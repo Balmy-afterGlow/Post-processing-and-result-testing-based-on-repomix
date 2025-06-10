@@ -55,10 +55,10 @@ class GitCommitProcessor:
                 diff_content = ""
                 for diff_item in diffs:
                     if diff_item.a_path == file_path or diff_item.b_path == file_path:
-                        if diff_item.diff == b"":  # Git 返回空 diff 表示二进制文件
-                            diff_content = "[二进制文件]"
-                        else:
-                            diff_content = diff_item.diff
+                        try:
+                            diff_content = diff_item.diff.decode("utf-8")
+                        except UnicodeDecodeError:
+                            diff_content = "[二进制文件或编码不支持]"
 
                 commit_list.append(
                     {
