@@ -47,9 +47,11 @@ class GitCommitProcessor:
                 diffs = []
                 if len(commit.parents) > 0:  # 如果不是初始提交
                     parent = commit.parents[0]
-                    diffs = parent.diff(commit, paths=file_path)
+                    diffs = parent.diff(commit, paths=file_path, create_patch=True)
                 else:  # 初始提交
-                    diffs = commit.diff(git.NULL_TREE, paths=file_path)
+                    diffs = commit.diff(
+                        git.NULL_TREE, paths=file_path, create_patch=True
+                    )
 
                 # 提取文件变更内容
                 diff_content = ""
@@ -65,9 +67,9 @@ class GitCommitProcessor:
                         "hash": commit.hexsha[:8],  # 短hash
                         "author": commit.author.name,
                         "email": commit.author.email,
-                        "date": datetime.fromtimestamp(
-                            commit.authored_date
-                        ).isoformat(),
+                        "date": datetime.fromtimestamp(commit.authored_date).strftime(
+                            "%Y-%m-%d %H:%M:%S"
+                        ),
                         "message": commit.message.strip(),
                         "diff": diff_content,
                     }
@@ -78,34 +80,6 @@ class GitCommitProcessor:
         except Exception as e:
             print(f"获取文件 {file_path} 的提交历史时出错: {e}")
             return []
-
-    def format_commit_info(self, commit_info):
-        """
-        格式化单个提交信息为markdown
-
-        Args:
-            commit_info: 提交信息字典
-
-        Returns:
-            str: 格式化后的markdown字符串
-        """
-        if not commit_info:
-            return "\n**Git信息:** 无法获取提交历史\n"
-
-        # 格式化日期
-        try:
-            date_obj = datetime.fromisoformat(commit_info["date"].replace(" +", "+"))
-            formatted_date = date_obj.strftime("%Y-%m-%d %H:%M:%S")
-        except Exception:
-            formatted_date = commit_info["date"]
-
-        return f"""
-**Git信息:**
-- **最近提交:** `{commit_info["hash"]}`
-- **提交者:** {commit_info["author"]} ({commit_info["email"]})
-- **提交时间:** {formatted_date}
-- **提交信息:** {commit_info["message"]}
-"""
 
     def format_commit_history(self, commit_list):
         """
@@ -123,30 +97,21 @@ class GitCommitProcessor:
         result = "\n### Git提交历史\n"
 
         for i, commit in enumerate(commit_list):
-            # 格式化日期
-            try:
-                date_obj = datetime.fromisoformat(commit["date"].replace(" +", "+"))
-                formatted_date = date_obj.strftime("%Y-%m-%d %H:%M:%S")
-            except Exception:
-                formatted_date = commit["date"]
-
             result += f"""
 #### 提交 {i + 1}
 - **提交标识:** `{commit["hash"]}`
 - **提交者:** {commit["author"]} ({commit["email"]})
-- **提交时间:** {formatted_date}
+- **提交时间:** {commit["date"]}
 - **提交信息:** {commit["message"]}
 
-<details>
-<summary>查看详细改动</summary>
+
+详细改动如下：
 
 ```diff
 {commit["diff"]}
 ```
 
-</details>
 """
-
         return result
 
     def extract_file_sections(self, content):
@@ -161,10 +126,7 @@ class GitCommitProcessor:
         """
         files = []
 
-        # 匹配文件路径模式 - 支持多种可能的格式
-        # 1. 二级标题形式: ## File: path/to/file
-        # 2. 列表项形式: * path/to/file
-        # 3. 只有文件路径的形式
+        # 匹配文件路径模式 - 支持二级标题形式: ## File: path/to/file
 
         # 尝试匹配二级标题形式
         file_header_pattern = r"## File:\s*(.+?)(?=\n)"
@@ -174,15 +136,15 @@ class GitCommitProcessor:
         for match in file_headers:
             file_path = match.group(1).strip()
             line_start = content[: match.start()].count("\n")
+            line_end = -1
 
             # 查找该文件部分的代码块
             code_blocks = []
-            for i in range(line_start + 1, len(lines)):
-                if i >= len(lines):
-                    break
-
+            i = line_start + 1
+            while i < len(lines):
                 # 如果遇到下一个文件标题，结束搜索
                 if lines[i].startswith("## File:"):
+                    line_end = i - 1
                     break
 
                 # 找到代码块开始
@@ -190,12 +152,13 @@ class GitCommitProcessor:
                     code_start = i
                     # 寻找代码块结束
                     for j in range(code_start + 1, len(lines)):
-                        if j >= len(lines):
-                            break
                         if lines[j].startswith("```"):
                             code_end = j
                             code_blocks.append({"start": code_start, "end": code_end})
+                            i = code_end + 1
                             break
+                    continue
+                i += 1
 
             if code_blocks:
                 # 取最后一个代码块作为文件内容块
@@ -204,67 +167,11 @@ class GitCommitProcessor:
                     {
                         "path": file_path,
                         "line_start": line_start,
+                        "line_end": line_end if line_end != -1 else len(lines),
                         "code_start": last_code_block["start"],
                         "code_end": last_code_block["end"],
-                        "line_end": last_code_block["end"],
                     }
                 )
-
-        # 如果没有找到二级标题形式，尝试原来的列表项形式
-        if not files:
-            file_pattern = r"^\s*\*\s+(.+?)$"
-            code_block_pattern = r"^```\s*$"
-
-            i = 0
-            while i < len(lines):
-                line = lines[i]
-
-                # 检查是否是文件路径行
-                file_match = re.match(file_pattern, line)
-                if file_match:
-                    file_path = file_match.group(1).strip()
-
-                    # 跳过不是实际文件路径的项（如 "文件路径" 这样的标题）
-                    if file_path == "文件路径" or file_path == "...":
-                        i += 1
-                        continue
-
-                    # 查找对应的代码块
-                    j = i + 1
-                    code_start = -1
-                    code_end = -1
-
-                    # 寻找代码块开始
-                    while j < len(lines):
-                        if re.match(code_block_pattern, lines[j]):
-                            code_start = j
-                            break
-                        j += 1
-
-                    # 寻找代码块结束
-                    if code_start != -1:
-                        j = code_start + 1
-                        while j < len(lines):
-                            if re.match(code_block_pattern, lines[j]):
-                                code_end = j
-                                break
-                            j += 1
-
-                    if code_start != -1 and code_end != -1:
-                        files.append(
-                            {
-                                "path": file_path,
-                                "line_start": i,
-                                "code_start": code_start,
-                                "code_end": code_end,
-                                "line_end": code_end,
-                            }
-                        )
-                        i = code_end + 1
-                    else:
-                        i += 1
-                else:
-                    i += 1
 
         return files
 
@@ -280,6 +187,8 @@ class GitCommitProcessor:
         """
         # 首先使用提取的文件部分
         files = self.extract_file_sections(md_content)
+        for file_info in files:
+            print(f"处理文件: {file_info['path']}")
         lines = md_content.split("\n")
 
         # 按行号从后往前处理，避免行号变化影响
@@ -301,52 +210,6 @@ class GitCommitProcessor:
 
         # 重新组合处理后的内容
         processed_md = "\n".join(lines)
-
-        # 如果没有找到文件部分，尝试使用正则表达式方法
-        if not files:
-            # 查找"Files"一级标题部分
-            files_section_match = re.search(
-                r"# Files.*?(?=\n# |$)", md_content, re.DOTALL
-            )
-            if files_section_match:
-                files_section = files_section_match.group(0)
-                # 在Files部分中寻找文件标题和代码块
-                section_pattern = r"## File: (.*?)(?=\n## File:|$)"
-                sections = re.findall(section_pattern, files_section, re.DOTALL)
-
-                processed_md = md_content
-
-                for section in sections:
-                    file_path_line = section.strip().split("\n")[0].strip()
-                    # 提取实际的文件路径
-                    if ":" in file_path_line:
-                        file_path = file_path_line.split(":", 1)[1].strip()
-                    else:
-                        file_path = file_path_line.strip()
-
-                    # 确保代码块后插入git信息
-                    code_blocks = re.findall(r"```.*?```", section, re.DOTALL)
-                    if code_blocks:
-                        last_code_block = code_blocks[-1]
-                        print(f"处理文件: {file_path}")
-
-                        # 获取指定数量的提交历史
-                        commit_list = self.get_file_commit_history(
-                            file_path, self.commit_count
-                        )
-                        git_history_text = self.format_commit_history(commit_list)
-
-                        # 定位代码块在原文档中的位置
-                        section_start = md_content.find(section)
-                        block_in_section = section.find(last_code_block) + len(
-                            last_code_block
-                        )
-                        insert_pos = section_start + block_in_section
-
-                        if insert_pos > 0:
-                            before = processed_md[:insert_pos]
-                            after = processed_md[insert_pos:]
-                            processed_md = before + "\n" + git_history_text + after
 
         return processed_md
 

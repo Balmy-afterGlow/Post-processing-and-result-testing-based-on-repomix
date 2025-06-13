@@ -1,2 +1,6 @@
 repomix*.md
 demo.py
+*.backup
+chroma_db*
+datasets_generate.py
+rag_comparison_results.json
