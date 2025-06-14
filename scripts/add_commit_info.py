@@ -16,7 +16,9 @@ import git  # GitPython库
 
 
 class GitCommitProcessor:
-    def __init__(self, repo_path=".", md_file_path=None, remote_repo=None):
+    def __init__(
+        self, repo_path=".", md_file_path=None, remote_repo=None, target_commit=None
+    ):
         """
         初始化处理器
 
@@ -24,10 +26,12 @@ class GitCommitProcessor:
             repo_path: Git仓库路径（本地）
             md_file_path: markdown文件路径
             remote_repo: 远程仓库（格式：owner/repo 或完整URL）
+            target_commit: 目标提交SHA，用于检出到特定状态获取文件历史
         """
         self.md_file_path = Path(md_file_path) if md_file_path else None
         self.commit_count = 5  # 默认显示5条提交历史
         self.remote_repo = remote_repo
+        self.target_commit = target_commit
         self.temp_dir = None
         self.repo_path = None
 
@@ -55,9 +59,24 @@ class GitCommitProcessor:
 
             print(f"正在克隆远程仓库: {repo_url}")
             # 克隆仓库到临时目录
-            git.Repo.clone_from(repo_url, self.temp_dir)
+            repo = git.Repo.clone_from(repo_url, self.temp_dir)
             self.repo_path = Path(self.temp_dir)
             print(f"仓库克隆完成: {self.temp_dir}")
+
+            # 如果指定了目标提交，检出到该提交
+            if self.target_commit:
+                print(f"正在检出到指定提交: {self.target_commit}")
+                try:
+                    repo.git.checkout(self.target_commit)
+                    current_commit = repo.head.commit
+                    print(f"成功检出到提交: {current_commit.hexsha[:8]}")
+                    print(f"提交信息: {current_commit.message.strip()}")
+                    print(
+                        f"提交时间: {datetime.fromtimestamp(current_commit.authored_date).strftime('%Y-%m-%d %H:%M:%S')}"
+                    )
+                except Exception as e:
+                    print(f"警告: 无法检出到指定提交 {self.target_commit}: {e}")
+                    print("将使用默认分支进行处理")
 
         except Exception as e:
             if self.temp_dir and os.path.exists(self.temp_dir):
@@ -92,8 +111,29 @@ class GitCommitProcessor:
         """
         try:
             repo = git.Repo(self.repo_path)
-            # 获取文件最近的多个提交信息
-            commits = list(repo.iter_commits(paths=file_path, max_count=count))
+
+            # 如果指定了目标提交，从该提交开始获取历史
+            if self.target_commit:
+                try:
+                    # 从指定提交开始获取文件历史
+                    commits = list(
+                        repo.iter_commits(
+                            self.target_commit, paths=file_path, max_count=count
+                        )
+                    )
+                    if not commits:
+                        print(
+                            f"警告: 在提交 {self.target_commit} 中未找到文件 {file_path}，尝试获取全局历史"
+                        )
+                        commits = list(
+                            repo.iter_commits(paths=file_path, max_count=count)
+                        )
+                except Exception as e:
+                    print(f"从指定提交获取历史失败: {e}，使用默认方法")
+                    commits = list(repo.iter_commits(paths=file_path, max_count=count))
+            else:
+                # 获取文件最近的多个提交信息
+                commits = list(repo.iter_commits(paths=file_path, max_count=count))
 
             commit_list = []
             for commit in commits:
@@ -119,6 +159,7 @@ class GitCommitProcessor:
                 commit_list.append(
                     {
                         "hash": commit.hexsha[:8],  # 短hash
+                        "full_hash": commit.hexsha,  # 完整hash
                         "author": commit.author.name,
                         "email": commit.author.email,
                         "date": datetime.fromtimestamp(commit.authored_date).strftime(
@@ -287,7 +328,25 @@ class GitCommitProcessor:
             # 验证这是一个有效的Git仓库
             repo = git.Repo(self.repo_path)
             print(f"使用Git仓库: {self.repo_path}")
-            print(f"当前分支: {repo.active_branch.name}")
+
+            try:
+                current_commit = repo.head.commit
+                print(
+                    f"当前提交: {current_commit.hexsha[:8]} - {current_commit.message.strip()[:50]}"
+                )
+                if self.target_commit:
+                    if current_commit.hexsha.startswith(self.target_commit):
+                        print(f"✅ 已成功检出到目标提交: {self.target_commit}")
+                    else:
+                        print("⚠️  当前提交与目标提交不匹配")
+
+                try:
+                    print(f"当前分支: {repo.active_branch.name}")
+                except TypeError:
+                    print("当前状态: detached HEAD (已检出到特定提交)")
+            except Exception as e:
+                print(f"获取当前状态信息失败: {e}")
+
         except git.exc.InvalidGitRepositoryError:
             raise ValueError(f"指定路径不是有效的Git仓库: {self.repo_path}")
 
@@ -332,6 +391,7 @@ def main():
   %(prog)s repo.md -r owner/repo      # 指定GitHub远程仓库（格式：owner/repo）
   %(prog)s repo.md -r https://github.com/owner/repo.git  # 指定完整的远程仓库URL
   %(prog)s repo.md -c 3               # 指定每个文件显示3条提交历史（默认为5条）
+  %(prog)s repo.md -r owner/repo --target-commit abc123  # 从指定提交开始获取历史
         """,
     )
 
@@ -348,6 +408,10 @@ def main():
         type=int,
         default=5,
         help="显示的提交历史数量（默认为5条）",
+    )
+    parser.add_argument(
+        "--target-commit",
+        help="目标提交SHA（完整或前缀），从该提交状态开始获取文件历史",
     )
 
     args = parser.parse_args()
@@ -366,13 +430,17 @@ def main():
 
         if is_remote:
             # 使用上下文管理器处理远程仓库
-            with GitCommitProcessor(remote_repo=args.repo) as processor:
+            with GitCommitProcessor(
+                remote_repo=args.repo, target_commit=args.target_commit
+            ) as processor:
                 processor.commit_count = args.commit_count
                 processor.process_file(args.input_file, args.output)
         else:
             # 处理本地仓库
             repo_path = args.repo if args.repo else "."
-            processor = GitCommitProcessor(repo_path=repo_path)
+            processor = GitCommitProcessor(
+                repo_path=repo_path, target_commit=args.target_commit
+            )
             processor.commit_count = args.commit_count
             processor.process_file(args.input_file, args.output)
 

@@ -92,6 +92,7 @@ def save_metadata(
     sha: str,
     standard_metadata: dict,
     compressed_metadata: dict,
+    git_enhanced_metadata: dict | None = None,
 ):
     """
     保存元数据到 JSON 文件
@@ -111,18 +112,33 @@ def save_metadata(
     if standard_tokens > 0:
         token_ratio = compressed_tokens / standard_tokens
 
+    # 构建文件信息
+    files_info = {"standard": standard_metadata, "compressed": compressed_metadata}
+
+    total_files = 2
+    total_size = standard_metadata.get("file_size_bytes", 0) + compressed_metadata.get(
+        "file_size_bytes", 0
+    )
+    total_tokens = standard_tokens + compressed_tokens
+
+    # 如果有Git增强版本，添加到元数据中
+    if git_enhanced_metadata:
+        files_info["git_enhanced"] = git_enhanced_metadata
+        total_files = 3
+        total_size += git_enhanced_metadata.get("file_size_bytes", 0)
+        total_tokens += git_enhanced_metadata.get("token_counts", {}).get("gpt-4", 0)
+
     metadata = {
         "repository": {
             "name": repo,
             "sha": sha,
             "generation_date": datetime.now().isoformat(),
         },
-        "files": {"standard": standard_metadata, "compressed": compressed_metadata},
+        "files": files_info,
         "summary": {
-            "total_files": 2,
-            "total_size_bytes": standard_metadata.get("file_size_bytes", 0)
-            + compressed_metadata.get("file_size_bytes", 0),
-            "total_tokens_gpt4": standard_tokens + compressed_tokens,
+            "total_files": total_files,
+            "total_size_bytes": total_size,
+            "total_tokens_gpt4": total_tokens,
             "compression_ratio": {
                 "size": round(size_ratio, 3),
                 "tokens": round(token_ratio, 3),
@@ -137,10 +153,13 @@ def save_metadata(
     print(f"[+] Metadata saved: {metadata_file}")
     print(f"    Standard tokens (GPT-4): {standard_tokens:,}")
     print(f"    Compressed tokens (GPT-4): {compressed_tokens:,}")
+    if git_enhanced_metadata:
+        git_tokens = git_enhanced_metadata.get("token_counts", {}).get("gpt-4", 0)
+        print(f"    Git-enhanced tokens (GPT-4): {git_tokens:,}")
     print(f"    Compression ratio: {token_ratio:.3f}")
 
 
-def generate_md(repo: str, sha: str):
+def generate_md(repo: str, sha: str, env_name: str = "repomind"):
     owner, name = repo.split("/")
     output_dir = Path(f"../repomix_md/repository-{name}")
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -167,47 +186,74 @@ def generate_md(repo: str, sha: str):
     print(f"[+] Generating (compressed): {compressed_path}")
     subprocess.run(base_args + ["--compress", "-o", str(compressed_path)], check=True)
 
+    # 生成带Git提交历史的版本
+    git_enhanced_path = output_dir / f"repomix-output-{name}-with-git.md"
+    print(f"[+] Generating Git-enhanced version: {git_enhanced_path}")
+    git_enhanced_success = False
+    try:
+        # 调用 add_commit_info.py 脚本
+        add_commit_script = Path(__file__).parent / "add_commit_info.py"
+        subprocess.run(
+            [
+                "conda activate",
+                f"{env_name}",
+                "&&",
+                "python",
+                str(add_commit_script),
+                str(standard_path),
+                "-r",
+                repo,  # 使用远程仓库
+                "-o",
+                str(git_enhanced_path),
+                "-c",
+                "5",  # 显示5条提交历史，避免文件过大
+            ],
+            check=True,
+        )
+        print("[+] Git-enhanced version created successfully")
+        git_enhanced_success = True
+    except subprocess.CalledProcessError as e:
+        print(f"[!] Failed to create Git-enhanced version: {e}")
+
     # 计算元数据
     print(f"[+] Calculating metadata for {repo}...")
     standard_metadata = get_file_metadata(standard_path)
     compressed_metadata = get_file_metadata(compressed_path)
 
-    # 保存元数据
-    save_metadata(output_dir, repo, sha, standard_metadata, compressed_metadata)
+    # 如果成功生成了Git增强版本，也计算其元数据
+    git_enhanced_metadata = None
+    if git_enhanced_success and git_enhanced_path.exists():
+        git_enhanced_metadata = get_file_metadata(git_enhanced_path)
 
-    return standard_metadata, compressed_metadata
+    # 保存元数据
+    save_metadata(
+        output_dir,
+        repo,
+        sha,
+        standard_metadata,
+        compressed_metadata,
+        git_enhanced_metadata,
+    )
+
+    return standard_metadata, compressed_metadata, git_enhanced_metadata
 
 
 def main():
     repo_map = load_repos_from_issues()
-    all_metadata = []
-    success_count = 0
-    failed_repos = []
 
     print(f"[+] Starting batch generation for {len(repo_map)} repositories...")
 
     for repo, sha in repo_map.items():
         try:
             print(f"\n[+] Processing {repo} (SHA: {sha})")
-            standard_metadata, compressed_metadata = generate_md(repo, sha)
-
-            # 收集统计信息
-            all_metadata.append(
-                {
-                    "repo": repo,
-                    "sha": sha,
-                    "standard": standard_metadata,
-                    "compressed": compressed_metadata,
-                }
+            standard_metadata, compressed_metadata, git_enhanced_metadata = generate_md(
+                repo, sha
             )
-            success_count += 1
 
         except subprocess.CalledProcessError as e:
             print(f"[!] Failed to generate for {repo}: {e}")
-            failed_repos.append({"repo": repo, "error": str(e)})
         except Exception as e:
             print(f"[!] Unexpected error for {repo}: {e}")
-            failed_repos.append({"repo": repo, "error": str(e)})
 
 
 if __name__ == "__main__":
