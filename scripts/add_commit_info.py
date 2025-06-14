@@ -159,7 +159,6 @@ class GitCommitProcessor:
                 commit_list.append(
                     {
                         "hash": commit.hexsha[:8],  # 短hash
-                        "full_hash": commit.hexsha,  # 完整hash
                         "author": commit.author.name,
                         "email": commit.author.email,
                         "date": datetime.fromtimestamp(commit.authored_date).strftime(
