@@ -6,6 +6,9 @@ Git提交信息后处理脚本
 
 import re
 import sys
+import os
+import shutil
+import tempfile
 from datetime import datetime
 from pathlib import Path
 import argparse
@@ -13,17 +16,68 @@ import git  # GitPython库
 
 
 class GitCommitProcessor:
-    def __init__(self, repo_path=".", md_file_path=None):
+    def __init__(self, repo_path=".", md_file_path=None, remote_repo=None):
         """
         初始化处理器
 
         Args:
-            repo_path: Git仓库路径
+            repo_path: Git仓库路径（本地）
             md_file_path: markdown文件路径
+            remote_repo: 远程仓库（格式：owner/repo 或完整URL）
         """
-        self.repo_path = Path(repo_path)
         self.md_file_path = Path(md_file_path) if md_file_path else None
         self.commit_count = 5  # 默认显示5条提交历史
+        self.remote_repo = remote_repo
+        self.temp_dir = None
+        self.repo_path = None
+
+        # 处理远程仓库
+        if remote_repo:
+            self._setup_remote_repo()
+        else:
+            self.repo_path = Path(repo_path)
+
+    def _setup_remote_repo(self):
+        """设置远程仓库，克隆到临时目录"""
+        try:
+            # 创建临时目录
+            self.temp_dir = tempfile.mkdtemp(prefix="git_commit_processor_")
+            print(f"创建临时目录: {self.temp_dir}")
+
+            # 构建远程仓库URL
+            if self.remote_repo.startswith("http"):
+                repo_url = self.remote_repo
+            elif "/" in self.remote_repo and not self.remote_repo.startswith("/"):
+                # 格式如 owner/repo
+                repo_url = f"https://github.com/{self.remote_repo}.git"
+            else:
+                raise ValueError(f"无效的远程仓库格式: {self.remote_repo}")
+
+            print(f"正在克隆远程仓库: {repo_url}")
+            # 克隆仓库到临时目录
+            git.Repo.clone_from(repo_url, self.temp_dir)
+            self.repo_path = Path(self.temp_dir)
+            print(f"仓库克隆完成: {self.temp_dir}")
+
+        except Exception as e:
+            if self.temp_dir and os.path.exists(self.temp_dir):
+                shutil.rmtree(self.temp_dir)
+            raise Exception(f"克隆远程仓库失败: {e}")
+
+    def cleanup(self):
+        """清理临时目录"""
+        if self.temp_dir and os.path.exists(self.temp_dir):
+            print(f"清理临时目录: {self.temp_dir}")
+            shutil.rmtree(self.temp_dir)
+            self.temp_dir = None
+
+    def __enter__(self):
+        """支持上下文管理器"""
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """上下文管理器退出时自动清理"""
+        self.cleanup()
 
     def get_file_commit_history(self, file_path, count=5):
         """
@@ -225,6 +279,18 @@ class GitCommitProcessor:
         if not input_path.exists():
             raise FileNotFoundError(f"输入文件不存在: {input_file}")
 
+        # 检查仓库是否有效
+        if not self.repo_path or not self.repo_path.exists():
+            raise FileNotFoundError(f"Git仓库路径不存在: {self.repo_path}")
+
+        try:
+            # 验证这是一个有效的Git仓库
+            repo = git.Repo(self.repo_path)
+            print(f"使用Git仓库: {self.repo_path}")
+            print(f"当前分支: {repo.active_branch.name}")
+        except git.exc.InvalidGitRepositoryError:
+            raise ValueError(f"指定路径不是有效的Git仓库: {self.repo_path}")
+
         # 读取原文件
         with open(input_path, "r", encoding="utf-8") as f:
             content = f.read()
@@ -250,6 +316,9 @@ class GitCommitProcessor:
 
         print(f"处理完成，输出文件: {output_path}")
 
+        if self.remote_repo:
+            print("远程仓库信息已添加完成，临时目录将在脚本结束时清理")
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -259,7 +328,9 @@ def main():
 使用示例:
   %(prog)s repo.md                    # 处理repo.md文件，自动备份原文件
   %(prog)s repo.md -o output.md       # 输出到新文件
-  %(prog)s repo.md -r /path/to/repo   # 指定Git仓库路径
+  %(prog)s repo.md -r /path/to/repo   # 指定本地Git仓库路径
+  %(prog)s repo.md -r owner/repo      # 指定GitHub远程仓库（格式：owner/repo）
+  %(prog)s repo.md -r https://github.com/owner/repo.git  # 指定完整的远程仓库URL
   %(prog)s repo.md -c 3               # 指定每个文件显示3条提交历史（默认为5条）
         """,
     )
@@ -267,7 +338,9 @@ def main():
     parser.add_argument("input_file", help="输入的markdown文件路径")
     parser.add_argument("-o", "--output", help="输出文件路径（可选，默认覆盖原文件）")
     parser.add_argument(
-        "-r", "--repo", default=".", help="Git仓库路径（默认为当前目录）"
+        "-r",
+        "--repo",
+        help="Git仓库路径。可以是本地路径、GitHub格式(owner/repo)或完整URL",
     )
     parser.add_argument(
         "-c",
@@ -280,10 +353,28 @@ def main():
     args = parser.parse_args()
 
     try:
-        processor = GitCommitProcessor(repo_path=args.repo)
-        # 设置提交历史数量
-        processor.commit_count = args.commit_count
-        processor.process_file(args.input_file, args.output)
+        # 判断是否为远程仓库
+        is_remote = False
+        if args.repo:
+            # 检查是否为远程仓库格式
+            if args.repo.startswith("http") or (
+                "/" in args.repo
+                and not args.repo.startswith("/")
+                and not os.path.exists(args.repo)
+            ):
+                is_remote = True
+
+        if is_remote:
+            # 使用上下文管理器处理远程仓库
+            with GitCommitProcessor(remote_repo=args.repo) as processor:
+                processor.commit_count = args.commit_count
+                processor.process_file(args.input_file, args.output)
+        else:
+            # 处理本地仓库
+            repo_path = args.repo if args.repo else "."
+            processor = GitCommitProcessor(repo_path=repo_path)
+            processor.commit_count = args.commit_count
+            processor.process_file(args.input_file, args.output)
 
     except Exception as e:
         print(f"错误: {e}", file=sys.stderr)
