@@ -1,0 +1,8 @@
+{
+  "gson": true,
+  "spring-cloud-alibaba": true,
+  "leakcanary": true,
+  "apktool": true,
+  "compose": true,
+  "okhttp": true
+}

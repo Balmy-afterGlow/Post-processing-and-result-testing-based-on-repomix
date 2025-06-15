@@ -214,8 +214,8 @@ def generate_md(repo: str, sha: str, env_name: str = "repomind"):
     print(f"[+] Generating Git-enhanced version: {git_enhanced_path}")
     git_enhanced_success = False
     try:
-        # 调用 add_commit_info.py 脚本
-        add_commit_script = Path(__file__).parent / "add_commit_info.py"
+        # 调用 add_commit_info_optimized.py 脚本
+        add_commit_script = Path(__file__).parent / "add_commit_info_optimized.py"
         subprocess.run(
             [
                 "conda",

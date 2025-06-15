@@ -1,0 +1,60 @@
+{
+  "repository": {
+    "name": "streamlit/streamlit",
+    "sha": "76bba47f71eeeca22c52d4e599387bb416da15ca",
+    "generation_date": "2025-06-15T10:27:01.759621"
+  },
+  "files": {
+    "standard": {
+      "file_name": "repomix-output-streamlit.md",
+      "file_size_mb": 15.13,
+      "character_count": 15826292,
+      "line_count": 565483,
+      "word_count": 1962256,
+      "token_counts": {
+        "gpt-4": 5078620,
+        "estimated": 3956573
+      },
+      "created_time": "2025-06-15T10:22:59.682671",
+      "modified_time": "2025-06-15T10:22:59.682671",
+      "generation_time": "2025-06-15T10:26:57.737114"
+    },
+    "compressed": {
+      "file_name": "repomix-output-streamlit-compress.md",
+      "file_size_mb": 5.76,
+      "character_count": 5934467,
+      "line_count": 158744,
+      "word_count": 722182,
+      "token_counts": {
+        "gpt-4": 1995846,
+        "estimated": 1483616
+      },
+      "created_time": "2025-06-15T10:23:41.282278",
+      "modified_time": "2025-06-15T10:23:41.282278",
+      "generation_time": "2025-06-15T10:26:59.068184"
+    },
+    "git_enhanced": {
+      "file_name": "repomix-output-streamlit-with-git.md",
+      "file_size_mb": 15.2,
+      "character_count": 15861321,
+      "line_count": 568529,
+      "word_count": 1966825,
+      "token_counts": {
+        "gpt-4": 5102989,
+        "estimated": 3965330
+      },
+      "created_time": "2025-06-15T10:26:53.413545",
+      "modified_time": "2025-06-15T10:26:53.413545",
+      "generation_time": "2025-06-15T10:27:01.755982"
+    }
+  },
+  "summary": {
+    "total_files": 3,
+    "total_size_bytes": 0,
+    "total_tokens_gpt4": 12177455,
+    "compression_ratio": {
+      "size": 0,
+      "tokens": 0.393
+    }
+  }
+}

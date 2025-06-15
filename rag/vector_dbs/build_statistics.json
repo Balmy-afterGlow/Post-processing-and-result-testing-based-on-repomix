@@ -1,0 +1,10 @@
+{
+  "total_repos": 18,
+  "processed_repos": 6,
+  "skipped_repos": 12,
+  "failed_repos": 0,
+  "total_documents": 11916,
+  "filtered_documents": 54,
+  "processing_errors": [],
+  "total_processing_time_seconds": 360.155405
+}

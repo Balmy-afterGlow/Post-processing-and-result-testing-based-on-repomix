@@ -3,6 +3,7 @@ demo.py
 *.backup
 chroma_db*
 datasets_generate.py
+add_commit_info_optimized.py
 __pycache__
 .mypy_cache
 .env
