@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+"""
+RAG评估系统提示词配置
+"""
+
 system_prompt = """You are an AI assistant specialized in software crash analysis and automated debugging.
 
 You will be given:
@@ -15,8 +20,6 @@ Your output must be a JSON object with **exactly the following structure**:
   "location": ["...", ...], // The file path or function name where changes are needed
   "fix": "..."       // A specific suggestion or code snippet for the fix
 }
-
-Respond with JSON ONLY. Do not include comments or explanation outside the JSON.
 """
 
 
@@ -50,3 +53,39 @@ The following code snippets were retrieved from the repository using semantic se
 
 Please analyze the issue using the above context and respond with a JSON object as described in the system prompt.
 """
+
+
+def get_evaluation_prompt(ai_output, gold_standard):
+    """
+    生成AI评估prompt
+
+    Args:
+        ai_output: AI输出结果
+        gold_standard: 标准答案
+
+    Returns:
+        评估prompt字符串
+    """
+    prompt = f"""
+You are an expert code analysis evaluator. Please evaluate the semantic similarity between the AI-generated analysis and the gold standard answer.
+
+AI Output:
+- Reason: {ai_output.get("reason", "N/A")}
+- Location: {ai_output.get("location", [])}  
+- Fix: {ai_output.get("fix", "N/A")}
+
+Gold Standard:
+- Reason: {gold_standard.get("reason", "N/A")}
+- Location: {gold_standard.get("location", [])}
+- Fix: {gold_standard.get("fix", "N/A")}
+
+Please evaluate the semantic similarity on a scale of 0-100, considering:
+1. Correctness of the root cause analysis
+2. Accuracy of the file/location identification  
+3. Appropriateness of the suggested fix
+4. Overall technical accuracy
+
+Provide your evaluation as a single score (0-100) and a brief explanation.
+Format: Score: XX. Explanation: [your reasoning]
+"""
+    return prompt

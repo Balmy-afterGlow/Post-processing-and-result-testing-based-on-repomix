@@ -1,8 +1,8 @@
 repomix*.md
-demo.py
 *.backup
 chroma_db*
 datasets_generate.py
 __pycache__
 .mypy_cache
 .env
+*.log

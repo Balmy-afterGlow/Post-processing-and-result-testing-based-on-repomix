@@ -1,0 +1,39 @@
+{
+  "question_id": "java-0005",
+  "timestamp": "/home/moyu/Code/Project/TencentMini/Code_knowledge/Assessment/post-processing_and_result-testing/evalulate",
+  "metrics": {
+    "text_similarity": {
+      "reason_similarity": 0.26668260963425944,
+      "fix_similarity": 0.10494193401689632,
+      "average_text_similarity": 0.18581227182557788
+    },
+    "location_matching": {
+      "jaccard": 0.0,
+      "overlap": 0.0,
+      "f1": 0.0,
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    "ranking_metrics": {
+      "top_1_accuracy": 0.0,
+      "top_3_accuracy": 0.0,
+      "map_score": 0.0
+    },
+    "structure_completeness": {
+      "field_coverage": 1.0,
+      "required_completeness": 1.0,
+      "content_completeness": 1.0,
+      "overall_completeness": 1.0
+    },
+    "confidence_score": 0.6658333333333333,
+    "ai_similarity": {
+      "enabled": true,
+      "score": 0.9,
+      "status": "success"
+    },
+    "overall_scores": {
+      "f1_score": 0.1486498174604623,
+      "weighted_score": 0.5826265936508516
+    }
+  }
+}
