@@ -1,0 +1,8 @@
+{
+  "reason": "The issue was caused by the JsonPrimitive's equals method not properly handling BigDecimal comparisons. The original implementation converted all numbers to double values for comparison, which loses precision for BigDecimal values. This led to incorrect equality checks when comparing BigDecimal values that should be considered different due to their precise decimal representations.",
+  "location": [
+    "gson/src/test/java/com/google/gson/JsonPrimitiveTest.java",
+    "gson/src/main/java/com/google/gson/JsonPrimitive.java"
+  ],
+  "fix": "The fix modifies the equals method to first check if both values are instances of BigDecimal. If they are, it uses BigDecimal's compareTo method for precise comparison. For other Number types, it falls back to the original double value comparison. This ensures that BigDecimal values are compared accurately while maintaining the existing behavior for other number types."
+}

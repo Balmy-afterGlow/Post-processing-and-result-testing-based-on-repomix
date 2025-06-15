@@ -1,0 +1,9 @@
+{
+  "reason": "The issue was that OkHttp was not correctly implementing the HTTP caching specifications for 302 (Found) and 307 (Temporary Redirect) responses. According to RFC 2616 and RFC 7231, these responses can be cached if they include appropriate cache-control headers (like Expires, max-age, s-maxage, or public). However, OkHttp was explicitly marking all responses with status codes 302 to 307 as uncacheable, regardless of their headers.",
+  "location": [
+    "okhttp/src/main/java/com/squareup/okhttp/internal/http/CacheStrategy.java",
+    "okhttp-urlconnection/src/test/java/com/squareup/okhttp/UrlConnectionCacheTest.java",
+    "okhttp-tests/src/test/java/com/squareup/okhttp/CacheTest.java"
+  ],
+  "fix": "The fix involved modifying the `isCacheable` method in `CacheStrategy.java` to properly handle 302 and 307 responses. Now, these responses are cacheable if they include specific cache-control headers (Expires, max-age, s-maxage, or public). The test cases in `CacheTest.java` and `UrlConnectionCacheTest.java` were also updated to reflect this change, ensuring that 302 and 307 responses with appropriate headers are cached, while those without such headers are not."
+}

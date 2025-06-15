@@ -1,0 +1,120 @@
+2025-06-15 09:12:32,544 - INFO - 开始批量构建向量数据库...
+2025-06-15 09:12:32,544 - INFO - 找到Git增强文件: keras
+2025-06-15 09:12:32,544 - INFO - 找到Git增强文件: libgdx
+2025-06-15 09:12:32,544 - INFO - 找到Git增强文件: gson
+2025-06-15 09:12:32,545 - INFO - 找到Git增强文件: spring-cloud-alibaba
+2025-06-15 09:12:32,545 - WARNING - 跳过仓库 Alma: 未找到Git增强版文件
+2025-06-15 09:12:32,545 - INFO - 找到Git增强文件: leakcanary
+2025-06-15 09:12:32,545 - INFO - 找到Git增强文件: python
+2025-06-15 09:12:32,545 - INFO - 找到Git增强文件: apktool
+2025-06-15 09:12:32,545 - INFO - 找到Git增强文件: colossalai
+2025-06-15 09:12:32,545 - INFO - 找到Git增强文件: shardingsphere
+2025-06-15 09:12:32,545 - INFO - 找到Git增强文件: dbeaver
+2025-06-15 09:12:32,545 - INFO - 找到Git增强文件: compose
+2025-06-15 09:12:32,546 - INFO - 找到Git增强文件: mitmproxy
+2025-06-15 09:12:32,546 - WARNING - 跳过仓库 ccxt: 未找到Git增强版文件
+2025-06-15 09:12:32,546 - INFO - 找到Git增强文件: rich
+2025-06-15 09:12:32,546 - WARNING - 跳过仓库 deepspeed: 未找到Git增强版文件
+2025-06-15 09:12:32,546 - INFO - 找到Git增强文件: okhttp
+2025-06-15 09:12:32,546 - INFO - 找到Git增强文件: serverless
+2025-06-15 09:12:32,546 - INFO - 总共找到 15 个Git增强版文件
+2025-06-15 09:12:32,546 - INFO - 进度: 1/15 - 处理仓库 keras
+2025-06-15 09:12:32,546 - INFO - 开始处理仓库: keras
+2025-06-15 09:12:37,857 - INFO - 仓库 keras: 解析出 1452 个代码块
+2025-06-15 09:12:38,295 - INFO - 仓库 keras: 创建文档 - 基础版:18703, 增强版:24083, 压缩版:1734
+2025-06-15 09:12:43,438 - INFO - PyTorch version 2.7.1 available.
+2025-06-15 09:12:43,704 - INFO - Use pytorch device_name: cpu
+2025-06-15 09:12:43,704 - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-06-15 09:16:23,956 - ERROR - ❌ 仓库 keras 处理失败: (MaxRetryError("HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main/additional_chat_templates?recursive=False&expand=False (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x766024f8cfb0>: Failed to establish a new connection: [Errno 101] Network is unreachable'))"), '(Request ID: 4e91889f-465c-48c7-9c17-931d01d390e7)')
+2025-06-15 09:16:23,959 - INFO - 进度: 2/15 - 处理仓库 libgdx
+2025-06-15 09:16:23,959 - INFO - 开始处理仓库: libgdx
+2025-06-15 09:17:12,215 - INFO - 开始批量构建向量数据库...
+2025-06-15 09:17:12,215 - INFO - 找到Git增强文件: keras
+2025-06-15 09:17:12,215 - INFO - 找到Git增强文件: libgdx
+2025-06-15 09:17:12,215 - INFO - 找到Git增强文件: gson
+2025-06-15 09:17:12,215 - INFO - 找到Git增强文件: spring-cloud-alibaba
+2025-06-15 09:17:12,215 - WARNING - 跳过仓库 Alma: 未找到Git增强版文件
+2025-06-15 09:17:12,215 - INFO - 找到Git增强文件: leakcanary
+2025-06-15 09:17:12,216 - INFO - 找到Git增强文件: python
+2025-06-15 09:17:12,216 - INFO - 找到Git增强文件: apktool
+2025-06-15 09:17:12,216 - INFO - 找到Git增强文件: colossalai
+2025-06-15 09:17:12,216 - INFO - 找到Git增强文件: shardingsphere
+2025-06-15 09:17:12,216 - INFO - 找到Git增强文件: dbeaver
+2025-06-15 09:17:12,216 - INFO - 找到Git增强文件: compose
+2025-06-15 09:17:12,216 - INFO - 找到Git增强文件: mitmproxy
+2025-06-15 09:17:12,216 - WARNING - 跳过仓库 ccxt: 未找到Git增强版文件
+2025-06-15 09:17:12,216 - INFO - 找到Git增强文件: rich
+2025-06-15 09:17:12,216 - WARNING - 跳过仓库 deepspeed: 未找到Git增强版文件
+2025-06-15 09:17:12,217 - INFO - 找到Git增强文件: okhttp
+2025-06-15 09:17:12,217 - INFO - 找到Git增强文件: serverless
+2025-06-15 09:17:12,217 - INFO - 总共找到 15 个Git增强版文件
+2025-06-15 09:17:12,217 - INFO - 进度: 1/15 - 处理仓库 keras
+2025-06-15 09:17:12,217 - INFO - 开始处理仓库: keras
+2025-06-15 09:17:12,217 - INFO - 清理已存在的向量数据库: keras
+2025-06-15 09:17:18,536 - INFO - 仓库 keras: 解析出 1452 个代码块
+2025-06-15 09:17:20,004 - INFO - 仓库 keras: 创建文档 - 基础版:18703, 增强版:24083, 压缩版:1734
+2025-06-15 09:17:23,439 - INFO - PyTorch version 2.7.1 available.
+2025-06-15 09:17:23,604 - INFO - Use pytorch device_name: cpu
+2025-06-15 09:17:23,604 - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-06-15 09:17:24,588 - WARNING - HTTP Error 429 thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json
+2025-06-15 09:17:24,588 - WARNING - Retrying in 1s [Retry 1/5].
+2025-06-15 09:17:25,762 - WARNING - HTTP Error 429 thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json
+2025-06-15 09:17:25,762 - WARNING - Retrying in 2s [Retry 2/5].
+2025-06-15 09:17:27,865 - WARNING - HTTP Error 429 thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json
+2025-06-15 09:17:27,865 - WARNING - Retrying in 4s [Retry 3/5].
+2025-06-15 09:17:32,133 - WARNING - HTTP Error 429 thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json
+2025-06-15 09:17:32,133 - WARNING - Retrying in 8s [Retry 4/5].
+2025-06-15 09:17:40,310 - WARNING - HTTP Error 429 thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json
+2025-06-15 09:17:40,310 - WARNING - Retrying in 8s [Retry 5/5].
+2025-06-15 09:17:48,600 - WARNING - HTTP Error 429 thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json
+2025-06-15 09:17:48,899 - WARNING - HTTP Error 429 thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json
+2025-06-15 09:17:48,899 - WARNING - Retrying in 1s [Retry 1/5].
+2025-06-15 09:17:50,031 - WARNING - HTTP Error 429 thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json
+2025-06-15 09:17:50,031 - WARNING - Retrying in 2s [Retry 2/5].
+2025-06-15 09:17:52,165 - WARNING - HTTP Error 429 thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json
+2025-06-15 09:17:52,165 - WARNING - Retrying in 4s [Retry 3/5].
+2025-06-15 09:17:57,267 - WARNING - HTTP Error 429 thrown while requesting HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json
+2025-06-15 09:17:57,267 - WARNING - Retrying in 8s [Retry 4/5].
+2025-06-15 09:22:45,731 - INFO - 开始批量构建向量数据库...
+2025-06-15 09:22:45,731 - INFO - 找到Git增强文件: keras
+2025-06-15 09:22:45,731 - INFO - 找到Git增强文件: libgdx
+2025-06-15 09:22:45,731 - INFO - 找到Git增强文件: gson
+2025-06-15 09:22:45,732 - INFO - 找到Git增强文件: spring-cloud-alibaba
+2025-06-15 09:22:45,732 - WARNING - 跳过仓库 Alma: 未找到Git增强版文件
+2025-06-15 09:22:45,732 - INFO - 找到Git增强文件: leakcanary
+2025-06-15 09:22:45,732 - INFO - 找到Git增强文件: python
+2025-06-15 09:22:45,732 - INFO - 找到Git增强文件: apktool
+2025-06-15 09:22:45,732 - INFO - 找到Git增强文件: colossalai
+2025-06-15 09:22:45,732 - INFO - 找到Git增强文件: shardingsphere
+2025-06-15 09:22:45,732 - INFO - 找到Git增强文件: dbeaver
+2025-06-15 09:22:45,732 - INFO - 找到Git增强文件: compose
+2025-06-15 09:22:45,732 - INFO - 找到Git增强文件: mitmproxy
+2025-06-15 09:22:45,732 - WARNING - 跳过仓库 ccxt: 未找到Git增强版文件
+2025-06-15 09:22:45,732 - INFO - 找到Git增强文件: rich
+2025-06-15 09:22:45,732 - WARNING - 跳过仓库 deepspeed: 未找到Git增强版文件
+2025-06-15 09:22:45,733 - INFO - 找到Git增强文件: okhttp
+2025-06-15 09:22:45,733 - INFO - 找到Git增强文件: serverless
+2025-06-15 09:22:45,733 - INFO - 总共找到 15 个Git增强版文件
+2025-06-15 09:22:45,733 - INFO - 进度: 1/15 - 处理仓库 keras
+2025-06-15 09:22:45,733 - INFO - 开始处理仓库: keras
+2025-06-15 09:22:45,733 - INFO - 清理已存在的向量数据库: keras
+2025-06-15 09:22:51,409 - INFO - 仓库 keras: 解析出 1452 个代码块
+2025-06-15 09:22:51,933 - INFO - 仓库 keras: 创建文档 - 基础版:18703, 增强版:24083, 压缩版:1734
+2025-06-15 09:22:57,660 - INFO - PyTorch version 2.7.1 available.
+2025-06-15 09:22:57,880 - INFO - Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-06-15 09:22:58,644 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-06-15 09:31:07,707 - INFO - 仓库 keras basic版本: 已索引 18703 个文档
+2025-06-15 09:31:07,721 - INFO - Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-06-15 09:31:07,855 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-06-15 09:42:38,160 - INFO - 仓库 keras enhanced版本: 已索引 24083 个文档
+2025-06-15 09:42:38,229 - INFO - Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-06-15 09:42:38,569 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-06-15 09:43:15,901 - INFO - 仓库 keras compressed版本: 已索引 1734 个文档
+2025-06-15 09:43:15,952 - INFO - ✅ 仓库 keras 处理完成
+2025-06-15 09:43:16,898 - INFO - 进度: 2/15 - 处理仓库 libgdx
+2025-06-15 09:43:16,899 - INFO - 开始处理仓库: libgdx
+2025-06-15 09:43:16,899 - INFO - 清理已存在的向量数据库: libgdx
+2025-06-15 09:44:46,355 - INFO - 仓库 libgdx: 解析出 4738 个代码块
+2025-06-15 09:44:52,489 - INFO - 仓库 libgdx: 创建文档 - 基础版:66409, 增强版:77329, 压缩版:5096
+2025-06-15 09:44:52,491 - INFO - Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-06-15 09:44:52,597 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.

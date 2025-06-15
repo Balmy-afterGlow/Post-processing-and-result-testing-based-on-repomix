@@ -5,6 +5,11 @@ from dataclasses import dataclass
 import re
 import shutil
 
+# 设置环境变量以使用本地缓存，避免网络请求
+os.environ["HF_HUB_OFFLINE"] = "1"
+os.environ["TRANSFORMERS_OFFLINE"] = "1" 
+os.environ["HF_DATASETS_OFFLINE"] = "1"
+
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
@@ -144,8 +149,11 @@ class DocumentProcessor:
     """文档处理器 - 实现三种处理策略"""
 
     def __init__(self):
+        # 增加chunk_size，减少文档数量
         self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000, chunk_overlap=200, separators=["\n\n", "\n", " ", ""]
+            chunk_size=2000,  # 增加到2000
+            chunk_overlap=200, 
+            separators=["\n\n", "\n", " ", ""]
         )
 
     def create_basic_documents(self, code_blocks: List[CodeBlock]) -> List[Document]:
@@ -291,7 +299,23 @@ class LangChainRAGSystem:
 
     def __init__(self, collection_name: str, model_name: str = "all-MiniLM-L6-v2"):
         self.collection_name = collection_name
-        self.embeddings = HuggingFaceEmbeddings(model_name=model_name)
+        
+        # 配置HuggingFace Embeddings以使用本地缓存，避免网络请求
+        model_kwargs = {
+            'device': 'cpu',  # 使用CPU
+            'trust_remote_code': False
+        }
+        encode_kwargs = {
+            'normalize_embeddings': True
+        }
+        
+        # 设置离线模式和本地缓存
+        self.embeddings = HuggingFaceEmbeddings(
+            model_name=f"sentence-transformers/{model_name}",
+            model_kwargs=model_kwargs,
+            encode_kwargs=encode_kwargs,
+            cache_folder=os.path.expanduser("~/.cache/huggingface/hub"),
+        )
 
         # 设置ChromaDB持久化目录
         self.persist_directory = f"./chroma_db_{collection_name}"
@@ -299,8 +323,8 @@ class LangChainRAGSystem:
         # 初始化Chroma向量存储
         self.vectorstore = None
 
-        if os.path.exists(self.persist_directory):
-            shutil.rmtree(self.persist_directory)
+        # if os.path.exists(self.persist_directory):
+        #     shutil.rmtree(self.persist_directory)
 
     def index_documents(self, documents: List[Document]):
         """索引文档到向量数据库"""
@@ -317,6 +341,22 @@ class LangChainRAGSystem:
         )
 
         print(f"已索引 {len(documents)} 个文档块到集合 '{self.collection_name}'")
+
+    def _create_vectorstore_from_documents(self, documents: List[Document]):
+        """从文档创建新的向量存储"""
+        return Chroma.from_documents(
+            documents=documents,
+            embedding=self.embeddings,
+            collection_name=self.collection_name,
+            persist_directory=self.persist_directory,
+        )
+
+    def _add_documents_to_vectorstore(self, documents: List[Document]):
+        """向现有向量存储添加文档"""
+        if self.vectorstore is None:
+            raise ValueError("向量存储未初始化，请先调用 _create_vectorstore_from_documents")
+        
+        self.vectorstore.add_documents(documents)
 
     def search(self, query: str, k: int = 5) -> List[Dict]:
         """搜索相关文档"""

@@ -1,0 +1,60 @@
+{
+  "repository": {
+    "name": "ibotpeaches/apktool",
+    "sha": "ad59fdd378fe56fb108a53be2a89c9c05b1018d1",
+    "generation_date": "2025-06-14T16:50:10.869870"
+  },
+  "files": {
+    "standard": {
+      "file_name": "repomix-output-apktool.md",
+      "file_size_mb": 0.68,
+      "character_count": 715684,
+      "line_count": 18735,
+      "word_count": 61848,
+      "token_counts": {
+        "gpt-4": 203563,
+        "estimated": 178921
+      },
+      "created_time": "2025-06-14T16:47:21.474861",
+      "modified_time": "2025-06-14T16:47:21.474861",
+      "generation_time": "2025-06-14T16:50:10.711623"
+    },
+    "compressed": {
+      "file_name": "repomix-output-apktool-compress.md",
+      "file_size_mb": 0.47,
+      "character_count": 485119,
+      "line_count": 12070,
+      "word_count": 44386,
+      "token_counts": {
+        "gpt-4": 162578,
+        "estimated": 121279
+      },
+      "created_time": "2025-06-14T16:47:28.329138",
+      "modified_time": "2025-06-14T16:47:28.329138",
+      "generation_time": "2025-06-14T16:50:10.744845"
+    },
+    "git_enhanced": {
+      "file_name": "repomix-output-apktool-with-git.md",
+      "file_size_mb": 1.63,
+      "character_count": 1675679,
+      "line_count": 49694,
+      "word_count": 169184,
+      "token_counts": {
+        "gpt-4": 521250,
+        "estimated": 418919
+      },
+      "created_time": "2025-06-14T16:50:10.544537",
+      "modified_time": "2025-06-14T16:50:10.544537",
+      "generation_time": "2025-06-14T16:50:10.869852"
+    }
+  },
+  "summary": {
+    "total_files": 3,
+    "total_size_bytes": 0,
+    "total_tokens_gpt4": 887391,
+    "compression_ratio": {
+      "size": 0,
+      "tokens": 0.799
+    }
+  }
+}

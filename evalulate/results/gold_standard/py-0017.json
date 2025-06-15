@@ -1,0 +1,7 @@
+{
+  "reason": "The issue was caused by the incorrect import of the Exchange class in the ccxt.pro module. Instead of importing the asynchronous version from ccxt.async_support.base.exchange, it was importing the synchronous version from ccxt.base.exchange. This led to the watch_* methods and other Exchange methods being treated as synchronous when they should have been asynchronous, causing type checking errors and incorrect behavior.",
+  "location": [
+    "python/ccxt/pro/__init__.py"
+  ],
+  "fix": "The fix involved changing the import statement in the ccxt.pro/__init__.py file to import the Exchange class from ccxt.async_support.base.exchange instead of ccxt.base.exchange. This ensures that all Exchange methods, including watch_* methods, are correctly treated as asynchronous, aligning with the expected behavior and resolving the type checking warnings."
+}

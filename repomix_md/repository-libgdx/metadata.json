@@ -1,0 +1,60 @@
+{
+  "repository": {
+    "name": "libgdx/libgdx",
+    "sha": "956c5671356974cab234cc1f8368f1ef583456a5",
+    "generation_date": "2025-06-14T16:41:52.370671"
+  },
+  "files": {
+    "standard": {
+      "file_name": "repomix-output-libgdx.md",
+      "file_size_mb": 46.12,
+      "character_count": 47930155,
+      "line_count": 1329492,
+      "word_count": 4767242,
+      "token_counts": {
+        "gpt-4": 14303439,
+        "estimated": 11982538
+      },
+      "created_time": "2025-06-14T16:08:57.027971",
+      "modified_time": "2025-06-14T16:08:57.027971",
+      "generation_time": "2025-06-14T16:41:35.177002"
+    },
+    "compressed": {
+      "file_name": "repomix-output-libgdx-compress.md",
+      "file_size_mb": 30.21,
+      "character_count": 31363952,
+      "line_count": 769162,
+      "word_count": 3282815,
+      "token_counts": {
+        "gpt-4": 9511891,
+        "estimated": 7840988
+      },
+      "created_time": "2025-06-14T16:14:13.815022",
+      "modified_time": "2025-06-14T16:14:13.815022",
+      "generation_time": "2025-06-14T16:41:38.246892"
+    },
+    "git_enhanced": {
+      "file_name": "repomix-output-libgdx-with-git.md",
+      "file_size_mb": 111.06,
+      "character_count": 115230760,
+      "line_count": 3269272,
+      "word_count": 12580527,
+      "token_counts": {
+        "gpt-4": 36904842,
+        "estimated": 28807690
+      },
+      "created_time": "2025-06-14T16:41:25.844517",
+      "modified_time": "2025-06-14T16:41:25.844517",
+      "generation_time": "2025-06-14T16:41:52.360691"
+    }
+  },
+  "summary": {
+    "total_files": 3,
+    "total_size_bytes": 0,
+    "total_tokens_gpt4": 60720172,
+    "compression_ratio": {
+      "size": 0,
+      "tokens": 0.665
+    }
+  }
+}

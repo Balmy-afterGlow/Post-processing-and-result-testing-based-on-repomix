@@ -1,0 +1,11 @@
+{
+  "reason": "The issue occurred because the RESTEasy Reactive request context was not properly propagated to the coroutine context when using Kotlin coroutines. This led to the 'No RESTEasy Reactive request in progress' error when trying to access request-scoped objects like HttpHeaders in coroutine-based endpoints. The root cause was that the VertxDispatcher, which handles coroutine execution, wasn't maintaining the request context during coroutine execution.",
+  "location": [
+    "extensions/resteasy-reactive/quarkus-resteasy-reactive-kotlin/runtime/src/main/kotlin/org/jboss/resteasy/reactive/server/runtime/kotlin/ApplicationCoroutineScope.kt",
+    "extensions/resteasy-reactive/quarkus-resteasy-reactive-kotlin/runtime/src/main/kotlin/org/jboss/resteasy/reactive/server/runtime/kotlin/FilterUtils.kt",
+    "extensions/resteasy-reactive/quarkus-resteasy-reactive-kotlin/runtime/src/main/kotlin/org/jboss/resteasy/reactive/server/runtime/kotlin/CoroutineInvocationHandler.kt",
+    "extensions/resteasy-reactive/quarkus-resteasy-reactive-kotlin/runtime/src/main/kotlin/org/jboss/resteasy/reactive/server/runtime/kotlin/FlowToPublisherHandler.kt",
+    "integration-tests/resteasy-reactive-kotlin/standard/src/main/kotlin/io/quarkus/it/resteasy/reactive/kotlin/GreetingResource.kt"
+  ],
+  "fix": "The fix involved modifying the VertxDispatcher to properly handle the RESTEasy Reactive request context. The changes included: 1) Adding ResteasyReactiveRequestContext as a parameter to VertxDispatcher, 2) Setting the current request context using CurrentRequestManager before executing the coroutine block, and 3) Clearing it afterward. This ensures request-scoped objects remain accessible throughout coroutine execution. The fix was applied consistently across all places where VertxDispatcher is used in the codebase."
+}

@@ -1,0 +1,7 @@
+{
+  "reason": "The crash occurred because the RootViewWatcher attempted to access a boolean resource using the rootView's resources, which might not have access to the application's resources, leading to a Resources$NotFoundException when the resource ID was not valid in that context.",
+  "location": [
+    "leakcanary-object-watcher-android/src/main/java/leakcanary/RootViewWatcher.kt"
+  ],
+  "fix": "The fix involves changing the resource access to use the application context's resources instead of the rootView's resources. This ensures that the resource lookup is done in a context that definitely has access to the application's resources, preventing the NotFoundException."
+}

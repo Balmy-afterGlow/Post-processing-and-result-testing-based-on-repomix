@@ -1,0 +1,7 @@
+{
+  "reason": "The issue occurred because the code was using 'subprocess.run()', which is a Python 3.5+ feature, in a Python 2.7 environment. Python 2.7's subprocess module does not have the 'run' method, leading to the AttributeError.",
+  "location": [
+    "lib/plugins/aws/invokeLocal/invoke.py"
+  ],
+  "fix": "The fix replaced 'subprocess.run()' with 'subprocess.check_call()', which is compatible with Python 2.7. Additionally, error handling was added to gracefully handle cases where the 'tty' command fails, using try-except blocks to catch OSError and CalledProcessError."
+}

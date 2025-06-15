@@ -1,0 +1,7 @@
+{
+  "reason": "The issue was caused by early resolution of the hostname during the creation of the Endpoint, using InetSocketAddress in the constructor. This early resolution meant that if the DNS resolution failed (due to temporary DNS server failure or network outage), the unresolved address would be stored and reused for all subsequent connection attempts. This led to two problems: 1) Retry attempts were ineffective because they kept trying to connect to the same unresolved address, and 2) When multiple connections shared the same endpoint, the endpoint would remain in a failed state indefinitely because the unresolved address was never refreshed.",
+  "location": [
+    "ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/Endpoint.kt"
+  ],
+  "fix": "The fix involved moving the hostname resolution (InetSocketAddress creation) inside the connection retry loop, just before each connection attempt. This ensures that each retry attempt gets a fresh chance to resolve the hostname. Additionally, the fix checks if the address is unresolved right after creation and throws an UnresolvedAddressException if it is, which allows the retry mechanism to work as intended by discarding the failed attempt and trying again with a fresh resolution."
+}

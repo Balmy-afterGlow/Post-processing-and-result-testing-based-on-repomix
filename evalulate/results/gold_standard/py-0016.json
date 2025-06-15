@@ -1,0 +1,7 @@
+{
+  "reason": "The issue occurred because `docker-compose logs` command was failing when any service in the project had a logging driver set to 'none' or was None, even if the user didn't explicitly request logs for that service. This behavior was introduced by a previous change that enforced strict checking of logging drivers for all containers, without filtering out those with unsupported logging drivers when no specific service was requested.",
+  "location": [
+    "compose/cli/main.py"
+  ],
+  "fix": "The fix modifies the `log_printer_from_project` function to filter out containers with logging drivers set to 'none' or None before creating the LogPrinter instance. This ensures that only containers with readable logging drivers are included when no specific service is requested, allowing the command to proceed with available logs while ignoring those from services with non-readable logging configurations."
+}

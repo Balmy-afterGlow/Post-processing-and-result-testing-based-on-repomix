@@ -1,0 +1,8 @@
+{
+  "reason": "The issue was that the documentation for `Flow<T>.timeout` suggested using a generic `catch{}` operator without rethrowing exceptions, which would catch all exceptions, not just the `TimeoutCancellationException` that the timeout operator emits. This could lead to unintended handling of other exceptions that should be propagated.",
+  "location": [
+    "kotlinx-coroutines-core/common/src/flow/operators/Delay.kt",
+    "kotlinx-coroutines-core/jvm/test/examples/example-timeout-duration-01.kt"
+  ],
+  "fix": "The fix updated the documentation to explicitly check for `TimeoutCancellationException` in the `catch{}` block. If the exception is a `TimeoutCancellationException`, it emits a specified value (-1 in the example). For all other exceptions, it rethrows them, ensuring that only timeout exceptions are caught and handled as intended."
+}

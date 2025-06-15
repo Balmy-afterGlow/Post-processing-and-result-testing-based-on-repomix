@@ -1,0 +1,60 @@
+{
+  "repository": {
+    "name": "thealgorithms/python",
+    "sha": "dbfc220264e514cbc94320b6e4769acfaea85fad",
+    "generation_date": "2025-06-14T16:50:51.530924"
+  },
+  "files": {
+    "standard": {
+      "file_name": "repomix-output-python.md",
+      "file_size_mb": 3.49,
+      "character_count": 3657369,
+      "line_count": 301961,
+      "word_count": 381862,
+      "token_counts": {
+        "gpt-4": 1345519,
+        "estimated": 914342
+      },
+      "created_time": "2025-06-14T16:50:18.687056",
+      "modified_time": "2025-06-14T16:50:18.687056",
+      "generation_time": "2025-06-14T16:50:50.545886"
+    },
+    "compressed": {
+      "file_name": "repomix-output-python-compress.md",
+      "file_size_mb": 3.34,
+      "character_count": 3491796,
+      "line_count": 297114,
+      "word_count": 367937,
+      "token_counts": {
+        "gpt-4": 1307889,
+        "estimated": 872949
+      },
+      "created_time": "2025-06-14T16:50:27.375976",
+      "modified_time": "2025-06-14T16:50:27.375976",
+      "generation_time": "2025-06-14T16:50:50.858228"
+    },
+    "git_enhanced": {
+      "file_name": "repomix-output-python-with-git.md",
+      "file_size_mb": 7.22,
+      "character_count": 7537542,
+      "line_count": 609031,
+      "word_count": 753796,
+      "token_counts": {
+        "gpt-4": 2950736,
+        "estimated": 1884385
+      },
+      "created_time": "2025-06-14T16:50:50.159247",
+      "modified_time": "2025-06-14T16:50:50.159247",
+      "generation_time": "2025-06-14T16:50:51.530906"
+    }
+  },
+  "summary": {
+    "total_files": 3,
+    "total_size_bytes": 0,
+    "total_tokens_gpt4": 5604144,
+    "compression_ratio": {
+      "size": 0,
+      "tokens": 0.972
+    }
+  }
+}

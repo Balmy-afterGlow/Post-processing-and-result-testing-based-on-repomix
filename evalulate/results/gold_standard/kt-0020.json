@@ -1,0 +1,13 @@
+{
+  "reason": "The issue was caused by the `LottieAnimation` composable recomposing itself on every frame due to the direct passing of the `progress` parameter. Since `progress` changes with every frame, it triggered unnecessary recompositions, degrading performance significantly. This was inefficient because the actual visual changes only needed to occur during the draw phase, not the composition or layout phases.",
+  "location": [
+    "sample-compose/src/main/java/com/airbnb/lottie/sample/compose/examples/TransitionsExamplesPage.kt",
+    "sample-compose/src/main/java/com/airbnb/lottie/sample/compose/examples/AnimatableExamplesPage.kt",
+    "issue-repro-compose/src/main/java/com/airbnb/lottie/issues/compose/ComposeIssueReproActivity.kt",
+    "sample-compose/src/main/java/com/airbnb/lottie/sample/compose/examples/ViewPagerExample.kt",
+    "sample-compose/src/main/java/com/airbnb/lottie/sample/compose/player/PlayerPage.kt",
+    "lottie-compose/src/main/java/com/airbnb/lottie/compose/LottieAnimation.kt",
+    "sample-compose/src/main/java/com/airbnb/lottie/sample/compose/examples/BasicUsageExamplesPage.kt"
+  ],
+  "fix": "The fix involved modifying the `LottieAnimation` composable to accept a `progressProvider` lambda instead of a direct `progress` value. This change ensures that the composable does not recompose on every frame by decoupling the progress value from the composition phase. The lambda is only invoked during the draw phase, where the progress value is actually needed, thus optimizing performance by preventing unnecessary recompositions."
+}

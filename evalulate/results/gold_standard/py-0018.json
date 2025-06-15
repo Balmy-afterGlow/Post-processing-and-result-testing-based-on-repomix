@@ -1,0 +1,8 @@
+{
+  "reason": "The issue occurred when using BF16 training with FP32 gradient accumulation in Zero Stage 1 with DeepSpeedCPUAdam optimizer. The error indicated that the optimizer parameters were on CUDA instead of CPU, despite the 'offload_optimizer' being set to 'cpu' in the config. The root cause was in the gradient reduction logic where the code did not properly handle the case when gradient accumulation was used for reduction, leading to incorrect device placement of parameters.",
+  "location": [
+    "deepspeed/runtime/engine.py",
+    "deepspeed/runtime/zero/stage_1_and_2.py"
+  ],
+  "fix": "The fix involved several changes: 1) Modified the condition for returning BFLOAT16 in the engine.py to also check if CPU offload is not enabled, ensuring proper handling of BF16 with FP32 gradient accumulation. 2) Updated the gradient reduction logic in stage_1_and_2.py to properly handle cases where gradient accumulation is used for reduction, including checking for None gradients and correctly copying gradient data. 3) Ensured that gradient reduction pointers are properly managed and cleared when gradients are freed, preventing incorrect device placement of parameters."
+}

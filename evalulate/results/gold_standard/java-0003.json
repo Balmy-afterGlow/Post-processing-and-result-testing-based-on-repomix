@@ -1,0 +1,7 @@
+{
+  "reason": "The issue was caused by a NullPointerException when ActivityManager.getRunningAppProcesses() returned null, which is a documented possibility in the Android API. The method LeakCanaryInternals.isInServiceProcess() did not handle this null case, leading to a crash when attempting to iterate over the null list.",
+  "location": [
+    "leakcanary-android/src/main/java/com/squareup/leakcanary/internal/LeakCanaryInternals.java"
+  ],
+  "fix": "The fix involved adding a null check before iterating over the list returned by ActivityManager.getRunningAppProcesses(). The list is now stored in a variable first, and the iteration only proceeds if the list is not null. This prevents the NullPointerException by ensuring that the code only attempts to iterate over a valid list."
+}

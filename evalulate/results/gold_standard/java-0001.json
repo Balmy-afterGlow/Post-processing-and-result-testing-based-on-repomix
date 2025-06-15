@@ -1,0 +1,7 @@
+{
+  "reason": "The issue was caused by incorrect handling of foreign key references between tables in different schemas in SQL Server. The original code attempted to find the referenced table in the same schema as the foreign key, rather than in the schema where the referenced table actually resided. This led to the foreign key not being displayed in the UI even though it existed in the database.",
+  "location": [
+    "plugins/org.jkiss.dbeaver.ext.mssql/src/org/jkiss/dbeaver/ext/mssql/model/SQLServerSchema.java"
+  ],
+  "fix": "The fix involved modifying the code to correctly look up the referenced table in its own schema rather than the schema of the foreign key. This was done by adding a new method `getTable(DBRProgressMonitor monitor, long tableId)` to the `SQLServerSchema` class and updating the foreign key creation logic to use this method with the correct schema (`refSchema.getTable(monitor, refTableId)` instead of `getTable(monitor, refTableId)`). This ensures that the referenced table is properly found and displayed in the UI, regardless of which schema it belongs to."
+}

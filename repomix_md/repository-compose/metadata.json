@@ -1,0 +1,60 @@
+{
+  "repository": {
+    "name": "docker/compose",
+    "sha": "fc744a0cc9394ddb2a56b37c79f4cf7d33881222",
+    "generation_date": "2025-06-14T16:59:14.670412"
+  },
+  "files": {
+    "standard": {
+      "file_name": "repomix-output-compose.md",
+      "file_size_mb": 1.16,
+      "character_count": 1215446,
+      "line_count": 36849,
+      "word_count": 90106,
+      "token_counts": {
+        "gpt-4": 266482,
+        "estimated": 303861
+      },
+      "created_time": "2025-06-14T16:58:52.268798",
+      "modified_time": "2025-06-14T16:58:52.268798",
+      "generation_time": "2025-06-14T16:59:14.489500"
+    },
+    "compressed": {
+      "file_name": "repomix-output-compose-compress.md",
+      "file_size_mb": 0.44,
+      "character_count": 455408,
+      "line_count": 17112,
+      "word_count": 43140,
+      "token_counts": {
+        "gpt-4": 120193,
+        "estimated": 113852
+      },
+      "created_time": "2025-06-14T16:58:57.345069",
+      "modified_time": "2025-06-14T16:58:57.345069",
+      "generation_time": "2025-06-14T16:59:14.518909"
+    },
+    "git_enhanced": {
+      "file_name": "repomix-output-compose-with-git.md",
+      "file_size_mb": 2.05,
+      "character_count": 2107847,
+      "line_count": 71190,
+      "word_count": 189340,
+      "token_counts": {
+        "gpt-4": 532175,
+        "estimated": 526961
+      },
+      "created_time": "2025-06-14T16:59:14.340942",
+      "modified_time": "2025-06-14T16:59:14.340942",
+      "generation_time": "2025-06-14T16:59:14.670396"
+    }
+  },
+  "summary": {
+    "total_files": 3,
+    "total_size_bytes": 0,
+    "total_tokens_gpt4": 918850,
+    "compression_ratio": {
+      "size": 0,
+      "tokens": 0.451
+    }
+  }
+}

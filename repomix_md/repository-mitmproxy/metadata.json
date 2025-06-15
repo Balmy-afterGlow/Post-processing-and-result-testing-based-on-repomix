@@ -1,0 +1,60 @@
+{
+  "repository": {
+    "name": "mitmproxy/mitmproxy",
+    "sha": "b01d574d8b1fceae7cea10484b525301b4ba4a77",
+    "generation_date": "2025-06-14T16:56:49.650872"
+  },
+  "files": {
+    "standard": {
+      "file_name": "repomix-output-mitmproxy.md",
+      "file_size_mb": 6.38,
+      "character_count": 6682711,
+      "line_count": 120118,
+      "word_count": 436807,
+      "token_counts": {
+        "gpt-4": 1995881,
+        "estimated": 1670677
+      },
+      "created_time": "2025-06-14T16:55:01.006172",
+      "modified_time": "2025-06-14T16:55:01.006172",
+      "generation_time": "2025-06-14T16:56:47.680079"
+    },
+    "compressed": {
+      "file_name": "repomix-output-mitmproxy-compress.md",
+      "file_size_mb": 4.75,
+      "character_count": 4950109,
+      "line_count": 66952,
+      "word_count": 308499,
+      "token_counts": {
+        "gpt-4": 1631984,
+        "estimated": 1237527
+      },
+      "created_time": "2025-06-14T16:55:15.902055",
+      "modified_time": "2025-06-14T16:55:15.902055",
+      "generation_time": "2025-06-14T16:56:48.091963"
+    },
+    "git_enhanced": {
+      "file_name": "repomix-output-mitmproxy-with-git.md",
+      "file_size_mb": 16.11,
+      "character_count": 16736025,
+      "line_count": 291885,
+      "word_count": 1230152,
+      "token_counts": {
+        "gpt-4": 5300621,
+        "estimated": 4184006
+      },
+      "created_time": "2025-06-14T16:56:47.013024",
+      "modified_time": "2025-06-14T16:56:47.013024",
+      "generation_time": "2025-06-14T16:56:49.648637"
+    }
+  },
+  "summary": {
+    "total_files": 3,
+    "total_size_bytes": 0,
+    "total_tokens_gpt4": 8928486,
+    "compression_ratio": {
+      "size": 0,
+      "tokens": 0.818
+    }
+  }
+}

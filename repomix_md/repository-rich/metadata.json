@@ -1,0 +1,60 @@
+{
+  "repository": {
+    "name": "textualize/rich",
+    "sha": "0ed9309a0e298ed91b21498caa021a37cac15591",
+    "generation_date": "2025-06-14T16:54:53.195314"
+  },
+  "files": {
+    "standard": {
+      "file_name": "repomix-output-rich.md",
+      "file_size_mb": 3.15,
+      "character_count": 3263768,
+      "line_count": 35731,
+      "word_count": 170203,
+      "token_counts": {
+        "gpt-4": 1477591,
+        "estimated": 815942
+      },
+      "created_time": "2025-06-14T16:54:06.953114",
+      "modified_time": "2025-06-14T16:54:06.953114",
+      "generation_time": "2025-06-14T16:54:52.284608"
+    },
+    "compressed": {
+      "file_name": "repomix-output-rich-compress.md",
+      "file_size_mb": 2.58,
+      "character_count": 2686608,
+      "line_count": 19415,
+      "word_count": 129352,
+      "token_counts": {
+        "gpt-4": 1321114,
+        "estimated": 671652
+      },
+      "created_time": "2025-06-14T16:54:18.891551",
+      "modified_time": "2025-06-14T16:54:18.891551",
+      "generation_time": "2025-06-14T16:54:52.494905"
+    },
+    "git_enhanced": {
+      "file_name": "repomix-output-rich-with-git.md",
+      "file_size_mb": 8.08,
+      "character_count": 8298912,
+      "line_count": 85031,
+      "word_count": 416689,
+      "token_counts": {
+        "gpt-4": 4084749,
+        "estimated": 2074728
+      },
+      "created_time": "2025-06-14T16:54:51.941513",
+      "modified_time": "2025-06-14T16:54:51.941513",
+      "generation_time": "2025-06-14T16:54:53.191984"
+    }
+  },
+  "summary": {
+    "total_files": 3,
+    "total_size_bytes": 0,
+    "total_tokens_gpt4": 6883454,
+    "compression_ratio": {
+      "size": 0,
+      "tokens": 0.894
+    }
+  }
+}

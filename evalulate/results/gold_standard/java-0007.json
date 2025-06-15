@@ -1,0 +1,7 @@
+{
+  "reason": "The issue occurred when handling Chinese characters in PostgreSQL data rows. The original code incorrectly calculated the length of string data by using String.length(), which returns the number of characters (code points) rather than the number of bytes. For non-ASCII characters like Chinese, this caused a mismatch between the declared length and actual byte length in the PostgreSQL protocol message, resulting in the 'extraneous data in \"D\" message' error.",
+  "location": [
+    "sharding-proxy/sharding-proxy-transport/sharding-proxy-transport-postgresql/src/main/java/org/apache/shardingsphere/shardingproxy/transport/postgresql/packet/command/query/text/PostgreSQLDataRowPacket.java"
+  ],
+  "fix": "The fix changed the length calculation from String.length() to String.getBytes().length, which properly accounts for the byte length of the string, including multi-byte characters like Chinese. This ensures the correct byte length is written in the PostgreSQL protocol message, preventing the protocol error."
+}

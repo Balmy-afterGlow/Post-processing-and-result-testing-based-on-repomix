@@ -1,0 +1,7 @@
+{
+  "reason": "The issue was caused by using floating-point division (/) instead of integer division (//) in Python. This led to incorrect calculations when summing the terms of arithmetic progressions for multiples of 3, 5, and 15, resulting in a floating-point number (233366.4) instead of the correct integer answer (233168).",
+  "location": [
+    "Project Euler/Problem 01/sol2.py"
+  ],
+  "fix": "The fix involved replacing all floating-point division operators (/) with integer division operators (//) in the calculations for the number of terms and the sums of the arithmetic progressions. This ensures that all operations yield integer results, correctly computing the sum of multiples of 3 and 5 below the given number while subtracting the sum of multiples of 15 to avoid double-counting."
+}

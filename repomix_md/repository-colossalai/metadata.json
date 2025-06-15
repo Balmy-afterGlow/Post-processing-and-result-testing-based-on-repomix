@@ -1,0 +1,60 @@
+{
+  "repository": {
+    "name": "hpcaitech/colossalai",
+    "sha": "d7bf284706ef256c38d3aad53142b07cfc0fc10e",
+    "generation_date": "2025-06-14T16:58:43.938748"
+  },
+  "files": {
+    "standard": {
+      "file_name": "repomix-output-colossalai.md",
+      "file_size_mb": 7.54,
+      "character_count": 7840499,
+      "line_count": 199948,
+      "word_count": 667934,
+      "token_counts": {
+        "gpt-4": 1851300,
+        "estimated": 1960124
+      },
+      "created_time": "2025-06-14T16:56:58.065526",
+      "modified_time": "2025-06-14T16:56:58.065526",
+      "generation_time": "2025-06-14T16:58:43.490643"
+    },
+    "compressed": {
+      "file_name": "repomix-output-colossalai-compress.md",
+      "file_size_mb": 3.83,
+      "character_count": 3900976,
+      "line_count": 114426,
+      "word_count": 423558,
+      "token_counts": {
+        "gpt-4": 1079711,
+        "estimated": 975244
+      },
+      "created_time": "2025-06-14T16:57:06.865194",
+      "modified_time": "2025-06-14T16:57:06.865194",
+      "generation_time": "2025-06-14T16:58:43.755816"
+    },
+    "git_enhanced": {
+      "file_name": "repomix-output-colossalai-with-git.md",
+      "file_size_mb": 20.26,
+      "character_count": 20864212,
+      "line_count": 571898,
+      "word_count": 2027018,
+      "token_counts": {
+        "gpt-4": 5216053,
+        "estimated": 5216053
+      },
+      "created_time": "2025-06-14T16:58:42.834453",
+      "modified_time": "2025-06-14T16:58:42.834453",
+      "generation_time": "2025-06-14T16:58:43.936322"
+    }
+  },
+  "summary": {
+    "total_files": 3,
+    "total_size_bytes": 0,
+    "total_tokens_gpt4": 8147064,
+    "compression_ratio": {
+      "size": 0,
+      "tokens": 0.583
+    }
+  }
+}

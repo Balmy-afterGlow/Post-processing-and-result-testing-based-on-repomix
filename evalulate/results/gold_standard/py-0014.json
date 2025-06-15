@@ -1,0 +1,9 @@
+{
+  "reason": "The issue was caused by mitmproxy using an outdated method (set_info_callback) to log TLS secrets, which only supported logging CLIENT_RANDOM entries and not the newer TLSv1.3-specific secrets like CLIENT_HANDSHAKE_TRAFFIC_SECRET. This limitation was due to the older version of pyOpenSSL (19.1.0) being used, which didn't support the set_keylog_callback method needed for TLSv1.3 key logging.",
+  "location": [
+    "mitmproxy/net/tls.py",
+    "test/mitmproxy/net/test_tls.py",
+    "setup.py"
+  ],
+  "fix": "The fix involved upgrading pyOpenSSL to version 20.0 (which supports set_keylog_callback) and modifying the MasterSecretLogger class to use context.set_keylog_callback instead of context.set_info_callback. The new implementation directly writes the key material provided by OpenSSL's keylog callback, which includes TLSv1.3 secrets, to the keylog file without needing to manually extract and format them. This change enables proper logging of TLSv1.3 traffic secrets required by tools like Wireshark for decryption."
+}

@@ -144,43 +144,61 @@ repository-{name}/
 ```json
 {
   "repository": {
-    "name": "owner/repo",
-    "sha": "abc123",
-    "generation_date": "2025-06-14T15:30:00"
+    "name": "square/okhttp", # 仓库名
+    "sha": "64f2af812bef505b6cbc1693aa8b504d9dbbb42e", # 从指定提交拉取
+    "generation_date": "2025-06-14T15:42:09.574316" # 生成日期
   },
   "files": {
     "standard": {
-      "file_name": "repomix-output-repo.md",
-      "file_size_mb": 2.5,
-      "token_counts": {
-        "gpt-4": 12000,
-        "estimated": 11800
-      }
+      "file_name": "repomix-output-okhttp.md",
+      "file_size_mb": 2.06, # 文件大小
+      "character_count": 2164041, # 文件字符
+      "line_count": 54579, # 文件行数
+      "word_count": 183484,
+      "token_counts": { # 文件tokens
+        "gpt-4": 516498, # gpt-4模型的tokens
+        "estimated": 541010 # 估算tokens
+      },
+      "created_time": "2025-06-14T15:40:01.830444",
+      "modified_time": "2025-06-14T15:40:01.830444",
+      "generation_time": "2025-06-14T15:42:09.172929"
     },
     "compressed": {
-      "file_name": "repomix-output-repo-compress.md",
-      "file_size_mb": 1.8,
+      "file_name": "repomix-output-okhttp-compress.md",
+      "file_size_mb": 1.51,
+      "character_count": 1570319,
+      "line_count": 34470,
+      "word_count": 139213,
       "token_counts": {
-        "gpt-4": 8500,
-        "estimated": 8200
-      }
+        "gpt-4": 398184,
+        "estimated": 392579
+      },
+      "created_time": "2025-06-14T15:40:09.559776",
+      "modified_time": "2025-06-14T15:40:09.559776",
+      "generation_time": "2025-06-14T15:42:09.267461"
     },
     "git_enhanced": {
-      "file_name": "repomix-output-repo-with-git.md",
-      "file_size_mb": 4.2,
+      "file_name": "repomix-output-okhttp-with-git.md",
+      "file_size_mb": 4.33,
+      "character_count": 4495900,
+      "line_count": 117557,
+      "word_count": 423834,
       "token_counts": {
-        "gpt-4": 18000,
-        "estimated": 16800
-      }
+        "gpt-4": 1138235,
+        "estimated": 1123975
+      },
+      "created_time": "2025-06-14T15:42:08.862343",
+      "modified_time": "2025-06-14T15:42:08.862343",
+      "generation_time": "2025-06-14T15:42:09.573586"
     }
   },
   "summary": {
     "total_files": 3,
-    "total_size_bytes": 8765432,
-    "total_tokens_gpt4": 38500,
+    "total_size_bytes": 0,
+    "total_tokens_gpt4": 2052917,
     "compression_ratio": {
-      "size": 0.72,
-      "tokens": 0.71
+      "size": 0,
+      "tokens": 0.771
     }
   }
 }

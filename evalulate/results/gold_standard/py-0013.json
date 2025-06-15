@@ -1,0 +1,7 @@
+{
+  "reason": "The issue occurred because the code unconditionally tried to get the current working directory (cwd) during the import of the rich module. If the cwd was deleted after the Python process started but before the import, this would raise a `FileNotFoundError`, causing the import to fail.",
+  "location": [
+    "rich/__init__.py"
+  ],
+  "fix": "The fix wraps the cwd lookup in a try-except block. If getting the cwd fails with a `FileNotFoundError`, it defaults to an empty string for `_IMPORT_CWD` instead of raising an exception. This makes the import resilient to cases where the cwd does not exist."
+}

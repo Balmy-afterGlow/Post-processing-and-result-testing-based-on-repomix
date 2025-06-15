@@ -1,0 +1,8 @@
+{
+  "reason": "The issue occurred because the SSH connection configuration was not consistently setting the username from the authentication dialog when using encrypted certificates. The code was conditionally setting the username only for password-based authentication (SSHConstants.AuthType.PASSWORD), causing it to default to the OS login when the username was left blank in settings.",
+  "location": [
+    "plugins/org.jkiss.dbeaver.registry/src/org/jkiss/dbeaver/registry/DataSourceDescriptor.java",
+    "plugins/org.jkiss.dbeaver.net.ssh.ui/src/org/jkiss/dbeaver/ui/net/ssh/SSHTunnelConfiguratorUI.java"
+  ],
+  "fix": "The fix involved removing the conditional checks that only set the username for password-based authentication. Now, the username is always set from the authentication dialog (dbpAuthInfo.getUserName()) regardless of the authentication type (AuthType). This ensures that the username is properly captured and used for the SSH connection, preventing it from defaulting to the OS login."
+}

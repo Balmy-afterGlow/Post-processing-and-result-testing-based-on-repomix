@@ -1,0 +1,8 @@
+{
+  "reason": "The issue occurred because the state of the settings dialog (shouldShowSettingsDialog) was managed in the NiaAppState class without being persisted across activity recreations. When the activity was recreated (e.g., due to screen rotation or resizing), the state was lost, causing the dialog to close.",
+  "location": [
+    "app/src/main/java/com/google/samples/apps/nowinandroid/ui/NiaAppState.kt",
+    "app/src/main/java/com/google/samples/apps/nowinandroid/ui/NiaApp.kt"
+  ],
+  "fix": "The fix involved moving the state management of the settings dialog visibility (showSettingsDialog) from NiaAppState to the NiaApp composable function, using rememberSaveable instead of mutableStateOf. rememberSaveable automatically saves and restores the state across activity recreations, ensuring the dialog remains open when the activity is recreated. The NiaAppState class was also cleaned up by removing the now-unnecessary shouldShowSettingsDialog state and related methods."
+}

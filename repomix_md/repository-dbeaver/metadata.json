@@ -1,0 +1,60 @@
+{
+  "repository": {
+    "name": "dbeaver/dbeaver",
+    "sha": "63aee4269a199deb69359f4913055615619a7666",
+    "generation_date": "2025-06-14T16:03:22.237246"
+  },
+  "files": {
+    "standard": {
+      "file_name": "repomix-output-dbeaver.md",
+      "file_size_mb": 28.29,
+      "character_count": 29593480,
+      "line_count": 721088,
+      "word_count": 2160356,
+      "token_counts": {
+        "gpt-4": 6717064,
+        "estimated": 7398370
+      },
+      "created_time": "2025-06-14T15:42:38.639314",
+      "modified_time": "2025-06-14T15:42:38.639314",
+      "generation_time": "2025-06-14T16:03:15.573945"
+    },
+    "compressed": {
+      "file_name": "repomix-output-dbeaver-compress.md",
+      "file_size_mb": 19.37,
+      "character_count": 20106132,
+      "line_count": 458586,
+      "word_count": 1608853,
+      "token_counts": {
+        "gpt-4": 5119273,
+        "estimated": 5026533
+      },
+      "created_time": "2025-06-14T15:43:06.001575",
+      "modified_time": "2025-06-14T15:43:06.001575",
+      "generation_time": "2025-06-14T16:03:17.110302"
+    },
+    "git_enhanced": {
+      "file_name": "repomix-output-dbeaver-with-git.md",
+      "file_size_mb": 58.42,
+      "character_count": 60093492,
+      "line_count": 1669743,
+      "word_count": 5132851,
+      "token_counts": {
+        "gpt-4": 15624346,
+        "estimated": 15023373
+      },
+      "created_time": "2025-06-14T16:03:11.523633",
+      "modified_time": "2025-06-14T16:03:11.523633",
+      "generation_time": "2025-06-14T16:03:22.226271"
+    }
+  },
+  "summary": {
+    "total_files": 3,
+    "total_size_bytes": 0,
+    "total_tokens_gpt4": 27460683,
+    "compression_ratio": {
+      "size": 0,
+      "tokens": 0.762
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "repository": {
+    "name": "apache/shardingsphere",
+    "sha": "6c49107d434c31e5f95365bb1bfcbcd52f7f4585",
+    "generation_date": "2025-06-14T16:47:04.083291"
+  },
+  "files": {
+    "standard": {
+      "file_name": "repomix-output-shardingsphere.md",
+      "file_size_mb": 8.73,
+      "character_count": 9152788,
+      "line_count": 212249,
+      "word_count": 804679,
+      "token_counts": {
+        "gpt-4": 2119325,
+        "estimated": 2288197
+      },
+      "created_time": "2025-06-14T16:42:04.652663",
+      "modified_time": "2025-06-14T16:42:04.652663",
+      "generation_time": "2025-06-14T16:47:01.963092"
+    },
+    "compressed": {
+      "file_name": "repomix-output-shardingsphere-compress.md",
+      "file_size_mb": 6.84,
+      "character_count": 7138689,
+      "line_count": 159079,
+      "word_count": 713726,
+      "token_counts": {
+        "gpt-4": 1762380,
+        "estimated": 1784672
+      },
+      "created_time": "2025-06-14T16:42:17.177093",
+      "modified_time": "2025-06-14T16:42:17.177093",
+      "generation_time": "2025-06-14T16:47:02.442035"
+    },
+    "git_enhanced": {
+      "file_name": "repomix-output-shardingsphere-with-git.md",
+      "file_size_mb": 21.41,
+      "character_count": 22114574,
+      "line_count": 574681,
+      "word_count": 2141854,
+      "token_counts": {
+        "gpt-4": 5585375,
+        "estimated": 5528643
+      },
+      "created_time": "2025-06-14T16:47:00.987408",
+      "modified_time": "2025-06-14T16:47:00.987408",
+      "generation_time": "2025-06-14T16:47:04.081014"
+    }
+  },
+  "summary": {
+    "total_files": 3,
+    "total_size_bytes": 0,
+    "total_tokens_gpt4": 9467080,
+    "compression_ratio": {
+      "size": 0,
+      "tokens": 0.832
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "reason": "The issue occurred due to improper management of the connection state in a concurrent environment. The BackendConnection was not correctly setting the running status before executing queries, leading to NullPointerException and SQLException when the connection was closed or in an invalid state during query execution. The root cause was the premature setting of the running status in the getConnections method, which could conflict with the actual state needed for transaction handling.",
+  "location": [
+    "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/connection/ConnectionStateHandler.java",
+    "sharding-proxy/sharding-proxy-frontend/sharding-proxy-frontend-core/src/main/java/org/apache/shardingsphere/shardingproxy/frontend/command/CommandExecutorTask.java",
+    "sharding-proxy/sharding-proxy-backend/src/test/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/connection/BackendConnectionTest.java",
+    "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/connection/BackendConnection.java"
+  ],
+  "fix": "The fix involved two main changes: 1) Removing the automatic setting of the running status in the getConnections method to prevent premature state changes, and 2) Modifying the setRunningStatusIfNecessary method in ConnectionStateHandler to only set the status to RUNNING if it's not already in TRANSACTION or RUNNING state. Additionally, the fix included updating the test cases to reflect these changes and ensuring the running status is set at the appropriate time in the CommandExecutorTask before executing commands."
+}

@@ -1,0 +1,8 @@
+{
+  "reason": "The issue arises from a race condition during the shutdown sequence of a MultiWorkerDispatcher in Kotlin/Native. When the dispatcher is shutting down, it first closes the channel used for task dispatch and then requests termination of all workers. However, due to the non-atomic nature of the channel's close operation (where helpers remove waiters from the queue and then resume them), a worker might attempt to resume a task after the worker has already been terminated. This leads to an IllegalStateException because the worker is no longer active.",
+  "location": [
+    "kotlinx-coroutines-core/native/src/EventLoop.kt",
+    "kotlinx-coroutines-core/native/src/MultithreadedDispatchers.kt"
+  ],
+  "fix": "The fix involves adding try-catch blocks around critical sections where IllegalStateException might be thrown due to the race condition during worker termination. Specifically, it wraps the executeAfter call in EventLoopImplPlatform.unpark() and the entire worker run loop in MultiWorkerDispatcher.workerRunLoop() with try-catch blocks that catch and ignore IllegalStateException. This acknowledges the inherent race condition in the current Workers API and prevents the application from crashing by gracefully handling these expected exceptions."
+}

@@ -1,0 +1,7 @@
+{
+  "reason": "The issue occurred because the code did not handle the case where the training is run on a single card (dist.get_world_size() == 1) properly. Specifically, it failed to define prompt_sampler and pretrain_sampler variables when not using distributed training, leading to potential undefined variable errors when these samplers were referenced later in the code.",
+  "location": [
+    "applications/Chat/examples/train_prompts.py"
+  ],
+  "fix": "The fix adds else clauses to the conditions checking for distributed training, explicitly setting prompt_sampler and pretrain_sampler to None when running on a single card. This ensures the variables are always defined and the DataLoader can properly handle the case where no sampler is needed (shuffling is handled directly by the DataLoader when sampler is None)."
+}

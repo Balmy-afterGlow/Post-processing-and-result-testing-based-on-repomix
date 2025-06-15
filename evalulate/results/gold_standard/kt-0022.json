@@ -1,0 +1,7 @@
+{
+  "reason": "The issue was related to accessibility in the JetSurvey sample app. The RadioButton parent lacked the selectableGroup modifier, and its children with the selectable modifier did not have their role set to RadioButton. This caused TalkBack, an accessibility service, to not properly announce the radio button roles to users with visual impairments.",
+  "location": [
+    "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/question/ChoiceQuestion.kt"
+  ],
+  "fix": "The fix involved moving the selectable modifier from the Row to the parent composable and adding the Role.RadioButton to the selectable modifier when the choice is single (radio button). This ensures that the parent has the selectableGroup modifier implicitly by having selectable children, and each child properly declares its role as a RadioButton for accessibility services like TalkBack."
+}

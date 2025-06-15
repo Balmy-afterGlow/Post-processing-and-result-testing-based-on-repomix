@@ -12,7 +12,7 @@ Your job is to:
 Your output must be a JSON object with **exactly the following structure**:
 {
   "reason": "...",   // A short explanation of what causes the issue
-  "location": "...", // The file path or function name where changes are needed
+  "location": ["...", ...], // The file path or function name where changes are needed
   "fix": "..."       // A specific suggestion or code snippet for the fix
 }
 

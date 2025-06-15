@@ -1,0 +1,60 @@
+{
+  "repository": {
+    "name": "serverless/serverless",
+    "sha": "4bcd16336c4188bfc30b88b3877d7fcbd23253d9",
+    "generation_date": "2025-06-14T16:53:57.688236"
+  },
+  "files": {
+    "standard": {
+      "file_name": "repomix-output-serverless.md",
+      "file_size_mb": 2.85,
+      "character_count": 2983644,
+      "line_count": 92369,
+      "word_count": 268035,
+      "token_counts": {
+        "gpt-4": 684141,
+        "estimated": 745911
+      },
+      "created_time": "2025-06-14T16:52:53.984187",
+      "modified_time": "2025-06-14T16:52:53.984187",
+      "generation_time": "2025-06-14T16:53:57.043355"
+    },
+    "compressed": {
+      "file_name": "repomix-output-serverless-compress.md",
+      "file_size_mb": 1.77,
+      "character_count": 1844858,
+      "line_count": 57515,
+      "word_count": 198131,
+      "token_counts": {
+        "gpt-4": 458546,
+        "estimated": 461214
+      },
+      "created_time": "2025-06-14T16:53:02.425375",
+      "modified_time": "2025-06-14T16:53:02.425375",
+      "generation_time": "2025-06-14T16:53:57.160032"
+    },
+    "git_enhanced": {
+      "file_name": "repomix-output-serverless-with-git.md",
+      "file_size_mb": 6.88,
+      "character_count": 7058364,
+      "line_count": 234262,
+      "word_count": 735936,
+      "token_counts": {
+        "gpt-4": 1825581,
+        "estimated": 1764591
+      },
+      "created_time": "2025-06-14T16:53:56.733032",
+      "modified_time": "2025-06-14T16:53:56.733032",
+      "generation_time": "2025-06-14T16:53:57.688219"
+    }
+  },
+  "summary": {
+    "total_files": 3,
+    "total_size_bytes": 0,
+    "total_tokens_gpt4": 2968268,
+    "compression_ratio": {
+      "size": 0,
+      "tokens": 0.67
+    }
+  }
+}

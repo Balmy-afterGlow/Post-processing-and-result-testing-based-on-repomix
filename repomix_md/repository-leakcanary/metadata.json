@@ -1,0 +1,60 @@
+{
+  "repository": {
+    "name": "square/leakcanary",
+    "sha": "462561d249bddf5a28439bc588a7cb026a8425bf",
+    "generation_date": "2025-06-14T16:06:32.443800"
+  },
+  "files": {
+    "standard": {
+      "file_name": "repomix-output-leakcanary.md",
+      "file_size_mb": 0.27,
+      "character_count": 279029,
+      "line_count": 7521,
+      "word_count": 26470,
+      "token_counts": {
+        "gpt-4": 69053,
+        "estimated": 69757
+      },
+      "created_time": "2025-06-14T16:03:36.168382",
+      "modified_time": "2025-06-14T16:03:36.168382",
+      "generation_time": "2025-06-14T16:06:32.367152"
+    },
+    "compressed": {
+      "file_name": "repomix-output-leakcanary-compress.md",
+      "file_size_mb": 0.19,
+      "character_count": 200167,
+      "line_count": 5261,
+      "word_count": 20207,
+      "token_counts": {
+        "gpt-4": 53420,
+        "estimated": 50041
+      },
+      "created_time": "2025-06-14T16:03:46.676874",
+      "modified_time": "2025-06-14T16:03:46.676874",
+      "generation_time": "2025-06-14T16:06:32.382431"
+    },
+    "git_enhanced": {
+      "file_name": "repomix-output-leakcanary-with-git.md",
+      "file_size_mb": 0.71,
+      "character_count": 737223,
+      "line_count": 20772,
+      "word_count": 78932,
+      "token_counts": {
+        "gpt-4": 193171,
+        "estimated": 184305
+      },
+      "created_time": "2025-06-14T16:06:32.191187",
+      "modified_time": "2025-06-14T16:06:32.191187",
+      "generation_time": "2025-06-14T16:06:32.443748"
+    }
+  },
+  "summary": {
+    "total_files": 3,
+    "total_size_bytes": 0,
+    "total_tokens_gpt4": 315644,
+    "compression_ratio": {
+      "size": 0,
+      "tokens": 0.774
+    }
+  }
+}

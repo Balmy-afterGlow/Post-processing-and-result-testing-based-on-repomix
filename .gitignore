@@ -3,4 +3,6 @@ demo.py
 *.backup
 chroma_db*
 datasets_generate.py
-rag_comparison_results.json
+__pycache__
+.mypy_cache
+.env

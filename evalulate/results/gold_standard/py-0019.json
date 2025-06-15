@@ -1,0 +1,8 @@
+{
+  "reason": "The issue occurred because the `@st.cache_data` decorator's hashing mechanism did not recognize `uuid.UUID` objects as hashable types, leading to an `UnhashableTypeError` when attempting to cache functions that took UUID objects as arguments. The root cause was the absence of UUID in the list of types that the hasher could process directly, unlike the deprecated `@st.cache` which could handle them.",
+  "location": [
+    "lib/tests/streamlit/runtime/caching/hashing_test.py",
+    "lib/streamlit/runtime/caching/hashing.py"
+  ],
+  "fix": "The fix involved updating the hashing mechanism to explicitly recognize `uuid.UUID` objects as hashable types. This was done by adding a check for `isinstance(obj, uuid.UUID)` in the `_key` function and implementing a specific handling for UUID objects in the `_CacheFuncHasher` class, where UUID objects are converted to their byte representation for hashing. Additionally, tests were added to verify that UUID objects are correctly hashed and that different UUID instances produce distinct hash values."
+}

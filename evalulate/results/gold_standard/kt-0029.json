@@ -1,0 +1,9 @@
+{
+  "reason": "The issue occurred when a Kotlin data class had multiple fields annotated with @Transient. The Moshi library was incorrectly handling these transient fields, leading to a duplicate option exception during JSON processing. The root cause was that the KotlinJsonAdapter was not properly distinguishing between transient and non-transient bindings when creating the JsonReader.Options, causing it to attempt to process transient fields as if they were regular fields.",
+  "location": [
+    "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/codegen/GeneratedAdaptersTest.kt",
+    "kotlin/reflect/src/main/java/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapter.kt",
+    "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt"
+  ],
+  "fix": "The fix involved modifying the KotlinJsonAdapter to separate transient and non-transient bindings. The adapter now maintains two separate lists: one for all bindings (including transient) and another for only non-transient bindings. The JsonReader.Options is now created using only the non-transient bindings, preventing the duplicate option exception. Additionally, the Binding data class was updated to include a propertyIndex to correctly map between the indices of all bindings and non-transient bindings."
+}

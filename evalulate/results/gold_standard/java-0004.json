@@ -1,0 +1,16 @@
+{
+  "reason": "The issue occurred because the NacosDiscoveryClient was tightly coupled with NacosRegistration, which is only available when auto-registration is enabled (spring.cloud.service-registry.auto-registration.enabled=true). When auto-registration was disabled, the NacosRegistration bean was not created, leading to a dependency injection failure in NacosDiscoveryClient.",
+  "location": [
+    "spring-cloud-alibaba-nacos-discovery/src/test/java/org/springframework/cloud/alibaba/nacos/ribbon/NacosRibbonClientConfigurationTests.java",
+    "spring-cloud-alibaba-nacos-discovery/src/test/java/org/springframework/cloud/alibaba/nacos/NacosDiscoveryAutoConfigurationTests.java",
+    "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/NacosDiscoveryAutoConfiguration.java",
+    "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/ribbon/NacosServerList.java",
+    "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/NacosDiscoveryClient.java",
+    "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/NacosDiscoveryClientAutoConfiguration.java",
+    "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/endpoint/NacosDiscoveryEndpoint.java",
+    "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/registry/NacosRegistration.java",
+    "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/endpoint/NacosDiscoveryEndpointAutoConfiguration.java",
+    "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/NacosDiscoveryProperties.java"
+  ],
+  "fix": "The fix decoupled NacosDiscoveryClient from NacosRegistration by directly using NacosDiscoveryProperties to get the necessary service information and creating the NamingService. This change allows NacosDiscoveryClient to function independently of auto-registration settings. The NacosDiscoveryProperties bean creation was moved to NacosDiscoveryClientAutoConfiguration to ensure it's always available, and the NamingService creation logic was centralized in NacosDiscoveryProperties."
+}
