@@ -1,0 +1,708 @@
+{
+  "basic": [
+    {
+      "content": "# File: Project Euler/Problem 14/sol1.py (python)\n\n## Code Content:\n```python\nfrom __future__ import print_function\nlargest_number = 0\npre_counter = 0\n\nfor input1 in range(750000,1000000):\n    counter = 1\n    number = input1\n\n    while number > 1:\n        if number % 2 == 0:\n            number /=2\n            counter += 1\n        else:\n            number = (3*number)+1\n            counter += 1\n\n    if counter > pre_counter:\n        largest_number = input1\n        pre_counter = counter\n\nprint(('Largest Number:',largest_number,'->',pre_counter,'digits'))\n```",
+      "metadata": {
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "language": "python",
+        "file_path": "Project Euler/Problem 14/sol1.py",
+        "strategy": "basic"
+      },
+      "similarity_score": 0.7619066834449768
+    },
+    {
+      "content": "# File: Project Euler/Problem 16/sol1.py (python)\n\n## Code Content:\n```python\npower = int(input(\"Enter the power of 2: \"))\nnum = 2**power\n\nstring_num = str(num)\n\nlist_num = list(string_num)\n\nsum_of_num = 0\n\nprint(\"2 ^\",power,\"=\",num)\n\nfor i in list_num:\n    sum_of_num += int(i)\n\nprint(\"Sum of the digits are:\",sum_of_num)\n```",
+      "metadata": {
+        "language": "python",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "file_path": "Project Euler/Problem 16/sol1.py",
+        "strategy": "basic"
+      },
+      "similarity_score": 0.8232100009918213
+    },
+    {
+      "content": "# File: Project Euler/Problem 48/sol1.py (python)\n\n## Code Content:\n```python\nfrom __future__ import print_function\n'''\nSelf Powers\nProblem 48\n\nThe series, 11 + 22 + 33 + ... + 1010 = 10405071317.\n\nFind the last ten digits of the series, 11 + 22 + 33 + ... + 10001000.\n'''\n\ntry:\n\txrange\nexcept NameError:\n\txrange = range\n\ntotal = 0\nfor i in xrange(1, 1001):\n\ttotal += i**i\n\n\nprint(str(total)[-10:])\n```",
+      "metadata": {
+        "file_path": "Project Euler/Problem 48/sol1.py",
+        "language": "python",
+        "strategy": "basic",
+        "chunk_index": 0,
+        "total_chunks": 1
+      },
+      "similarity_score": 0.8608807325363159
+    },
+    {
+      "content": "# File: Project Euler/Problem 01/sol4.py (python)\n\n## Code Content:\n```python\ndef mulitples(limit):\n    xmulti = []\n    zmulti = []\n    z = 3\n    x = 5\n    temp = 1\n    while True:\n        result = z * temp\n        if (result < limit):\n            zmulti.append(result)\n            temp += 1\n        else:\n            temp = 1\n            break\n    while True:\n        result = x * temp\n        if (result < limit):\n            xmulti.append(result)\n            temp += 1\n        else:\n            break\n    collection = list(set(xmulti+zmulti))\n    return (sum(collection))\n    \n    \n        \n        \n        \n    \nprint (mulitples(1000))\n```",
+      "metadata": {
+        "language": "python",
+        "file_path": "Project Euler/Problem 01/sol4.py",
+        "strategy": "basic",
+        "total_chunks": 1,
+        "chunk_index": 0
+      },
+      "similarity_score": 0.8697577714920044
+    },
+    {
+      "content": "# File: Project Euler/Problem 08/sol1.py (python)\n\n## Code Content:\n```python\nimport sys\ndef main():\n    LargestProduct = -sys.maxsize-1\n    number=input().strip()\n    for i in range(len(number)-13):\n        product=1\n        for j in range(13):\n            product *= int(number[i+j])\n        if product > LargestProduct:\n            LargestProduct = product\n    print(LargestProduct)\n\n\nif __name__ == '__main__':\n    main()\n```",
+      "metadata": {
+        "total_chunks": 1,
+        "file_path": "Project Euler/Problem 08/sol1.py",
+        "language": "python",
+        "strategy": "basic",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.882557213306427
+    },
+    {
+      "content": "# File: Project Euler/Problem 13/sol1.py (python)\n\n## Code Content:\n```python\n'''\nProblem Statement:\nWork out the first ten digits of the sum of the N 50-digit numbers.\n'''\nfrom __future__ import print_function\n\nn = int(input().strip())\n\narray = []\nfor i in range(n):\n    array.append(int(input().strip()))\n\nprint(str(sum(array))[:10])\n```",
+      "metadata": {
+        "total_chunks": 1,
+        "strategy": "basic",
+        "chunk_index": 0,
+        "file_path": "Project Euler/Problem 13/sol1.py",
+        "language": "python"
+      },
+      "similarity_score": 0.9002026319503784
+    },
+    {
+      "content": "# File: Project Euler/Problem 20/sol2.py (python)\n\n## Code Content:\n```python\nfrom math import factorial\ndef main():\n\tprint(sum([int(x) for x in str(factorial(100))]))\nif __name__ == '__main__':\n\tmain()\n```",
+      "metadata": {
+        "strategy": "basic",
+        "language": "python",
+        "file_path": "Project Euler/Problem 20/sol2.py",
+        "total_chunks": 1,
+        "chunk_index": 0
+      },
+      "similarity_score": 0.9065345525741577
+    },
+    {
+      "content": "# File: Project Euler/Problem 02/sol2.py (python)\n\n## Code Content:\n```python\ndef fib(n):\n    ls = []\n    a,b = 0,1\n    n += 1\n    for i in range(n):\n        if (b % 2 == 0):\n            ls.append(b)\n        else:\n            pass\n        a,b = b, a+b\n    print (sum(ls))\n    return None\nfib(10)\n```",
+      "metadata": {
+        "total_chunks": 1,
+        "strategy": "basic",
+        "chunk_index": 0,
+        "file_path": "Project Euler/Problem 02/sol2.py",
+        "language": "python"
+      },
+      "similarity_score": 0.9253358840942383
+    },
+    {
+      "content": "# File: Project Euler/Problem 25/sol1.py (python)\n\n## Code Content:\n```python\nfrom __future__ import print_function\n\ntry:\n\txrange\t\t\t#Python 2\nexcept NameError:\n\txrange = range\t#Python 3\n\ndef fibonacci(n):\n\tif n == 1 or type(n) is not int:\n\t\treturn 0\n\telif n == 2:\n\t\treturn 1\n\telse:\n\t\tsequence = [0, 1]\n\t\tfor i in xrange(2, n+1):\n\t\t\tsequence.append(sequence[i-1] + sequence[i-2])\n\n\t\treturn sequence[n]\n\ndef fibonacci_digits_index(n):\n\tdigits = 0\n\tindex = 2\n\n\twhile digits < n:\n\t\tindex += 1\n\t\tdigits = len(str(fibonacci(index)))\n\n\treturn index\n\nif __name__ == '__main__':\n\tprint(fibonacci_digits_index(1000))\n```",
+      "metadata": {
+        "language": "python",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "strategy": "basic",
+        "file_path": "Project Euler/Problem 25/sol1.py"
+      },
+      "similarity_score": 0.9677440524101257
+    },
+    {
+      "content": "# File: Project Euler/Problem 20/sol1.py (python)\n\n## Code Content:\n```python\n# Finding the factorial.\ndef factorial(n):\n    fact = 1\n    for i in range(1,n+1):\n        fact *= i\n    return fact\n\n# Spliting the digits and adding it.\ndef split_and_add(number):\n    sum_of_digits = 0\n    while(number>0):\n        last_digit = number % 10\n        sum_of_digits += last_digit\n        number = int(number/10) # Removing the last_digit from the given number.\n    return sum_of_digits\n\n# Taking the user input.\nnumber = int(input(\"Enter the Number: \"))\n\n# Assigning the factorial from the factorial function.\nfactorial = factorial(number)\n\n# Spliting and adding the factorial into answer.\nanswer = split_and_add(factorial)\n\n# Printing the answer.\nprint(answer)\n```",
+      "metadata": {
+        "language": "python",
+        "chunk_index": 0,
+        "strategy": "basic",
+        "file_path": "Project Euler/Problem 20/sol1.py",
+        "total_chunks": 1
+      },
+      "similarity_score": 1.020185947418213
+    },
+    {
+      "content": "# File: Project Euler/Problem 03/sol2.py (python)\n\n## Code Content:\n```python\n'''\nProblem:\nThe prime factors of 13195 are 5,7,13 and 29. What is the largest prime factor of a given number N?\ne.g. for 10, largest prime factor = 5. For 17, largest prime factor = 17.\n'''\nfrom __future__ import print_function\nn=int(input())\nprime=1\ni=2\nwhile(i*i<=n):\n    while(n%i==0):\n        prime=i\n        n/=i\n    i+=1\nif(n>1):\n    prime=n\nprint(prime)\n```",
+      "metadata": {
+        "file_path": "Project Euler/Problem 03/sol2.py",
+        "language": "python",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "strategy": "basic"
+      },
+      "similarity_score": 1.0237059593200684
+    },
+    {
+      "content": "# File: Project Euler/Problem 04/sol1.py (python)\n\n## Code Content:\n```python\n'''\nProblem:\nA palindromic number reads the same both ways. The largest palindrome made from the product of two 2-digit numbers is 9009 = 91 x 99.\nFind the largest palindrome made from the product of two 3-digit numbers which is less than N.\n'''\nfrom __future__ import print_function\nlimit = int(input(\"limit? \"))\n\n# fetchs the next number\nfor number in range(limit-1,10000,-1):\n\n    # converts number into string.\n    strNumber = str(number)\n\n    # checks whether 'strNumber' is a palindrome.\n    if(strNumber == strNumber[::-1]):\n\n        divisor = 999\n\n        # if 'number' is a product of two 3-digit numbers\n        # then number is the answer otherwise fetch next number.\n        while(divisor != 99): \n            \n            if((number % divisor == 0) and (len(str(number / divisor)) == 3)):\n\n                print(number)\n                exit(0)\n\n            divisor -=1\n```",
+      "metadata": {
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "strategy": "basic",
+        "file_path": "Project Euler/Problem 04/sol1.py",
+        "language": "python"
+      },
+      "similarity_score": 1.0294032096862793
+    },
+    {
+      "content": "# File: Project Euler/Problem 01/sol1.py (python)\n\n## Code Content:\n```python\n'''\nProblem Statement:\nIf we list all the natural numbers below 10 that are multiples of 3 or 5,\nwe get 3,5,6 and 9. The sum of these multiples is 23.\nFind the sum of all the multiples of 3 or 5 below N.\n'''\nfrom __future__ import print_function\ntry:\n    raw_input          # Python 2\nexcept NameError:\n    raw_input = input  # Python 3\nn = int(raw_input().strip())\nsum=0\nfor a in range(3,n):\n    if(a%3==0 or a%5==0):\n        sum+=a\nprint(sum)\n```",
+      "metadata": {
+        "file_path": "Project Euler/Problem 01/sol1.py",
+        "chunk_index": 0,
+        "strategy": "basic",
+        "language": "python",
+        "total_chunks": 1
+      },
+      "similarity_score": 1.0363731384277344
+    },
+    {
+      "content": "# File: Project Euler/Problem 10/sol1.py (python)\n\n## Code Content:\n```python\nfrom __future__ import print_function\nfrom math import sqrt\n\ntry:\n\txrange\t\t\t#Python 2\nexcept NameError:\n\txrange = range\t#Python 3\n\ndef is_prime(n):\n\tfor i in xrange(2, int(sqrt(n))+1):\n\t\tif n%i == 0:\n\t\t\treturn False\n\n\treturn True\n\ndef sum_of_primes(n):\n\tif n > 2:\n\t\tsumOfPrimes = 2\n\telse:\n\t\treturn 0\n\n\tfor i in xrange(3, n, 2):\n\t\tif is_prime(i):\n\t\t\tsumOfPrimes += i\n\n\treturn sumOfPrimes\n\nif __name__ == '__main__':\n\timport sys\n\n\tif len(sys.argv) == 1:\n\t\tprint(sum_of_primes(2000000))\n\telse:\n\t\ttry:\n\t\t\tn = int(sys.argv[1])\n\t\t\tprint(sum_of_primes(n))\n\t\texcept ValueError:\n\t\t\tprint('Invalid entry - please enter a number.')\n```",
+      "metadata": {
+        "total_chunks": 1,
+        "language": "python",
+        "strategy": "basic",
+        "chunk_index": 0,
+        "file_path": "Project Euler/Problem 10/sol1.py"
+      },
+      "similarity_score": 1.0439553260803223
+    },
+    {
+      "content": "# File: Project Euler/Problem 06/sol2.py (python)\n\n## Code Content:\n```python\n# -*- coding: utf-8 -*-\n'''\nProblem:\nThe sum of the squares of the first ten natural numbers is,\n            1^2 + 2^2 + ... + 10^2 = 385\nThe square of the sum of the first ten natural numbers is,\n            (1 + 2 + ... + 10)^2 = 552 = 3025\nHence the difference between the sum of the squares of the first ten natural numbers and the square of the sum is 3025 − 385 = 2640.\nFind the difference between the sum of the squares of the first N natural numbers and the square of the sum.\n'''\nfrom __future__ import print_function\nn = int(input())\nsuma = n*(n+1)/2\nsuma **= 2\nsumb = n*(n+1)*(2*n+1)/6\nprint(suma-sumb)\n```",
+      "metadata": {
+        "language": "python",
+        "file_path": "Project Euler/Problem 06/sol2.py",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "strategy": "basic"
+      },
+      "similarity_score": 1.0445209741592407
+    },
+    {
+      "content": "# File: Project Euler/Problem 06/sol1.py (python)\n\n## Code Content:\n```python\n# -*- coding: utf-8 -*-\n'''\nProblem:\nThe sum of the squares of the first ten natural numbers is,\n            1^2 + 2^2 + ... + 10^2 = 385\nThe square of the sum of the first ten natural numbers is,\n            (1 + 2 + ... + 10)^2 = 552 = 3025\nHence the difference between the sum of the squares of the first ten natural numbers and the square of the sum is 3025 − 385 = 2640.\nFind the difference between the sum of the squares of the first N natural numbers and the square of the sum.\n'''\nfrom __future__ import print_function\n\nsuma = 0\nsumb = 0\nn = int(input())\nfor i in range(1,n+1):\n    suma += i**2\n    sumb += i\nsum = sumb**2 - suma\nprint(sum)\n```",
+      "metadata": {
+        "total_chunks": 1,
+        "language": "python",
+        "file_path": "Project Euler/Problem 06/sol1.py",
+        "strategy": "basic",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.0503517389297485
+    },
+    {
+      "content": "# File: Project Euler/Problem 02/sol1.py (python)\n\n## Code Content:\n```python\n'''\nProblem:\nEach new term in the Fibonacci sequence is generated by adding the previous two terms. By starting with 1 and 2,\nthe first 10 terms will be:\n                1,2,3,5,8,13,21,34,55,89,..\nBy considering the terms in the Fibonacci sequence whose values do not exceed n, find the sum of the even-valued terms.\ne.g. for n=10, we have {2,8}, sum is 10.\n'''\nfrom __future__ import print_function\n\ntry:\n    raw_input          # Python 2\nexcept NameError:\n    raw_input = input  # Python 3\n\nn = int(raw_input().strip())\ni=1\nj=2 \nsum=0\nwhile(j<=n):\n    if((j&1)==0): #can also use (j%2==0)\n        sum+=j\n    temp=i\n    i=j\n    j=temp+i\nprint(sum)\n```",
+      "metadata": {
+        "total_chunks": 1,
+        "file_path": "Project Euler/Problem 02/sol1.py",
+        "language": "python",
+        "chunk_index": 0,
+        "strategy": "basic"
+      },
+      "similarity_score": 1.0504109859466553
+    },
+    {
+      "content": "# File: Project Euler/Problem 04/sol2.py (python)\n\n## Code Content:\n```python\n'''\nProblem:\nA palindromic number reads the same both ways. The largest palindrome made from the product of two 2-digit numbers is 9009 = 91 x 99.\nFind the largest palindrome made from the product of two 3-digit numbers which is less than N.\n'''\nfrom __future__ import print_function\narr = []\nfor i in range(999,100,-1):\n    for j in range(999,100,-1):\n        t = str(i*j)\n        if t == t[::-1]:\n            arr.append(i*j)\narr.sort()\n\nn=int(input())\nfor i in arr[::-1]:\n    if(i<n):\n        print(i)\n        exit(0)\n```",
+      "metadata": {
+        "file_path": "Project Euler/Problem 04/sol2.py",
+        "strategy": "basic",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "language": "python"
+      },
+      "similarity_score": 1.0581607818603516
+    },
+    {
+      "content": "# File: Project Euler/Problem 36/sol1.py (python)\n\n## Code Content:\n```python\nfrom __future__ import print_function\n'''\nDouble-base palindromes\nProblem 36\nThe decimal number, 585 = 10010010012 (binary), is palindromic in both bases.\n\nFind the sum of all numbers, less than one million, which are palindromic in base 10 and base 2.\n\n(Please note that the palindromic number, in either base, may not include leading zeros.)\n'''\ntry:\n\txrange\t\t#Python 2\nexcept NameError:\n\txrange = range\t#Python 3\n\ndef is_palindrome(n):\n\tn = str(n)\n\n\tif n == n[::-1]:\n\t\treturn True\n\telse:\n\t\treturn False\n\ntotal = 0\n\nfor i in xrange(1, 1000000):\n\tif is_palindrome(i) and is_palindrome(bin(i).split('b')[1]):\n\t\ttotal += i\n\nprint(total)\n```",
+      "metadata": {
+        "total_chunks": 1,
+        "strategy": "basic",
+        "language": "python",
+        "file_path": "Project Euler/Problem 36/sol1.py",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.0719661712646484
+    },
+    {
+      "content": "# File: Project Euler/Problem 17/sol1.py (python)\n\n## Code Content:\n```python\nfrom __future__ import print_function\n'''\nNumber letter counts\nProblem 17\n\nIf the numbers 1 to 5 are written out in words: one, two, three, four, five, then there are 3 + 3 + 5 + 4 + 4 = 19 letters used in total.\n\nIf all the numbers from 1 to 1000 (one thousand) inclusive were written out in words, how many letters would be used?\n\n\nNOTE: Do not count spaces or hyphens. For example, 342 (three hundred and forty-two) contains 23 letters and 115 (one hundred and fifteen) \ncontains 20 letters. The use of \"and\" when writing out numbers is in compliance with British usage.\n'''\n\nones_counts = [0, 3, 3, 5, 4, 4, 3, 5, 5, 4, 3, 6, 6, 8, 8, 7, 7, 9, 8, 8] #number of letters in zero, one, two, ..., nineteen (0 for zero since it's never said aloud)\ntens_counts = [0, 0, 6, 6, 5, 5, 5, 7, 6, 6] #number of letters in twenty, thirty, ..., ninety (0 for numbers less than 20 due to inconsistency in teens)\n\ncount = 0\n\nfor i in range(1, 1001):\n\tif i < 1000:\n\t\tif i >= 100:\n\t\t\tcount += ones_counts[i/100] + 7 #add number of letters for \"n hundred\"\n\n\t\t\tif i%100 is not 0:\n\t\t\t\tcount += 3 #add number of letters for \"and\" if number is not multiple of 100\n\n\t\tif 0 < i%100 < 20:\n\t\t\tcount += ones_counts[i%100] #add number of letters for one, two, three, ..., nineteen (could be combined with below if not for inconsistency in teens)\n\t\telse:\n\t\t\tcount += ones_counts[i%10] + tens_counts[(i%100-i%10)/10] #add number of letters for twenty, twenty one, ..., ninety nine\n\telse:\n\t\tcount += ones_counts[i/1000] + 8\n\nprint(count)\n```",
+      "metadata": {
+        "total_chunks": 1,
+        "file_path": "Project Euler/Problem 17/sol1.py",
+        "chunk_index": 0,
+        "language": "python",
+        "strategy": "basic"
+      },
+      "similarity_score": 1.092195987701416
+    }
+  ],
+  "enhanced": [
+    {
+      "content": "# File: Project Euler/Problem 16/sol1.py (python)\n\n## Code Content:\n```python\npower = int(input(\"Enter the power of 2: \"))\nnum = 2**power\n\nstring_num = str(num)\n\nlist_num = list(string_num)\n\nsum_of_num = 0\n\nprint(\"2 ^\",power,\"=\",num)\n\nfor i in list_num:\n    sum_of_num += int(i)\n\nprint(\"Sum of the digits are:\",sum_of_num)\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: c787a22d\n- Author: Thejus-Paul (thejuspaul@protonmail.ch)\n- Date: 2017-11-20 04:04:21\n- Message: Problem 16 Added\n\nSolution to the Problem 16  has been added.\n- Changes:\n```diff\n@@ -0,0 +1,15 @@\n+power = int(input(\"Enter the power of 2: \"))\n+num = 2**power\n+\n+string_num = str(num)\n+\n+list_num = list(string_num)\n+\n+sum_of_num = 0\n+\n+print(\"2 ^\",power,\"=\",num)\n+\n+for i in list_num:\n+    sum_of_num += int(i)\n+\n+print(\"Sum of the digits are:\",sum_of_num)...\n```",
+      "metadata": {
+        "file_path": "Project Euler/Problem 16/sol1.py",
+        "language": "python",
+        "strategy": "enhanced",
+        "chunk_index": 0,
+        "commit_count": 1,
+        "total_chunks": 1
+      },
+      "similarity_score": 0.842354416847229
+    },
+    {
+      "content": "# File: Project Euler/Problem 08/sol1.py (python)\n\n## Code Content:\n```python\nimport sys\ndef main():\n    LargestProduct = -sys.maxsize-1\n    number=input().strip()\n    for i in range(len(number)-13):\n        product=1\n        for j in range(13):\n            product *= int(number[i+j])\n        if product > LargestProduct:\n            LargestProduct = product\n    print(LargestProduct)\n\n\nif __name__ == '__main__':\n    main()\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 744803ad\n- Author: shivg7706 (shivamgupta7706@gmail.com)\n- Date: 2018-02-27 21:49:53\n- Message: Adding Problem_08\n- Changes:\n```diff\n@@ -0,0 +1,15 @@\n+import sys\n+def main():\n+    LargestProduct = -sys.maxsize-1\n+    number=input().strip()\n+    for i in range(len(number)-13):\n+        product=1\n+        for j in range(13):\n+            product *= int(number[i+j])\n+        if product > LargestProduct:\n+            LargestProduct = product\n+    print(LargestProduct)\n+\n+\n+if __name__ == '__main__':\n+    main()...\n```",
+      "metadata": {
+        "language": "python",
+        "strategy": "enhanced",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "commit_count": 1,
+        "file_path": "Project Euler/Problem 08/sol1.py"
+      },
+      "similarity_score": 0.8530868291854858
+    },
+    {
+      "content": "# File: Project Euler/Problem 20/sol2.py (python)\n\n## Code Content:\n```python\nfrom math import factorial\ndef main():\n\tprint(sum([int(x) for x in str(factorial(100))]))\nif __name__ == '__main__':\n\tmain()\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: b6b7784b\n- Author: shivg7706 (shivamgupta7706@gmail.com)\n- Date: 2018-03-03 13:00:31\n- Message: another sol for problem_20\n- Changes:\n```diff\n@@ -0,0 +1,5 @@\n+from math import factorial\n+def main():\n+\tprint(sum([int(x) for x in str(factorial(100))]))\n+if __name__ == '__main__':\n+\tmain()\n\\ No newline at end of file...\n```",
+      "metadata": {
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "file_path": "Project Euler/Problem 20/sol2.py",
+        "strategy": "enhanced",
+        "commit_count": 1,
+        "language": "python"
+      },
+      "similarity_score": 0.867698073387146
+    },
+    {
+      "content": "# File: Project Euler/Problem 48/sol1.py (python)\n\n## Code Content:\n```python\nfrom __future__ import print_function\n'''\nSelf Powers\nProblem 48\n\nThe series, 11 + 22 + 33 + ... + 1010 = 10405071317.\n\nFind the last ten digits of the series, 11 + 22 + 33 + ... + 10001000.\n'''\n\ntry:\n\txrange\nexcept NameError:\n\txrange = range\n\ntotal = 0\nfor i in xrange(1, 1001):\n\ttotal += i**i\n\n\nprint(str(total)[-10:])\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 46b4e51d\n- Author: Daniel Ingram (ingramds@appstate.edu)\n- Date: 2018-03-19 01:59:01\n- Message: Solution to Problem 48\n- Changes:\n```diff\n@@ -0,0 +1,21 @@\n+from __future__ import print_function\n+'''\n+Self Powers\n+Problem 48\n+\n+The series, 11 + 22 + 33 + ... + 1010 = 10405071317.\n+\n+Find the last ten digits of the series, 11 + 22 + 33 + ... + 10001000.\n+'''\n+\n+try:\n+\txrange\n+except NameError:\n+\txrange = range\n+\n+total = 0\n+for i in xrange(1, 1001):\n+\ttotal += i**i\n+\n+\n+print(str(total)[-10:])\n\\ No newline at end of file...\n```",
+      "metadata": {
+        "language": "python",
+        "file_path": "Project Euler/Problem 48/sol1.py",
+        "commit_count": 1,
+        "strategy": "enhanced",
+        "chunk_index": 0,
+        "total_chunks": 1
+      },
+      "similarity_score": 0.8800503015518188
+    },
+    {
+      "content": "# File: Project Euler/Problem 14/sol1.py (python)\n\n## Code Content:\n```python\nfrom __future__ import print_function\nlargest_number = 0\npre_counter = 0\n\nfor input1 in range(750000,1000000):\n    counter = 1\n    number = input1\n\n    while number > 1:\n        if number % 2 == 0:\n            number /=2\n            counter += 1\n        else:\n            number = (3*number)+1\n            counter += 1\n\n    if counter > pre_counter:\n        largest_number = input1\n        pre_counter = counter\n\nprint(('Largest Number:',largest_number,'->',pre_counter,'digits'))\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 4e069490\n- Author: cclauss (cclauss@bluewin.ch)\n- Date: 2017-11-25 17:23:50\n- Message: Modernize Python 2 code to get ready for Python 3\n- Changes:\n```diff\n@@ -1,3 +1,4 @@\n+from __future__ import print_function\n largest_number = 0\n pre_counter = 0\n \n@@ -17,4 +18,4 @@ for input1 in range(750000,1000000):\n         largest_number = input1\n         pre_counter = counter\n \n-print('Largest Number:',largest_number,'->',pre_counter,'digits')\n+print(('Largest Number:',largest_number,'->',pre_counter,'digits'))...\n```\n\n### Commit 2\n- ID: 0f78cd6a\n- Author: Thejus-Paul (thejuspaul@protonmail.ch)\n- Date: 2017-11-13 02:26:18\n- Message: Project Euler Solution Added\n- Changes:\n```diff\n@@ -0,0 +1,20 @@\n+largest_number = 0\n+pre_counter = 0\n+\n+for input1 in range(750000,1000000):\n+    counter = 1\n+    number = input1\n+\n+    while number > 1:\n+        if number % 2 == 0:\n+            number /=2\n+            counter += 1\n+        else:\n+            number = (3*number)+1\n+            counter += 1\n+\n+    if counter > pre_counter:\n+        largest_number = input1\n+        pre_counter = counter\n+\n+print('Largest Number:',largest_number,'->',pre_counter,'digits')...\n```",
+      "metadata": {
+        "file_path": "Project Euler/Problem 14/sol1.py",
+        "strategy": "enhanced",
+        "total_chunks": 1,
+        "commit_count": 2,
+        "chunk_index": 0,
+        "language": "python"
+      },
+      "similarity_score": 0.9061987400054932
+    },
+    {
+      "content": "# File: Project Euler/Problem 13/sol1.py (python)\n\n## Code Content:\n```python\n'''\nProblem Statement:\nWork out the first ten digits of the sum of the N 50-digit numbers.\n'''\nfrom __future__ import print_function\n\nn = int(input().strip())\n\narray = []\nfor i in range(n):\n    array.append(int(input().strip()))\n\nprint(str(sum(array))[:10])\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 4e069490\n- Author: cclauss (cclauss@bluewin.ch)\n- Date: 2017-11-25 17:23:50\n- Message: Modernize Python 2 code to get ready for Python 3\n- Changes:\n```diff\n@@ -2,6 +2,7 @@\n Problem Statement:\n Work out the first ten digits of the sum of the N 50-digit numbers.\n '''\n+from __future__ import print_function\n \n n = int(input().strip())...\n```\n\n### Commit 2\n- ID: 20a45779\n- Author: bT-53 (phanu.bjstp@gmail.com)\n- Date: 2017-10-27 10:19:58\n- Message: Add a soution of ProjectEuler Problem 13\n- Changes:\n```diff\n@@ -0,0 +1,13 @@\n+'''\n+Problem Statement:\n+Work out the first ten digits of the sum of the N 50-digit numbers.\n+'''\n+\n+n = int(input().strip())\n+\n+array = []\n+for i in range(n):\n+    array.append(int(input().strip()))\n+\n+print(str(sum(array))[:10])\n+...\n```",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "Project Euler/Problem 13/sol1.py",
+        "commit_count": 2,
+        "strategy": "enhanced",
+        "language": "python",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.9650733470916748
+    },
+    {
+      "content": "# File: Project Euler/Problem 01/sol4.py (python)\n\n## Code Content:\n```python\ndef mulitples(limit):\n    xmulti = []\n    zmulti = []\n    z = 3\n    x = 5\n    temp = 1\n    while True:\n        result = z * temp\n        if (result < limit):\n            zmulti.append(result)\n            temp += 1\n        else:\n            temp = 1\n            break\n    while True:\n        result = x * temp\n        if (result < limit):\n            xmulti.append(result)\n            temp += 1\n        else:\n            break\n    collection = list(set(xmulti+zmulti))\n    return (sum(collection))\n    \n    \n        \n        \n        \n    \nprint (mulitples(1000))\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 10b0a40b\n- Author: Christian Bender (christianbender89@web.de)\n- Date: 2018-04-16 05:52:45\n- Message: fixed solution 4 of problem 1\n- Changes:\n```diff\n@@ -9,7 +9,6 @@ def mulitples(limit):\n         if (result < limit):\n             zmulti.append(result)\n             temp += 1\n-            continue\n         else:\n             temp = 1\n             break\n@@ -18,15 +17,14 @@ def mulitples(limit):\n         if (result < limit):\n             xmulti.append(result)\n             temp += 1\n-            continue\n         else:\n-            temp = 1\n             break\n-    return (sum(zmulti) + sum(xmulti))\n+    collection = list(set(xmulti+zmulti))\n+    ...\n```",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "Project Euler/Problem 01/sol4.py",
+        "total_chunks": 2,
+        "commit_count": 2,
+        "strategy": "enhanced",
+        "language": "python"
+      },
+      "similarity_score": 0.9755133390426636
+    },
+    {
+      "content": "### Commit 3\n- ID: 8d9da8f6\n- Author: Christian Bender (christianbender89@web.de)\n- Date: 2017-11-19 22:10:09\n- Message: Correction: File solv01.py\n\nI have remove some semicolons.\n- Changes:\n```diff\n@@ -8,11 +8,13 @@ e.g. for n=10, we have {2,8}, sum is 10.\n '''\n \n n = int(raw_input().strip())\n-i=1; j=2; sum=0\n+i=1\n+j=2 \n+sum=0\n while(j<=n):\n     if((j&1)==0): #can also use (j%2==0)\n         sum+=j\n     temp=i\n     i=j\n     j=temp+i\n-print sum\n\\ No newline at end of file\n+print sum...\n```\n\n### Commit 4\n- ID: 7284714d\n- Author: Sachin Arora (sachinarora.707@gmail.com)\n- Date: 2017-10-24 23:41:19\n- Message: Project Euler Solutions Added.\n- Changes:\n```diff\n@@ -0,0 +1,18 @@\n+'''\n+Problem:\n+Each new term in the Fibonacci sequence is generated by adding the previous two terms. By starting with 1 and 2,\n+the first 10 terms will be:\n+                1,2,3,5,8,13,21,34,55,89,..\n+By considering the terms in the Fibonacci sequence whose values do not exceed n, find the sum of the even-valued terms.\n+e.g. for n=10, we have {2,8}, sum is 10.\n+'''\n+\n+n = int(raw_input().strip())\n+i=1; j=2; sum=0\n+while(j<=n):\n+    if((j&1)==0): #can also use (j%2==0)\n+      ...\n```",
+      "metadata": {
+        "chunk_index": 1,
+        "strategy": "enhanced",
+        "commit_count": 4,
+        "file_path": "Project Euler/Problem 02/sol1.py",
+        "total_chunks": 2,
+        "language": "python"
+      },
+      "similarity_score": 0.9768264293670654
+    },
+    {
+      "content": "### Commit 4\n- ID: 3fae059b\n- Author: Thejus-Paul (thejuspaul@protonmail.ch)\n- Date: 2017-11-09 08:45:10\n- Message: Added Question 9\n- Changes:\n```diff\n@@ -2,8 +2,8 @@\n \n Problems are taken from https://projecteuler.net/.\n \n-Project Euler is a series of challenging mathematical/computer programming problems that will require more than just mathematical \n-insights to solve. Project Euler is ideal for mathematicians who are learning to code. \n+Project Euler is a series of challenging mathematical/computer programming problems that will require more than just mathematical\n+insights to solve. Project Euler is ideal for mathematicians who are learni...\n```\n\n### Commit 5\n- ID: 848432c6\n- Author: Sachin Arora (sachinarora.707@gmail.com)\n- Date: 2017-10-24 22:49:14\n- Message: Project Euler Problems Added.\n- Changes:\n```diff\n@@ -0,0 +1,39 @@\n+# ProjectEuler\n+\n+Problems are taken from https://projecteuler.net/.\n+\n+Project Euler is a series of challenging mathematical/computer programming problems that will require more than just mathematical \n+insights to solve. Project Euler is ideal for mathematicians who are learning to code. \n+\n+Here the efficiency of your code is also checked.\n+I've tried to provide all the best possible solutions.\n+\n+PROBLEMS:\n+\n+1. If we list all the natural numbers below 10 that are multiples...\n```",
+      "metadata": {
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "language": "markdown",
+        "total_chunks": 4,
+        "file_path": "Project Euler/README.md",
+        "chunk_index": 3
+      },
+      "similarity_score": 0.9853805303573608
+    },
+    {
+      "content": "# File: Project Euler/Problem 20/sol1.py (python)\n\n## Code Content:\n```python\n# Finding the factorial.\ndef factorial(n):\n    fact = 1\n    for i in range(1,n+1):\n        fact *= i\n    return fact\n\n# Spliting the digits and adding it.\ndef split_and_add(number):\n    sum_of_digits = 0\n    while(number>0):\n        last_digit = number % 10\n        sum_of_digits += last_digit\n        number = int(number/10) # Removing the last_digit from the given number.\n    return sum_of_digits\n\n# Taking the user input.\nnumber = int(input(\"Enter the Number: \"))\n\n# Assigning the factorial from the factorial function.\nfactorial = factorial(number)\n\n# Spliting and adding the factorial into answer.\nanswer = split_and_add(factorial)\n\n# Printing the answer.\nprint(answer)\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 03374415\n- Author: Thejus-Paul (thejuspaul@protonmail.ch)\n- Date: 2017-11-27 13:14:32\n- Message: Added Solution\n\n Added Solution for Problem 20\n- Changes:\n```diff\n@@ -0,0 +1,27 @@\n+# Finding the factorial.\n+def factorial(n):\n+    fact = 1\n+    for i in range(1,n+1):\n+        fact *= i\n+    return fact\n+\n+# Spliting the digits and adding it.\n+def split_and_add(number):\n+    sum_of_digits = 0\n+    while(number>0):\n+        last_digit = number % 10\n+        sum_of_digits += last_digit\n+        number = int(number/10) # Removing the last_digit from the given number.\n+    return sum_of_digits\n+\n+# Taking the user input.\n+number = int(input(\"Enter the Number: \"...\n```",
+      "metadata": {
+        "total_chunks": 1,
+        "language": "python",
+        "commit_count": 1,
+        "chunk_index": 0,
+        "strategy": "enhanced",
+        "file_path": "Project Euler/Problem 20/sol1.py"
+      },
+      "similarity_score": 0.9925647974014282
+    },
+    {
+      "content": "# File: Project Euler/Problem 03/sol2.py (python)\n\n## Code Content:\n```python\n'''\nProblem:\nThe prime factors of 13195 are 5,7,13 and 29. What is the largest prime factor of a given number N?\ne.g. for 10, largest prime factor = 5. For 17, largest prime factor = 17.\n'''\nfrom __future__ import print_function\nn=int(input())\nprime=1\ni=2\nwhile(i*i<=n):\n    while(n%i==0):\n        prime=i\n        n/=i\n    i+=1\nif(n>1):\n    prime=n\nprint(prime)\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 4e069490\n- Author: cclauss (cclauss@bluewin.ch)\n- Date: 2017-11-25 17:23:50\n- Message: Modernize Python 2 code to get ready for Python 3\n- Changes:\n```diff\n@@ -3,6 +3,7 @@ Problem:\n The prime factors of 13195 are 5,7,13 and 29. What is the largest prime factor of a given number N?\n e.g. for 10, largest prime factor = 5. For 17, largest prime factor = 17.\n '''\n+from __future__ import print_function\n n=int(input())\n prime=1\n i=2\n@@ -13,4 +14,4 @@ while(i*i<=n):\n     i+=1\n if(n>1):\n     prime=n\n-print prime\n+print(prime)...\n```\n\n### Commit 2\n- ID: 7284714d\n- Author: Sachin Arora (sachinarora.707@gmail.com)\n- Date: 2017-10-24 23:41:19\n- Message: Project Euler Solutions Added.\n- Changes:\n```diff\n@@ -0,0 +1,16 @@\n+'''\n+Problem:\n+The prime factors of 13195 are 5,7,13 and 29. What is the largest prime factor of a given number N?\n+e.g. for 10, largest prime factor = 5. For 17, largest prime factor = 17.\n+'''\n+n=int(input())\n+prime=1\n+i=2\n+while(i*i<=n):\n+    while(n%i==0):\n+        prime=i\n+        n/=i\n+    i+=1\n+if(n>1):\n+    prime=n\n+print prime...\n```",
+      "metadata": {
+        "commit_count": 2,
+        "language": "python",
+        "file_path": "Project Euler/Problem 03/sol2.py",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.0083491802215576
+    },
+    {
+      "content": "# File: Project Euler/Problem 25/sol1.py (python)\n\n## Code Content:\n```python\nfrom __future__ import print_function\n\ntry:\n\txrange\t\t\t#Python 2\nexcept NameError:\n\txrange = range\t#Python 3\n\ndef fibonacci(n):\n\tif n == 1 or type(n) is not int:\n\t\treturn 0\n\telif n == 2:\n\t\treturn 1\n\telse:\n\t\tsequence = [0, 1]\n\t\tfor i in xrange(2, n+1):\n\t\t\tsequence.append(sequence[i-1] + sequence[i-2])\n\n\t\treturn sequence[n]\n\ndef fibonacci_digits_index(n):\n\tdigits = 0\n\tindex = 2\n\n\twhile digits < n:\n\t\tindex += 1\n\t\tdigits = len(str(fibonacci(index)))\n\n\treturn index\n\nif __name__ == '__main__':\n\tprint(fibonacci_digits_index(1000))\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: c6c5d623\n- Author: Daniel Ingram (ingramds@appstate.edu)\n- Date: 2018-03-19 21:29:46\n- Message: Fixed xrange compatibility for Python 3\n- Changes:\n```diff\n@@ -1,5 +1,10 @@\n from __future__ import print_function\n \n+try:\n+\txrange\t\t\t#Python 2\n+except NameError:\n+\txrange = range\t#Python 3\n+\n def fibonacci(n):\n \tif n == 1 or type(n) is not int:\n \t\treturn 0...\n```\n\n### Commit 2\n- ID: 301c9073\n- Author: Daniel Ingram (ingramds@appstate.edu)\n- Date: 2018-03-15 02:55:07\n- Message: Dynamic programming solution to Problem 25\n- Changes:\n```diff\n@@ -0,0 +1,26 @@\n+from __future__ import print_function\n+\n+def fibonacci(n):\n+\tif n == 1 or type(n) is not int:\n+\t\treturn 0\n+\telif n == 2:\n+\t\treturn 1\n+\telse:\n+\t\tsequence = [0, 1]\n+\t\tfor i in xrange(2, n+1):\n+\t\t\tsequence.append(sequence[i-1] + sequence[i-2])\n+\n+\t\treturn sequence[n]\n+\n+def fibonacci_digits_index(n):\n+\tdigits = 0\n+\tindex = 2\n+\n+\twhile digits < n:\n+\t\tindex += 1\n+\t\tdigits = len(str(fibonacci(index)))\n+\n+\treturn index\n+\n+if __name__ == '__main__':\n+\tprint(fibonacci_digits_index(1000)...\n```",
+      "metadata": {
+        "file_path": "Project Euler/Problem 25/sol1.py",
+        "commit_count": 2,
+        "language": "python",
+        "total_chunks": 1,
+        "strategy": "enhanced",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.0203889608383179
+    },
+    {
+      "content": "# File: Project Euler/Problem 04/sol2.py (python)\n\n## Code Content:\n```python\n'''\nProblem:\nA palindromic number reads the same both ways. The largest palindrome made from the product of two 2-digit numbers is 9009 = 91 x 99.\nFind the largest palindrome made from the product of two 3-digit numbers which is less than N.\n'''\nfrom __future__ import print_function\narr = []\nfor i in range(999,100,-1):\n    for j in range(999,100,-1):\n        t = str(i*j)\n        if t == t[::-1]:\n            arr.append(i*j)\narr.sort()\n\nn=int(input())\nfor i in arr[::-1]:\n    if(i<n):\n        print(i)\n        exit(0)\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 4e069490\n- Author: cclauss (cclauss@bluewin.ch)\n- Date: 2017-11-25 17:23:50\n- Message: Modernize Python 2 code to get ready for Python 3\n- Changes:\n```diff\n@@ -3,6 +3,7 @@ Problem:\n A palindromic number reads the same both ways. The largest palindrome made from the product of two 2-digit numbers is 9009 = 91 x 99.\n Find the largest palindrome made from the product of two 3-digit numbers which is less than N.\n '''\n+from __future__ import print_function\n arr = []\n for i in range(999,100,-1):\n     for j in range(999,100,-1):\n@@ -14,5 +15,5 @@ arr.sort()\n n=int(input())\n for i in arr[::-1]:\n     if(i<n):\n-        print i\n+        print(i)\n         exit...\n```\n\n### Commit 2\n- ID: 7284714d\n- Author: Sachin Arora (sachinarora.707@gmail.com)\n- Date: 2017-10-24 23:41:19\n- Message: Project Euler Solutions Added.\n- Changes:\n```diff\n@@ -0,0 +1,18 @@\n+'''\n+Problem:\n+A palindromic number reads the same both ways. The largest palindrome made from the product of two 2-digit numbers is 9009 = 91 x 99.\n+Find the largest palindrome made from the product of two 3-digit numbers which is less than N.\n+'''\n+arr = []\n+for i in range(999,100,-1):\n+    for j in range(999,100,-1):\n+        t = str(i*j)\n+        if t == t[::-1]:\n+            arr.append(i*j)\n+arr.sort()\n+\n+n=int(input())\n+for i in arr[::-1]:\n+    if(i<n):\n+        print i\n+...\n```",
+      "metadata": {
+        "language": "python",
+        "commit_count": 2,
+        "strategy": "enhanced",
+        "file_path": "Project Euler/Problem 04/sol2.py",
+        "chunk_index": 0,
+        "total_chunks": 1
+      },
+      "similarity_score": 1.0217416286468506
+    },
+    {
+      "content": "@daniel-s-ingram Similar changes needed on Problems 25 and 28 so they can run on Python 3.\n\nflake8 testing of https://github.com/TheAlgorithms/Python on Python 3.6.3\n\n$ __flake8 . --count --select=E901,E999,F821,F822,F823 --show-source --statistics__\n```\n./Project Euler/Problem 10/sol1.py:5:11: F821 undefined name 'xrange'\n\tfor i in xrange(2, int(sqrt(n))+1):\n          ^\n./Project Euler/Problem 10/sol1.py:17:11: F821 undefined name 'xrange'\n\tfor i in xrange(3, n, 2):\n          ^\n./Project Euler/Problem 25/sol1.py:10:12: F821 undefined name 'xrange'\n\t\tfor i in xrange(2, n+1):\n           ^\n./Project Euler/Problem 28/sol1.py:7:11: F821 undefined name 'xrange'\n\tfor i in xrange(1, int(ceil(n/2.0))):\n          ^\n4     F821 undefined name 'xrange'\n```\n- Changes:\n```diff\n@@ -1,6 +1,12 @@\n from __future__ import print_function\n from math import sqrt\n \n+try:\n+\txrange          # Python 2\n+except NameError:\n+\txrange = range  # Python 3\n+\n+\n def is_prime(n):\n \tfor i in xrange(2, int(sqrt(n))+1):\n \t\tif n%i == 0:\n@@ -30,4 +36,4 @@ if __name__ == '__main__':\n \t\t\tn = int(sys.argv[1])\n \t\t\tprint(sum_of_primes(n))\n \t\texcept ValueError:\n-\t\t\tprint('Invalid entry - please enter a number.')\n\\ No newline at end of file\n+\t\t\tprint('Invalid entry - please enter a number.')...\n```\n\n### Commit 4\n- ID: 7beaeae0\n- Author: Daniel Ingram (ingramds@appstate.edu)\n- Date: 2018-03-15 02:35:16\n- Message: Brute force solution to Problem 10\n- Changes:\n```diff\n@@ -0,0 +1,33 @@\n+from __future__ import print_function\n+from math import sqrt\n+\n+def is_prime(n):\n+\tfor i in xrange(2, int(sqrt(n))+1):\n+\t\tif n%i == 0:\n+\t\t\treturn False\n+\n+\treturn True\n+\n+def sum_of_primes(n):\n+\tif n > 2:\n+\t\tsumOfPrimes = 2\n+\telse:\n+\t\treturn 0\n+\n+\tfor i in xrange(3, n, 2):\n+\t\tif is_prime(i):\n+\t\t\tsumOfPrimes += i\n+\n+\treturn sumOfPrimes\n+\n+if __name__ == '__main__':\n+\timport sys\n+\n+\tif len(sys.argv) == 1:\n+\t\tprint(sum_of_primes(2000000))\n+\telse:\n+\t\ttry:\n+\t\t\tn = int(sys.argv[1])\n+...\n```",
+      "metadata": {
+        "language": "python",
+        "file_path": "Project Euler/Problem 10/sol1.py",
+        "strategy": "enhanced",
+        "total_chunks": 2,
+        "chunk_index": 1,
+        "commit_count": 4
+      },
+      "similarity_score": 1.0226736068725586
+    },
+    {
+      "content": "# File: Project Euler/Problem 02/sol1.py (python)\n\n## Code Content:\n```python\n'''\nProblem:\nEach new term in the Fibonacci sequence is generated by adding the previous two terms. By starting with 1 and 2,\nthe first 10 terms will be:\n                1,2,3,5,8,13,21,34,55,89,..\nBy considering the terms in the Fibonacci sequence whose values do not exceed n, find the sum of the even-valued terms.\ne.g. for n=10, we have {2,8}, sum is 10.\n'''\nfrom __future__ import print_function\n\ntry:\n    raw_input          # Python 2\nexcept NameError:\n    raw_input = input  # Python 3\n\nn = int(raw_input().strip())\ni=1\nj=2 \nsum=0\nwhile(j<=n):\n    if((j&1)==0): #can also use (j%2==0)\n        sum+=j\n    temp=i\n    i=j\n    j=temp+i\nprint(sum)\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 2ed1bad7\n- Author: cclauss (cclauss@bluewin.ch)\n- Date: 2017-12-13 23:32:28\n- Message: Merge branch 'master' into modernize-python2-code\n- Changes:\n```diff\n@@ -14,7 +14,9 @@ except NameError:\n     raw_input = input  # Python 3\n \n n = int(raw_input().strip())\n-i=1; j=2; sum=0\n+i=1\n+j=2 \n+sum=0\n while(j<=n):\n     if((j&1)==0): #can also use (j%2==0)\n         sum+=j...\n```\n\n### Commit 2\n- ID: 4e069490\n- Author: cclauss (cclauss@bluewin.ch)\n- Date: 2017-11-25 17:23:50\n- Message: Modernize Python 2 code to get ready for Python 3\n- Changes:\n```diff\n@@ -6,6 +6,12 @@ the first 10 terms will be:\n By considering the terms in the Fibonacci sequence whose values do not exceed n, find the sum of the even-valued terms.\n e.g. for n=10, we have {2,8}, sum is 10.\n '''\n+from __future__ import print_function\n+\n+try:\n+    raw_input          # Python 2\n+except NameError:\n+    raw_input = input  # Python 3\n \n n = int(raw_input().strip())\n i=1; j=2; sum=0\n@@ -15,4 +21,4 @@ while(j<=n):\n     temp=i\n     i=j\n     j=temp+i\n-print sum\n\\ No newline at end of fi...\n```\n\n### Commit 3\n- ID: 8d9da8f6\n- Author: Christian Bender (christianbender89@web.de)\n- Date: 2017-11-19 22:10:09\n- Message: Correction: File solv01.py",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "Project Euler/Problem 02/sol1.py",
+        "commit_count": 4,
+        "language": "python",
+        "strategy": "enhanced",
+        "total_chunks": 2
+      },
+      "similarity_score": 1.0230237245559692
+    },
+    {
+      "content": "# File: Project Euler/Problem 04/sol1.py (python)\n\n## Code Content:\n```python\n'''\nProblem:\nA palindromic number reads the same both ways. The largest palindrome made from the product of two 2-digit numbers is 9009 = 91 x 99.\nFind the largest palindrome made from the product of two 3-digit numbers which is less than N.\n'''\nfrom __future__ import print_function\nlimit = int(input(\"limit? \"))\n\n# fetchs the next number\nfor number in range(limit-1,10000,-1):\n\n    # converts number into string.\n    strNumber = str(number)\n\n    # checks whether 'strNumber' is a palindrome.\n    if(strNumber == strNumber[::-1]):\n\n        divisor = 999\n\n        # if 'number' is a product of two 3-digit numbers\n        # then number is the answer otherwise fetch next number.\n        while(divisor != 99): \n            \n            if((number % divisor == 0) and (len(str(number / divisor)) == 3)):\n\n                print(number)\n                exit(0)\n\n            divisor -=1\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 2ed1bad7\n- Author: cclauss (cclauss@bluewin.ch)\n- Date: 2017-12-13 23:32:28\n- Message: Merge branch 'master' into modernize-python2-code\n- Changes:\n```diff\n@@ -4,13 +4,26 @@ A palindromic number reads the same both ways. The largest palindrome made from\n Find the largest palindrome made from the product of two 3-digit numbers which is less than N.\n '''\n from __future__ import print_function\n-n=int(input())\n-for i in range(n-1,10000,-1):\n-    temp=str(i)\n-    if(temp==temp[::-1]):\n-        j=999\n-        while(j!=99):\n-            if((i%j==0) and (len(str(i/j))==3)):\n-                print(i)\n+limit = int(input(\"limit? \"))\n+\n+# fetchs the next numbe...\n```\n\n### Commit 2\n- ID: a81084c5\n- Author: Christian Bender (christianbender89@web.de)\n- Date: 2017-12-03 22:39:13\n- Message: Refactoring solv1.py",
+      "metadata": {
+        "commit_count": 4,
+        "language": "python",
+        "total_chunks": 3,
+        "file_path": "Project Euler/Problem 04/sol1.py",
+        "strategy": "enhanced",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.0294032096862793
+    },
+    {
+      "content": "# File: Project Euler/Problem 06/sol2.py (python)\n\n## Code Content:\n```python\n# -*- coding: utf-8 -*-\n'''\nProblem:\nThe sum of the squares of the first ten natural numbers is,\n            1^2 + 2^2 + ... + 10^2 = 385\nThe square of the sum of the first ten natural numbers is,\n            (1 + 2 + ... + 10)^2 = 552 = 3025\nHence the difference between the sum of the squares of the first ten natural numbers and the square of the sum is 3025 − 385 = 2640.\nFind the difference between the sum of the squares of the first N natural numbers and the square of the sum.\n'''\nfrom __future__ import print_function\nn = int(input())\nsuma = n*(n+1)/2\nsuma **= 2\nsumb = n*(n+1)*(2*n+1)/6\nprint(suma-sumb)\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 4e069490\n- Author: cclauss (cclauss@bluewin.ch)\n- Date: 2017-11-25 17:23:50\n- Message: Modernize Python 2 code to get ready for Python 3\n- Changes:\n```diff\n@@ -8,8 +8,9 @@ The square of the sum of the first ten natural numbers is,\n Hence the difference between the sum of the squares of the first ten natural numbers and the square of the sum is 3025 − 385 = 2640.\n Find the difference between the sum of the squares of the first N natural numbers and the square of the sum.\n '''\n+from __future__ import print_function\n n = int(input())\n suma = n*(n+1)/2\n suma **= 2\n sumb = n*(n+1)*(2*n+1)/6\n-print suma-sumb\n\\ No newline at end of file\n+print(suma-sumb)\n...\n```",
+      "metadata": {
+        "file_path": "Project Euler/Problem 06/sol2.py",
+        "strategy": "enhanced",
+        "language": "python",
+        "total_chunks": 2,
+        "chunk_index": 0,
+        "commit_count": 2
+      },
+      "similarity_score": 1.0368883609771729
+    },
+    {
+      "content": "### Commit 4\n- ID: 7284714d\n- Author: Sachin Arora (sachinarora.707@gmail.com)\n- Date: 2017-10-24 23:41:19\n- Message: Project Euler Solutions Added.\n- Changes:\n```diff\n@@ -0,0 +1,38 @@\n+'''\n+Problem:\n+The prime factors of 13195 are 5,7,13 and 29. What is the largest prime factor of a given number N?\n+e.g. for 10, largest prime factor = 5. For 17, largest prime factor = 17.\n+'''\n+\n+import math\n+\n+def isprime(no):\n+    if(no==2):\n+        return True\n+    elif (no%2==0):\n+        return False\n+    sq = int(math.sqrt(no))+1\n+    for i in range(3,sq,2):\n+        if(no%i==0):\n+            return False\n+    return True\n+\n+max=0\n+n=int(input())\n+if(isprime(n)):\n+    ...\n```",
+      "metadata": {
+        "commit_count": 4,
+        "file_path": "Project Euler/Problem 03/sol1.py",
+        "strategy": "enhanced",
+        "language": "python",
+        "chunk_index": 2,
+        "total_chunks": 3
+      },
+      "similarity_score": 1.038065791130066
+    },
+    {
+      "content": "# File: Project Euler/Problem 02/sol2.py (python)\n\n## Code Content:\n```python\ndef fib(n):\n    ls = []\n    a,b = 0,1\n    n += 1\n    for i in range(n):\n        if (b % 2 == 0):\n            ls.append(b)\n        else:\n            pass\n        a,b = b, a+b\n    print (sum(ls))\n    return None\nfib(10)\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 92e0aa29\n- Author: Ben (34241521+arcsinecosine@users.noreply.github.com)\n- Date: 2018-01-21 16:34:09\n- Message: Add files via upload\n- Changes:\n```diff\n@@ -0,0 +1,13 @@\n+def fib(n):\n+    ls = []\n+    a,b = 0,1\n+    n += 1\n+    for i in range(n):\n+        if (b % 2 == 0):\n+            ls.append(b)\n+        else:\n+            pass\n+        a,b = b, a+b\n+    print (sum(ls))\n+    return None\n+fib(10)...\n```",
+      "metadata": {
+        "strategy": "enhanced",
+        "language": "python",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "file_path": "Project Euler/Problem 02/sol2.py",
+        "commit_count": 1
+      },
+      "similarity_score": 1.0400185585021973
+    },
+    {
+      "content": "# File: Project Euler/Problem 06/sol1.py (python)\n\n## Code Content:\n```python\n# -*- coding: utf-8 -*-\n'''\nProblem:\nThe sum of the squares of the first ten natural numbers is,\n            1^2 + 2^2 + ... + 10^2 = 385\nThe square of the sum of the first ten natural numbers is,\n            (1 + 2 + ... + 10)^2 = 552 = 3025\nHence the difference between the sum of the squares of the first ten natural numbers and the square of the sum is 3025 − 385 = 2640.\nFind the difference between the sum of the squares of the first N natural numbers and the square of the sum.\n'''\nfrom __future__ import print_function\n\nsuma = 0\nsumb = 0\nn = int(input())\nfor i in range(1,n+1):\n    suma += i**2\n    sumb += i\nsum = sumb**2 - suma\nprint(sum)\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 4e069490\n- Author: cclauss (cclauss@bluewin.ch)\n- Date: 2017-11-25 17:23:50\n- Message: Modernize Python 2 code to get ready for Python 3\n- Changes:\n```diff\n@@ -8,6 +8,7 @@ The square of the sum of the first ten natural numbers is,\n Hence the difference between the sum of the squares of the first ten natural numbers and the square of the sum is 3025 − 385 = 2640.\n Find the difference between the sum of the squares of the first N natural numbers and the square of the sum.\n '''\n+from __future__ import print_function\n \n suma = 0\n sumb = 0\n@@ -16,4 +17,4 @@ for i in range(1,n+1):\n     suma += i**2\n     sumb += i\n sum = sumb**2 - suma\n-print sum\n\\ No new...\n```",
+      "metadata": {
+        "file_path": "Project Euler/Problem 06/sol1.py",
+        "total_chunks": 2,
+        "commit_count": 2,
+        "language": "python",
+        "chunk_index": 0,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.040176272392273
+    }
+  ],
+  "compressed": [
+    {
+      "content": "# File: Project Euler/Problem 13/sol1.py (python)\n\n## Key Code Elements:\nProblem Statement:\nfrom __future__ import print_function\nfor i in range(n):\n\n## Recent Changes:\n- 4e069490 by cclauss (cclauss@bluewin.ch): Modernize Python 2 code to get ready for Python 3...\n- 20a45779 by bT-53 (phanu.bjstp@gmail.com): Add a soution of ProjectEuler Problem 13...",
+      "metadata": {
+        "strategy": "compressed",
+        "language": "python",
+        "commit_count": 2,
+        "file_path": "Project Euler/Problem 13/sol1.py",
+        "chunk_index": 0,
+        "total_chunks": 1
+      },
+      "similarity_score": 0.6309601068496704
+    },
+    {
+      "content": "# File: Project Euler/Problem 01/sol2.py (python)\n\n## Key Code Elements:\nProblem Statement:\nfrom __future__ import print_function\ntry:\nexcept NameError:\n\n## Recent Changes:\n- 4e069490 by cclauss (cclauss@bluewin.ch): Modernize Python 2 code to get ready for Python 3...\n- 7284714d by Sachin Arora (sachinarora.707@gmail.com): Project Euler Solutions Added....",
+      "metadata": {
+        "language": "python",
+        "chunk_index": 0,
+        "commit_count": 2,
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "file_path": "Project Euler/Problem 01/sol2.py"
+      },
+      "similarity_score": 0.6771393418312073
+    },
+    {
+      "content": "# File: Project Euler/Problem 06/sol2.py (python)\n\n## Key Code Elements:\nProblem:\nfrom __future__ import print_function\n\n## Recent Changes:\n- 4e069490 by cclauss (cclauss@bluewin.ch): Modernize Python 2 code to get ready for Python 3...\n- 7284714d by Sachin Arora (sachinarora.707@gmail.com): Project Euler Solutions Added....",
+      "metadata": {
+        "chunk_index": 0,
+        "commit_count": 2,
+        "total_chunks": 1,
+        "file_path": "Project Euler/Problem 06/sol2.py",
+        "strategy": "compressed",
+        "language": "python"
+      },
+      "similarity_score": 0.6827315092086792
+    },
+    {
+      "content": "# File: Project Euler/Problem 14/sol1.py (python)\n\n## Key Code Elements:\nfrom __future__ import print_function\nfor input1 in range(750000,1000000):\n    while number > 1:\n        if number % 2 == 0:\n        else:\n    if counter > pre_counter:\n\n## Recent Changes:\n- 4e069490 by cclauss (cclauss@bluewin.ch): Modernize Python 2 code to get ready for Python 3...\n- 0f78cd6a by Thejus-Paul (thejuspaul@protonmail.ch): Project Euler Solution Added...",
+      "metadata": {
+        "language": "python",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "file_path": "Project Euler/Problem 14/sol1.py",
+        "commit_count": 2,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.718144416809082
+    },
+    {
+      "content": "# File: Project Euler/Problem 16/sol1.py (python)\n\n## Key Code Elements:\nfor i in list_num:\n\n## Recent Changes:\n- c787a22d by Thejus-Paul (thejuspaul@protonmail.ch): Problem 16 Added\n\nSolution to the Problem 16  has been added....",
+      "metadata": {
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "file_path": "Project Euler/Problem 16/sol1.py",
+        "language": "python",
+        "commit_count": 1
+      },
+      "similarity_score": 0.7492953538894653
+    },
+    {
+      "content": "# File: Project Euler/Problem 03/sol2.py (python)\n\n## Key Code Elements:\nProblem:\nfrom __future__ import print_function\nwhile(i*i<=n):\n    while(n%i==0):\nif(n>1):\n\n## Recent Changes:\n- 4e069490 by cclauss (cclauss@bluewin.ch): Modernize Python 2 code to get ready for Python 3...\n- 7284714d by Sachin Arora (sachinarora.707@gmail.com): Project Euler Solutions Added....",
+      "metadata": {
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "commit_count": 2,
+        "total_chunks": 1,
+        "file_path": "Project Euler/Problem 03/sol2.py",
+        "language": "python"
+      },
+      "similarity_score": 0.7642778158187866
+    },
+    {
+      "content": "# File: Project Euler/Problem 01/sol1.py (python)\n\n## Key Code Elements:\nProblem Statement:\nfrom __future__ import print_function\ntry:\nexcept NameError:\nfor a in range(3,n):\n    if(a%3==0 or a%5==0):\n\n## Recent Changes:\n- 4e069490 by cclauss (cclauss@bluewin.ch): Modernize Python 2 code to get ready for Python 3...\n- 7284714d by Sachin Arora (sachinarora.707@gmail.com): Project Euler Solutions Added....",
+      "metadata": {
+        "total_chunks": 1,
+        "language": "python",
+        "chunk_index": 0,
+        "file_path": "Project Euler/Problem 01/sol1.py",
+        "commit_count": 2,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.7668555378913879
+    },
+    {
+      "content": "# File: Project Euler/Problem 04/sol1.py (python)\n\n## Key Code Elements:\nProblem:\nfrom __future__ import print_function\nfor number in range(limit-1,10000,-1):\n    if(strNumber == strNumber[::-1]):\n        while(divisor != 99): \n            if((number % divisor == 0) and (len(str(number / divisor)) == 3)):\n\n## Recent Changes:\n- 2ed1bad7 by cclauss (cclauss@bluewin.ch): Merge branch 'master' into modernize-python2-code...\n- a81084c5 by Christian Bender (christianbender89@web.de): Refactoring solv1.py\n\nLittle embellishment of the code.\nI put some comments and put readable identif...\n- 4e069490 by cclauss (cclauss@bluewin.ch): Modernize Python 2 code to get ready for Python 3...",
+      "metadata": {
+        "language": "python",
+        "file_path": "Project Euler/Problem 04/sol1.py",
+        "commit_count": 4,
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.778100848197937
+    },
+    {
+      "content": "# File: Project Euler/Problem 08/sol1.py (python)\n\n## Key Code Elements:\nimport sys\ndef main():\n    for i in range(len(number)-13):\n        for j in range(13):\n        if product > LargestProduct:\nif __name__ == '__main__':\n\n## Recent Changes:\n- 744803ad by shivg7706 (shivamgupta7706@gmail.com): Adding Problem_08...",
+      "metadata": {
+        "strategy": "compressed",
+        "commit_count": 1,
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "file_path": "Project Euler/Problem 08/sol1.py",
+        "language": "python"
+      },
+      "similarity_score": 0.7796935439109802
+    },
+    {
+      "content": "# File: Project Euler/Problem 48/sol1.py (python)\n\n## Key Code Elements:\nfrom __future__ import print_function\ntry:\nexcept NameError:\nfor i in xrange(1, 1001):\n\n## Recent Changes:\n- 46b4e51d by Daniel Ingram (ingramds@appstate.edu): Solution to Problem 48...",
+      "metadata": {
+        "commit_count": 1,
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "language": "python",
+        "file_path": "Project Euler/Problem 48/sol1.py",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.7798816561698914
+    },
+    {
+      "content": "# File: Project Euler/Problem 06/sol1.py (python)\n\n## Key Code Elements:\nProblem:\nfrom __future__ import print_function\nfor i in range(1,n+1):\n\n## Recent Changes:\n- 4e069490 by cclauss (cclauss@bluewin.ch): Modernize Python 2 code to get ready for Python 3...\n- 7284714d by Sachin Arora (sachinarora.707@gmail.com): Project Euler Solutions Added....",
+      "metadata": {
+        "commit_count": 2,
+        "language": "python",
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "file_path": "Project Euler/Problem 06/sol1.py",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.7854933142662048
+    },
+    {
+      "content": "# File: Project Euler/Problem 02/sol1.py (python)\n\n## Key Code Elements:\nProblem:\nthe first 10 terms will be:\nfrom __future__ import print_function\ntry:\nexcept NameError:\nwhile(j<=n):\n\n## Recent Changes:\n- 2ed1bad7 by cclauss (cclauss@bluewin.ch): Merge branch 'master' into modernize-python2-code...\n- 4e069490 by cclauss (cclauss@bluewin.ch): Modernize Python 2 code to get ready for Python 3...\n- 8d9da8f6 by Christian Bender (christianbender89@web.de): Correction: File solv01.py\n\nI have remove some semicolons....",
+      "metadata": {
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "language": "python",
+        "strategy": "compressed",
+        "file_path": "Project Euler/Problem 02/sol1.py",
+        "commit_count": 4
+      },
+      "similarity_score": 0.7878519892692566
+    },
+    {
+      "content": "# File: Project Euler/Problem 05/sol1.py (python)\n\n## Key Code Elements:\nProblem:\nfrom __future__ import print_function\nwhile 1:\n    for j in range(2,n):\n        if (i%j != 0):\n    if(nfound==0):\n        if(i==0):\n\n## Recent Changes:\n- 4e069490 by cclauss (cclauss@bluewin.ch): Modernize Python 2 code to get ready for Python 3...\n- 7284714d by Sachin Arora (sachinarora.707@gmail.com): Project Euler Solutions Added....",
+      "metadata": {
+        "language": "python",
+        "commit_count": 2,
+        "total_chunks": 1,
+        "file_path": "Project Euler/Problem 05/sol1.py",
+        "chunk_index": 0,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.8083775043487549
+    },
+    {
+      "content": "# File: Project Euler/Problem 01/sol3.py (python)\n\n## Key Code Elements:\nfrom __future__ import print_function\nProblem Statement:\ntry:\nexcept NameError:\nwhile(1):\n    if(num>=n):\n    if(num>=n):\n    if(num>=n):\n    if(num>=n):\n    if(num>=n):\n    if(num>=n):\n    if(num>=n):\n\n## Recent Changes:\n- 13ebdc35 by Christian Bender (christianbender89@web.de): I fixed the sol3.py of problem 1...\n- 2ed1bad7 by cclauss (cclauss@bluewin.ch): Merge branch 'master' into modernize-python2-code...\n- 4e069490 by cclauss (cclauss@bluewin.ch): Modernize Python 2 code to get ready for Python 3...",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "python",
+        "file_path": "Project Euler/Problem 01/sol3.py",
+        "strategy": "compressed",
+        "commit_count": 5,
+        "total_chunks": 1
+      },
+      "similarity_score": 0.8395179510116577
+    },
+    {
+      "content": "# File: Project Euler/Problem 04/sol2.py (python)\n\n## Key Code Elements:\nProblem:\nfrom __future__ import print_function\nfor i in range(999,100,-1):\n    for j in range(999,100,-1):\n        if t == t[::-1]:\nfor i in arr[::-1]:\n    if(i<n):\n\n## Recent Changes:\n- 4e069490 by cclauss (cclauss@bluewin.ch): Modernize Python 2 code to get ready for Python 3...\n- 7284714d by Sachin Arora (sachinarora.707@gmail.com): Project Euler Solutions Added....",
+      "metadata": {
+        "language": "python",
+        "total_chunks": 1,
+        "commit_count": 2,
+        "chunk_index": 0,
+        "file_path": "Project Euler/Problem 04/sol2.py",
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.845862865447998
+    },
+    {
+      "content": "# File: Project Euler/Problem 22/sol1.py (python)\n\n## Key Code Elements:\nfrom __future__ import print_function\ntry:\nexcept NameError:\nwith open('p022_names.txt') as file:\nfor i, name in enumerate(names):\n\tfor letter in name:\n\n## Recent Changes:\n- a5f0ae84 by Daniel Ingram (ingramds@appstate.edu): Solution to Problem 22...",
+      "metadata": {
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "commit_count": 1,
+        "language": "python",
+        "file_path": "Project Euler/Problem 22/sol1.py",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.8536692261695862
+    },
+    {
+      "content": "# File: Project Euler/Problem 02/sol2.py (python)\n\n## Key Code Elements:\ndef fib(n):\n    for i in range(n):\n        if (b % 2 == 0):\n        else:\n\n## Recent Changes:\n- 92e0aa29 by Ben (34241521+arcsinecosine@users.noreply.github.com): Add files via upload...",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "Project Euler/Problem 02/sol2.py",
+        "strategy": "compressed",
+        "commit_count": 1,
+        "total_chunks": 1,
+        "language": "python"
+      },
+      "similarity_score": 0.8606097102165222
+    },
+    {
+      "content": "# File: Project Euler/Problem 03/sol1.py (python)\n\n## Key Code Elements:\nProblem:\nfrom __future__ import print_function\nimport math\ndef isprime(no):\n    if(no==2):\n    elif (no%2==0):\n    for i in range(3,sq,2):\n        if(no%i==0):\nif(isprime(n)):\nelse:\n    while (n%2==0):\n    if(isprime(n)):\n    else:\n        for i in range(3,n1,2):\n            if(n%i==0):\n\n## Recent Changes:\n- 2ed1bad7 by cclauss (cclauss@bluewin.ch): Merge branch 'master' into modernize-python2-code...\n- 4e069490 by cclauss (cclauss@bluewin.ch): Modernize Python 2 code to get ready for Python 3...\n- 01f48e70 by Christian Bender (christianbender89@web.de): Correction: File solv01.py\n\nIdentifier 'max' changed in 'maxNumber' , since 'max' is a function....",
+      "metadata": {
+        "language": "python",
+        "chunk_index": 0,
+        "commit_count": 4,
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "file_path": "Project Euler/Problem 03/sol1.py"
+      },
+      "similarity_score": 0.8803268671035767
+    },
+    {
+      "content": "# File: Project Euler/Problem 20/sol2.py (python)\n\n## Key Code Elements:\nfrom math import factorial\ndef main():\nif __name__ == '__main__':\n\n## Recent Changes:\n- b6b7784b by shivg7706 (shivamgupta7706@gmail.com): another sol for problem_20...",
+      "metadata": {
+        "language": "python",
+        "commit_count": 1,
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "file_path": "Project Euler/Problem 20/sol2.py",
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.8806357383728027
+    },
+    {
+      "content": "# File: Project Euler/Problem 52/sol1.py (python)\n\n## Key Code Elements:\nfrom __future__ import print_function\nwhile True:\n       sorted(list(str(6*i))):\n\n## Recent Changes:\n- b172ec38 by Daniel Ingram (ingramds@appstate.edu): Solution to Problem 52...",
+      "metadata": {
+        "language": "python",
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "commit_count": 1,
+        "file_path": "Project Euler/Problem 52/sol1.py",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.8806747198104858
+    }
+  ]
+}

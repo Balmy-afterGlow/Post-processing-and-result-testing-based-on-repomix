@@ -1,0 +1,7 @@
+{
+  "reason": "The issue occurs because the script 'train_prompts.py' does not properly handle the case when running with a single GPU (dist.get_world_size() == 1), specifically missing definitions for prompt_sampler and pretrain_sampler.",
+  "location": [
+    "applications/Chat/examples/train_prompts.py"
+  ],
+  "fix": "Add proper initialization for prompt_sampler and pretrain_sampler when dist.get_world_size() == 1. For example, add these lines after the strategy configuration:\n\nif dist.get_world_size() == 1:\n    prompt_sampler = None\n    pretrain_sampler = None\nelse:\n    prompt_sampler = DistributedSampler(prompt_dataset)\n    pretrain_sampler = DistributedSampler(pretrain_dataset)"
+}

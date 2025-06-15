@@ -1,0 +1,708 @@
+{
+  "basic": [
+    {
+      "content": "# File: ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/ConnectionFactory.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.client.engine.cio\n\nimport io.ktor.util.cio.*\nimport io.ktor.network.selector.*\nimport io.ktor.network.sockets.*\nimport io.ktor.network.sockets.Socket\nimport kotlinx.coroutines.sync.*\nimport java.net.*\n\ninternal class ConnectionFactory(\n    private val selector: SelectorManager,\n    maxConnectionsCount: Int\n) {\n    private val semaphore = Semaphore(maxConnectionsCount)\n\n    suspend fun connect(address: InetSocketAddress): Socket {\n        semaphore.acquire()\n        return try {\n            aSocket(selector).tcpNoDelay().tcp().connect(address)\n        } catch (cause: Throwable) {\n            // a failure or cancellation\n            semaphore.release()\n            throw cause\n        }\n    }\n\n    fun release() {\n        semaphore.release()\n    }\n}\n```",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "kotlin",
+        "file_path": "ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/ConnectionFactory.kt",
+        "total_chunks": 1,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.6086405515670776
+    },
+    {
+      "content": "# File: ktor-utils/jvm/src/io/ktor/util/cio/Channels.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.util.cio\n\nimport java.io.*\n\n/**\n * An exception thrown when an IO error occurred during reading or writing to/from the underlying channel.\n * The typical error is \"connection reset\" and so on.\n */\nopen class ChannelIOException(message: String, exception: Throwable) : IOException(message, exception)\n\n/**\n * An exception that is thrown when an IO error occurred during writing to the destination channel.\n * Usually it happens when a remote client closed the connection.\n */\nclass ChannelWriteException(message: String = \"Cannot write to a channel\", exception: Throwable) :\n    ChannelIOException(message, exception)\n\n/**\n * An exception that is thrown when an IO error occurred during reading from the request channel.\n * Usually it happens when a remote client closed the connection.\n */\nclass ChannelReadException(message: String = \"Cannot read from a channel\", exception: Throwable) :\n    ChannelIOException(message, exception)\n```",
+      "metadata": {
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "strategy": "basic",
+        "language": "kotlin",
+        "file_path": "ktor-utils/jvm/src/io/ktor/util/cio/Channels.kt"
+      },
+      "similarity_score": 0.6575934290885925
+    },
+    {
+      "content": "# File: ktor-network/jvm/src/io/ktor/network/sockets/SocketImpl.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.network.sockets\n\nimport io.ktor.network.selector.*\nimport java.net.*\nimport java.nio.channels.*\n\ninternal class SocketImpl<out S : SocketChannel>(\n    override val channel: S,\n    private val socket: java.net.Socket,\n    selector: SelectorManager\n) : NIOSocketImpl<S>(channel, selector, pool = null), Socket {\n    init {\n        require(!channel.isBlocking) { \"channel need to be configured as non-blocking\" }\n    }\n\n    override val localAddress: SocketAddress\n        get() = socket.localSocketAddress\n\n    override val remoteAddress: SocketAddress\n        get() = socket.remoteSocketAddress\n\n    @Suppress(\"BlockingMethodInNonBlockingContext\")\n    internal suspend fun connect(target: SocketAddress): Socket {\n        if (channel.connect(target)) return this\n\n        wantConnect(true)\n        selector.select(this, SelectInterest.CONNECT)\n\n        while (true) {\n            if (channel.finishConnect()) break\n\n            wantConnect(true)\n            selector.select(this, SelectInterest.CONNECT)\n        }\n\n        wantConnect(false)\n\n        return this\n    }\n\n    private fun wantConnect(state: Boolean = true) {\n        interestOp(SelectInterest.CONNECT, state)\n    }\n}\n```",
+      "metadata": {
+        "total_chunks": 1,
+        "file_path": "ktor-network/jvm/src/io/ktor/network/sockets/SocketImpl.kt",
+        "strategy": "basic",
+        "language": "kotlin",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.6591897010803223
+    },
+    {
+      "content": "# File: ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/Endpoint.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.client.engine.cio\n\nimport io.ktor.client.request.*\nimport io.ktor.network.sockets.*\nimport io.ktor.network.sockets.Socket\nimport io.ktor.network.tls.*\nimport io.ktor.util.*\nimport io.ktor.util.date.*\nimport kotlinx.atomicfu.*\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.channels.*\nimport java.io.*\nimport java.net.*\nimport kotlin.coroutines.*\n\ninternal class Endpoint(\n    host: String,\n    port: Int,\n    private val overProxy: Boolean,\n    private val secure: Boolean,\n    private val config: CIOEngineConfig,\n    private val connectionFactory: ConnectionFactory,\n    override val coroutineContext: CoroutineContext,\n    private val onDone: () -> Unit\n) : CoroutineScope, Closeable {\n    private val address = InetSocketAddress(host, port)\n\n    private val connections: AtomicInt = atomic(0)\n    private val tasks: Channel<RequestTask> = Channel(Channel.UNLIMITED)\n    private val deliveryPoint: Channel<RequestTask> = Channel()\n\n    private val maxEndpointIdleTime: Long = 2 * config.endpoint.connectTimeout\n\n    private val postman = launch(start = CoroutineStart.LAZY) {\n        try {\n            while (true) {\n                val task = withTimeout(maxEndpointIdleTime) {\n                    tasks.receive()\n                }",
+      "metadata": {
+        "file_path": "ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/Endpoint.kt",
+        "chunk_index": 0,
+        "total_chunks": 4,
+        "strategy": "basic",
+        "language": "kotlin"
+      },
+      "similarity_score": 0.6802104115486145
+    },
+    {
+      "content": "# File: ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/CIOEngine.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.client.engine.cio\n\nimport io.ktor.client.engine.*\nimport io.ktor.client.request.*\nimport io.ktor.http.*\nimport io.ktor.network.selector.*\nimport kotlinx.atomicfu.*\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.channels.*\nimport java.io.*\nimport java.net.*\nimport java.util.concurrent.*\n\ninternal class CIOEngine(\n    override val config: CIOEngineConfig\n) : HttpClientJvmEngine(\"ktor-cio\") {\n    private val endpoints = ConcurrentHashMap<String, Endpoint>()\n\n    @UseExperimental(InternalCoroutinesApi::class)\n    private val selectorManager by lazy { ActorSelectorManager(dispatcher) }\n\n    private val connectionFactory = ConnectionFactory(selectorManager, config.maxConnectionsCount)\n    private val closed = atomic(false)\n\n    private val proxy = when (val type = config.proxy?.type()) {\n        Proxy.Type.DIRECT,\n        null -> null\n        Proxy.Type.HTTP -> config.proxy\n        else -> throw IllegalStateException(\"Proxy of type $type is unsupported by CIO engine.\")\n    }\n\n    override suspend fun execute(data: HttpRequestData): HttpResponseData {\n        while (true) {\n            if (closed.value) throw ClientClosedException()",
+      "metadata": {
+        "file_path": "ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/CIOEngine.kt",
+        "strategy": "basic",
+        "language": "kotlin",
+        "chunk_index": 0,
+        "total_chunks": 3
+      },
+      "similarity_score": 0.6833637356758118
+    },
+    {
+      "content": "# File: ktor-network/jvm/test/io/ktor/network/sockets/tests/ClientSocketTest.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.network.sockets.tests\n\nimport io.ktor.network.selector.*\nimport io.ktor.network.sockets.*\nimport io.ktor.network.sockets.Socket\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.debug.junit4.*\nimport io.ktor.utils.io.*\nimport org.junit.*\nimport org.junit.Test\nimport org.junit.rules.*\nimport java.net.ServerSocket\nimport java.nio.*\nimport java.util.concurrent.*\nimport kotlin.concurrent.*\nimport kotlin.test.*\n\nclass ClientSocketTest {\n    private val exec = Executors.newCachedThreadPool()\n    private val selector = ActorSelectorManager(exec.asCoroutineDispatcher())\n    private var server: Pair<ServerSocket, Thread>? = null\n\n    @get:Rule\n    val timeout = CoroutinesTimeout.seconds(15)\n\n    @get:Rule\n    val errors = ErrorCollector()\n\n    @After\n    fun tearDown() {\n        server?.let { (server, thread) ->\n            server.close()\n            thread.interrupt()\n        }\n        selector.close()\n        exec.shutdown()\n    }\n\n    @Test\n    fun testConnect() {\n        server { it.close() }\n\n        client {\n        }\n    }\n\n    @Test\n    fun testRead() {\n        server { client ->\n            client.getOutputStream().use { o ->\n                o.write(\"123\".toByteArray())\n                o.flush()\n            }\n        }\n\n        client { socket ->\n            val bb = ByteBuffer.allocate(3)\n            val channel = socket.openReadChannel()\n            channel.readFully(bb)\n            assertEquals(\"123\", String(bb.array()))\n        }\n    }\n\n    @Test\n    fun testWrite() {\n        server { client ->\n            assertEquals(\"123\", client.getInputStream().reader().readText())\n        }",
+      "metadata": {
+        "strategy": "basic",
+        "total_chunks": 2,
+        "language": "kotlin",
+        "file_path": "ktor-network/jvm/test/io/ktor/network/sockets/tests/ClientSocketTest.kt",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.6874622106552124
+    },
+    {
+      "content": "# File: ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/ConnectionPipeline.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.client.engine.cio\n\nimport io.ktor.client.request.*\nimport io.ktor.client.utils.*\nimport io.ktor.http.*\nimport io.ktor.http.cio.*\nimport io.ktor.network.sockets.*\nimport io.ktor.util.cio.*\nimport io.ktor.util.date.*\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.CancellationException\nimport kotlinx.coroutines.channels.*\nimport kotlinx.coroutines.channels.Channel\nimport io.ktor.utils.io.*\nimport io.ktor.utils.io.core.*\nimport io.ktor.utils.io.pool.*\nimport kotlinx.coroutines.sync.*\nimport java.nio.channels.*\nimport kotlin.coroutines.*\n\ninternal class ConnectionPipeline(\n    keepAliveTime: Long,\n    pipelineMaxSize: Int,\n    socket: Socket,\n    overProxy: Boolean,\n    tasks: Channel<RequestTask>,\n    parentContext: CoroutineContext\n) : CoroutineScope {\n    override val coroutineContext: CoroutineContext = parentContext + Job()\n\n    private val networkInput = socket.openReadChannel()\n    private val networkOutput = socket.openWriteChannel()\n    private val requestLimit = Semaphore(pipelineMaxSize)\n    private val responseChannel = Channel<ConnectionResponseTask>(Channel.UNLIMITED)\n\n    val pipelineContext: Job = launch(start = CoroutineStart.LAZY) {\n        try {\n            while (true) {\n                val task = withTimeoutOrNull(keepAliveTime) {\n                    tasks.receive()\n                } ?: break\n\n                try {\n                    requestLimit.acquire()\n                    responseChannel.send(ConnectionResponseTask(GMTDate(), task))\n                } catch (cause: Throwable) {\n                    task.response.resumeWithException(cause)\n                    throw cause\n                }",
+      "metadata": {
+        "strategy": "basic",
+        "file_path": "ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/ConnectionPipeline.kt",
+        "total_chunks": 4,
+        "language": "kotlin",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.6937552690505981
+    },
+    {
+      "content": "# File: ktor-network/jvm/src/io/ktor/network/sockets/NIOSocket.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.network.sockets\n\nimport io.ktor.network.selector.*\nimport kotlinx.coroutines.*\nimport io.ktor.utils.io.*\nimport io.ktor.utils.io.ByteChannel\nimport io.ktor.utils.io.pool.*\nimport java.nio.*\nimport java.nio.channels.*\nimport java.util.concurrent.CancellationException\nimport java.util.concurrent.atomic.*\nimport kotlin.coroutines.*\n\ninternal abstract class NIOSocketImpl<out S>(\n    override val channel: S,\n    val selector: SelectorManager,\n    val pool: ObjectPool<ByteBuffer>?\n) : ReadWriteSocket, SelectableBase(channel), CoroutineScope\n    where S : java.nio.channels.ByteChannel, S : java.nio.channels.SelectableChannel {\n\n    private val closeFlag = AtomicBoolean()\n    private val readerJob = AtomicReference<ReaderJob?>()\n    private val writerJob = AtomicReference<WriterJob?>()\n\n    override val socketContext: CompletableJob = Job()\n\n    override val coroutineContext: CoroutineContext\n        get() = socketContext\n\n    // NOTE: it is important here to use different versions of attachForReadingImpl\n    // because it is not always valid to use channel's internal buffer for NIO read/write:\n    //  at least UDP datagram reading MUST use bigger byte buffer otherwise datagram could be truncated\n    //  that will cause broken data\n    // however it is not the case for attachForWriting this is why we use direct writing in any case\n\n    final override fun attachForReading(channel: ByteChannel): WriterJob {\n        return attachFor(\"reading\", channel, writerJob) {\n            if (pool != null) {\n                attachForReadingImpl(channel, this.channel, this, selector, pool)\n            } else {\n                attachForReadingDirectImpl(channel, this.channel, this, selector)\n            }\n        }\n    }",
+      "metadata": {
+        "language": "kotlin",
+        "total_chunks": 3,
+        "strategy": "basic",
+        "file_path": "ktor-network/jvm/src/io/ktor/network/sockets/NIOSocket.kt",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.6952709555625916
+    },
+    {
+      "content": "# File: ktor-network/jvm/src/io/ktor/network/sockets/Builders.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.network.sockets\n\nimport io.ktor.network.selector.*\nimport java.net.*\nimport java.nio.channels.*\n\n/**\n * Represent a configurable socket\n */\ninterface Configurable<out T : Configurable<T, O>, O : SocketOptions> {\n    /**\n     * Current socket options\n     */\n    var options: O\n\n    /**\n     * Configure socket options in [block] function\n     */\n    fun configure(block: O.() -> Unit): T {\n        @Suppress(\"UNCHECKED_CAST\")\n        val newOptions = options.copy() as O\n\n        block(newOptions)\n        options = newOptions\n\n        @Suppress(\"UNCHECKED_CAST\")\n        return this as T\n    }\n}\n\n/**\n * Set TCP_NODELAY socket option to disable the Nagle algorithm.\n */\nfun <T : Configurable<T, *>> T.tcpNoDelay(): T {\n    return configure {\n        if (this is SocketOptions.TCPClientSocketOptions) {\n            noDelay = true\n        }\n    }\n}\n\n/**\n * Start building a socket\n */\nfun aSocket(selector: SelectorManager): SocketBuilder = SocketBuilder(selector, SocketOptions.create())\n\n/**\n * Socket builder\n */\n@Suppress(\"PublicApiImplicitType\", \"unused\")\nclass SocketBuilder internal constructor(private val selector: SelectorManager, override var options: SocketOptions) :\n    Configurable<SocketBuilder, SocketOptions> {\n    /**\n     * Build TCP socket\n     */\n    fun tcp() = TcpSocketBuilder(selector, options.peer())\n\n    /**\n     * Build UDP socket\n     */\n    fun udp() = UDPSocketBuilder(selector, options.peer().udp())\n}",
+      "metadata": {
+        "strategy": "basic",
+        "language": "kotlin",
+        "file_path": "ktor-network/jvm/src/io/ktor/network/sockets/Builders.kt",
+        "chunk_index": 0,
+        "total_chunks": 3
+      },
+      "similarity_score": 0.6985674500465393
+    },
+    {
+      "content": "# File: ktor-server/ktor-server-netty/jvm/src/io/ktor/server/netty/NettyChannelInitializer.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.server.netty\n\nimport io.ktor.server.engine.*\nimport io.ktor.server.netty.cio.*\nimport io.ktor.server.netty.http1.*\nimport io.ktor.server.netty.http2.*\nimport io.netty.channel.*\nimport io.netty.channel.socket.SocketChannel\nimport io.netty.handler.codec.http.*\nimport io.netty.handler.codec.http2.*\nimport io.netty.handler.ssl.*\nimport io.netty.handler.timeout.*\nimport io.netty.util.concurrent.*\nimport java.nio.channels.*\nimport java.security.*\nimport java.security.cert.*\nimport kotlin.coroutines.*\n\n/**\n * A [ChannelInitializer] implementation that does setup the default ktor channel pipeline\n */\n@EngineAPI\nclass NettyChannelInitializer(\n    private val enginePipeline: EnginePipeline,\n    private val environment: ApplicationEngineEnvironment,\n    private val callEventGroup: EventExecutorGroup,\n    private val engineContext: CoroutineContext,\n    private val userContext: CoroutineContext,\n    private val connector: EngineConnectorConfig,\n    private val requestQueueLimit: Int,\n    private val runningLimit: Int,\n    private val responseWriteTimeout: Int,\n    private val requestReadTimeout: Int,\n    private val httpServerCodec: () -> HttpServerCodec\n) : ChannelInitializer<SocketChannel>() {\n    private var sslContext: SslContext? = null\n\n    init {\n        if (connector is EngineSSLConnectorConfig) {\n\n            // It is better but netty-openssl doesn't support it\n//              val kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm())\n//              kmf.init(ktorConnector.keyStore, password)\n//              password.fill('\\u0000')",
+      "metadata": {
+        "language": "kotlin",
+        "total_chunks": 4,
+        "chunk_index": 0,
+        "strategy": "basic",
+        "file_path": "ktor-server/ktor-server-netty/jvm/src/io/ktor/server/netty/NettyChannelInitializer.kt"
+      },
+      "similarity_score": 0.7042834758758545
+    },
+    {
+      "content": "# File: ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/CIOEngineConfig.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.client.engine.cio\n\nimport io.ktor.client.engine.*\nimport io.ktor.network.tls.*\n\n/**\n * Configuration for [CIO] client engine.\n */\nclass CIOEngineConfig : HttpClientEngineConfig() {\n    /**\n     * [Endpoint] settings.\n     */\n    val endpoint: EndpointConfig = EndpointConfig()\n    /**\n     * [https] settings.\n     */\n    val https: TLSConfigBuilder = TLSConfigBuilder()\n\n    /**\n     * Maximum allowed connections count.\n     */\n    var maxConnectionsCount: Int = 1000\n\n    /**\n     * Timeout to get send request headers and get first response bytes(in millis).\n     *\n     * Use 0 to disable.\n     */\n    var requestTimeout: Long = 15000\n\n    /**\n     * [https] settings.\n     */\n    fun https(block: TLSConfigBuilder.() -> Unit): TLSConfigBuilder = https.apply(block)\n}\n\n/**\n * Configure [endpoint] settings.\n */\nfun CIOEngineConfig.endpoint(block: EndpointConfig.() -> Unit): EndpointConfig = endpoint.apply(block)\n\n/**\n * [Endpoint] settings.\n */\nclass EndpointConfig {\n    /**\n     * Maximum connections  per single route.\n     */\n    var maxConnectionsPerRoute: Int = 100\n\n    /**\n     * Connection keep-alive time in millis.\n     */\n    var keepAliveTime: Long = 5000\n\n    /**\n     * Maximum number of requests per single pipeline.\n     */\n    var pipelineMaxSize: Int = 20\n\n    /**\n     * Connect timeout in millis.\n     */\n    var connectTimeout: Long = 5000\n\n    /**\n     * Maximum number of connection attempts.\n     */\n    var connectRetryAttempts: Int = 5\n}\n```",
+      "metadata": {
+        "language": "kotlin",
+        "chunk_index": 0,
+        "file_path": "ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/CIOEngineConfig.kt",
+        "total_chunks": 1,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.7061266899108887
+    },
+    {
+      "content": "# File: ktor-network/jvm/src/io/ktor/network/sockets/CIOWriter.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.network.sockets\n\nimport io.ktor.network.selector.*\nimport kotlinx.coroutines.*\nimport io.ktor.utils.io.*\nimport io.ktor.utils.io.ByteChannel\nimport io.ktor.utils.io.core.*\nimport io.ktor.utils.io.pool.*\nimport java.nio.*\nimport java.nio.channels.*\n\ninternal fun CoroutineScope.attachForWritingImpl(\n    channel: ByteChannel,\n    nioChannel: WritableByteChannel,\n    selectable: Selectable,\n    selector: SelectorManager,\n    pool: ObjectPool<ByteBuffer>\n): ReaderJob {\n    val buffer = pool.borrow()\n\n    return reader(Dispatchers.Unconfined + CoroutineName(\"cio-to-nio-writer\"), channel) {\n        try {\n            while (true) {\n                buffer.clear()\n                if (channel.readAvailable(buffer) == -1) {\n                    break\n                }\n                buffer.flip()\n\n                while (buffer.hasRemaining()) {\n                    val rc = nioChannel.write(buffer)\n                    if (rc == 0) {\n                        selectable.interestOp(SelectInterest.WRITE, true)\n                        selector.select(selectable, SelectInterest.WRITE)\n                    } else {\n                        selectable.interestOp(SelectInterest.WRITE, false)\n                    }\n                }\n            }\n        } finally {\n            pool.recycle(buffer)\n            if (nioChannel is SocketChannel) {\n                try {\n                    nioChannel.socket().shutdownOutput()\n                } catch (ignore: ClosedChannelException) {\n                }\n            }\n        }\n    }\n}",
+      "metadata": {
+        "language": "kotlin",
+        "total_chunks": 2,
+        "strategy": "basic",
+        "chunk_index": 0,
+        "file_path": "ktor-network/jvm/src/io/ktor/network/sockets/CIOWriter.kt"
+      },
+      "similarity_score": 0.7072375416755676
+    },
+    {
+      "content": "# File: ktor-client/ktor-client-cio/jvm/test/io/ktor/client/engine/cio/ConnectErrorsTest.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.client.engine.cio\n\nimport io.ktor.application.*\nimport io.ktor.client.*\nimport io.ktor.client.call.*\nimport io.ktor.client.engine.*\nimport io.ktor.client.request.*\nimport io.ktor.network.tls.certificates.*\nimport io.ktor.response.*\nimport io.ktor.routing.*\nimport io.ktor.server.engine.*\nimport io.ktor.server.netty.*\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.debug.junit4.*\nimport org.junit.*\nimport java.io.*\nimport java.net.*\nimport java.util.concurrent.*\nimport javax.net.ssl.*\nimport kotlin.concurrent.*\nimport kotlin.test.*\nimport kotlin.test.Test\n\n@Suppress(\"KDocMissingDocumentation\", \"BlockingMethodInNonBlockingContext\")\nclass ConnectErrorsTest {\n    @get:Rule\n    val timeout = CoroutinesTimeout.seconds(60)\n\n    private val serverSocket = ServerSocket(0, 1)\n\n    @AfterTest\n    fun teardown() {\n        serverSocket.close()\n    }\n\n    @Test\n    fun testConnectAfterConnectionErrors(): Unit = runBlocking<Unit> {\n        HttpClient(CIO.config {\n            maxConnectionsCount = 1\n            endpoint.connectTimeout = SOCKET_CONNECT_TIMEOUT\n            endpoint.connectRetryAttempts = 3\n        }).use { client ->\n            serverSocket.close()\n\n            repeat(5) {\n                try {\n                    client.call(\"http://localhost:${serverSocket.localPort}/\").close()\n                    fail(\"Shouldn't reach here\")\n                } catch (_: java.net.ConnectException) {\n                }\n            }",
+      "metadata": {
+        "strategy": "basic",
+        "total_chunks": 3,
+        "chunk_index": 0,
+        "file_path": "ktor-client/ktor-client-cio/jvm/test/io/ktor/client/engine/cio/ConnectErrorsTest.kt",
+        "language": "kotlin"
+      },
+      "similarity_score": 0.709711492061615
+    },
+    {
+      "content": "# File: ktor-server/ktor-server-cio/jvm/src/io/ktor/server/cio/HttpServer.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.server.cio\n\nimport io.ktor.http.cio.*\nimport io.ktor.http.cio.internals.WeakTimeoutQueue\nimport io.ktor.network.selector.*\nimport io.ktor.network.sockets.*\nimport io.ktor.network.sockets.ServerSocket\nimport io.ktor.network.sockets.Socket\nimport io.ktor.server.engine.*\nimport io.ktor.util.*\nimport kotlinx.coroutines.*\nimport org.slf4j.*\nimport java.net.*\nimport java.nio.channels.*\nimport java.util.concurrent.*\nimport kotlin.coroutines.*\n\n/**\n * Represents a server instance\n * @property rootServerJob server job - root for all jobs\n * @property acceptJob client connections accepting job\n * @property serverSocket a deferred server socket instance, could be completed with error if it failed to bind\n */\n@Suppress(\"MemberVisibilityCanBePrivate\")\n@KtorExperimentalAPI\nclass HttpServer(val rootServerJob: Job, val acceptJob: Job, val serverSocket: Deferred<ServerSocket>)\n\n/**\n * HTTP server connector settings\n * @property host to listen to\n * @property port to listen to\n * @property connectionIdleTimeoutSeconds time to live for IDLE connections\n */\n@KtorExperimentalAPI\ndata class HttpServerSettings(\n    val host: String = \"0.0.0.0\",\n    val port: Int = 8080,\n    val connectionIdleTimeoutSeconds: Long = 45\n)\n\n@Suppress(\"KDocMissingDocumentation\", \"unused\")\n@Deprecated(\"Binary compatibility.\", level = DeprecationLevel.HIDDEN)\nfun httpServer(settings: HttpServerSettings, parentJob: Job? = null, handler: HttpRequestHandler): HttpServer {\n    val parent = parentJob ?: Dispatchers.Default\n    return CoroutineScope(parent).httpServer(settings, handler = handler)\n}",
+      "metadata": {
+        "strategy": "basic",
+        "file_path": "ktor-server/ktor-server-cio/jvm/src/io/ktor/server/cio/HttpServer.kt",
+        "language": "kotlin",
+        "chunk_index": 0,
+        "total_chunks": 3
+      },
+      "similarity_score": 0.7100599408149719
+    },
+    {
+      "content": "# File: ktor-network/jvm/src/io/ktor/network/sockets/CIOReader.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.network.sockets\n\nimport io.ktor.network.selector.*\nimport kotlinx.coroutines.*\nimport io.ktor.utils.io.*\nimport io.ktor.utils.io.ByteChannel\nimport io.ktor.utils.io.core.*\nimport io.ktor.utils.io.nio.*\nimport io.ktor.utils.io.pool.*\nimport java.nio.*\nimport java.nio.channels.*\n\ninternal fun CoroutineScope.attachForReadingImpl(\n    channel: ByteChannel,\n    nioChannel: ReadableByteChannel,\n    selectable: Selectable,\n    selector: SelectorManager,\n    pool: ObjectPool<ByteBuffer>\n): WriterJob {\n    val buffer = pool.borrow()\n    return writer(Dispatchers.Unconfined + CoroutineName(\"cio-from-nio-reader\"), channel) {\n        try {\n            while (true) {\n                val rc = nioChannel.read(buffer)\n                if (rc == -1) {\n                    channel.close()\n                    break\n                } else if (rc == 0) {\n                    channel.flush()\n                    selectable.interestOp(SelectInterest.READ, true)\n                    selector.select(selectable, SelectInterest.READ)\n                } else {\n                    selectable.interestOp(SelectInterest.READ, false)\n                    buffer.flip()\n                    channel.writeFully(buffer)\n                    buffer.clear()\n                }\n            }\n        } finally {\n            pool.recycle(buffer)\n            if (nioChannel is SocketChannel) {\n                try {\n                    nioChannel.socket().shutdownInput()\n                } catch (ignore: ClosedChannelException) {\n                }\n            }\n        }\n    }\n}",
+      "metadata": {
+        "language": "kotlin",
+        "chunk_index": 0,
+        "strategy": "basic",
+        "file_path": "ktor-network/jvm/src/io/ktor/network/sockets/CIOReader.kt",
+        "total_chunks": 2
+      },
+      "similarity_score": 0.7199753522872925
+    },
+    {
+      "content": "# File: ktor-network/jvm/src/io/ktor/network/sockets/DatagramSocketImpl.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.network.sockets\n\nimport io.ktor.network.selector.*\nimport io.ktor.network.util.*\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.channels.*\nimport io.ktor.utils.io.core.*\nimport java.net.*\nimport java.nio.*\nimport java.nio.channels.*\n\n@UseExperimental(ObsoleteCoroutinesApi::class, ExperimentalCoroutinesApi::class)\ninternal class DatagramSocketImpl(override val channel: DatagramChannel, selector: SelectorManager)\n    : BoundDatagramSocket, ConnectedDatagramSocket, NIOSocketImpl<DatagramChannel>(channel, selector, DefaultDatagramByteBufferPool) {\n\n    private val socket = channel.socket()!!\n\n    override val localAddress: SocketAddress\n        get() = socket.localSocketAddress ?: throw IllegalStateException(\"Channel is not yet bound\")\n\n    override val remoteAddress: SocketAddress\n        get() = socket.remoteSocketAddress ?: throw IllegalStateException(\"Channel is not yet connected\")\n\n    private val sender = actor<Datagram>(Dispatchers.IO) {\n        consumeEach { datagram ->\n            sendImpl(datagram)\n        }\n    }\n\n    private val receiver = produce<Datagram>(Dispatchers.IO) {\n        while (true) {\n            channel.send(receiveImpl())\n        }\n    }\n\n    override val incoming: ReceiveChannel<Datagram>\n        get() = receiver\n\n    override val outgoing: SendChannel<Datagram>\n        get() = sender\n\n    override fun close() {\n        receiver.cancel()\n        sender.close()\n        super.close()\n    }",
+      "metadata": {
+        "file_path": "ktor-network/jvm/src/io/ktor/network/sockets/DatagramSocketImpl.kt",
+        "total_chunks": 3,
+        "language": "kotlin",
+        "strategy": "basic",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.7386996746063232
+    },
+    {
+      "content": "# File: ktor-http/ktor-http-cio/jvm/src/io/ktor/http/cio/websocket/DefaultWebSocketSessionImpl.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.http.cio.websocket\n\nimport io.ktor.util.*\nimport io.ktor.util.cio.*\nimport kotlinx.atomicfu.*\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.channels.*\nimport io.ktor.utils.io.core.*\nimport io.ktor.utils.io.pool.*\nimport java.nio.*\nimport kotlin.coroutines.*\n\nprivate val IncomingProcessorCoroutineName = CoroutineName(\"ws-incoming-processor\")\nprivate val OutgoingProcessorCoroutineName = CoroutineName(\"ws-outgoing-processor\")\n\nprivate val NORMAL_CLOSE = CloseReason(CloseReason.Codes.NORMAL, \"OK\")\n\n/**\n * Default web socket session implementation that handles ping-pongs, close sequence and frame fragmentation\n */\n@WebSocketInternalAPI\nclass DefaultWebSocketSessionImpl(\n    private val raw: WebSocketSession,\n    pingInterval: Long = -1L,\n    override var timeoutMillis: Long = 15000L,\n    private val pool: ObjectPool<ByteBuffer> = KtorDefaultPool\n) : DefaultWebSocketSession, WebSocketSession {\n    private val pinger = atomic<SendChannel<Frame.Pong>?>(null)\n    private val closeReasonRef = CompletableDeferred<CloseReason>()\n    private val filtered = Channel<Frame>(8)\n    private val outgoingToBeProcessed = Channel<Frame>(8)\n    private val closed: AtomicBoolean = atomic(false)\n    private val context = Job(raw.coroutineContext[Job])\n\n    override val incoming: ReceiveChannel<Frame> get() = filtered\n    override val outgoing: SendChannel<Frame> get() = outgoingToBeProcessed\n\n    override val coroutineContext: CoroutineContext =\n        raw.coroutineContext + context + CoroutineName(\"ws-default\")\n\n    override var masking: Boolean\n        get() = raw.masking\n        set(value) {\n            raw.masking = value\n        }",
+      "metadata": {
+        "total_chunks": 5,
+        "chunk_index": 0,
+        "file_path": "ktor-http/ktor-http-cio/jvm/src/io/ktor/http/cio/websocket/DefaultWebSocketSessionImpl.kt",
+        "language": "kotlin",
+        "strategy": "basic"
+      },
+      "similarity_score": 0.753825306892395
+    },
+    {
+      "content": "# File: ktor-client/ktor-client-cio/jvm/test/io/ktor/client/engine/cio/CIOHttpsTest.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.client.engine.cio\n\nimport io.ktor.application.*\nimport io.ktor.client.request.*\nimport io.ktor.client.response.*\nimport io.ktor.client.tests.utils.*\nimport io.ktor.http.*\nimport io.ktor.network.tls.*\nimport io.ktor.network.tls.certificates.*\nimport io.ktor.network.tls.extensions.*\nimport io.ktor.response.*\nimport io.ktor.routing.*\nimport io.ktor.server.engine.*\nimport io.ktor.server.jetty.*\nimport io.ktor.util.*\nimport kotlinx.coroutines.*\nimport org.junit.*\nimport java.io.*\nimport java.security.*\nimport javax.net.ssl.*\nimport kotlin.test.*\nimport kotlin.test.Test\n\nclass CIOHttpsTest : TestWithKtor() {\n\n    override val server: ApplicationEngine = embeddedServer(Jetty, applicationEngineEnvironment {\n        sslConnector(keyStore, \"sha384ecdsa\", { \"changeit\".toCharArray() }, { \"changeit\".toCharArray() }) {\n            port = serverPort\n            keyStorePath = keyStoreFile.absoluteFile\n\n            module {\n                routing {\n                    get(\"/\") {\n                        call.respondText(\"Hello, world\")\n                    }\n                }\n            }\n        }\n    })\n\n    companion object {\n        val keyStoreFile = File(\"build/temp.jks\")\n        lateinit var keyStore: KeyStore\n        private lateinit var sslContext: SSLContext\n        lateinit var x509TrustManager: X509TrustManager",
+      "metadata": {
+        "file_path": "ktor-client/ktor-client-cio/jvm/test/io/ktor/client/engine/cio/CIOHttpsTest.kt",
+        "total_chunks": 4,
+        "language": "kotlin",
+        "strategy": "basic",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.7539563775062561
+    },
+    {
+      "content": "# File: ktor-network/jvm/test/io/ktor/network/sockets/tests/ServerSocketTest.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.network.sockets.tests\n\nimport io.ktor.network.selector.*\nimport io.ktor.network.sockets.*\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.debug.junit4.*\nimport io.ktor.utils.io.*\nimport org.junit.*\nimport org.junit.Test\nimport java.io.*\nimport java.nio.channels.*\nimport java.util.concurrent.*\nimport java.util.concurrent.CancellationException\nimport kotlin.concurrent.*\nimport kotlin.coroutines.*\nimport kotlin.test.*\n\nclass ServerSocketTest : CoroutineScope {\n    private val testJob = Job()\n    private val exec = Executors.newCachedThreadPool()\n    private var tearDown = false\n    private val selector = ActorSelectorManager(exec.asCoroutineDispatcher() + testJob)\n    private var client: Pair<java.net.Socket, Thread>? = null\n\n    @Volatile\n    private var serverSocket = CompletableDeferred<ServerSocket>()\n\n    @Volatile\n    private var server: Job? = null\n    private var failure: Throwable? = null\n    private val bound = CountDownLatch(1)\n\n    override val coroutineContext: CoroutineContext\n        get() = testJob\n\n    @get:Rule\n    val timeout = CoroutinesTimeout.seconds(15)\n\n    @After\n    fun tearDown() {\n        testJob.cancel()\n        tearDown = true\n\n        client?.let { (s, t) ->\n            s.close()\n            t.interrupt()\n        }\n        serverSocket.cancel()\n        server?.cancel()\n\n        runBlocking {\n            serverSocket.join()\n            server?.join()\n        }\n\n        selector.close()\n        exec.shutdown()\n        failure?.let { throw it }\n    }\n\n    @Test\n    fun testBindAndAccept() {\n        server { }\n        client { }\n    }",
+      "metadata": {
+        "total_chunks": 3,
+        "language": "kotlin",
+        "strategy": "basic",
+        "file_path": "ktor-network/jvm/test/io/ktor/network/sockets/tests/ServerSocketTest.kt",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.7623658776283264
+    },
+    {
+      "content": "# File: ktor-network/jvm/src/io/ktor/network/sockets/ServerSocketImpl.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.network.sockets\n\nimport io.ktor.network.selector.*\nimport kotlinx.coroutines.*\nimport java.net.*\nimport java.nio.channels.*\n\n@Suppress(\"BlockingMethodInNonBlockingContext\")\ninternal class ServerSocketImpl(\n    override val channel: ServerSocketChannel,\n    val selector: SelectorManager\n) : ServerSocket, Selectable by SelectableBase(channel) {\n    init {\n        require(!channel.isBlocking) { \"channel need to be configured as non-blocking\" }\n    }\n\n    override val socketContext: CompletableJob = Job()\n\n    override val localAddress: SocketAddress\n        get() = channel.socket().localSocketAddress\n\n    override suspend fun accept(): Socket {\n        channel.accept()?.let { return accepted(it) }\n        return acceptSuspend()\n    }\n\n    private suspend fun acceptSuspend(): Socket {\n        while (true) {\n            interestOp(SelectInterest.ACCEPT, true)\n            selector.select(this, SelectInterest.ACCEPT)\n            channel.accept()?.let { return accepted(it) }\n        }\n    }\n\n    private fun accepted(nioChannel: SocketChannel): Socket {\n        interestOp(SelectInterest.ACCEPT, false)\n        val socket = nioChannel.socket()!!\n        nioChannel.configureBlocking(false)\n        socket.tcpNoDelay = true\n        return SocketImpl(nioChannel, socket, selector)\n    }\n\n    override fun close() {\n        try {\n            try {\n                channel.close()\n            } finally {\n                selector.notifyClosed(this)\n            }\n\n            socketContext.complete()\n        } catch (cause: Throwable) {\n            socketContext.completeExceptionally(cause)\n        }\n    }\n\n    override fun dispose() {\n        super.dispose()\n    }\n}\n```",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "basic",
+        "file_path": "ktor-network/jvm/src/io/ktor/network/sockets/ServerSocketImpl.kt",
+        "total_chunks": 1,
+        "language": "kotlin"
+      },
+      "similarity_score": 0.7704359292984009
+    }
+  ],
+  "enhanced": [
+    {
+      "content": "/**\n     * Maximum number of connection attempts.\n     */\n    var connectRetryAttempts: Int = 5\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: ed855b29\n- Author: Leonid Stashevsky (leonid.stashevsky@gmail.com)\n- Date: 2019-05-24 16:02:23\n- Message: Fix typo; remove obsolete code\n- Changes:\n```diff\n@@ -6,9 +6,6 @@ package io.ktor.client.engine.cio\n \n import io.ktor.client.engine.*\n import io.ktor.network.tls.*\n-import java.security.*\n-import java.security.cert.*\n-import javax.net.ssl.*\n \n /**\n  * Configuration for [CIO] client engine....\n```\n\n### Commit 2\n- ID: 0742885f\n- Author: Leonid Stashevsky (leonid.stashevsky@gmail.com)\n- Date: 2019-05-07 22:10:58\n- Message: Add CIO read timeout\n- Changes:\n```diff\n@@ -28,6 +28,13 @@ class CIOEngineConfig : HttpClientEngineConfig() {\n      */\n     var maxConnectionsCount: Int = 1000\n \n+    /**\n+     * Timeout to get send request headers and get first response bytes(in millis).\n+     *\n+     * Use 0 to disable.\n+     */\n+    var requestTimeout: Long = 15000\n+\n     /**\n      * [https] settings.\n      */\n@@ -54,7 +61,7 @@ class EndpointConfig {\n     var keepAliveTime: Long = 5000\n \n     /**\n-     * Maximum number of requests per single pipeline\n+     * Maximu...\n```\n\n### Commit 3\n- ID: 68eef194\n- Author: Sergey Mashkov (sergey.mashkov@jetbrains.com)\n- Date: 2019-04-30 21:02:31\n- Message: Add license header to every source file\n- Changes:\n```diff\n@@ -1,3 +1,7 @@\n+/*\n+ * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n+ */\n+\n package io.ktor.client.engine.cio\n \n import io.ktor.client.engine.*...\n```",
+      "metadata": {
+        "language": "kotlin",
+        "commit_count": 5,
+        "chunk_index": 1,
+        "strategy": "enhanced",
+        "total_chunks": 3,
+        "file_path": "ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/CIOEngineConfig.kt"
+      },
+      "similarity_score": 0.5882538557052612
+    },
+    {
+      "content": "# File: ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/ConnectionFactory.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.client.engine.cio\n\nimport io.ktor.util.cio.*\nimport io.ktor.network.selector.*\nimport io.ktor.network.sockets.*\nimport io.ktor.network.sockets.Socket\nimport kotlinx.coroutines.sync.*\nimport java.net.*\n\ninternal class ConnectionFactory(\n    private val selector: SelectorManager,\n    maxConnectionsCount: Int\n) {\n    private val semaphore = Semaphore(maxConnectionsCount)\n\n    suspend fun connect(address: InetSocketAddress): Socket {\n        semaphore.acquire()\n        return try {\n            aSocket(selector).tcpNoDelay().tcp().connect(address)\n        } catch (cause: Throwable) {\n            // a failure or cancellation\n            semaphore.release()\n            throw cause\n        }\n    }\n\n    fun release() {\n        semaphore.release()\n    }\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 691bfa01\n- Author: Leonid Stashevsky (leonid@MacBook-Pro-Leonid.local)\n- Date: 2019-07-23 21:01:57\n- Message: Add proxy tests\n- Changes:\n```diff\n@@ -8,6 +8,7 @@ import io.ktor.util.cio.*\n import io.ktor.network.selector.*\n import io.ktor.network.sockets.*\n import io.ktor.network.sockets.Socket\n+import kotlinx.coroutines.sync.*\n import java.net.*\n \n internal class ConnectionFactory(\n@@ -17,17 +18,17 @@ internal class ConnectionFactory(\n     private val semaphore = Semaphore(maxConnectionsCount)\n \n     suspend fun connect(address: InetSocketAddress): Socket {\n-        semaphore.enter()\n+        semaphore.acquire()\n         return try {\n   ...\n```",
+      "metadata": {
+        "total_chunks": 3,
+        "file_path": "ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/ConnectionFactory.kt",
+        "chunk_index": 0,
+        "language": "kotlin",
+        "strategy": "enhanced",
+        "commit_count": 5
+      },
+      "similarity_score": 0.6086405515670776
+    },
+    {
+      "content": "### Commit 2\n- ID: 4bc651ee\n- Author: Sergey Mashkov (sergey.mashkov@jetbrains.com)\n- Date: 2018-12-21 00:25:07\n- Message: Reduce JDK8 dependencies: ktor-network\n- Changes:\n```diff\n@@ -4,16 +4,20 @@ import io.ktor.network.selector.*\n import java.net.*\n import java.nio.channels.*\n \n-internal class SocketImpl<out S : SocketChannel>(override val channel: S, selector: SelectorManager) : NIOSocketImpl<S>(channel, selector, pool = null), Socket {\n+internal class SocketImpl<out S : SocketChannel>(\n+    override val channel: S,\n+    private val socket: java.net.Socket,\n+    selector: SelectorManager\n+) : NIOSocketImpl<S>(channel, selector, pool = null), Socket {\n     init {\n      ...\n```\n\n### Commit 3\n- ID: 46f42b89\n- Author: Leonid Stashevsky (leonid.stashevsky@gmail.com)\n- Date: 2018-12-22 14:10:21\n- Message: Migrate to kotlin-multiplatform plugin\n- Changes:\n```diff\n@@ -0,0 +1,40 @@\n+package io.ktor.network.sockets\n+\n+import io.ktor.network.selector.*\n+import java.net.*\n+import java.nio.channels.*\n+\n+internal class SocketImpl<out S : SocketChannel>(override val channel: S, selector: SelectorManager) : NIOSocketImpl<S>(channel, selector, pool = null), Socket {\n+    init {\n+        require(!channel.isBlocking) { \"channel need to be configured as non-blocking\" }\n+    }\n+\n+    override val localAddress: SocketAddress\n+        get() = channel.localAddress\n+\n+   ...\n```",
+      "metadata": {
+        "chunk_index": 1,
+        "language": "kotlin",
+        "file_path": "ktor-network/jvm/src/io/ktor/network/sockets/SocketImpl.kt",
+        "commit_count": 3,
+        "strategy": "enhanced",
+        "total_chunks": 2
+      },
+      "similarity_score": 0.6100425720214844
+    },
+    {
+      "content": "# File: ktor-utils/jvm/src/io/ktor/util/cio/Channels.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.util.cio\n\nimport java.io.*\n\n/**\n * An exception thrown when an IO error occurred during reading or writing to/from the underlying channel.\n * The typical error is \"connection reset\" and so on.\n */\nopen class ChannelIOException(message: String, exception: Throwable) : IOException(message, exception)\n\n/**\n * An exception that is thrown when an IO error occurred during writing to the destination channel.\n * Usually it happens when a remote client closed the connection.\n */\nclass ChannelWriteException(message: String = \"Cannot write to a channel\", exception: Throwable) :\n    ChannelIOException(message, exception)\n\n/**\n * An exception that is thrown when an IO error occurred during reading from the request channel.\n * Usually it happens when a remote client closed the connection.\n */\nclass ChannelReadException(message: String = \"Cannot read from a channel\", exception: Throwable) :\n    ChannelIOException(message, exception)\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 68eef194\n- Author: Sergey Mashkov (sergey.mashkov@jetbrains.com)\n- Date: 2019-04-30 21:02:31\n- Message: Add license header to every source file\n- Changes:\n```diff\n@@ -1,3 +1,7 @@\n+/*\n+ * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n+ */\n+\n package io.ktor.util.cio\n \n import java.io.*...\n```",
+      "metadata": {
+        "strategy": "enhanced",
+        "file_path": "ktor-utils/jvm/src/io/ktor/util/cio/Channels.kt",
+        "chunk_index": 0,
+        "total_chunks": 2,
+        "commit_count": 2,
+        "language": "kotlin"
+      },
+      "similarity_score": 0.6575934290885925
+    },
+    {
+      "content": "# File: ktor-network/jvm/src/io/ktor/network/sockets/SocketImpl.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.network.sockets\n\nimport io.ktor.network.selector.*\nimport java.net.*\nimport java.nio.channels.*\n\ninternal class SocketImpl<out S : SocketChannel>(\n    override val channel: S,\n    private val socket: java.net.Socket,\n    selector: SelectorManager\n) : NIOSocketImpl<S>(channel, selector, pool = null), Socket {\n    init {\n        require(!channel.isBlocking) { \"channel need to be configured as non-blocking\" }\n    }\n\n    override val localAddress: SocketAddress\n        get() = socket.localSocketAddress\n\n    override val remoteAddress: SocketAddress\n        get() = socket.remoteSocketAddress\n\n    @Suppress(\"BlockingMethodInNonBlockingContext\")\n    internal suspend fun connect(target: SocketAddress): Socket {\n        if (channel.connect(target)) return this\n\n        wantConnect(true)\n        selector.select(this, SelectInterest.CONNECT)\n\n        while (true) {\n            if (channel.finishConnect()) break\n\n            wantConnect(true)\n            selector.select(this, SelectInterest.CONNECT)\n        }\n\n        wantConnect(false)\n\n        return this\n    }\n\n    private fun wantConnect(state: Boolean = true) {\n        interestOp(SelectInterest.CONNECT, state)\n    }\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 68eef194\n- Author: Sergey Mashkov (sergey.mashkov@jetbrains.com)\n- Date: 2019-04-30 21:02:31\n- Message: Add license header to every source file\n- Changes:\n```diff\n@@ -1,3 +1,7 @@\n+/*\n+ * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n+ */\n+\n package io.ktor.network.sockets\n \n import io.ktor.network.selector.*...\n```",
+      "metadata": {
+        "total_chunks": 2,
+        "language": "kotlin",
+        "chunk_index": 0,
+        "strategy": "enhanced",
+        "commit_count": 3,
+        "file_path": "ktor-network/jvm/src/io/ktor/network/sockets/SocketImpl.kt"
+      },
+      "similarity_score": 0.6591897010803223
+    },
+    {
+      "content": "### Commit 5\n- ID: 6a9b8f28\n- Author: Leonid Stashevsky (leonid.stashevsky@gmail.com)\n- Date: 2019-03-25 23:14:10\n- Message: Simplify engine API\n- Changes:\n```diff\n@@ -1,10 +1,7 @@\n package io.ktor.client.engine.cio\n \n-import io.ktor.client.call.*\n import io.ktor.client.engine.*\n-import io.ktor.client.features.websocket.*\n import io.ktor.client.request.*\n-import io.ktor.client.response.*\n import io.ktor.http.*\n import io.ktor.network.selector.*\n import kotlinx.atomicfu.*\n@@ -12,9 +9,10 @@ import kotlinx.coroutines.*\n import kotlinx.coroutines.channels.*\n import java.io.*\n import java.util.concurrent.*\n-import kotlin.coroutines.*\n \n-internal class CIOEngine...\n```",
+      "metadata": {
+        "total_chunks": 5,
+        "language": "kotlin",
+        "chunk_index": 4,
+        "file_path": "ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/CIOEngine.kt",
+        "strategy": "enhanced",
+        "commit_count": 5
+      },
+      "similarity_score": 0.6628362536430359
+    },
+    {
+      "content": "# File: ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/Endpoint.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.client.engine.cio\n\nimport io.ktor.client.request.*\nimport io.ktor.network.sockets.*\nimport io.ktor.network.sockets.Socket\nimport io.ktor.network.tls.*\nimport io.ktor.util.*\nimport io.ktor.util.date.*\nimport kotlinx.atomicfu.*\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.channels.*\nimport java.io.*\nimport java.net.*\nimport kotlin.coroutines.*\n\ninternal class Endpoint(\n    host: String,\n    port: Int,\n    private val overProxy: Boolean,\n    private val secure: Boolean,\n    private val config: CIOEngineConfig,\n    private val connectionFactory: ConnectionFactory,\n    override val coroutineContext: CoroutineContext,\n    private val onDone: () -> Unit\n) : CoroutineScope, Closeable {\n    private val address = InetSocketAddress(host, port)\n\n    private val connections: AtomicInt = atomic(0)\n    private val tasks: Channel<RequestTask> = Channel(Channel.UNLIMITED)\n    private val deliveryPoint: Channel<RequestTask> = Channel()\n\n    private val maxEndpointIdleTime: Long = 2 * config.endpoint.connectTimeout\n\n    private val postman = launch(start = CoroutineStart.LAZY) {\n        try {\n            while (true) {\n                val task = withTimeout(maxEndpointIdleTime) {\n                    tasks.receive()\n                }",
+      "metadata": {
+        "language": "kotlin",
+        "strategy": "enhanced",
+        "file_path": "ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/Endpoint.kt",
+        "total_chunks": 6,
+        "commit_count": 5,
+        "chunk_index": 0
+      },
+      "similarity_score": 0.6802104115486145
+    },
+    {
+      "content": "# File: ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/CIOEngine.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.client.engine.cio\n\nimport io.ktor.client.engine.*\nimport io.ktor.client.request.*\nimport io.ktor.http.*\nimport io.ktor.network.selector.*\nimport kotlinx.atomicfu.*\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.channels.*\nimport java.io.*\nimport java.net.*\nimport java.util.concurrent.*\n\ninternal class CIOEngine(\n    override val config: CIOEngineConfig\n) : HttpClientJvmEngine(\"ktor-cio\") {\n    private val endpoints = ConcurrentHashMap<String, Endpoint>()\n\n    @UseExperimental(InternalCoroutinesApi::class)\n    private val selectorManager by lazy { ActorSelectorManager(dispatcher) }\n\n    private val connectionFactory = ConnectionFactory(selectorManager, config.maxConnectionsCount)\n    private val closed = atomic(false)\n\n    private val proxy = when (val type = config.proxy?.type()) {\n        Proxy.Type.DIRECT,\n        null -> null\n        Proxy.Type.HTTP -> config.proxy\n        else -> throw IllegalStateException(\"Proxy of type $type is unsupported by CIO engine.\")\n    }\n\n    override suspend fun execute(data: HttpRequestData): HttpResponseData {\n        while (true) {\n            if (closed.value) throw ClientClosedException()",
+      "metadata": {
+        "strategy": "enhanced",
+        "chunk_index": 0,
+        "file_path": "ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/CIOEngine.kt",
+        "commit_count": 5,
+        "language": "kotlin",
+        "total_chunks": 5
+      },
+      "similarity_score": 0.6833637356758118
+    },
+    {
+      "content": "# File: ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/ConnectionPipeline.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.client.engine.cio\n\nimport io.ktor.client.request.*\nimport io.ktor.client.utils.*\nimport io.ktor.http.*\nimport io.ktor.http.cio.*\nimport io.ktor.network.sockets.*\nimport io.ktor.util.cio.*\nimport io.ktor.util.date.*\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.CancellationException\nimport kotlinx.coroutines.channels.*\nimport kotlinx.coroutines.channels.Channel\nimport io.ktor.utils.io.*\nimport io.ktor.utils.io.core.*\nimport io.ktor.utils.io.pool.*\nimport kotlinx.coroutines.sync.*\nimport java.nio.channels.*\nimport kotlin.coroutines.*\n\ninternal class ConnectionPipeline(\n    keepAliveTime: Long,\n    pipelineMaxSize: Int,\n    socket: Socket,\n    overProxy: Boolean,\n    tasks: Channel<RequestTask>,\n    parentContext: CoroutineContext\n) : CoroutineScope {\n    override val coroutineContext: CoroutineContext = parentContext + Job()\n\n    private val networkInput = socket.openReadChannel()\n    private val networkOutput = socket.openWriteChannel()\n    private val requestLimit = Semaphore(pipelineMaxSize)\n    private val responseChannel = Channel<ConnectionResponseTask>(Channel.UNLIMITED)\n\n    val pipelineContext: Job = launch(start = CoroutineStart.LAZY) {\n        try {\n            while (true) {\n                val task = withTimeoutOrNull(keepAliveTime) {\n                    tasks.receive()\n                } ?: break\n\n                try {\n                    requestLimit.acquire()\n                    responseChannel.send(ConnectionResponseTask(GMTDate(), task))\n                } catch (cause: Throwable) {\n                    task.response.resumeWithException(cause)\n                    throw cause\n                }",
+      "metadata": {
+        "file_path": "ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/ConnectionPipeline.kt",
+        "total_chunks": 6,
+        "strategy": "enhanced",
+        "language": "kotlin",
+        "chunk_index": 0,
+        "commit_count": 5
+      },
+      "similarity_score": 0.6937552690505981
+    },
+    {
+      "content": "# File: ktor-network/jvm/src/io/ktor/network/sockets/NIOSocket.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.network.sockets\n\nimport io.ktor.network.selector.*\nimport kotlinx.coroutines.*\nimport io.ktor.utils.io.*\nimport io.ktor.utils.io.ByteChannel\nimport io.ktor.utils.io.pool.*\nimport java.nio.*\nimport java.nio.channels.*\nimport java.util.concurrent.CancellationException\nimport java.util.concurrent.atomic.*\nimport kotlin.coroutines.*\n\ninternal abstract class NIOSocketImpl<out S>(\n    override val channel: S,\n    val selector: SelectorManager,\n    val pool: ObjectPool<ByteBuffer>?\n) : ReadWriteSocket, SelectableBase(channel), CoroutineScope\n    where S : java.nio.channels.ByteChannel, S : java.nio.channels.SelectableChannel {\n\n    private val closeFlag = AtomicBoolean()\n    private val readerJob = AtomicReference<ReaderJob?>()\n    private val writerJob = AtomicReference<WriterJob?>()\n\n    override val socketContext: CompletableJob = Job()\n\n    override val coroutineContext: CoroutineContext\n        get() = socketContext\n\n    // NOTE: it is important here to use different versions of attachForReadingImpl\n    // because it is not always valid to use channel's internal buffer for NIO read/write:\n    //  at least UDP datagram reading MUST use bigger byte buffer otherwise datagram could be truncated\n    //  that will cause broken data\n    // however it is not the case for attachForWriting this is why we use direct writing in any case\n\n    final override fun attachForReading(channel: ByteChannel): WriterJob {\n        return attachFor(\"reading\", channel, writerJob) {\n            if (pool != null) {\n                attachForReadingImpl(channel, this.channel, this, selector, pool)\n            } else {\n                attachForReadingDirectImpl(channel, this.channel, this, selector)\n            }\n        }\n    }",
+      "metadata": {
+        "strategy": "enhanced",
+        "total_chunks": 4,
+        "language": "kotlin",
+        "chunk_index": 0,
+        "file_path": "ktor-network/jvm/src/io/ktor/network/sockets/NIOSocket.kt",
+        "commit_count": 4
+      },
+      "similarity_score": 0.6952709555625916
+    },
+    {
+      "content": "# File: ktor-network/jvm/src/io/ktor/network/sockets/Builders.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.network.sockets\n\nimport io.ktor.network.selector.*\nimport java.net.*\nimport java.nio.channels.*\n\n/**\n * Represent a configurable socket\n */\ninterface Configurable<out T : Configurable<T, O>, O : SocketOptions> {\n    /**\n     * Current socket options\n     */\n    var options: O\n\n    /**\n     * Configure socket options in [block] function\n     */\n    fun configure(block: O.() -> Unit): T {\n        @Suppress(\"UNCHECKED_CAST\")\n        val newOptions = options.copy() as O\n\n        block(newOptions)\n        options = newOptions\n\n        @Suppress(\"UNCHECKED_CAST\")\n        return this as T\n    }\n}\n\n/**\n * Set TCP_NODELAY socket option to disable the Nagle algorithm.\n */\nfun <T : Configurable<T, *>> T.tcpNoDelay(): T {\n    return configure {\n        if (this is SocketOptions.TCPClientSocketOptions) {\n            noDelay = true\n        }\n    }\n}\n\n/**\n * Start building a socket\n */\nfun aSocket(selector: SelectorManager): SocketBuilder = SocketBuilder(selector, SocketOptions.create())\n\n/**\n * Socket builder\n */\n@Suppress(\"PublicApiImplicitType\", \"unused\")\nclass SocketBuilder internal constructor(private val selector: SelectorManager, override var options: SocketOptions) :\n    Configurable<SocketBuilder, SocketOptions> {\n    /**\n     * Build TCP socket\n     */\n    fun tcp() = TcpSocketBuilder(selector, options.peer())\n\n    /**\n     * Build UDP socket\n     */\n    fun udp() = UDPSocketBuilder(selector, options.peer().udp())\n}",
+      "metadata": {
+        "strategy": "enhanced",
+        "language": "kotlin",
+        "file_path": "ktor-network/jvm/src/io/ktor/network/sockets/Builders.kt",
+        "total_chunks": 5,
+        "commit_count": 4,
+        "chunk_index": 0
+      },
+      "similarity_score": 0.6985674500465393
+    },
+    {
+      "content": "# File: ktor-server/ktor-server-netty/jvm/src/io/ktor/server/netty/NettyChannelInitializer.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.server.netty\n\nimport io.ktor.server.engine.*\nimport io.ktor.server.netty.cio.*\nimport io.ktor.server.netty.http1.*\nimport io.ktor.server.netty.http2.*\nimport io.netty.channel.*\nimport io.netty.channel.socket.SocketChannel\nimport io.netty.handler.codec.http.*\nimport io.netty.handler.codec.http2.*\nimport io.netty.handler.ssl.*\nimport io.netty.handler.timeout.*\nimport io.netty.util.concurrent.*\nimport java.nio.channels.*\nimport java.security.*\nimport java.security.cert.*\nimport kotlin.coroutines.*\n\n/**\n * A [ChannelInitializer] implementation that does setup the default ktor channel pipeline\n */\n@EngineAPI\nclass NettyChannelInitializer(\n    private val enginePipeline: EnginePipeline,\n    private val environment: ApplicationEngineEnvironment,\n    private val callEventGroup: EventExecutorGroup,\n    private val engineContext: CoroutineContext,\n    private val userContext: CoroutineContext,\n    private val connector: EngineConnectorConfig,\n    private val requestQueueLimit: Int,\n    private val runningLimit: Int,\n    private val responseWriteTimeout: Int,\n    private val requestReadTimeout: Int,\n    private val httpServerCodec: () -> HttpServerCodec\n) : ChannelInitializer<SocketChannel>() {\n    private var sslContext: SslContext? = null\n\n    init {\n        if (connector is EngineSSLConnectorConfig) {\n\n            // It is better but netty-openssl doesn't support it\n//              val kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm())\n//              kmf.init(ktorConnector.keyStore, password)\n//              password.fill('\\u0000')",
+      "metadata": {
+        "chunk_index": 0,
+        "commit_count": 3,
+        "strategy": "enhanced",
+        "file_path": "ktor-server/ktor-server-netty/jvm/src/io/ktor/server/netty/NettyChannelInitializer.kt",
+        "language": "kotlin",
+        "total_chunks": 5
+      },
+      "similarity_score": 0.7042834758758545
+    },
+    {
+      "content": "# File: ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/CIOEngineConfig.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.client.engine.cio\n\nimport io.ktor.client.engine.*\nimport io.ktor.network.tls.*\n\n/**\n * Configuration for [CIO] client engine.\n */\nclass CIOEngineConfig : HttpClientEngineConfig() {\n    /**\n     * [Endpoint] settings.\n     */\n    val endpoint: EndpointConfig = EndpointConfig()\n    /**\n     * [https] settings.\n     */\n    val https: TLSConfigBuilder = TLSConfigBuilder()\n\n    /**\n     * Maximum allowed connections count.\n     */\n    var maxConnectionsCount: Int = 1000\n\n    /**\n     * Timeout to get send request headers and get first response bytes(in millis).\n     *\n     * Use 0 to disable.\n     */\n    var requestTimeout: Long = 15000\n\n    /**\n     * [https] settings.\n     */\n    fun https(block: TLSConfigBuilder.() -> Unit): TLSConfigBuilder = https.apply(block)\n}\n\n/**\n * Configure [endpoint] settings.\n */\nfun CIOEngineConfig.endpoint(block: EndpointConfig.() -> Unit): EndpointConfig = endpoint.apply(block)\n\n/**\n * [Endpoint] settings.\n */\nclass EndpointConfig {\n    /**\n     * Maximum connections  per single route.\n     */\n    var maxConnectionsPerRoute: Int = 100\n\n    /**\n     * Connection keep-alive time in millis.\n     */\n    var keepAliveTime: Long = 5000\n\n    /**\n     * Maximum number of requests per single pipeline.\n     */\n    var pipelineMaxSize: Int = 20\n\n    /**\n     * Connect timeout in millis.\n     */\n    var connectTimeout: Long = 5000\n\n    /**\n     * Maximum number of connection attempts.\n     */\n    var connectRetryAttempts: Int = 5\n}\n```\n\n## Git Commit History",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "kotlin",
+        "strategy": "enhanced",
+        "total_chunks": 3,
+        "commit_count": 5,
+        "file_path": "ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/CIOEngineConfig.kt"
+      },
+      "similarity_score": 0.7061266899108887
+    },
+    {
+      "content": "# File: ktor-server/ktor-server-cio/jvm/src/io/ktor/server/cio/HttpServer.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.server.cio\n\nimport io.ktor.http.cio.*\nimport io.ktor.http.cio.internals.WeakTimeoutQueue\nimport io.ktor.network.selector.*\nimport io.ktor.network.sockets.*\nimport io.ktor.network.sockets.ServerSocket\nimport io.ktor.network.sockets.Socket\nimport io.ktor.server.engine.*\nimport io.ktor.util.*\nimport kotlinx.coroutines.*\nimport org.slf4j.*\nimport java.net.*\nimport java.nio.channels.*\nimport java.util.concurrent.*\nimport kotlin.coroutines.*\n\n/**\n * Represents a server instance\n * @property rootServerJob server job - root for all jobs\n * @property acceptJob client connections accepting job\n * @property serverSocket a deferred server socket instance, could be completed with error if it failed to bind\n */\n@Suppress(\"MemberVisibilityCanBePrivate\")\n@KtorExperimentalAPI\nclass HttpServer(val rootServerJob: Job, val acceptJob: Job, val serverSocket: Deferred<ServerSocket>)\n\n/**\n * HTTP server connector settings\n * @property host to listen to\n * @property port to listen to\n * @property connectionIdleTimeoutSeconds time to live for IDLE connections\n */\n@KtorExperimentalAPI\ndata class HttpServerSettings(\n    val host: String = \"0.0.0.0\",\n    val port: Int = 8080,\n    val connectionIdleTimeoutSeconds: Long = 45\n)\n\n@Suppress(\"KDocMissingDocumentation\", \"unused\")\n@Deprecated(\"Binary compatibility.\", level = DeprecationLevel.HIDDEN)\nfun httpServer(settings: HttpServerSettings, parentJob: Job? = null, handler: HttpRequestHandler): HttpServer {\n    val parent = parentJob ?: Dispatchers.Default\n    return CoroutineScope(parent).httpServer(settings, handler = handler)\n}",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "kotlin",
+        "total_chunks": 5,
+        "strategy": "enhanced",
+        "file_path": "ktor-server/ktor-server-cio/jvm/src/io/ktor/server/cio/HttpServer.kt",
+        "commit_count": 5
+      },
+      "similarity_score": 0.7100599408149719
+    },
+    {
+      "content": "# File: ktor-network/jvm/src/io/ktor/network/sockets/DatagramSocketImpl.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.network.sockets\n\nimport io.ktor.network.selector.*\nimport io.ktor.network.util.*\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.channels.*\nimport io.ktor.utils.io.core.*\nimport java.net.*\nimport java.nio.*\nimport java.nio.channels.*\n\n@UseExperimental(ObsoleteCoroutinesApi::class, ExperimentalCoroutinesApi::class)\ninternal class DatagramSocketImpl(override val channel: DatagramChannel, selector: SelectorManager)\n    : BoundDatagramSocket, ConnectedDatagramSocket, NIOSocketImpl<DatagramChannel>(channel, selector, DefaultDatagramByteBufferPool) {\n\n    private val socket = channel.socket()!!\n\n    override val localAddress: SocketAddress\n        get() = socket.localSocketAddress ?: throw IllegalStateException(\"Channel is not yet bound\")\n\n    override val remoteAddress: SocketAddress\n        get() = socket.remoteSocketAddress ?: throw IllegalStateException(\"Channel is not yet connected\")\n\n    private val sender = actor<Datagram>(Dispatchers.IO) {\n        consumeEach { datagram ->\n            sendImpl(datagram)\n        }\n    }\n\n    private val receiver = produce<Datagram>(Dispatchers.IO) {\n        while (true) {\n            channel.send(receiveImpl())\n        }\n    }\n\n    override val incoming: ReceiveChannel<Datagram>\n        get() = receiver\n\n    override val outgoing: SendChannel<Datagram>\n        get() = sender\n\n    override fun close() {\n        receiver.cancel()\n        sender.close()\n        super.close()\n    }",
+      "metadata": {
+        "language": "kotlin",
+        "file_path": "ktor-network/jvm/src/io/ktor/network/sockets/DatagramSocketImpl.kt",
+        "commit_count": 4,
+        "chunk_index": 0,
+        "total_chunks": 4,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.7386996746063232
+    },
+    {
+      "content": "# File: ktor-http/ktor-http-cio/jvm/src/io/ktor/http/cio/websocket/DefaultWebSocketSessionImpl.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.http.cio.websocket\n\nimport io.ktor.util.*\nimport io.ktor.util.cio.*\nimport kotlinx.atomicfu.*\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.channels.*\nimport io.ktor.utils.io.core.*\nimport io.ktor.utils.io.pool.*\nimport java.nio.*\nimport kotlin.coroutines.*\n\nprivate val IncomingProcessorCoroutineName = CoroutineName(\"ws-incoming-processor\")\nprivate val OutgoingProcessorCoroutineName = CoroutineName(\"ws-outgoing-processor\")\n\nprivate val NORMAL_CLOSE = CloseReason(CloseReason.Codes.NORMAL, \"OK\")\n\n/**\n * Default web socket session implementation that handles ping-pongs, close sequence and frame fragmentation\n */\n@WebSocketInternalAPI\nclass DefaultWebSocketSessionImpl(\n    private val raw: WebSocketSession,\n    pingInterval: Long = -1L,\n    override var timeoutMillis: Long = 15000L,\n    private val pool: ObjectPool<ByteBuffer> = KtorDefaultPool\n) : DefaultWebSocketSession, WebSocketSession {\n    private val pinger = atomic<SendChannel<Frame.Pong>?>(null)\n    private val closeReasonRef = CompletableDeferred<CloseReason>()\n    private val filtered = Channel<Frame>(8)\n    private val outgoingToBeProcessed = Channel<Frame>(8)\n    private val closed: AtomicBoolean = atomic(false)\n    private val context = Job(raw.coroutineContext[Job])\n\n    override val incoming: ReceiveChannel<Frame> get() = filtered\n    override val outgoing: SendChannel<Frame> get() = outgoingToBeProcessed\n\n    override val coroutineContext: CoroutineContext =\n        raw.coroutineContext + context + CoroutineName(\"ws-default\")\n\n    override var masking: Boolean\n        get() = raw.masking\n        set(value) {\n            raw.masking = value\n        }",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "kotlin",
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "file_path": "ktor-http/ktor-http-cio/jvm/src/io/ktor/http/cio/websocket/DefaultWebSocketSessionImpl.kt",
+        "total_chunks": 7
+      },
+      "similarity_score": 0.753825306892395
+    },
+    {
+      "content": "### Commit 2\n- ID: 46f42b89\n- Author: Leonid Stashevsky (leonid.stashevsky@gmail.com)\n- Date: 2018-12-22 14:10:21\n- Message: Migrate to kotlin-multiplatform plugin\n- Changes:\n```diff\n@@ -0,0 +1,24 @@\n+package io.ktor.util.cio\n+\n+import java.io.*\n+\n+/**\n+ * An exception thrown when an IO error occurred during reading or writing to/from the underlying channel.\n+ * The typical error is \"connection reset\" and so on.\n+ */\n+open class ChannelIOException(message: String, exception: Throwable) : IOException(message, exception)\n+\n+/**\n+ * An exception that is thrown when an IO error occurred during writing to the destination channel.\n+ * Usually it happens when a remote client closed...\n```",
+      "metadata": {
+        "total_chunks": 2,
+        "file_path": "ktor-utils/jvm/src/io/ktor/util/cio/Channels.kt",
+        "strategy": "enhanced",
+        "language": "kotlin",
+        "commit_count": 2,
+        "chunk_index": 1
+      },
+      "similarity_score": 0.7649737596511841
+    },
+    {
+      "content": "# File: ktor-network/jvm/src/io/ktor/network/sockets/ServerSocketImpl.kt (kotlin)\n\n## Code Content:\n```kotlin\n/*\n * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n */\n\npackage io.ktor.network.sockets\n\nimport io.ktor.network.selector.*\nimport kotlinx.coroutines.*\nimport java.net.*\nimport java.nio.channels.*\n\n@Suppress(\"BlockingMethodInNonBlockingContext\")\ninternal class ServerSocketImpl(\n    override val channel: ServerSocketChannel,\n    val selector: SelectorManager\n) : ServerSocket, Selectable by SelectableBase(channel) {\n    init {\n        require(!channel.isBlocking) { \"channel need to be configured as non-blocking\" }\n    }\n\n    override val socketContext: CompletableJob = Job()\n\n    override val localAddress: SocketAddress\n        get() = channel.socket().localSocketAddress\n\n    override suspend fun accept(): Socket {\n        channel.accept()?.let { return accepted(it) }\n        return acceptSuspend()\n    }\n\n    private suspend fun acceptSuspend(): Socket {\n        while (true) {\n            interestOp(SelectInterest.ACCEPT, true)\n            selector.select(this, SelectInterest.ACCEPT)\n            channel.accept()?.let { return accepted(it) }\n        }\n    }\n\n    private fun accepted(nioChannel: SocketChannel): Socket {\n        interestOp(SelectInterest.ACCEPT, false)\n        val socket = nioChannel.socket()!!\n        nioChannel.configureBlocking(false)\n        socket.tcpNoDelay = true\n        return SocketImpl(nioChannel, socket, selector)\n    }\n\n    override fun close() {\n        try {\n            try {\n                channel.close()\n            } finally {\n                selector.notifyClosed(this)\n            }\n\n            socketContext.complete()\n        } catch (cause: Throwable) {\n            socketContext.completeExceptionally(cause)\n        }\n    }\n\n    override fun dispose() {\n        super.dispose()\n    }\n}\n```\n\n## Git Commit History",
+      "metadata": {
+        "strategy": "enhanced",
+        "total_chunks": 3,
+        "chunk_index": 0,
+        "file_path": "ktor-network/jvm/src/io/ktor/network/sockets/ServerSocketImpl.kt",
+        "language": "kotlin",
+        "commit_count": 4
+      },
+      "similarity_score": 0.7704359292984009
+    },
+    {
+      "content": "return HttpServer(serverJob, acceptJob, socket)\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 0a06632a\n- Author: Sergey Mashkov (sergey.mashkov@jetbrains.com)\n- Date: 2019-09-10 17:48:54\n- Message: Provide coroutine exception handlers for all server engines\n- Changes:\n```diff\n@@ -10,13 +10,13 @@ import io.ktor.network.selector.*\n import io.ktor.network.sockets.*\n import io.ktor.network.sockets.ServerSocket\n import io.ktor.network.sockets.Socket\n+import io.ktor.server.engine.*\n import io.ktor.util.*\n import kotlinx.coroutines.*\n import org.slf4j.*\n import java.net.*\n import java.nio.channels.*\n import java.util.concurrent.*\n-import java.util.concurrent.CancellationException\n import kotlin.coroutines.*\n \n /**\n@@ -88,6 +88,8 @@ fun CoroutineScope.httpServer(\n         Ti...\n```\n\n### Commit 2\n- ID: bcc07ffc\n- Author: Sergey Mashkov (sergey.mashkov@jetbrains.com)\n- Date: 2019-05-31 19:31:51\n- Message: Strengthen deprecations and remove outdated code\n- Changes:\n```diff\n@@ -42,15 +42,15 @@ data class HttpServerSettings(\n     val connectionIdleTimeoutSeconds: Long = 45\n )\n \n-@Suppress(\"KDocMissingDocumentation\")\n-@Deprecated(\"Use httpServer with CoroutineScope receiver\", level = DeprecationLevel.ERROR)\n+@Suppress(\"KDocMissingDocumentation\", \"unused\")\n+@Deprecated(\"Binary compatibility.\", level = DeprecationLevel.HIDDEN)\n fun httpServer(settings: HttpServerSettings, parentJob: Job? = null, handler: HttpRequestHandler): HttpServer {\n     val parent = parentJob ?: ...\n```\n\n### Commit 3\n- ID: 68eef194\n- Author: Sergey Mashkov (sergey.mashkov@jetbrains.com)\n- Date: 2019-04-30 21:02:31\n- Message: Add license header to every source file\n- Changes:\n```diff\n@@ -1,3 +1,7 @@\n+/*\n+ * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.\n+ */\n+\n package io.ktor.server.cio\n \n import io.ktor.http.cio.*...\n```",
+      "metadata": {
+        "file_path": "ktor-server/ktor-server-cio/jvm/src/io/ktor/server/cio/HttpServer.kt",
+        "language": "kotlin",
+        "strategy": "enhanced",
+        "chunk_index": 3,
+        "total_chunks": 5,
+        "commit_count": 5
+      },
+      "similarity_score": 0.7709459066390991
+    },
+    {
+      "content": "### Commit 5\n- ID: 46f42b89\n- Author: Leonid Stashevsky (leonid.stashevsky@gmail.com)\n- Date: 2018-12-22 14:10:21\n- Message: Migrate to kotlin-multiplatform plugin\n- Changes:\n```diff\n@@ -0,0 +1,20 @@\n+package io.ktor.client.engine.cio\n+\n+import io.ktor.util.cio.*\n+import io.ktor.network.selector.*\n+import io.ktor.network.sockets.*\n+import io.ktor.network.sockets.Socket\n+import java.net.*\n+\n+internal class ConnectionFactory(private val selector: SelectorManager, maxConnectionsCount: Int) {\n+    private val semaphore = Semaphore(maxConnectionsCount)\n+\n+    suspend fun connect(address: InetSocketAddress): Socket {\n+        semaphore.enter()\n+        return aSocket(selector).tcp...\n```",
+      "metadata": {
+        "total_chunks": 3,
+        "file_path": "ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/ConnectionFactory.kt",
+        "language": "kotlin",
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "chunk_index": 2
+      },
+      "similarity_score": 0.7739992737770081
+    }
+  ],
+  "compressed": [
+    {
+      "content": "# File: ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/CIOEngine.kt (kotlin)\n\n## Key Code Elements:\nimport io.ktor.client.engine.*\nimport io.ktor.client.request.*\nimport io.ktor.http.*\nimport io.ktor.network.selector.*\nimport kotlinx.atomicfu.*\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.channels.*\nimport java.io.*\nimport java.net.*\nimport java.util.concurrent.*\n    @UseExperimental(InternalCoroutinesApi::class)\n@Suppress(\"KDocMissingDocumentation\")\nclass ClientClosedException(override val cause: Throwable? = null) : IllegalStateException(\"Client already closed\")\n\n## Recent Changes:\n- ee0d1980 by Leonid Stashevsky (leonid.stashevsky@gmail.com): Add CIO client proxy support...\n- 68eef194 by Sergey Mashkov (sergey.mashkov@jetbrains.com): Add license header to every source file...\n- 32597950 by Leonid Stashevsky (leonid.stashevsky@gmail.com): Migrate to CompletableJob...",
+      "metadata": {
+        "chunk_index": 0,
+        "commit_count": 5,
+        "file_path": "ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/CIOEngine.kt",
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "language": "kotlin"
+      },
+      "similarity_score": 0.5962045192718506
+    },
+    {
+      "content": "# File: ktor-server/ktor-server-cio/jvm/src/io/ktor/server/cio/HttpServer.kt (kotlin)\n\n## Key Code Elements:\nimport io.ktor.http.cio.*\nimport io.ktor.http.cio.internals.WeakTimeoutQueue\nimport io.ktor.network.selector.*\nimport io.ktor.network.sockets.*\nimport io.ktor.network.sockets.ServerSocket\nimport io.ktor.network.sockets.Socket\nimport io.ktor.server.engine.*\nimport io.ktor.util.*\nimport kotlinx.coroutines.*\nimport org.slf4j.*\nimport java.net.*\nimport java.nio.channels.*\nimport java.util.concurrent.*\nimport kotlin.coroutines.*\n@Suppress(\"MemberVisibilityCanBePrivate\")\n\n## Recent Changes:\n- 0a06632a by Sergey Mashkov (sergey.mashkov@jetbrains.com): Provide coroutine exception handlers for all server engines...\n- bcc07ffc by Sergey Mashkov (sergey.mashkov@jetbrains.com): Strengthen deprecations and remove outdated code...\n- 68eef194 by Sergey Mashkov (sergey.mashkov@jetbrains.com): Add license header to every source file...",
+      "metadata": {
+        "language": "kotlin",
+        "total_chunks": 1,
+        "file_path": "ktor-server/ktor-server-cio/jvm/src/io/ktor/server/cio/HttpServer.kt",
+        "chunk_index": 0,
+        "commit_count": 5,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.5983946919441223
+    },
+    {
+      "content": "# File: ktor-network/jvm/src/io/ktor/network/sockets/Builders.kt (kotlin)\n\n## Key Code Elements:\nimport io.ktor.network.selector.*\nimport java.net.*\nimport java.nio.channels.*\n    var options: O\n        @Suppress(\"UNCHECKED_CAST\")\n        @Suppress(\"UNCHECKED_CAST\")\n@Suppress(\"PublicApiImplicitType\", \"unused\")\nclass SocketBuilder internal constructor(private val selector: SelectorManager, override var options: SocketOptions) :\n@Suppress(\"PublicApiImplicitType\")\nclass TcpSocketBuilder internal constructor(\nclass UDPSocketBuilder internal constructor(\n\n## Recent Changes:\n- 68eef194 by Sergey Mashkov (sergey.mashkov@jetbrains.com): Add license header to every source file...\n- 32597950 by Leonid Stashevsky (leonid.stashevsky@gmail.com): Migrate to CompletableJob...\n- 4bc651ee by Sergey Mashkov (sergey.mashkov@jetbrains.com): Reduce JDK8 dependencies: ktor-network...",
+      "metadata": {
+        "language": "kotlin",
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "commit_count": 4,
+        "file_path": "ktor-network/jvm/src/io/ktor/network/sockets/Builders.kt",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.6078187227249146
+    },
+    {
+      "content": "# File: ktor-client/ktor-client-cio/jvm/test/io/ktor/client/engine/cio/ConnectErrorsTest.kt (kotlin)\n\n## Key Code Elements:\nimport io.ktor.application.*\nimport io.ktor.client.*\nimport io.ktor.client.call.*\nimport io.ktor.client.engine.*\nimport io.ktor.client.request.*\nimport io.ktor.network.tls.certificates.*\nimport io.ktor.response.*\nimport io.ktor.routing.*\nimport io.ktor.server.engine.*\nimport io.ktor.server.netty.*\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.debug.junit4.*\nimport org.junit.*\nimport java.io.*\nimport java.net.*\n\n## Recent Changes:\n- 8fc2ef4d by Sergey Mashkov (sergey.mashkov@jetbrains.com): Fix client error tests on Windows...\n- ed855b29 by Leonid Stashevsky (leonid.stashevsky@gmail.com): Fix typo; remove obsolete code...\n- f46723ae by Leonid Stashevsky (leonid.stashevsky@gmail.com): Set tests timeout, reduce tls random pressure...",
+      "metadata": {
+        "strategy": "compressed",
+        "file_path": "ktor-client/ktor-client-cio/jvm/test/io/ktor/client/engine/cio/ConnectErrorsTest.kt",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "commit_count": 5,
+        "language": "kotlin"
+      },
+      "similarity_score": 0.610694944858551
+    },
+    {
+      "content": "# File: ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/ConnectionPipeline.kt (kotlin)\n\n## Key Code Elements:\nimport io.ktor.client.request.*\nimport io.ktor.client.utils.*\nimport io.ktor.http.*\nimport io.ktor.http.cio.*\nimport io.ktor.network.sockets.*\nimport io.ktor.util.cio.*\nimport io.ktor.util.date.*\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.CancellationException\nimport kotlinx.coroutines.channels.*\nimport kotlinx.coroutines.channels.Channel\nimport io.ktor.utils.io.*\nimport io.ktor.utils.io.core.*\nimport io.ktor.utils.io.pool.*\nimport kotlinx.coroutines.sync.*\n\n## Recent Changes:\n- 8d6bc40b by Sergey Mashkov (sergey.mashkov@jetbrains.com): Complete migration to built-in IO...\n- 3a9bc56d by Sergey Mashkov (sergey.mashkov@jetbrains.com): Migrate to built-in IO...\n- ee0d1980 by Leonid Stashevsky (leonid.stashevsky@gmail.com): Add CIO client proxy support...",
+      "metadata": {
+        "commit_count": 5,
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "file_path": "ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/ConnectionPipeline.kt",
+        "language": "kotlin"
+      },
+      "similarity_score": 0.613745391368866
+    },
+    {
+      "content": "# File: ktor-server/ktor-server-netty/jvm/src/io/ktor/server/netty/NettyChannelInitializer.kt (kotlin)\n\n## Key Code Elements:\nimport io.ktor.server.engine.*\nimport io.ktor.server.netty.cio.*\nimport io.ktor.server.netty.http1.*\nimport io.ktor.server.netty.http2.*\nimport io.netty.channel.*\nimport io.netty.channel.socket.SocketChannel\nimport io.netty.handler.codec.http.*\nimport io.netty.handler.codec.http2.*\nimport io.netty.handler.ssl.*\nimport io.netty.handler.timeout.*\nimport io.netty.util.concurrent.*\nimport java.nio.channels.*\nimport java.security.*\nimport java.security.cert.*\nimport kotlin.coroutines.*\n\n## Recent Changes:\n- 5984fbe5 by Simon Jackson (sizeak@hotmail.com): Add ReadTimeoutHandler to Netty pipeline. (#998)\n\n* Added ReadTimeoutHandler to Netty pipeline (infi...\n- 68eef194 by Sergey Mashkov (sergey.mashkov@jetbrains.com): Add license header to every source file...\n- 46f42b89 by Leonid Stashevsky (leonid.stashevsky@gmail.com): Migrate to kotlin-multiplatform plugin...",
+      "metadata": {
+        "chunk_index": 0,
+        "commit_count": 3,
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "file_path": "ktor-server/ktor-server-netty/jvm/src/io/ktor/server/netty/NettyChannelInitializer.kt",
+        "language": "kotlin"
+      },
+      "similarity_score": 0.6319699287414551
+    },
+    {
+      "content": "# File: ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/ConnectionFactory.kt (kotlin)\n\n## Key Code Elements:\nimport io.ktor.util.cio.*\nimport io.ktor.network.selector.*\nimport io.ktor.network.sockets.*\nimport io.ktor.network.sockets.Socket\nimport kotlinx.coroutines.sync.*\nimport java.net.*\n\n## Recent Changes:\n- 691bfa01 by Leonid Stashevsky (leonid@MacBook-Pro-Leonid.local): Add proxy tests...\n- 68eef194 by Sergey Mashkov (sergey.mashkov@jetbrains.com): Add license header to every source file...\n- e8de451d by Leonid Stashevsky (leonid.stashevsky@gmail.com): Make client websocket feature common...",
+      "metadata": {
+        "language": "kotlin",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "commit_count": 5,
+        "strategy": "compressed",
+        "file_path": "ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/ConnectionFactory.kt"
+      },
+      "similarity_score": 0.6374374628067017
+    },
+    {
+      "content": "# File: ktor-network/jvm/src/io/ktor/network/sockets/CIOReader.kt (kotlin)\n\n## Key Code Elements:\nimport io.ktor.network.selector.*\nimport kotlinx.coroutines.*\nimport io.ktor.utils.io.*\nimport io.ktor.utils.io.ByteChannel\nimport io.ktor.utils.io.core.*\nimport io.ktor.utils.io.nio.*\nimport io.ktor.utils.io.pool.*\nimport java.nio.*\nimport java.nio.channels.*\n@UseExperimental(ExperimentalIoApi::class)\n\n## Recent Changes:\n- 3a9bc56d by Sergey Mashkov (sergey.mashkov@jetbrains.com): Migrate to built-in IO...\n- f2031006 by Sergey Mashkov (sergey.mashkov@jetbrains.com): Fix CIO reader/writer coroutine names...\n- 68eef194 by Sergey Mashkov (sergey.mashkov@jetbrains.com): Add license header to every source file...",
+      "metadata": {
+        "language": "kotlin",
+        "total_chunks": 1,
+        "file_path": "ktor-network/jvm/src/io/ktor/network/sockets/CIOReader.kt",
+        "commit_count": 5,
+        "chunk_index": 0,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.637845516204834
+    },
+    {
+      "content": "# File: ktor-network/jvm/src/io/ktor/network/sockets/JavaSocketOptions.kt (kotlin)\n\n## Key Code Elements:\nimport java.io.*\nimport java.lang.reflect.*\nimport java.nio.channels.*\n\n## Recent Changes:\n- 68eef194 by Sergey Mashkov (sergey.mashkov@jetbrains.com): Add license header to every source file...\n- 4bc651ee by Sergey Mashkov (sergey.mashkov@jetbrains.com): Reduce JDK8 dependencies: ktor-network...",
+      "metadata": {
+        "file_path": "ktor-network/jvm/src/io/ktor/network/sockets/JavaSocketOptions.kt",
+        "total_chunks": 1,
+        "language": "kotlin",
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "commit_count": 2
+      },
+      "similarity_score": 0.6394469141960144
+    },
+    {
+      "content": "# File: ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/Endpoint.kt (kotlin)\n\n## Key Code Elements:\nimport io.ktor.client.request.*\nimport io.ktor.network.sockets.*\nimport io.ktor.network.sockets.Socket\nimport io.ktor.network.tls.*\nimport io.ktor.util.*\nimport io.ktor.util.date.*\nimport kotlinx.atomicfu.*\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.channels.*\nimport java.io.*\nimport java.net.*\nimport kotlin.coroutines.*\n@Suppress(\"KDocMissingDocumentation\")\n@Deprecated(\n@Suppress(\"KDocMissingDocumentation\")\n\n## Recent Changes:\n- 1a0a350d by Sergey Mashkov (sergey.mashkov@jetbrains.com): Strengthen deprecations...\n- ee0d1980 by Leonid Stashevsky (leonid.stashevsky@gmail.com): Add CIO client proxy support...\n- 0742885f by Leonid Stashevsky (leonid.stashevsky@gmail.com): Add CIO read timeout...",
+      "metadata": {
+        "language": "kotlin",
+        "strategy": "compressed",
+        "file_path": "ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/Endpoint.kt",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "commit_count": 5
+      },
+      "similarity_score": 0.6582908034324646
+    },
+    {
+      "content": "# File: ktor-network/jvm/src/io/ktor/network/sockets/CIOWriter.kt (kotlin)\n\n## Key Code Elements:\nimport io.ktor.network.selector.*\nimport kotlinx.coroutines.*\nimport io.ktor.utils.io.*\nimport io.ktor.utils.io.ByteChannel\nimport io.ktor.utils.io.core.*\nimport io.ktor.utils.io.pool.*\nimport java.nio.*\nimport java.nio.channels.*\n@UseExperimental(ExperimentalIoApi::class)\n\n## Recent Changes:\n- 3a9bc56d by Sergey Mashkov (sergey.mashkov@jetbrains.com): Migrate to built-in IO...\n- f2031006 by Sergey Mashkov (sergey.mashkov@jetbrains.com): Fix CIO reader/writer coroutine names...\n- 5ba4a7a1 by Leonid Stashevsky (leonid.stashevsky@gmail.com): Prevent body download on response cancel; Fix response autoclose...",
+      "metadata": {
+        "file_path": "ktor-network/jvm/src/io/ktor/network/sockets/CIOWriter.kt",
+        "strategy": "compressed",
+        "commit_count": 5,
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "language": "kotlin"
+      },
+      "similarity_score": 0.6607851386070251
+    },
+    {
+      "content": "# File: ktor-network/jvm/src/io/ktor/network/sockets/NIOSocket.kt (kotlin)\n\n## Key Code Elements:\nimport io.ktor.network.selector.*\nimport kotlinx.coroutines.*\nimport io.ktor.utils.io.*\nimport io.ktor.utils.io.ByteChannel\nimport io.ktor.utils.io.pool.*\nimport java.nio.*\nimport java.nio.channels.*\nimport java.util.concurrent.CancellationException\nimport java.util.concurrent.atomic.*\nimport kotlin.coroutines.*\n    // NOTE: it is important here to use different versions of attachForReadingImpl\n    // because it is not always valid to use channel's internal buffer for NIO read/write:\n    @UseExperimental(InternalCoroutinesApi::class)\n            ?.getCancellationException() // TODO it should be completable deferred or provide its own exception\n\n## Recent Changes:\n- 3a9bc56d by Sergey Mashkov (sergey.mashkov@jetbrains.com): Migrate to built-in IO...\n- 68eef194 by Sergey Mashkov (sergey.mashkov@jetbrains.com): Add license header to every source file...\n- 32597950 by Leonid Stashevsky (leonid.stashevsky@gmail.com): Migrate to CompletableJob...",
+      "metadata": {
+        "language": "kotlin",
+        "total_chunks": 1,
+        "file_path": "ktor-network/jvm/src/io/ktor/network/sockets/NIOSocket.kt",
+        "strategy": "compressed",
+        "commit_count": 4,
+        "chunk_index": 0
+      },
+      "similarity_score": 0.6613572835922241
+    },
+    {
+      "content": "# File: ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/utils.kt (kotlin)\n\n## Key Code Elements:\nimport io.ktor.client.call.*\nimport io.ktor.client.engine.*\nimport io.ktor.client.request.*\nimport io.ktor.client.utils.*\nimport io.ktor.http.*\nimport io.ktor.http.cio.*\nimport io.ktor.http.cio.websocket.*\nimport io.ktor.http.content.*\nimport io.ktor.util.date.*\nimport kotlinx.coroutines.*\nimport io.ktor.utils.io.*\nimport io.ktor.utils.io.errors.*\nimport kotlin.coroutines.*\n\n## Recent Changes:\n- beac785b by Evey-Edward Neely (evyymail@gmail.com): CIO engine no longer sends port in \"Host\" header (#1295)\n\n* CIO engine no longer sends port in \"Host...\n- 3a9bc56d by Sergey Mashkov (sergey.mashkov@jetbrains.com): Migrate to built-in IO...\n- ee0d1980 by Leonid Stashevsky (leonid.stashevsky@gmail.com): Add CIO client proxy support...",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "kotlin",
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "file_path": "ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/utils.kt",
+        "commit_count": 5
+      },
+      "similarity_score": 0.6685171723365784
+    },
+    {
+      "content": "# File: ktor-http/ktor-http-cio/jvm/src/io/ktor/http/cio/websocket/PingPong.kt (kotlin)\n\n## Key Code Elements:\nimport io.ktor.util.*\nimport io.ktor.util.cio.*\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.channels.*\nimport io.ktor.utils.io.pool.*\nimport java.nio.*\nimport java.nio.charset.*\nimport java.util.concurrent.CancellationException\nimport kotlin.random.*\n@UseExperimental(ExperimentalCoroutinesApi::class, ObsoleteCoroutinesApi::class)\n@UseExperimental(ExperimentalCoroutinesApi::class, ObsoleteCoroutinesApi::class)\n\n## Recent Changes:\n- 50eaccf7 by Sergey Mashkov (sergey.mashkov@jetbrains.com): Rename close reason UNEXPECTED_CONDITION to INTERNAL_ERROR...\n- c811267e by Sergey Mashkov (sergey.mashkov@jetbrains.com): Avoid redundant exceptions during ping/pong and close sequence...\n- 1a0a350d by Sergey Mashkov (sergey.mashkov@jetbrains.com): Strengthen deprecations...",
+      "metadata": {
+        "language": "kotlin",
+        "commit_count": 5,
+        "total_chunks": 1,
+        "file_path": "ktor-http/ktor-http-cio/jvm/src/io/ktor/http/cio/websocket/PingPong.kt",
+        "chunk_index": 0,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.6734614372253418
+    },
+    {
+      "content": "# File: ktor-network/jvm/src/io/ktor/network/sockets/ServerSocketImpl.kt (kotlin)\n\n## Key Code Elements:\nimport io.ktor.network.selector.*\nimport kotlinx.coroutines.*\nimport java.net.*\nimport java.nio.channels.*\n@Suppress(\"BlockingMethodInNonBlockingContext\")\n\n## Recent Changes:\n- 68eef194 by Sergey Mashkov (sergey.mashkov@jetbrains.com): Add license header to every source file...\n- 32597950 by Leonid Stashevsky (leonid.stashevsky@gmail.com): Migrate to CompletableJob...\n- 4bc651ee by Sergey Mashkov (sergey.mashkov@jetbrains.com): Reduce JDK8 dependencies: ktor-network...",
+      "metadata": {
+        "strategy": "compressed",
+        "file_path": "ktor-network/jvm/src/io/ktor/network/sockets/ServerSocketImpl.kt",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "commit_count": 4,
+        "language": "kotlin"
+      },
+      "similarity_score": 0.7095527648925781
+    },
+    {
+      "content": "# File: ktor-network/jvm/test/io/ktor/network/sockets/tests/ServerSocketTest.kt (kotlin)\n\n## Key Code Elements:\nimport io.ktor.network.selector.*\nimport io.ktor.network.sockets.*\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.debug.junit4.*\nimport io.ktor.utils.io.*\nimport org.junit.*\nimport org.junit.Test\nimport java.io.*\nimport java.nio.channels.*\nimport java.util.concurrent.*\nimport java.util.concurrent.CancellationException\nimport kotlin.concurrent.*\nimport kotlin.coroutines.*\nimport kotlin.test.*\nclass ServerSocketTest : CoroutineScope {\n\n## Recent Changes:\n- 3a9bc56d by Sergey Mashkov (sergey.mashkov@jetbrains.com): Migrate to built-in IO...\n- ed855b29 by Leonid Stashevsky (leonid.stashevsky@gmail.com): Fix typo; remove obsolete code...\n- f46723ae by Leonid Stashevsky (leonid.stashevsky@gmail.com): Set tests timeout, reduce tls random pressure...",
+      "metadata": {
+        "language": "kotlin",
+        "strategy": "compressed",
+        "file_path": "ktor-network/jvm/test/io/ktor/network/sockets/tests/ServerSocketTest.kt",
+        "commit_count": 5,
+        "total_chunks": 1,
+        "chunk_index": 0
+      },
+      "similarity_score": 0.7114025354385376
+    },
+    {
+      "content": "# File: ktor-server/ktor-server-netty/jvm/src/io/ktor/server/netty/cio/NettyResponsePipeline.kt (kotlin)\n\n## Key Code Elements:\nimport io.ktor.util.cio.*\nimport io.ktor.http.*\nimport io.ktor.server.netty.*\nimport io.ktor.util.*\nimport io.netty.buffer.*\nimport io.netty.channel.*\nimport io.netty.handler.codec.http.*\nimport io.netty.handler.codec.http2.*\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.CancellationException\nimport kotlinx.coroutines.channels.*\nimport io.ktor.utils.io.*\nimport io.ktor.utils.io.core.*\nimport java.io.*\nimport java.util.*\n\n## Recent Changes:\n- 3a9bc56d by Sergey Mashkov (sergey.mashkov@jetbrains.com): Migrate to built-in IO...\n- 68eef194 by Sergey Mashkov (sergey.mashkov@jetbrains.com): Add license header to every source file...\n- 46f42b89 by Leonid Stashevsky (leonid.stashevsky@gmail.com): Migrate to kotlin-multiplatform plugin...",
+      "metadata": {
+        "file_path": "ktor-server/ktor-server-netty/jvm/src/io/ktor/server/netty/cio/NettyResponsePipeline.kt",
+        "total_chunks": 1,
+        "language": "kotlin",
+        "commit_count": 3,
+        "chunk_index": 0,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.7212492227554321
+    },
+    {
+      "content": "# File: ktor-server/ktor-server-netty/jvm/src/io/ktor/server/netty/http1/NettyHttp1Handler.kt (kotlin)\n\n## Key Code Elements:\nimport io.ktor.application.*\nimport io.ktor.server.engine.*\nimport io.ktor.server.netty.*\nimport io.ktor.server.netty.cio.*\nimport io.ktor.util.cio.*\nimport io.netty.channel.*\nimport io.netty.handler.codec.http.*\nimport io.netty.util.concurrent.*\nimport kotlinx.coroutines.*\nimport io.ktor.utils.io.*\nimport java.io.*\nimport kotlin.coroutines.*\n@ChannelHandler.Sharable\n    @Suppress(\"OverridingDeprecatedMember\")\n\n## Recent Changes:\n- 0a06632a by Sergey Mashkov (sergey.mashkov@jetbrains.com): Provide coroutine exception handlers for all server engines...\n- e30b810d by Sergey Mashkov (sergey.mashkov@jetbrains.com): Fix handling GET requests with body (#1302)...\n- 3a9bc56d by Sergey Mashkov (sergey.mashkov@jetbrains.com): Migrate to built-in IO...",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "file_path": "ktor-server/ktor-server-netty/jvm/src/io/ktor/server/netty/http1/NettyHttp1Handler.kt",
+        "commit_count": 5,
+        "language": "kotlin",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.7237949967384338
+    },
+    {
+      "content": "# File: ktor-network/jvm/test/io/ktor/network/sockets/tests/ClientSocketTest.kt (kotlin)\n\n## Key Code Elements:\nimport io.ktor.network.selector.*\nimport io.ktor.network.sockets.*\nimport io.ktor.network.sockets.Socket\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.debug.junit4.*\nimport io.ktor.utils.io.*\nimport org.junit.*\nimport org.junit.Test\nimport org.junit.rules.*\nimport java.net.ServerSocket\nimport java.nio.*\nimport java.util.concurrent.*\nimport kotlin.concurrent.*\nimport kotlin.test.*\nclass ClientSocketTest {\n\n## Recent Changes:\n- 3a9bc56d by Sergey Mashkov (sergey.mashkov@jetbrains.com): Migrate to built-in IO...\n- f46723ae by Leonid Stashevsky (leonid.stashevsky@gmail.com): Set tests timeout, reduce tls random pressure...\n- 68eef194 by Sergey Mashkov (sergey.mashkov@jetbrains.com): Add license header to every source file...",
+      "metadata": {
+        "strategy": "compressed",
+        "commit_count": 4,
+        "language": "kotlin",
+        "total_chunks": 1,
+        "file_path": "ktor-network/jvm/test/io/ktor/network/sockets/tests/ClientSocketTest.kt",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.7300885915756226
+    },
+    {
+      "content": "# File: ktor-server/ktor-server-cio/jvm/src/io/ktor/server/cio/CIOApplicationEngine.kt (kotlin)\n\n## Key Code Elements:\nimport io.ktor.application.*\nimport io.ktor.server.engine.*\nimport io.ktor.util.*\nimport io.ktor.util.pipeline.*\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.scheduling.*\nimport java.util.concurrent.*\nclass CIOApplicationEngine(environment: ApplicationEngineEnvironment, configure: Configuration.() -> Unit) :\n    class Configuration : BaseApplicationEngine.Configuration() {\n        var connectionIdleTimeoutSeconds: Int = 45\n    @UseExperimental(InternalCoroutinesApi::class)\n    @UseExperimental(InternalCoroutinesApi::class)\n            @UseExperimental(InternalCoroutinesApi::class)\n\n## Recent Changes:\n- 68eef194 by Sergey Mashkov (sergey.mashkov@jetbrains.com): Add license header to every source file...\n- 32597950 by Leonid Stashevsky (leonid.stashevsky@gmail.com): Migrate to CompletableJob...\n- f736f034 by Leonid Stashevsky (leonid.stashevsky@gmail.com): Workaround dispatcher.close() bug...",
+      "metadata": {
+        "file_path": "ktor-server/ktor-server-cio/jvm/src/io/ktor/server/cio/CIOApplicationEngine.kt",
+        "chunk_index": 0,
+        "language": "kotlin",
+        "total_chunks": 1,
+        "commit_count": 4,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.7304648756980896
+    }
+  ]
+}

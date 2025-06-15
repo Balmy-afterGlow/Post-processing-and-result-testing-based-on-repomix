@@ -1,0 +1,708 @@
+{
+  "basic": [
+    {
+      "content": "# File: .github/ISSUE_TEMPLATE/bug_report.md (markdown)\n\n## Code Content:\n```markdown\n---\nname: Bug report\nabout: Report a bug encountered while using docker-compose\ntitle: ''\nlabels: kind/bug\nassignees: ''\n\n---\n\n<!--\nWelcome to the docker-compose issue tracker! Before creating an issue, please heed the following:\n\n1. This tracker should only be used to report bugs and request features / enhancements to docker-compose\n    - For questions and general support, use https://forums.docker.com\n    - For documentation issues, use https://github.com/docker/docker.github.io\n    - For issues with the `docker stack` commands and the version 3 of the Compose file, use\n      https://github.com/docker/cli\n2. Use the search function before creating a new issue. Duplicates will be closed and directed to\n   the original discussion.\n3. When making a bug report, make sure you provide all required information. The easier it is for\n   maintainers to reproduce, the faster it'll be fixed.\n-->\n\n## Description of the issue\n\n## Context information (for bug reports)\n\n**Output of `docker-compose version`**\n```\n(paste here)\n```\n\n**Output of `docker version`**\n```\n(paste here)\n```\n\n**Output of `docker-compose config`**\n(Make sure to add the relevant `-f` and other flags)\n```\n(paste here)\n```\n\n\n## Steps to reproduce the issue\n\n1.\n2.\n3.\n\n### Observed result\n\n### Expected result\n\n### Stacktrace / full error message\n\n```\n(paste here)\n```\n\n## Additional information\n\nOS version / distribution, `docker-compose` install method, etc.\n```",
+      "metadata": {
+        "language": "markdown",
+        "file_path": ".github/ISSUE_TEMPLATE/bug_report.md",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.4226096272468567
+    },
+    {
+      "content": "# File: .github/ISSUE_TEMPLATE/feature_request.md (markdown)\n\n## Code Content:\n```markdown\n---\nname: Feature request\nabout: Suggest an idea to improve Compose\ntitle: ''\nlabels: kind/feature\nassignees: ''\n\n---\n\n<!--\nWelcome to the docker-compose issue tracker! Before creating an issue, please heed the following:\n\n1. This tracker should only be used to report bugs and request features / enhancements to docker-compose\n    - For questions and general support, use https://forums.docker.com\n    - For documentation issues, use https://github.com/docker/docker.github.io\n    - For issues with the `docker stack` commands and the version 3 of the Compose file, use\n      https://github.com/docker/cli\n2. Use the search function before creating a new issue. Duplicates will be closed and directed to\n   the original discussion.\n-->\n\n**Is your feature request related to a problem? Please describe.**\nA clear and concise description of what the problem is. Ex. I'm always frustrated when [...]\n\n**Describe the solution you'd like**\nA clear and concise description of what you want to happen.\n\n**Describe alternatives you've considered**\nA clear and concise description of any alternative solutions or features you've considered.\n\n**Additional context**\nAdd any other context or screenshots about the feature request here.\n```",
+      "metadata": {
+        "file_path": ".github/ISSUE_TEMPLATE/feature_request.md",
+        "total_chunks": 1,
+        "strategy": "basic",
+        "language": "markdown",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.5907282829284668
+    },
+    {
+      "content": "# File: tests/fixtures/logging-composefile/docker-compose.yml (yaml)\n\n## Code Content:\n```yaml\nversion: \"2\"\nservices:\n  simple:\n    image: busybox:1.31.0-uclibc\n    command: top\n    logging:\n      driver: \"none\"\n  another:\n    image: busybox:1.31.0-uclibc\n    command: top\n    logging:\n      driver: \"json-file\"\n      options:\n          max-size: \"10m\"\n```",
+      "metadata": {
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "strategy": "basic",
+        "language": "yaml",
+        "file_path": "tests/fixtures/logging-composefile/docker-compose.yml"
+      },
+      "similarity_score": 0.6693624258041382
+    },
+    {
+      "content": "# File: tests/fixtures/logging-composefile-legacy/docker-compose.yml (yaml)\n\n## Code Content:\n```yaml\nsimple:\n  image: busybox:1.31.0-uclibc\n  command: top\n  log_driver: \"none\"\nanother:\n  image: busybox:1.31.0-uclibc\n  command: top\n  log_driver: \"json-file\"\n  log_opt:\n    max-size: \"10m\"\n```",
+      "metadata": {
+        "total_chunks": 1,
+        "language": "yaml",
+        "chunk_index": 0,
+        "strategy": "basic",
+        "file_path": "tests/fixtures/logging-composefile-legacy/docker-compose.yml"
+      },
+      "similarity_score": 0.6783071756362915
+    },
+    {
+      "content": "# File: compose/service.py (python)\n\n## Code Content:\n```python\nimport enum\nimport itertools\nimport json\nimport logging\nimport os\nimport re\nimport subprocess\nimport sys\nimport tempfile\nfrom collections import namedtuple\nfrom collections import OrderedDict\nfrom operator import attrgetter\n\nfrom docker.errors import APIError\nfrom docker.errors import ImageNotFound\nfrom docker.errors import NotFound\nfrom docker.types import LogConfig\nfrom docker.types import Mount\nfrom docker.utils import version_gte\nfrom docker.utils import version_lt\nfrom docker.utils.ports import build_port_bindings\nfrom docker.utils.ports import split_port\nfrom docker.utils.utils import convert_tmpfs_mounts\n\nfrom . import __version__\nfrom . import const\nfrom . import progress_stream\nfrom .config import DOCKER_CONFIG_KEYS\nfrom .config import is_url\nfrom .config import merge_environment\nfrom .config import merge_labels\nfrom .config.errors import DependencyError\nfrom .config.types import MountSpec\nfrom .config.types import ServicePort\nfrom .config.types import VolumeSpec\nfrom .const import DEFAULT_TIMEOUT\nfrom .const import IS_WINDOWS_PLATFORM\nfrom .const import LABEL_CONFIG_HASH\nfrom .const import LABEL_CONTAINER_NUMBER\nfrom .const import LABEL_ONE_OFF\nfrom .const import LABEL_PROJECT\nfrom .const import LABEL_SERVICE\nfrom .const import LABEL_SLUG\nfrom .const import LABEL_VERSION\nfrom .const import NANOCPUS_SCALE\nfrom .const import WINDOWS_LONGPATH_PREFIX\nfrom .container import Container\nfrom .errors import HealthCheckFailed\nfrom .errors import NoHealthCheckConfigured\nfrom .errors import OperationFailedError\nfrom .parallel import parallel_execute\nfrom .progress_stream import stream_output\nfrom .progress_stream import StreamOutputError\nfrom .utils import generate_random_id\nfrom .utils import json_hash\nfrom .utils import parse_bytes\nfrom .utils import parse_seconds_float\nfrom .utils import truncate_id\nfrom .utils import unique_everseen\nfrom compose.cli.utils import binarystr_to_unicode",
+      "metadata": {
+        "language": "python",
+        "file_path": "compose/service.py",
+        "total_chunks": 40,
+        "chunk_index": 0,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.6931532025337219
+    },
+    {
+      "content": "Usage: unpause [SERVICE...]\n        \"\"\"\n        containers = self.project.unpause(service_names=options['SERVICE'])\n        exit_if(not containers, 'No containers to unpause', 1)\n\n    @metrics()\n    def up(self, options):\n        \"\"\"\n        Builds, (re)creates, starts, and attaches to containers for a service.\n\n        Unless they are already running, this command also starts any linked services.\n\n        The `docker-compose up` command aggregates the output of each container. When\n        the command exits, all containers are stopped. Running `docker-compose up -d`\n        starts the containers in the background and leaves them running.\n\n        If there are existing containers for a service, and the service's configuration\n        or image was changed after the container's creation, `docker-compose up` picks\n        up the changes by stopping and recreating the containers (preserving mounted\n        volumes). To prevent Compose from picking up changes, use the `--no-recreate`\n        flag.\n\n        If you want to force Compose to stop and recreate all containers, use the\n        `--force-recreate` flag.\n\n        Usage: up [options] [--scale SERVICE=NUM...] [--] [SERVICE...]",
+      "metadata": {
+        "chunk_index": 24,
+        "language": "python",
+        "strategy": "basic",
+        "total_chunks": 38,
+        "file_path": "compose/cli/main.py"
+      },
+      "similarity_score": 0.7262598872184753
+    },
+    {
+      "content": "# File: compose/config/errors.py (python)\n\n## Code Content:\n```python\nVERSION_EXPLANATION = (\n    'You might be seeing this error because you\\'re using the wrong Compose file version. '\n    'Either specify a supported version (e.g \"2.2\" or \"3.3\") and place '\n    'your service definitions under the `services` key, or omit the `version` key '\n    'and place your service definitions at the root of the file to use '\n    'version 1.\\nFor more on the Compose file format versions, see '\n    'https://docs.docker.com/compose/compose-file/')\n\n\nclass ConfigurationError(Exception):\n    def __init__(self, msg):\n        self.msg = msg\n\n    def __str__(self):\n        return self.msg\n\n\nclass EnvFileNotFound(ConfigurationError):\n    pass\n\n\nclass DependencyError(ConfigurationError):\n    pass\n\n\nclass CircularReference(ConfigurationError):\n    def __init__(self, trail):\n        self.trail = trail\n\n    @property\n    def msg(self):\n        lines = [\n            \"{} in {}\".format(service_name, filename)\n            for (filename, service_name) in self.trail\n        ]\n        return \"Circular reference:\\n  {}\".format(\"\\n  extends \".join(lines))\n\n\nclass ComposeFileNotFound(ConfigurationError):\n    def __init__(self, supported_filenames):\n        super().__init__(\"\"\"\n        Can't find a suitable configuration file in this directory or any\n        parent. Are you in the right directory?\n\n        Supported filenames: %s\n        \"\"\" % \", \".join(supported_filenames))\n\n\nclass DuplicateOverrideFileFound(ConfigurationError):\n    def __init__(self, override_filenames):\n        self.override_filenames = override_filenames\n        super().__init__(\n            \"Multiple override files found: {}. You may only use a single \"\n            \"override file.\".format(\", \".join(override_filenames))\n        )\n```",
+      "metadata": {
+        "strategy": "basic",
+        "file_path": "compose/config/errors.py",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "language": "python"
+      },
+      "similarity_score": 0.7268072366714478
+    },
+    {
+      "content": "setup(\n    name='docker-compose',\n    version=find_version(\"compose\", \"__init__.py\"),\n    description='Multi-container orchestration for Docker',\n    long_description=read('README.md'),\n    long_description_content_type='text/markdown',\n    url='https://www.docker.com/',\n    project_urls={\n        'Documentation': 'https://docs.docker.com/compose/overview',\n        'Changelog': 'https://github.com/docker/compose/blob/release/CHANGELOG.md',\n        'Source': 'https://github.com/docker/compose',\n        'Tracker': 'https://github.com/docker/compose/issues',\n    },\n    author='Docker, Inc.',\n    license='Apache License 2.0',\n    packages=find_packages(exclude=['tests.*', 'tests']),\n    include_package_data=True,\n    install_requires=install_requires,\n    extras_require=extras_require,\n    tests_require=tests_require,\n    python_requires='>=3.4',\n    entry_points={\n        'console_scripts': ['docker-compose=compose.cli.main:main'],\n    },\n    classifiers=[\n        'Development Status :: 5 - Production/Stable',\n        'Environment :: Console',\n        'Intended Audience :: Developers',\n        'License :: OSI Approved :: Apache Software License',\n        'Programming Language :: Python :: 3',\n        'Programming Language :: Python :: 3.4',\n        'Programming Language :: Python :: 3.6',\n        'Programming Language :: Python :: 3.7',\n        'Programming Language :: Python :: 3.8',\n        'Programming Language :: Python :: 3.9',\n    ],\n)\n```",
+      "metadata": {
+        "chunk_index": 1,
+        "strategy": "basic",
+        "file_path": "setup.py",
+        "language": "python",
+        "total_chunks": 2
+      },
+      "similarity_score": 0.7284015417098999
+    },
+    {
+      "content": "# File: tests/fixtures/logs-restart-composefile/docker-compose.yml (yaml)\n\n## Code Content:\n```yaml\nsimple:\n  image: busybox:1.31.0-uclibc\n  command: sh -c \"echo hello && tail -f /dev/null\"\nanother:\n  image: busybox:1.31.0-uclibc\n  command: sh -c \"sleep 2 && echo world && /bin/false\"\n  restart: \"on-failure:2\"\n```",
+      "metadata": {
+        "file_path": "tests/fixtures/logs-restart-composefile/docker-compose.yml",
+        "chunk_index": 0,
+        "language": "yaml",
+        "strategy": "basic",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.7348806262016296
+    },
+    {
+      "content": "# File: compose/cli/main.py (python)\n\n## Code Content:\n```python\nimport contextlib\nimport functools\nimport json\nimport logging\nimport pipes\nimport re\nimport subprocess\nimport sys\nfrom distutils.spawn import find_executable\nfrom inspect import getdoc\nfrom operator import attrgetter\n\nimport docker.errors\nimport docker.utils",
+      "metadata": {
+        "file_path": "compose/cli/main.py",
+        "chunk_index": 0,
+        "strategy": "basic",
+        "total_chunks": 38,
+        "language": "python"
+      },
+      "similarity_score": 0.7526233196258545
+    },
+    {
+      "content": "def exit_with_error(msg):\n    log.error(dedent(msg).strip())\n    raise ConnectionError()\n\n\ndef get_conn_error_message(url):\n    try:\n        if find_executable('docker') is None:\n            return docker_not_found_msg(\"Couldn't connect to Docker daemon.\")\n        if is_docker_for_mac_installed():\n            return conn_error_docker_for_mac\n        if find_executable('docker-machine') is not None:\n            return conn_error_docker_machine\n    except UnicodeDecodeError:\n        # https://github.com/docker/compose/issues/5442\n        # Ignore the error and print the generic message instead.\n        pass\n    return conn_error_generic.format(url=url)\n\n\ndef docker_not_found_msg(problem):\n    return \"{} You might need to install Docker:\\n\\n{}\".format(\n        problem, docker_install_url())\n\n\ndef docker_install_url():\n    if is_mac():\n        return docker_install_url_mac\n    elif is_ubuntu():\n        return docker_install_url_ubuntu\n    elif is_windows():\n        return docker_install_url_windows\n    else:\n        return docker_install_url_generic\n\n\ndocker_install_url_mac = \"https://docs.docker.com/engine/installation/mac/\"\ndocker_install_url_ubuntu = \"https://docs.docker.com/engine/installation/ubuntulinux/\"\ndocker_install_url_windows = \"https://docs.docker.com/engine/installation/windows/\"\ndocker_install_url_generic = \"https://docs.docker.com/engine/installation/\"\n\n\nconn_error_docker_machine = \"\"\"\n    Couldn't connect to Docker daemon - you might need to run `docker-machine start default`.\n\"\"\"\n\nconn_error_docker_for_mac = \"\"\"\n    Couldn't connect to Docker daemon. You might need to start Docker for Mac.\n\"\"\"\n\n\nconn_error_generic = \"\"\"\n    Couldn't connect to Docker daemon at {url} - is it running?\n\n    If it's at a non-standard location, specify the URL with the DOCKER_HOST environment variable.\n\"\"\"\n```",
+      "metadata": {
+        "total_chunks": 3,
+        "file_path": "compose/cli/errors.py",
+        "strategy": "basic",
+        "chunk_index": 2,
+        "language": "python"
+      },
+      "similarity_score": 0.763893723487854
+    },
+    {
+      "content": "def log_windows_pipe_error(exc):\n    if exc.winerror == 2:\n        log.error(\"Couldn't connect to Docker daemon. You might need to start Docker for Windows.\")\n    elif exc.winerror == 232:  # https://github.com/docker/compose/issues/5005\n        log.error(\n            \"The current Compose file version is not compatible with your engine version. \"\n            \"Please upgrade your Compose file to a more recent version, or set \"\n            \"a COMPOSE_API_VERSION in your environment.\"\n        )\n    else:\n        log.error(\n            \"Windows named pipe error: {} (code: {})\".format(\n                binarystr_to_unicode(exc.strerror), exc.winerror\n            )\n        )\n\n\ndef log_timeout_error(timeout):\n    log.error(\n        \"An HTTP request took too long to complete. Retry with --verbose to \"\n        \"obtain debug information.\\n\"\n        \"If you encounter this issue regularly because of slow network \"\n        \"conditions, consider setting COMPOSE_HTTP_TIMEOUT to a higher \"\n        \"value (current value: %s).\" % timeout)\n\n\ndef log_api_error(e, client_version):\n    explanation = binarystr_to_unicode(e.explanation)\n\n    if 'client is newer than server' not in explanation:\n        log.error(explanation)\n        return\n\n    version = API_VERSION_TO_ENGINE_VERSION.get(client_version)\n    if not version:\n        # They've set a custom API version\n        log.error(explanation)\n        return\n\n    log.error(\n        \"The Docker Engine version is less than the minimum required by \"\n        \"Compose. Your current project requires a Docker Engine of \"\n        \"version {version} or greater.\".format(version=version)\n    )\n\n\ndef exit_with_error(msg):\n    log.error(dedent(msg).strip())\n    raise ConnectionError()",
+      "metadata": {
+        "language": "python",
+        "total_chunks": 3,
+        "strategy": "basic",
+        "file_path": "compose/cli/errors.py",
+        "chunk_index": 1
+      },
+      "similarity_score": 0.7784428000450134
+    },
+    {
+      "content": "# File: tests/unit/cli/main_test.py (python)\n\n## Code Content:\n```python\nimport logging\n\nimport docker\nimport pytest\n\nfrom compose import container\nfrom compose.cli.errors import UserError\nfrom compose.cli.formatter import ConsoleWarningFormatter\nfrom compose.cli.main import build_one_off_container_options\nfrom compose.cli.main import call_docker\nfrom compose.cli.main import convergence_strategy_from_opts\nfrom compose.cli.main import filter_attached_containers\nfrom compose.cli.main import get_docker_start_call\nfrom compose.cli.main import setup_console_handler\nfrom compose.cli.main import warn_for_swarm_mode\nfrom compose.service import ConvergenceStrategy\nfrom tests import mock\n\n\ndef mock_container(service, number):\n    return mock.create_autospec(\n        container.Container,\n        service=service,\n        number=number,\n        name_without_project='{}_{}'.format(service, number))\n\n\n@pytest.fixture\ndef logging_handler():\n    stream = mock.Mock()\n    stream.isatty.return_value = True\n    return logging.StreamHandler(stream=stream)\n\n\nclass TestCLIMainTestCase:\n\n    def test_filter_attached_containers(self):\n        containers = [\n            mock_container('web', 1),\n            mock_container('web', 2),\n            mock_container('db', 1),\n            mock_container('other', 1),\n            mock_container('another', 1),\n        ]\n        service_names = ['web', 'db']\n        actual = filter_attached_containers(containers, service_names)\n        assert actual == containers[:3]\n\n    def test_filter_attached_containers_with_dependencies(self):\n        containers = [\n            mock_container('web', 1),\n            mock_container('web', 2),\n            mock_container('db', 1),\n            mock_container('other', 1),\n            mock_container('another', 1),\n        ]\n        service_names = ['web', 'db']\n        actual = filter_attached_containers(containers, service_names, attach_dependencies=True)\n        assert actual == containers",
+      "metadata": {
+        "strategy": "basic",
+        "total_chunks": 5,
+        "language": "python",
+        "chunk_index": 0,
+        "file_path": "tests/unit/cli/main_test.py"
+      },
+      "similarity_score": 0.782207190990448
+    },
+    {
+      "content": "# File: script/release/release.md.tmpl (text)\n\n## Code Content:\n```text\nIf you're a Mac or Windows user, the best way to install Compose and keep it up-to-date is **[Docker Desktop for Mac and Windows](https://www.docker.com/products/docker-desktop)**.\n\nDocker Desktop will automatically install the latest version of Docker Engine for you.\n\nAlternatively, you can use the usual commands to install or upgrade Compose:\n\n```\ncurl -L https://github.com/docker/compose/releases/download/{{version}}/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose\nchmod +x /usr/local/bin/docker-compose\n```\n\nSee the [install docs](https://docs.docker.com/compose/install/) for more install options and instructions.\n\n## Compose file format compatibility matrix\n\n| Compose file format | Docker Engine |\n| --- | --- |\n{% for engine, formats in compat_matrix.items() -%}\n| {% for format in formats %}{{format}}{% if not loop.last %}, {% endif %}{% endfor %} | {{engine}}+ |\n{% endfor -%}\n\n## Changes\n\n{{changelog}}\n\nThanks to {% for name in contributors %}@{{name}}{% if not loop.last %}, {% endif %}{% endfor %} for contributing to this release!\n\n## Integrity check\n\nBinary name | SHA-256 sum\n| --- | --- |\n{% for filename, sha in integrity.items() -%}\n| `{{filename}}` | `{{sha[1]}}` |\n{% endfor -%}\n```",
+      "metadata": {
+        "file_path": "script/release/release.md.tmpl",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "language": "text",
+        "strategy": "basic"
+      },
+      "similarity_score": 0.7829048037528992
+    },
+    {
+      "content": "# File: tests/fixtures/restart/docker-compose.yml (yaml)\n\n## Code Content:\n```yaml\nversion: \"2\"\nservices:\n  never:\n    image: busybox\n    restart: \"no\"\n  always:\n    image: busybox\n    restart: always\n  on-failure:\n    image: busybox\n    restart: on-failure\n  on-failure-5:\n    image: busybox\n    restart: \"on-failure:5\"\n  restart-null:\n    image: busybox\n    restart: \"\"\n```",
+      "metadata": {
+        "language": "yaml",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "file_path": "tests/fixtures/restart/docker-compose.yml",
+        "strategy": "basic"
+      },
+      "similarity_score": 0.808403491973877
+    },
+    {
+      "content": "# File: compose/cli/errors.py (python)\n\n## Code Content:\n```python\nimport contextlib\nimport logging\nimport socket\nfrom distutils.spawn import find_executable\nfrom textwrap import dedent\n\nfrom docker.errors import APIError\nfrom requests.exceptions import ConnectionError as RequestsConnectionError\nfrom requests.exceptions import ReadTimeout\nfrom requests.exceptions import SSLError\nfrom requests.packages.urllib3.exceptions import ReadTimeoutError\n\nfrom ..const import API_VERSION_TO_ENGINE_VERSION\nfrom .utils import binarystr_to_unicode\nfrom .utils import is_docker_for_mac_installed\nfrom .utils import is_mac\nfrom .utils import is_ubuntu\nfrom .utils import is_windows\n\n\nlog = logging.getLogger(__name__)\n\n\nclass UserError(Exception):\n\n    def __init__(self, msg):\n        self.msg = dedent(msg).strip()\n\n    def __str__(self):\n        return self.msg\n\n\nclass ConnectionError(Exception):\n    pass\n\n\n@contextlib.contextmanager\ndef handle_connection_errors(client):\n    try:\n        yield\n    except SSLError as e:\n        log.error('SSL error: %s' % e)\n        raise ConnectionError()\n    except RequestsConnectionError as e:\n        if e.args and isinstance(e.args[0], ReadTimeoutError):\n            log_timeout_error(client.timeout)\n            raise ConnectionError()\n        exit_with_error(get_conn_error_message(client.base_url))\n    except APIError as e:\n        log_api_error(e, client.api_version)\n        raise ConnectionError()\n    except (ReadTimeout, socket.timeout):\n        log_timeout_error(client.timeout)\n        raise ConnectionError()\n    except Exception as e:\n        if is_windows():\n            import pywintypes\n            if isinstance(e, pywintypes.error):\n                log_windows_pipe_error(e)\n                raise ConnectionError()\n        raise",
+      "metadata": {
+        "total_chunks": 3,
+        "chunk_index": 0,
+        "language": "python",
+        "strategy": "basic",
+        "file_path": "compose/cli/errors.py"
+      },
+      "similarity_score": 0.8115208745002747
+    },
+    {
+      "content": "'*:running services:__docker-compose_runningservices' && ret=0\n            ;;\n        (logs)\n            _arguments \\\n                $opts_help \\\n                '(-f --follow)'{-f,--follow}'[Follow log output]' \\\n                $opts_no_color \\\n                '--tail=[Number of lines to show from the end of the logs for each container.]:number of lines: ' \\\n                '(-t --timestamps)'{-t,--timestamps}'[Show timestamps]' \\\n                '*:services:__docker-compose_services' && ret=0\n            ;;\n        (pause)\n            _arguments \\\n                $opts_help \\\n                '*:running services:__docker-compose_runningservices' && ret=0\n            ;;\n        (port)\n            _arguments \\\n                $opts_help \\\n                '--protocol=[tcp or udp \\[default: tcp\\]]:protocol:(tcp udp)' \\\n                '--index=[index of the container if there are multiple instances of a service \\[default: 1\\]]:index: ' \\\n                '1:running services:__docker-compose_runningservices' \\\n                '2:port:_ports' && ret=0\n            ;;\n        (ps)\n            _arguments \\\n                $opts_help \\\n                '-q[Only display IDs]' \\\n                '--filter KEY=VAL[Filter services by a property]:<filtername>=<value>:' \\\n                '*:services:__docker-compose_services' && ret=0\n            ;;\n        (pull)\n            _arguments \\\n                $opts_help \\\n                '--ignore-pull-failures[Pull what it can and ignores images with pull failures.]' \\\n                '--no-parallel[Disable parallel pulling]' \\\n                '(-q --quiet)'{-q,--quiet}'[Pull without printing progress information]' \\\n                '--include-deps[Also pull services declared as dependencies]' \\\n                '*:services:__docker-compose_services_from_image' && ret=0\n            ;;\n        (push)\n            _arguments \\\n                $opts_help \\",
+      "metadata": {
+        "chunk_index": 5,
+        "language": "text",
+        "file_path": "contrib/completion/zsh/_docker-compose",
+        "total_chunks": 12,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.8157435059547424
+    },
+    {
+      "content": "# File: compose/const.py (python)\n\n## Code Content:\n```python\nimport sys\n\nfrom .version import ComposeVersion\n\nDEFAULT_TIMEOUT = 10\nHTTP_TIMEOUT = 60\nIS_WINDOWS_PLATFORM = (sys.platform == \"win32\")\nLABEL_CONTAINER_NUMBER = 'com.docker.compose.container-number'\nLABEL_ONE_OFF = 'com.docker.compose.oneoff'\nLABEL_PROJECT = 'com.docker.compose.project'\nLABEL_WORKING_DIR = 'com.docker.compose.project.working_dir'\nLABEL_CONFIG_FILES = 'com.docker.compose.project.config_files'\nLABEL_ENVIRONMENT_FILE = 'com.docker.compose.project.environment_file'\nLABEL_SERVICE = 'com.docker.compose.service'\nLABEL_NETWORK = 'com.docker.compose.network'\nLABEL_VERSION = 'com.docker.compose.version'\nLABEL_SLUG = 'com.docker.compose.slug'\nLABEL_VOLUME = 'com.docker.compose.volume'\nLABEL_CONFIG_HASH = 'com.docker.compose.config-hash'\nNANOCPUS_SCALE = 1000000000\nPARALLEL_LIMIT = 64\n\nSECRETS_PATH = '/run/secrets'\nWINDOWS_LONGPATH_PREFIX = '\\\\\\\\?\\\\'\n\nCOMPOSEFILE_V1 = ComposeVersion('1')\nCOMPOSE_SPEC = ComposeVersion('3.9')\n\n# minimum DOCKER ENGINE API version needed to support\n# features for each compose schema version\nAPI_VERSIONS = {\n    COMPOSEFILE_V1: '1.21',\n    COMPOSE_SPEC: '1.38',\n}\n\nAPI_VERSION_TO_ENGINE_VERSION = {\n    API_VERSIONS[COMPOSEFILE_V1]: '1.9.0',\n    API_VERSIONS[COMPOSE_SPEC]: '18.06.0',\n}\n```",
+      "metadata": {
+        "file_path": "compose/const.py",
+        "language": "python",
+        "chunk_index": 0,
+        "strategy": "basic",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.8162203431129456
+    },
+    {
+      "content": "# File: tests/integration/testcases.py (python)\n\n## Code Content:\n```python\nimport functools\nimport os\n\nimport pytest\nfrom docker.errors import APIError\nfrom docker.utils import version_lt\n\nfrom .. import unittest\nfrom ..helpers import BUSYBOX_IMAGE_WITH_TAG\nfrom compose.cli.docker_client import docker_client\nfrom compose.config.config import resolve_environment\nfrom compose.config.environment import Environment\nfrom compose.const import API_VERSIONS\nfrom compose.const import COMPOSE_SPEC as VERSION\nfrom compose.const import COMPOSEFILE_V1 as V1\nfrom compose.const import LABEL_PROJECT\nfrom compose.progress_stream import stream_output\nfrom compose.service import Service\n\nSWARM_SKIP_CONTAINERS_ALL = os.environ.get('SWARM_SKIP_CONTAINERS_ALL', '0') != '0'\nSWARM_SKIP_CPU_SHARES = os.environ.get('SWARM_SKIP_CPU_SHARES', '0') != '0'\nSWARM_SKIP_RM_VOLUMES = os.environ.get('SWARM_SKIP_RM_VOLUMES', '0') != '0'\nSWARM_ASSUME_MULTINODE = os.environ.get('SWARM_ASSUME_MULTINODE', '0') != '0'\n\n\ndef pull_busybox(client):\n    client.pull(BUSYBOX_IMAGE_WITH_TAG, stream=False)\n\n\ndef get_links(container):\n    links = container.get('HostConfig.Links') or []\n\n    def format_link(link):\n        _, alias = link.split(':')\n        return alias.split('/')[-1]\n\n    return [format_link(link) for link in links]\n\n\ndef engine_max_version():\n    if 'DOCKER_VERSION' not in os.environ:\n        return VERSION\n    version = os.environ['DOCKER_VERSION'].partition('-')[0]\n    if version_lt(version, '1.10'):\n        return V1\n    return VERSION\n\n\ndef min_version_skip(version):\n    return pytest.mark.skipif(\n        engine_max_version() < version,\n        reason=\"Engine version %s is too low\" % version\n    )\n\n\nclass DockerClientTestCase(unittest.TestCase):\n    @classmethod\n    def setUpClass(cls):\n        version = API_VERSIONS[engine_max_version()]\n        cls.client = docker_client(Environment(), version)\n\n    @classmethod\n    def tearDownClass(cls):\n        cls.client.close()\n        del cls.client",
+      "metadata": {
+        "strategy": "basic",
+        "file_path": "tests/integration/testcases.py",
+        "total_chunks": 3,
+        "chunk_index": 0,
+        "language": "python"
+      },
+      "similarity_score": 0.8479156494140625
+    },
+    {
+      "content": "# File: tests/fixtures/compatibility-mode/docker-compose.yml (yaml)\n\n## Code Content:\n```yaml\nversion: '3.5'\nservices:\n  foo:\n    image: alpine:3.10.1\n    command: /bin/true\n    deploy:\n      replicas: 3\n      restart_policy:\n        condition: any\n        max_attempts: 7\n      resources:\n        limits:\n          memory: 300M\n          cpus: '0.7'\n        reservations:\n          memory: 100M\n    volumes:\n      - foo:/bar\n    networks:\n      - bar\n\nvolumes:\n  foo:\n    driver: default\n\nnetworks:\n  bar:\n    attachable: true\n```",
+      "metadata": {
+        "strategy": "basic",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "language": "yaml",
+        "file_path": "tests/fixtures/compatibility-mode/docker-compose.yml"
+      },
+      "similarity_score": 0.85845947265625
+    }
+  ],
+  "enhanced": [
+    {
+      "content": "# File: .github/ISSUE_TEMPLATE/bug_report.md (markdown)\n\n## Code Content:\n```markdown\n---\nname: Bug report\nabout: Report a bug encountered while using docker-compose\ntitle: ''\nlabels: kind/bug\nassignees: ''\n\n---\n\n<!--\nWelcome to the docker-compose issue tracker! Before creating an issue, please heed the following:\n\n1. This tracker should only be used to report bugs and request features / enhancements to docker-compose\n    - For questions and general support, use https://forums.docker.com\n    - For documentation issues, use https://github.com/docker/docker.github.io\n    - For issues with the `docker stack` commands and the version 3 of the Compose file, use\n      https://github.com/docker/cli\n2. Use the search function before creating a new issue. Duplicates will be closed and directed to\n   the original discussion.\n3. When making a bug report, make sure you provide all required information. The easier it is for\n   maintainers to reproduce, the faster it'll be fixed.\n-->\n\n## Description of the issue\n\n## Context information (for bug reports)\n\n**Output of `docker-compose version`**\n```\n(paste here)\n```\n\n**Output of `docker version`**\n```\n(paste here)\n```\n\n**Output of `docker-compose config`**\n(Make sure to add the relevant `-f` and other flags)\n```\n(paste here)\n```\n\n\n## Steps to reproduce the issue\n\n1.\n2.\n3.\n\n### Observed result\n\n### Expected result\n\n### Stacktrace / full error message\n\n```\n(paste here)\n```\n\n## Additional information\n\nOS version / distribution, `docker-compose` install method, etc.\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 70f8e38b\n- Author: Guillaume LOURS (guillaume@lours.me)\n- Date: 2019-10-08 17:05:30\n- Message: Add automatic labeling of bug, feature & question issues\n\nSigned-off-by: Guillaume Lours <guillaume.lours@docker.com>\n- Changes:\n```diff\n@@ -1,6 +1,9 @@\n ---\n name: Bug report\n about: Report a bug encountered while using docker-compose\n+title: ''\n+labels: kind/bug\n+assignees: ''\n \n ---...\n```",
+      "metadata": {
+        "language": "markdown",
+        "commit_count": 2,
+        "total_chunks": 2,
+        "chunk_index": 0,
+        "file_path": ".github/ISSUE_TEMPLATE/bug_report.md",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.4226096272468567
+    },
+    {
+      "content": "### Commit 2\n- ID: 5017b25f\n- Author: Joffrey F (f.joffrey@gmail.com)\n- Date: 2018-10-17 09:12:34\n- Message: Update issue templates\n\nSigned-off-by: Joffrey F <joffrey@docker.com>\n- Changes:\n```diff\n@@ -0,0 +1,60 @@\n+---\n+name: Bug report\n+about: Report a bug encountered while using docker-compose\n+\n+---\n+\n+<!--\n+Welcome to the docker-compose issue tracker! Before creating an issue, please heed the following:\n+\n+1. This tracker should only be used to report bugs and request features / enhancements to docker-compose\n+    - For questions and general support, use https://forums.docker.com\n+    - For documentation issues, use https://github.com/docker/docker.github.io\n+    - For issues with the...\n```",
+      "metadata": {
+        "language": "markdown",
+        "strategy": "enhanced",
+        "commit_count": 2,
+        "file_path": ".github/ISSUE_TEMPLATE/bug_report.md",
+        "chunk_index": 1,
+        "total_chunks": 2
+      },
+      "similarity_score": 0.5046561360359192
+    },
+    {
+      "content": "### Commit 2\n- ID: 5017b25f\n- Author: Joffrey F (f.joffrey@gmail.com)\n- Date: 2018-10-17 09:12:34\n- Message: Update issue templates\n\nSigned-off-by: Joffrey F <joffrey@docker.com>\n- Changes:\n```diff\n@@ -0,0 +1,29 @@\n+---\n+name: Feature request\n+about: Suggest an idea to improve Compose\n+\n+---\n+\n+<!--\n+Welcome to the docker-compose issue tracker! Before creating an issue, please heed the following:\n+\n+1. This tracker should only be used to report bugs and request features / enhancements to docker-compose\n+    - For questions and general support, use https://forums.docker.com\n+    - For documentation issues, use https://github.com/docker/docker.github.io\n+    - For issues with the `docker sta...\n```",
+      "metadata": {
+        "language": "markdown",
+        "total_chunks": 2,
+        "strategy": "enhanced",
+        "file_path": ".github/ISSUE_TEMPLATE/feature_request.md",
+        "commit_count": 2,
+        "chunk_index": 1
+      },
+      "similarity_score": 0.5248357057571411
+    },
+    {
+      "content": "# File: .github/ISSUE_TEMPLATE/feature_request.md (markdown)\n\n## Code Content:\n```markdown\n---\nname: Feature request\nabout: Suggest an idea to improve Compose\ntitle: ''\nlabels: kind/feature\nassignees: ''\n\n---\n\n<!--\nWelcome to the docker-compose issue tracker! Before creating an issue, please heed the following:\n\n1. This tracker should only be used to report bugs and request features / enhancements to docker-compose\n    - For questions and general support, use https://forums.docker.com\n    - For documentation issues, use https://github.com/docker/docker.github.io\n    - For issues with the `docker stack` commands and the version 3 of the Compose file, use\n      https://github.com/docker/cli\n2. Use the search function before creating a new issue. Duplicates will be closed and directed to\n   the original discussion.\n-->\n\n**Is your feature request related to a problem? Please describe.**\nA clear and concise description of what the problem is. Ex. I'm always frustrated when [...]\n\n**Describe the solution you'd like**\nA clear and concise description of what you want to happen.\n\n**Describe alternatives you've considered**\nA clear and concise description of any alternative solutions or features you've considered.\n\n**Additional context**\nAdd any other context or screenshots about the feature request here.\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 70f8e38b\n- Author: Guillaume LOURS (guillaume@lours.me)\n- Date: 2019-10-08 17:05:30\n- Message: Add automatic labeling of bug, feature & question issues\n\nSigned-off-by: Guillaume Lours <guillaume.lours@docker.com>\n- Changes:\n```diff\n@@ -1,6 +1,9 @@\n ---\n name: Feature request\n about: Suggest an idea to improve Compose\n+title: ''\n+labels: kind/feature\n+assignees: ''\n \n ---...\n```\n\n### Commit 2\n- ID: 5017b25f\n- Author: Joffrey F (f.joffrey@gmail.com)\n- Date: 2018-10-17 09:12:34\n- Message: Update issue templates",
+      "metadata": {
+        "chunk_index": 0,
+        "total_chunks": 2,
+        "commit_count": 2,
+        "file_path": ".github/ISSUE_TEMPLATE/feature_request.md",
+        "strategy": "enhanced",
+        "language": "markdown"
+      },
+      "similarity_score": 0.5907282829284668
+    },
+    {
+      "content": "# File: compose/service.py (python)\n\n## Code Content:\n```python\nimport enum\nimport itertools\nimport json\nimport logging\nimport os\nimport re\nimport subprocess\nimport sys\nimport tempfile\nfrom collections import namedtuple\nfrom collections import OrderedDict\nfrom operator import attrgetter\n\nfrom docker.errors import APIError\nfrom docker.errors import ImageNotFound\nfrom docker.errors import NotFound\nfrom docker.types import LogConfig\nfrom docker.types import Mount\nfrom docker.utils import version_gte\nfrom docker.utils import version_lt\nfrom docker.utils.ports import build_port_bindings\nfrom docker.utils.ports import split_port\nfrom docker.utils.utils import convert_tmpfs_mounts\n\nfrom . import __version__\nfrom . import const\nfrom . import progress_stream\nfrom .config import DOCKER_CONFIG_KEYS\nfrom .config import is_url\nfrom .config import merge_environment\nfrom .config import merge_labels\nfrom .config.errors import DependencyError\nfrom .config.types import MountSpec\nfrom .config.types import ServicePort\nfrom .config.types import VolumeSpec\nfrom .const import DEFAULT_TIMEOUT\nfrom .const import IS_WINDOWS_PLATFORM\nfrom .const import LABEL_CONFIG_HASH\nfrom .const import LABEL_CONTAINER_NUMBER\nfrom .const import LABEL_ONE_OFF\nfrom .const import LABEL_PROJECT\nfrom .const import LABEL_SERVICE\nfrom .const import LABEL_SLUG\nfrom .const import LABEL_VERSION\nfrom .const import NANOCPUS_SCALE\nfrom .const import WINDOWS_LONGPATH_PREFIX\nfrom .container import Container\nfrom .errors import HealthCheckFailed\nfrom .errors import NoHealthCheckConfigured\nfrom .errors import OperationFailedError\nfrom .parallel import parallel_execute\nfrom .progress_stream import stream_output\nfrom .progress_stream import StreamOutputError\nfrom .utils import generate_random_id\nfrom .utils import json_hash\nfrom .utils import parse_bytes\nfrom .utils import parse_seconds_float\nfrom .utils import truncate_id\nfrom .utils import unique_everseen\nfrom compose.cli.utils import binarystr_to_unicode",
+      "metadata": {
+        "file_path": "compose/service.py",
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "chunk_index": 0,
+        "language": "python",
+        "total_chunks": 42
+      },
+      "similarity_score": 0.6931532025337219
+    },
+    {
+      "content": "Users that want to use the python client for building can\nopt-out of this feature by setting COMPOSE_DOCKER_CLI_BUILD=0\n\nSigned-off-by: Sebastiaan van Stijn <github@gone.nl>\n- Changes:\n```diff\n@@ -489,7 +489,8 @@ class Project:\n                 log.info('%s uses an image, skipping' % service.name)\n \n         if cli:\n-            log.warning(\"Native build is an experimental feature and could change at any time\")\n+            log.info(\"Building with native build. Learn about native build in Compose here: \"\n+                     \"https://docs.docker.com/go/compose-native-build/\")\n             if parallel_build:\n                 log.warning(\"Flag '--parallel' is ignored when building with...\n```",
+      "metadata": {
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "total_chunks": 29,
+        "language": "python",
+        "chunk_index": 28,
+        "file_path": "compose/project.py"
+      },
+      "similarity_score": 0.7058062553405762
+    },
+    {
+      "content": "When using an older version of Docker, the API should return an\nerror that reading logs is not supported, so no local check should\nbe needed.\n\nSigned-off-by: Sebastiaan van Stijn <github@gone.nl>\n- Changes:\n```diff\n@@ -8,7 +8,6 @@ from docker.errors import APIError\n \n from compose.cli.log_printer import build_log_generator\n from compose.cli.log_printer import build_log_presenters\n-from compose.cli.log_printer import build_no_log_generator\n from compose.cli.log_printer import consume_queue\n from compose.cli.log_printer import QueueItem\n from compose.cli.log_printer import wait_on_exit\n@@ -75,14 +74,6 @@ def test_wait_on_exit_raises():\n     assert expected in wait_on_exit(mock_container)\n \n \n-def test_build_...\n```\n\n### Commit 2\n- ID: 4d3d9f64\n- Author: alexrecuenco (alejandrogonzalezrecuenco@gmail.com)\n- Date: 2020-02-24 20:24:57\n- Message: Removed Python2 support\n\nCloses: #6890\n\nSome remarks,\n\n- `# coding ... utf-8` statements are not needed\n- isdigit on strings instead of a try-catch.\n- Default opening mode is read, so we can do `open()` without the `'r'` everywhere\n- Removed inheritinng from `object` class, it isn't necessary in python3.\n- `super(ClassName, self)` can now be replaced with `super()`\n- Use of itertools and `chain` on a couple places dealing with sets.\n- Used the operator module instead of lambdas when warranted\n    `itemgetter(0)` instead of `lambda x: x[0]`\n    `attrgetter('name')` instead of `lambda x: x.name`\n- `sorted` returns a list, so no need to use `list(sorted(...))`\n- Removed `dict()` using dictionary comprehensions whenever possible\n- Attempted to remove python3.2 support",
+      "metadata": {
+        "total_chunks": 7,
+        "chunk_index": 4,
+        "strategy": "enhanced",
+        "file_path": "tests/unit/cli/log_printer_test.py",
+        "commit_count": 5,
+        "language": "python"
+      },
+      "similarity_score": 0.7077137231826782
+    },
+    {
+      "content": "Usage: unpause [SERVICE...]\n        \"\"\"\n        containers = self.project.unpause(service_names=options['SERVICE'])\n        exit_if(not containers, 'No containers to unpause', 1)\n\n    @metrics()\n    def up(self, options):\n        \"\"\"\n        Builds, (re)creates, starts, and attaches to containers for a service.\n\n        Unless they are already running, this command also starts any linked services.\n\n        The `docker-compose up` command aggregates the output of each container. When\n        the command exits, all containers are stopped. Running `docker-compose up -d`\n        starts the containers in the background and leaves them running.\n\n        If there are existing containers for a service, and the service's configuration\n        or image was changed after the container's creation, `docker-compose up` picks\n        up the changes by stopping and recreating the containers (preserving mounted\n        volumes). To prevent Compose from picking up changes, use the `--no-recreate`\n        flag.\n\n        If you want to force Compose to stop and recreate all containers, use the\n        `--force-recreate` flag.\n\n        Usage: up [options] [--scale SERVICE=NUM...] [--] [SERVICE...]",
+      "metadata": {
+        "total_chunks": 41,
+        "language": "python",
+        "file_path": "compose/cli/main.py",
+        "chunk_index": 24,
+        "commit_count": 5,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.7262598872184753
+    },
+    {
+      "content": "# File: compose/config/errors.py (python)\n\n## Code Content:\n```python\nVERSION_EXPLANATION = (\n    'You might be seeing this error because you\\'re using the wrong Compose file version. '\n    'Either specify a supported version (e.g \"2.2\" or \"3.3\") and place '\n    'your service definitions under the `services` key, or omit the `version` key '\n    'and place your service definitions at the root of the file to use '\n    'version 1.\\nFor more on the Compose file format versions, see '\n    'https://docs.docker.com/compose/compose-file/')\n\n\nclass ConfigurationError(Exception):\n    def __init__(self, msg):\n        self.msg = msg\n\n    def __str__(self):\n        return self.msg\n\n\nclass EnvFileNotFound(ConfigurationError):\n    pass\n\n\nclass DependencyError(ConfigurationError):\n    pass\n\n\nclass CircularReference(ConfigurationError):\n    def __init__(self, trail):\n        self.trail = trail\n\n    @property\n    def msg(self):\n        lines = [\n            \"{} in {}\".format(service_name, filename)\n            for (filename, service_name) in self.trail\n        ]\n        return \"Circular reference:\\n  {}\".format(\"\\n  extends \".join(lines))\n\n\nclass ComposeFileNotFound(ConfigurationError):\n    def __init__(self, supported_filenames):\n        super().__init__(\"\"\"\n        Can't find a suitable configuration file in this directory or any\n        parent. Are you in the right directory?\n\n        Supported filenames: %s\n        \"\"\" % \", \".join(supported_filenames))\n\n\nclass DuplicateOverrideFileFound(ConfigurationError):\n    def __init__(self, override_filenames):\n        self.override_filenames = override_filenames\n        super().__init__(\n            \"Multiple override files found: {}. You may only use a single \"\n            \"override file.\".format(\", \".join(override_filenames))\n        )\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 4d3d9f64\n- Author: alexrecuenco (alejandrogonzalezrecuenco@gmail.com)\n- Date: 2020-02-24 20:24:57\n- Message: Removed Python2 support\n\nCloses: #6890",
+      "metadata": {
+        "language": "python",
+        "commit_count": 5,
+        "file_path": "compose/config/errors.py",
+        "strategy": "enhanced",
+        "chunk_index": 0,
+        "total_chunks": 3
+      },
+      "similarity_score": 0.7268072366714478
+    },
+    {
+      "content": "setup(\n    name='docker-compose',\n    version=find_version(\"compose\", \"__init__.py\"),\n    description='Multi-container orchestration for Docker',\n    long_description=read('README.md'),\n    long_description_content_type='text/markdown',\n    url='https://www.docker.com/',\n    project_urls={\n        'Documentation': 'https://docs.docker.com/compose/overview',\n        'Changelog': 'https://github.com/docker/compose/blob/release/CHANGELOG.md',\n        'Source': 'https://github.com/docker/compose',\n        'Tracker': 'https://github.com/docker/compose/issues',\n    },\n    author='Docker, Inc.',\n    license='Apache License 2.0',\n    packages=find_packages(exclude=['tests.*', 'tests']),\n    include_package_data=True,\n    install_requires=install_requires,\n    extras_require=extras_require,\n    tests_require=tests_require,\n    python_requires='>=3.4',\n    entry_points={\n        'console_scripts': ['docker-compose=compose.cli.main:main'],\n    },\n    classifiers=[\n        'Development Status :: 5 - Production/Stable',\n        'Environment :: Console',\n        'Intended Audience :: Developers',\n        'License :: OSI Approved :: Apache Software License',\n        'Programming Language :: Python :: 3',\n        'Programming Language :: Python :: 3.4',\n        'Programming Language :: Python :: 3.6',\n        'Programming Language :: Python :: 3.7',\n        'Programming Language :: Python :: 3.8',\n        'Programming Language :: Python :: 3.9',\n    ],\n)\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: efa59690\n- Author: aiordache (anca.iordache@docker.com)\n- Date: 2021-02-25 01:26:12\n- Message: Bump docker-py version to 4.4.4",
+      "metadata": {
+        "file_path": "setup.py",
+        "strategy": "enhanced",
+        "chunk_index": 1,
+        "total_chunks": 4,
+        "commit_count": 5,
+        "language": "python"
+      },
+      "similarity_score": 0.7284015417098999
+    },
+    {
+      "content": "# File: compose/cli/main.py (python)\n\n## Code Content:\n```python\nimport contextlib\nimport functools\nimport json\nimport logging\nimport pipes\nimport re\nimport subprocess\nimport sys\nfrom distutils.spawn import find_executable\nfrom inspect import getdoc\nfrom operator import attrgetter\n\nimport docker.errors\nimport docker.utils",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "python",
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "file_path": "compose/cli/main.py",
+        "total_chunks": 41
+      },
+      "similarity_score": 0.7526233792304993
+    },
+    {
+      "content": "def exit_with_error(msg):\n    log.error(dedent(msg).strip())\n    raise ConnectionError()\n\n\ndef get_conn_error_message(url):\n    try:\n        if find_executable('docker') is None:\n            return docker_not_found_msg(\"Couldn't connect to Docker daemon.\")\n        if is_docker_for_mac_installed():\n            return conn_error_docker_for_mac\n        if find_executable('docker-machine') is not None:\n            return conn_error_docker_machine\n    except UnicodeDecodeError:\n        # https://github.com/docker/compose/issues/5442\n        # Ignore the error and print the generic message instead.\n        pass\n    return conn_error_generic.format(url=url)\n\n\ndef docker_not_found_msg(problem):\n    return \"{} You might need to install Docker:\\n\\n{}\".format(\n        problem, docker_install_url())\n\n\ndef docker_install_url():\n    if is_mac():\n        return docker_install_url_mac\n    elif is_ubuntu():\n        return docker_install_url_ubuntu\n    elif is_windows():\n        return docker_install_url_windows\n    else:\n        return docker_install_url_generic\n\n\ndocker_install_url_mac = \"https://docs.docker.com/engine/installation/mac/\"\ndocker_install_url_ubuntu = \"https://docs.docker.com/engine/installation/ubuntulinux/\"\ndocker_install_url_windows = \"https://docs.docker.com/engine/installation/windows/\"\ndocker_install_url_generic = \"https://docs.docker.com/engine/installation/\"\n\n\nconn_error_docker_machine = \"\"\"\n    Couldn't connect to Docker daemon - you might need to run `docker-machine start default`.\n\"\"\"\n\nconn_error_docker_for_mac = \"\"\"\n    Couldn't connect to Docker daemon. You might need to start Docker for Mac.\n\"\"\"\n\n\nconn_error_generic = \"\"\"\n    Couldn't connect to Docker daemon at {url} - is it running?\n\n    If it's at a non-standard location, specify the URL with the DOCKER_HOST environment variable.\n\"\"\"\n```\n\n## Git Commit History",
+      "metadata": {
+        "language": "python",
+        "strategy": "enhanced",
+        "total_chunks": 6,
+        "chunk_index": 2,
+        "commit_count": 5,
+        "file_path": "compose/cli/errors.py"
+      },
+      "similarity_score": 0.763893723487854
+    },
+    {
+      "content": "# File: tests/fixtures/logging-composefile-legacy/docker-compose.yml (yaml)\n\n## Code Content:\n```yaml\nsimple:\n  image: busybox:1.31.0-uclibc\n  command: top\n  log_driver: \"none\"\nanother:\n  image: busybox:1.31.0-uclibc\n  command: top\n  log_driver: \"json-file\"\n  log_opt:\n    max-size: \"10m\"\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: cd098e0c\n- Author: Ulysses Souza (ulysses.souza@docker.com)\n- Date: 2019-07-16 00:56:04\n- Message: Pin test images on a non rolling tag\n\nMainly busybox:latest to the current latest which is 1.31.0-uclibc\n\nSigned-off-by: Ulysses Souza <ulysses.souza@docker.com>\n- Changes:\n```diff\n@@ -1,9 +1,9 @@\n simple:\n-  image: busybox:latest\n+  image: busybox:1.31.0-uclibc\n   command: top\n   log_driver: \"none\"\n another:\n-  image: busybox:latest\n+  image: busybox:1.31.0-uclibc\n   command: top\n   log_driver: \"json-file\"\n   log_opt:...\n```\n\n### Commit 2\n- ID: 46585fb8\n- Author: Joffrey F (joffrey@docker.com)\n- Date: 2016-01-09 06:37:07\n- Message: Support legacy logging options format\n\nAdditional test for legacy compose file.\n\nSigned-off-by: Joffrey F <joffrey@docker.com>\n- Changes:\n```diff\n@@ -0,0 +1,10 @@\n+simple:\n+  image: busybox:latest\n+  command: top\n+  log_driver: \"none\"\n+another:\n+  image: busybox:latest\n+  command: top\n+  log_driver: \"json-file\"\n+  log_opt:\n+    max-size: \"10m\"...\n```",
+      "metadata": {
+        "commit_count": 2,
+        "chunk_index": 0,
+        "strategy": "enhanced",
+        "total_chunks": 1,
+        "file_path": "tests/fixtures/logging-composefile-legacy/docker-compose.yml",
+        "language": "yaml"
+      },
+      "similarity_score": 0.764989972114563
+    },
+    {
+      "content": "This introduces a new '--attach-dependencies' flag to optionally attach\ndependent containers as part of the 'up' command. This makes their logs\nvisible in the output, alongside the listed services. It also means we\nbenefit from the '--abort-on-container-exit' behaviour when dependencies\nfail to start, giving more visibility of the failure.\n\nSigned-off-by: Ben Thorner <ben.thorner@digital.cabinet-office.gov.uk>\n- Changes:\n```diff\n@@ -12,7 +12,7 @@ from compose.cli.formatter import ConsoleWarningFormatter\n from compose.cli.main import build_one_off_container_options\n from compose.cli.main import call_docker\n from compose.cli.main import convergence_strategy_from_opts\n-from compose.cli.main import filter_containers_to_service_names\n+from compose.cli.main import filter_attached_containers\n from compose.cli.main import get_docker_start_call\n from compose.cli.main import setup_console_handler\n from compose.cli.main import war...\n```\n\n### Commit 5\n- ID: c641ea08\n- Author: Ulysses Souza (ulysses.souza@docker.com)\n- Date: 2019-07-22 23:27:10\n- Message: Fix stdin_open when running docker-compose run\n\nThis fix makes sure that stdin_open specified in the service\nis considering when shelling out to the CLI\n\nSigned-off-by: Ulysses Souza <ulysses.souza@docker.com>\n- Changes:\n```diff\n@@ -9,9 +9,11 @@ import pytest\n from compose import container\n from compose.cli.errors import UserError\n from compose.cli.formatter import ConsoleWarningFormatter\n+from compose.cli.main import build_one_off_container_options\n from compose.cli.main import call_docker\n from compose.cli.main import convergence_strategy_from_opts\n from compose.cli.main import filter_containers_to_service_names\n+from compose.cli.main import get_docker_start_call\n from compose.cli.main import setup_console_handler\n fr...\n```",
+      "metadata": {
+        "language": "python",
+        "file_path": "tests/unit/cli/main_test.py",
+        "chunk_index": 7,
+        "total_chunks": 8,
+        "commit_count": 5,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.7767120599746704
+    },
+    {
+      "content": "def log_windows_pipe_error(exc):\n    if exc.winerror == 2:\n        log.error(\"Couldn't connect to Docker daemon. You might need to start Docker for Windows.\")\n    elif exc.winerror == 232:  # https://github.com/docker/compose/issues/5005\n        log.error(\n            \"The current Compose file version is not compatible with your engine version. \"\n            \"Please upgrade your Compose file to a more recent version, or set \"\n            \"a COMPOSE_API_VERSION in your environment.\"\n        )\n    else:\n        log.error(\n            \"Windows named pipe error: {} (code: {})\".format(\n                binarystr_to_unicode(exc.strerror), exc.winerror\n            )\n        )\n\n\ndef log_timeout_error(timeout):\n    log.error(\n        \"An HTTP request took too long to complete. Retry with --verbose to \"\n        \"obtain debug information.\\n\"\n        \"If you encounter this issue regularly because of slow network \"\n        \"conditions, consider setting COMPOSE_HTTP_TIMEOUT to a higher \"\n        \"value (current value: %s).\" % timeout)\n\n\ndef log_api_error(e, client_version):\n    explanation = binarystr_to_unicode(e.explanation)\n\n    if 'client is newer than server' not in explanation:\n        log.error(explanation)\n        return\n\n    version = API_VERSION_TO_ENGINE_VERSION.get(client_version)\n    if not version:\n        # They've set a custom API version\n        log.error(explanation)\n        return\n\n    log.error(\n        \"The Docker Engine version is less than the minimum required by \"\n        \"Compose. Your current project requires a Docker Engine of \"\n        \"version {version} or greater.\".format(version=version)\n    )\n\n\ndef exit_with_error(msg):\n    log.error(dedent(msg).strip())\n    raise ConnectionError()",
+      "metadata": {
+        "total_chunks": 6,
+        "strategy": "enhanced",
+        "language": "python",
+        "chunk_index": 1,
+        "commit_count": 5,
+        "file_path": "compose/cli/errors.py"
+      },
+      "similarity_score": 0.7784428000450134
+    },
+    {
+      "content": "# File: tests/fixtures/simple-failing-dockerfile/docker-compose.yml (yaml)\n\n## Code Content:\n```yaml\nsimple:\n  build: .\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: c5c36d8b\n- Author: Adrian Budau (budau.adi@gmail.com)\n- Date: 2015-10-27 17:00:51\n- Message: Added --force-rm to compose build.\n\nIt's a flag passed to docker build that removes the intermediate\ncontainers left behind on fail builds.\n\nSigned-off-by: Adrian Budau <budau.adi@gmail.com>\n- Changes:\n```diff\n@@ -0,0 +1,2 @@\n+simple:\n+  build: ....\n```",
+      "metadata": {
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "commit_count": 1,
+        "language": "yaml",
+        "strategy": "enhanced",
+        "file_path": "tests/fixtures/simple-failing-dockerfile/docker-compose.yml"
+      },
+      "similarity_score": 0.7795045375823975
+    },
+    {
+      "content": "# File: tests/unit/cli/main_test.py (python)\n\n## Code Content:\n```python\nimport logging\n\nimport docker\nimport pytest\n\nfrom compose import container\nfrom compose.cli.errors import UserError\nfrom compose.cli.formatter import ConsoleWarningFormatter\nfrom compose.cli.main import build_one_off_container_options\nfrom compose.cli.main import call_docker\nfrom compose.cli.main import convergence_strategy_from_opts\nfrom compose.cli.main import filter_attached_containers\nfrom compose.cli.main import get_docker_start_call\nfrom compose.cli.main import setup_console_handler\nfrom compose.cli.main import warn_for_swarm_mode\nfrom compose.service import ConvergenceStrategy\nfrom tests import mock\n\n\ndef mock_container(service, number):\n    return mock.create_autospec(\n        container.Container,\n        service=service,\n        number=number,\n        name_without_project='{}_{}'.format(service, number))\n\n\n@pytest.fixture\ndef logging_handler():\n    stream = mock.Mock()\n    stream.isatty.return_value = True\n    return logging.StreamHandler(stream=stream)\n\n\nclass TestCLIMainTestCase:\n\n    def test_filter_attached_containers(self):\n        containers = [\n            mock_container('web', 1),\n            mock_container('web', 2),\n            mock_container('db', 1),\n            mock_container('other', 1),\n            mock_container('another', 1),\n        ]\n        service_names = ['web', 'db']\n        actual = filter_attached_containers(containers, service_names)\n        assert actual == containers[:3]\n\n    def test_filter_attached_containers_with_dependencies(self):\n        containers = [\n            mock_container('web', 1),\n            mock_container('web', 2),\n            mock_container('db', 1),\n            mock_container('other', 1),\n            mock_container('another', 1),\n        ]\n        service_names = ['web', 'db']\n        actual = filter_attached_containers(containers, service_names, attach_dependencies=True)\n        assert actual == containers",
+      "metadata": {
+        "strategy": "enhanced",
+        "chunk_index": 0,
+        "language": "python",
+        "file_path": "tests/unit/cli/main_test.py",
+        "commit_count": 5,
+        "total_chunks": 8
+      },
+      "similarity_score": 0.782207190990448
+    },
+    {
+      "content": "# File: script/release/release.md.tmpl (text)\n\n## Code Content:\n```text\nIf you're a Mac or Windows user, the best way to install Compose and keep it up-to-date is **[Docker Desktop for Mac and Windows](https://www.docker.com/products/docker-desktop)**.\n\nDocker Desktop will automatically install the latest version of Docker Engine for you.\n\nAlternatively, you can use the usual commands to install or upgrade Compose:\n\n```\ncurl -L https://github.com/docker/compose/releases/download/{{version}}/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose\nchmod +x /usr/local/bin/docker-compose\n```\n\nSee the [install docs](https://docs.docker.com/compose/install/) for more install options and instructions.\n\n## Compose file format compatibility matrix\n\n| Compose file format | Docker Engine |\n| --- | --- |\n{% for engine, formats in compat_matrix.items() -%}\n| {% for format in formats %}{{format}}{% if not loop.last %}, {% endif %}{% endfor %} | {{engine}}+ |\n{% endfor -%}\n\n## Changes\n\n{{changelog}}\n\nThanks to {% for name in contributors %}@{{name}}{% if not loop.last %}, {% endif %}{% endfor %} for contributing to this release!\n\n## Integrity check\n\nBinary name | SHA-256 sum\n| --- | --- |\n{% for filename, sha in integrity.items() -%}\n| `{{filename}}` | `{{sha[1]}}` |\n{% endfor -%}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 8493540a\n- Author: Gabriel Machado (gabriel.ms1@hotmail.com)\n- Date: 2018-09-30 07:08:00\n- Message: Reffer Docker for Mac and Windows as Docker Desktop",
+      "metadata": {
+        "strategy": "enhanced",
+        "total_chunks": 2,
+        "commit_count": 2,
+        "language": "text",
+        "file_path": "script/release/release.md.tmpl",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.7829048037528992
+    },
+    {
+      "content": "# File: tests/fixtures/logging-composefile/docker-compose.yml (yaml)\n\n## Code Content:\n```yaml\nversion: \"2\"\nservices:\n  simple:\n    image: busybox:1.31.0-uclibc\n    command: top\n    logging:\n      driver: \"none\"\n  another:\n    image: busybox:1.31.0-uclibc\n    command: top\n    logging:\n      driver: \"json-file\"\n      options:\n          max-size: \"10m\"\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: cd098e0c\n- Author: Ulysses Souza (ulysses.souza@docker.com)\n- Date: 2019-07-16 00:56:04\n- Message: Pin test images on a non rolling tag\n\nMainly busybox:latest to the current latest which is 1.31.0-uclibc\n\nSigned-off-by: Ulysses Souza <ulysses.souza@docker.com>\n- Changes:\n```diff\n@@ -1,12 +1,12 @@\n version: \"2\"\n services:\n   simple:\n-    image: busybox:latest\n+    image: busybox:1.31.0-uclibc\n     command: top\n     logging:\n       driver: \"none\"\n   another:\n-    image: busybox:latest\n+    image: busybox:1.31.0-uclibc\n     command: top\n     logging:\n       driver: \"json-file\"...\n```\n\n### Commit 2\n- ID: aeef61fc\n- Author: Aanand Prasad (aanand.prasad@gmail.com)\n- Date: 2016-01-29 23:58:38\n- Message: Make 'version' a string\n\nSigned-off-by: Aanand Prasad <aanand.prasad@gmail.com>\n- Changes:\n```diff\n@@ -1,4 +1,4 @@\n-version: 2\n+version: \"2\"\n services:\n   simple:\n     image: busybox:latest...\n```\n\n### Commit 3\n- ID: 21aae13e\n- Author: Joffrey F (joffrey@docker.com)\n- Date: 2016-01-09 05:21:45\n- Message: Move logging config changes to v2 spec\n\nReorganize JSON schemas\nUpdate fixtures\nUpdate service validation function",
+      "metadata": {
+        "commit_count": 4,
+        "language": "yaml",
+        "file_path": "tests/fixtures/logging-composefile/docker-compose.yml",
+        "total_chunks": 2,
+        "strategy": "enhanced",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.7847892642021179
+    },
+    {
+      "content": "## Git Commit History\n\n### Commit 1\n- ID: 8493540a\n- Author: Gabriel Machado (gabriel.ms1@hotmail.com)\n- Date: 2018-09-30 07:08:00\n- Message: Reffer Docker for Mac and Windows as Docker Desktop\n\nSigned-off-by: Gabriel Machado <gabriel.ms1@hotmail.com>\n- Changes:\n```diff\n@@ -1,6 +1,6 @@\n-If you're a Mac or Windows user, the best way to install Compose and keep it up-to-date is **[Docker for Mac and Windows](https://www.docker.com/products/docker)**.\n+If you're a Mac or Windows user, the best way to install Compose and keep it up-to-date is **[Docker Desktop for Mac and Windows](https://www.docker.com/products/docker-desktop)**.\n \n-Docker for Mac and Windows will automatically install the latest version of Docker Engine for you.\n+Docker Desktop will automatically...\n```\n\n### Commit 2\n- ID: b1c831c5\n- Author: Joffrey F (joffrey@docker.com)\n- Date: 2018-04-19 07:01:52\n- Message: Inital pass on comprehensive automated release script\n\nSigned-off-by: Joffrey F <joffrey@docker.com>\n- Changes:\n```diff\n@@ -0,0 +1,34 @@\n+If you're a Mac or Windows user, the best way to install Compose and keep it up-to-date is **[Docker for Mac and Windows](https://www.docker.com/products/docker)**.\n+\n+Docker for Mac and Windows will automatically install the latest version of Docker Engine for you.\n+\n+Alternatively, you can use the usual commands to install or upgrade Compose:\n+\n+```\n+curl -L https://github.com/docker/compose/releases/download/{{version}}/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/...\n```",
+      "metadata": {
+        "file_path": "script/release/release.md.tmpl",
+        "chunk_index": 1,
+        "language": "text",
+        "strategy": "enhanced",
+        "commit_count": 2,
+        "total_chunks": 2
+      },
+      "similarity_score": 0.794979989528656
+    }
+  ],
+  "compressed": [
+    {
+      "content": "# File: tests/fixtures/logging-composefile-legacy/docker-compose.yml (yaml)\n\n## Key Code Elements:\nsimple:\nanother:\n  log_opt:\n\n## Recent Changes:\n- cd098e0c by Ulysses Souza (ulysses.souza@docker.com): Pin test images on a non rolling tag\n\nMainly busybox:latest to the current latest which is 1.31.0-uc...\n- 46585fb8 by Joffrey F (joffrey@docker.com): Support legacy logging options format\n\nAdditional test for legacy compose file.\n\nSigned-off-by: Joff...",
+      "metadata": {
+        "file_path": "tests/fixtures/logging-composefile-legacy/docker-compose.yml",
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "commit_count": 2,
+        "language": "yaml"
+      },
+      "similarity_score": 0.625428318977356
+    },
+    {
+      "content": "# File: compose/service.py (python)\n\n## Key Code Elements:\nimport enum\nimport itertools\nimport json\nimport logging\nimport os\nimport re\nimport subprocess\nimport sys\nimport tempfile\nfrom collections import namedtuple\nfrom collections import OrderedDict\nfrom operator import attrgetter\nfrom docker.errors import APIError\nfrom docker.errors import ImageNotFound\nfrom docker.errors import NotFound\n\n## Recent Changes:\n- 72f7b086 by José Rodrigues (contact.jrodrigues@gmail.com): Add missing --add-host args to the build command\n\nSigned-off-by: José Rodrigues <contact.jrodrigues@...\n- 9c8f5a57 by aiordache (anca.iordache@docker.com): Set `platform` and `isolation` options for cli builder\n\nSigned-off-by: aiordache <anca.iordache@dock...\n- 5e3708e6 by Anca Iordache (aiordache@users.noreply.github.com): Merge pull request #7930 from acran/profiles\n\nImplement service profiles...",
+      "metadata": {
+        "file_path": "compose/service.py",
+        "commit_count": 5,
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "language": "python",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.7316930890083313
+    },
+    {
+      "content": "# File: tests/fixtures/top/docker-compose.yml (yaml)\n\n## Key Code Elements:\nservice_a:\nservice_b:\n\n## Recent Changes:\n- cd098e0c by Ulysses Souza (ulysses.souza@docker.com): Pin test images on a non rolling tag\n\nMainly busybox:latest to the current latest which is 1.31.0-uc...\n- a67500ee by Peter Urda (peter.urda@gmail.com): Added `top` to `docker-compose` to display running processes.\n\nThis commit allows `docker-compose` t...",
+      "metadata": {
+        "file_path": "tests/fixtures/top/docker-compose.yml",
+        "total_chunks": 1,
+        "language": "yaml",
+        "chunk_index": 0,
+        "commit_count": 2,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.764233410358429
+    },
+    {
+      "content": "# File: compose/const.py (python)\n\n## Key Code Elements:\nimport sys\nfrom .version import ComposeVersion\n\n## Recent Changes:\n- 9f47d4e5 by Ulysses Souza (ulyssessouza@gmail.com): Pin `docker-compose config`'s version to `3.9`\n\nThis avoids bugs on using it's output on swarm\n\nSign...\n- cb56036a by aiordache (anca.iordache@docker.com): rename schema to compose_spec\n\nSigned-off-by: aiordache <anca.iordache@docker.com>...\n- b78c1ec1 by aiordache (anca.iordache@docker.com): Merge 2.x and 3.x schemas\n\nSigned-off-by: aiordache <anca.iordache@docker.com>...",
+      "metadata": {
+        "language": "python",
+        "chunk_index": 0,
+        "file_path": "compose/const.py",
+        "commit_count": 5,
+        "total_chunks": 1,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.768100380897522
+    },
+    {
+      "content": "# File: tests/fixtures/ports-composefile-scale/docker-compose.yml (yaml)\n\n## Key Code Elements:\nsimple:\n  ports:\n\n## Recent Changes:\n- cd098e0c by Ulysses Souza (ulysses.souza@docker.com): Pin test images on a non rolling tag\n\nMainly busybox:latest to the current latest which is 1.31.0-uc...\n- a5fd91c7 by Vincent Demeester (vincent@sbr.pm): Fixing docker-compose port with scale (#667)\n\nFixes #667 and Closes #735 (taking over it)\n\nSigned-of...",
+      "metadata": {
+        "language": "yaml",
+        "file_path": "tests/fixtures/ports-composefile-scale/docker-compose.yml",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "commit_count": 2,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.7703380584716797
+    },
+    {
+      "content": "# File: tests/fixtures/logs-restart-composefile/docker-compose.yml (yaml)\n\n## Key Code Elements:\nsimple:\nanother:\n\n## Recent Changes:\n- cd098e0c by Ulysses Souza (ulysses.souza@docker.com): Pin test images on a non rolling tag\n\nMainly busybox:latest to the current latest which is 1.31.0-uc...\n- e0471693 by Ulysses Souza (ulysses.souza@docker.com): Workaround race conditions on tests\n\nSigned-off-by: Ulysses Souza <ulysses.souza@docker.com>...\n- 28085ebe by Nicholas Higgins (nickhiggins42@gmail.com): Attach logger to containers after crashing.\n\nFixes #6060\n\nSigned-off-by: Nicholas Higgins <nickhiggi...",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "tests/fixtures/logs-restart-composefile/docker-compose.yml",
+        "commit_count": 3,
+        "language": "yaml",
+        "total_chunks": 1,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.7725132703781128
+    },
+    {
+      "content": "# File: compose/cli/log_printer.py (python)\n\n## Key Code Elements:\nimport _thread as thread\nimport sys\nfrom collections import namedtuple\nfrom itertools import cycle\nfrom operator import attrgetter\nfrom queue import Empty\nfrom queue import Queue\nfrom threading import Thread\nfrom docker.errors import APIError\nfrom . import colors\nfrom compose.cli.signals import ShutdownException\nfrom compose.utils import split_buffer\nclass LogPresenter:\n    def __init__(self, prefix_width, color_func, keep_prefix=True):\n    def present(self, container, line):\n\n## Recent Changes:\n- 28f8b854 by Sebastiaan van Stijn (github@gone.nl): Remove local check for log-driver read support\n\nStarting with Docker 20.10, the docker daemon has su...\n- cddaa77f by Kaushal Rohit (rohit.kg98@gmail.com): Added option to disable log prefix via cli\n\nSigned-off-by: Kaushal Rohit <rohit.kg98@gmail.com>...\n- 4d3d9f64 by alexrecuenco (alejandrogonzalezrecuenco@gmail.com): Removed Python2 support\n\nCloses: #6890\n\nSome remarks,\n\n- `# coding ... utf-8` statements are not nee...",
+      "metadata": {
+        "total_chunks": 1,
+        "file_path": "compose/cli/log_printer.py",
+        "strategy": "compressed",
+        "commit_count": 5,
+        "chunk_index": 0,
+        "language": "python"
+      },
+      "similarity_score": 0.774872899055481
+    },
+    {
+      "content": "# File: tests/fixtures/simple-failing-dockerfile/docker-compose.yml (yaml)\n\n## Key Code Elements:\nsimple:\n\n## Recent Changes:\n- c5c36d8b by Adrian Budau (budau.adi@gmail.com): Added --force-rm to compose build.\n\nIt's a flag passed to docker build that removes the intermediate...",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "yaml",
+        "strategy": "compressed",
+        "file_path": "tests/fixtures/simple-failing-dockerfile/docker-compose.yml",
+        "commit_count": 1,
+        "total_chunks": 1
+      },
+      "similarity_score": 0.7765091061592102
+    },
+    {
+      "content": "# File: tests/unit/cli/main_test.py (python)\n\n## Key Code Elements:\nimport logging\nimport docker\nimport pytest\nfrom compose import container\nfrom compose.cli.errors import UserError\nfrom compose.cli.formatter import ConsoleWarningFormatter\nfrom compose.cli.main import build_one_off_container_options\nfrom compose.cli.main import call_docker\nfrom compose.cli.main import convergence_strategy_from_opts\nfrom compose.cli.main import filter_attached_containers\nfrom compose.cli.main import get_docker_start_call\nfrom compose.cli.main import setup_console_handler\nfrom compose.cli.main import warn_for_swarm_mode\nfrom compose.service import ConvergenceStrategy\nfrom tests import mock\n\n## Recent Changes:\n- 4fa72a06 by Mike Seplowitz (mseplowitz@bloomberg.net): Improve control over ANSI output (#6858)\n\n* Move global console_handler into function scope\n\nSigned-...\n- 4d3d9f64 by alexrecuenco (alejandrogonzalezrecuenco@gmail.com): Removed Python2 support\n\nCloses: #6890\n\nSome remarks,\n\n- `# coding ... utf-8` statements are not nee...\n- e8424d5a by Bastian Venthur (bastian.venthur@flixbus.com): Removed Python2 support\n\nCloses: #6890\n\nSigned-off-by: Bastian Venthur <bastian.venthur@flixbus.com>...",
+      "metadata": {
+        "commit_count": 5,
+        "total_chunks": 1,
+        "language": "python",
+        "chunk_index": 0,
+        "file_path": "tests/unit/cli/main_test.py",
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.7836751937866211
+    },
+    {
+      "content": "# File: .github/ISSUE_TEMPLATE/bug_report.md (markdown)\n\n## Key Code Elements:\nWelcome to the docker-compose issue tracker! Before creating an issue, please heed the following:\n\n## Recent Changes:\n- 70f8e38b by Guillaume LOURS (guillaume@lours.me): Add automatic labeling of bug, feature & question issues\n\nSigned-off-by: Guillaume Lours <guillaume....\n- 5017b25f by Joffrey F (f.joffrey@gmail.com): Update issue templates\n\nSigned-off-by: Joffrey F <joffrey@docker.com>...",
+      "metadata": {
+        "language": "markdown",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "file_path": ".github/ISSUE_TEMPLATE/bug_report.md",
+        "commit_count": 2,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.7894754409790039
+    },
+    {
+      "content": "# File: tests/fixtures/simple-failing-dockerfile/Dockerfile (text)\n\n## Recent Changes:\n- 99562d9d by Kevin Kirsche (kevin.kirsche@one.verizon.com): Fix Typos\n\n./MAINTAINERS:32: maitainers  ==> maintainers\n./tests/fixtures/simple-failing-dockerfile/...\n- cd098e0c by Ulysses Souza (ulysses.souza@docker.com): Pin test images on a non rolling tag\n\nMainly busybox:latest to the current latest which is 1.31.0-uc...\n- c5c36d8b by Adrian Budau (budau.adi@gmail.com): Added --force-rm to compose build.\n\nIt's a flag passed to docker build that removes the intermediate...",
+      "metadata": {
+        "commit_count": 3,
+        "language": "text",
+        "file_path": "tests/fixtures/simple-failing-dockerfile/Dockerfile",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.7939153909683228
+    },
+    {
+      "content": "# File: tests/integration/testcases.py (python)\n\n## Key Code Elements:\nimport functools\nimport os\nimport pytest\nfrom docker.errors import APIError\nfrom docker.utils import version_lt\nfrom .. import unittest\nfrom ..helpers import BUSYBOX_IMAGE_WITH_TAG\nfrom compose.cli.docker_client import docker_client\nfrom compose.config.config import resolve_environment\nfrom compose.config.environment import Environment\nfrom compose.const import API_VERSIONS\nfrom compose.const import COMPOSE_SPEC as VERSION\nfrom compose.const import COMPOSEFILE_V1 as V1\nfrom compose.const import LABEL_PROJECT\nfrom compose.progress_stream import stream_output\n\n## Recent Changes:\n- 369eb322 by Ulysses Souza (ulyssessouza@gmail.com): Add metrics\n\nSigned-off-by: Ulysses Souza <ulyssessouza@gmail.com>...\n- 7322dee6 by aiordache (anca.iordache@docker.com): Cleanup v*_only test decorators\n\nSigned-off-by: aiordache <anca.iordache@docker.com>...\n- cb56036a by aiordache (anca.iordache@docker.com): rename schema to compose_spec\n\nSigned-off-by: aiordache <anca.iordache@docker.com>...",
+      "metadata": {
+        "chunk_index": 0,
+        "commit_count": 5,
+        "language": "python",
+        "strategy": "compressed",
+        "file_path": "tests/integration/testcases.py",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.8117932081222534
+    },
+    {
+      "content": "# File: compose/__main__.py (python)\n\n## Key Code Elements:\nfrom compose.cli.main import main\n\n## Recent Changes:\n- e8424d5a by Bastian Venthur (bastian.venthur@flixbus.com): Removed Python2 support\n\nCloses: #6890\n\nSigned-off-by: Bastian Venthur <bastian.venthur@flixbus.com>...\n- bf1552da by Daniel Nephin (dnephin@docker.com): Use json to encode invalid values in configuration errors so that the user sees a proper repr of the...\n- adde8058 by Tomas Tomecek (ttomecek@redhat.com): allow running compose from git\n\nwith:\n\n```\n$ git clone docker/compose && cd compose\n$ export PYTHONP...",
+      "metadata": {
+        "commit_count": 3,
+        "total_chunks": 1,
+        "language": "python",
+        "strategy": "compressed",
+        "file_path": "compose/__main__.py",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.8130007982254028
+    },
+    {
+      "content": "# File: script/run/run.sh (bash)\n\n## Key Code Elements:\n# following paths:\n\n## Recent Changes:\n- 3e31f809 by EricsonMacedo (macedoericson@gmail.com): Setup environment variables for compose. (#7490)\n\n* Setup environment variables for compose.\n\n- Setu...\n- 1ff05ac0 by Christian Höltje (docwhat@gerf.org): run.sh: handle unix:// prefix in DOCKER_HOST\n\ndocker currently requires the `unix://` prefix when po...\n- 63115111 by Santiago M. Mola (santi@mola.io): avoid using realpath in scripts\n\nscripts/run uses realpath when COMPOSE_FILE is set. realpath is not...",
+      "metadata": {
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "language": "bash",
+        "commit_count": 5,
+        "file_path": "script/run/run.sh",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.813092827796936
+    },
+    {
+      "content": "# File: tests/fixtures/simple-composefile-volume-ready/docker-compose.yml (yaml)\n\n## Key Code Elements:\nsimple:\n\n## Recent Changes:\n- cd098e0c by Ulysses Souza (ulysses.souza@docker.com): Pin test images on a non rolling tag\n\nMainly busybox:latest to the current latest which is 1.31.0-uc...\n- 83388ec3 by Piotr Szymanski (skyleton@gmail.com): enable -v flag for docker-compose run command\n\nGive user ability to attach volumes while running con...",
+      "metadata": {
+        "commit_count": 2,
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "file_path": "tests/fixtures/simple-composefile-volume-ready/docker-compose.yml",
+        "language": "yaml",
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.820615828037262
+    },
+    {
+      "content": "# File: compose/project.py (python)\n\n## Key Code Elements:\nimport datetime\nimport enum\nimport logging\nimport operator\nimport re\nfrom functools import reduce\nfrom os import path\nfrom docker.errors import APIError\nfrom docker.errors import ImageNotFound\nfrom docker.errors import NotFound\nfrom docker.utils import version_lt\nfrom . import parallel\nfrom .cli.errors import UserError\nfrom .config import ConfigurationError\nfrom .config.config import V1\n\n## Recent Changes:\n- 2f48b6f5 by Ulysses Souza (ulyssessouza@gmail.com): Remove log.info for native build\n\nSigned-off-by: Ulysses Souza <ulyssessouza@gmail.com>...\n- 4fa72a06 by Mike Seplowitz (mseplowitz@bloomberg.net): Improve control over ANSI output (#6858)\n\n* Move global console_handler into function scope\n\nSigned-...\n- e36ac321 by Anca Iordache (aiordache@users.noreply.github.com): Merge pull request #7978 from thaJeztah/default_to_cli_build\n\nMake COMPOSE_DOCKER_CLI_BUILD=1 the de...",
+      "metadata": {
+        "strategy": "compressed",
+        "language": "python",
+        "total_chunks": 1,
+        "file_path": "compose/project.py",
+        "commit_count": 5,
+        "chunk_index": 0
+      },
+      "similarity_score": 0.8208988308906555
+    },
+    {
+      "content": "# File: .github/ISSUE_TEMPLATE/feature_request.md (markdown)\n\n## Key Code Elements:\nWelcome to the docker-compose issue tracker! Before creating an issue, please heed the following:\n\n## Recent Changes:\n- 70f8e38b by Guillaume LOURS (guillaume@lours.me): Add automatic labeling of bug, feature & question issues\n\nSigned-off-by: Guillaume Lours <guillaume....\n- 5017b25f by Joffrey F (f.joffrey@gmail.com): Update issue templates\n\nSigned-off-by: Joffrey F <joffrey@docker.com>...",
+      "metadata": {
+        "file_path": ".github/ISSUE_TEMPLATE/feature_request.md",
+        "language": "markdown",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "commit_count": 2
+      },
+      "similarity_score": 0.8228214383125305
+    },
+    {
+      "content": "# File: tests/fixtures/entrypoint-composefile/docker-compose.yml (yaml)\n\n## Key Code Elements:\nservices:\n  test:\n\n## Recent Changes:\n- 593d1aeb by Aanand Prasad (aanand.prasad@gmail.com): Fix bugs with entrypoint/command in docker-compose run\n\n- When no command is passed but `--entrypoin...",
+      "metadata": {
+        "language": "yaml",
+        "total_chunks": 1,
+        "commit_count": 1,
+        "file_path": "tests/fixtures/entrypoint-composefile/docker-compose.yml",
+        "strategy": "compressed",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.8235111832618713
+    },
+    {
+      "content": "# File: tests/fixtures/logging-composefile/docker-compose.yml (yaml)\n\n## Key Code Elements:\nservices:\n  simple:\n    logging:\n  another:\n    logging:\n      options:\n\n## Recent Changes:\n- cd098e0c by Ulysses Souza (ulysses.souza@docker.com): Pin test images on a non rolling tag\n\nMainly busybox:latest to the current latest which is 1.31.0-uc...\n- aeef61fc by Aanand Prasad (aanand.prasad@gmail.com): Make 'version' a string\n\nSigned-off-by: Aanand Prasad <aanand.prasad@gmail.com>...\n- 21aae13e by Joffrey F (joffrey@docker.com): Move logging config changes to v2 spec\n\nReorganize JSON schemas\nUpdate fixtures\nUpdate service valid...",
+      "metadata": {
+        "commit_count": 4,
+        "file_path": "tests/fixtures/logging-composefile/docker-compose.yml",
+        "language": "yaml",
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "chunk_index": 0
+      },
+      "similarity_score": 0.829598069190979
+    },
+    {
+      "content": "# File: tests/fixtures/entrypoint-dockerfile/Dockerfile (text)\n\n## Recent Changes:\n- cd098e0c by Ulysses Souza (ulysses.souza@docker.com): Pin test images on a non rolling tag\n\nMainly busybox:latest to the current latest which is 1.31.0-uc...\n- 593d1aeb by Aanand Prasad (aanand.prasad@gmail.com): Fix bugs with entrypoint/command in docker-compose run\n\n- When no command is passed but `--entrypoin...",
+      "metadata": {
+        "language": "text",
+        "file_path": "tests/fixtures/entrypoint-dockerfile/Dockerfile",
+        "total_chunks": 1,
+        "commit_count": 2,
+        "chunk_index": 0,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.8308039903640747
+    }
+  ]
+}

@@ -1,0 +1,708 @@
+{
+  "basic": [
+    {
+      "content": "\"type\": \"Article 📚\",\n    \"topics\": [\n      \"10\"\n    ],\n    \"authors\": [\n      \"1\"\n    ]\n  },\n  {\n    \"id\": \"35\",\n    \"title\": \"Mad Skills: Performance 🏎️💨\",\n    \"content\": \"The MAD Skills series on Performance continued with a blog post from \\nBen and a video from Tomáš that covers how to use the Macrobenchmark library along with UIAutomator to help generate Baseline Profiles for you. Baseline Profiles help your app to start and run faster by optimizing critical code paths ahead of time, allowing for a smoother user experience.\",\n    \"url\": \"https://medium.com/androiddevelopers/improving-performance-with-baseline-profiles-fdd0db0d8cc6\",\n    \"headerImageUrl\": \"https://miro.medium.com/max/1400/0*Tztd-PrhMpbWTXGC\",\n    \"publishDate\": \"2022-08-22T23:00:00.000Z\",\n    \"type\": \"Article 📚\",\n    \"topics\": [\n      \"7\"\n    ],\n    \"authors\": [\n      \"36\"\n    ]\n  },\n  {\n    \"id\": \"36\",\n    \"title\": \"AndroidX releases 🚀\",\n    \"content\": \"In AndroidX, the Wear Compose Version 1.0.1 release fixed a logic bug in ScalingLazyColumn. As mentioned before, we released Wear Tiles Version 1.1. Webkit Version 1.5 added setAlgorithmicDarkeningAllowed, and added support for setting an allow-list of URLs for the configured proxy.\",\n    \"url\": \"https://developer.android.com/jetpack/androidx/versions\",\n    \"headerImageUrl\": \"https://developer.android.com/images/social/android-developers.png\",\n    \"publishDate\": \"2022-10-25T23:00:00.000Z\",\n    \"type\": \"DAC - Android version features\",\n    \"topics\": [\n      \"8\",\n      \"19\"\n    ],\n    \"authors\": []\n  },\n  {\n    \"id\": \"37\",\n    \"title\": \"A story of App Excellence, featuring Tik Tok\",\n    \"content\": \"Over in video, we covered how TikTok used Android tools to improve app startup and make the user experience more seamless, and how it impacted app usage and Play Store ratings.\",\n    \"url\": \"https://youtu.be/k9Pdgiugleg\",\n    \"headerImageUrl\": \"https://i.ytimg.com/vi/k9Pdgiugleg/maxresdefault.jpg\",\n    \"publishDate\": \"2022-08-31T23:00:00.000Z\",",
+      "metadata": {
+        "file_path": "core/network/src/main/assets/news.json",
+        "strategy": "basic",
+        "total_chunks": 132,
+        "chunk_index": 17,
+        "language": "json"
+      },
+      "similarity_score": 0.9253313541412354
+    },
+    {
+      "content": "\"url\": \"https://android-developers.googleblog.com/2021/07/announcing-policy-updates-to-bolster.html\",\n    \"headerImageUrl\": \"https://1.bp.blogspot.com/-pWCVY7BR-z8/YQAzb9zCZsI/AAAAAAAAQzY/2-OetxLvjOUYhHlTFJNw5JSm_BVjkI0VwCLcBGAsYHQ/s0/Untitled.png\",\n    \"publishDate\": \"2021-07-27T23:00:00.000Z\",\n    \"type\": \"Article 📚\",\n    \"topics\": [\n      \"12\"\n    ],\n    \"authors\": [\n      \"10\"\n    ]\n  },\n  {\n    \"id\": \"294\",\n    \"title\": \"Identify performance bottlenecks using system trace\",\n    \"content\": \"System trace profiling within Android Studio with a detailed walkthrough of app startup performance.\",\n    \"url\": \"https://www.youtube.com/watch?v=aUrqx9AnDUg\",\n    \"headerImageUrl\": \"https://i.ytimg.com/vi/aUrqx9AnDUg/hqdefault.jpg\",\n    \"publishDate\": \"2021-07-25T23:00:00.000Z\",\n    \"type\": \"Video 📺\",\n    \"topics\": [\n      \"7\",\n      \"5\"\n    ],\n    \"authors\": [\n      \"37\"\n    ]\n  },\n  {\n    \"id\": \"295\",\n    \"title\": \"Testing in Compose\",\n    \"content\": \"ADB released episode #171, part of our continuing series on Jetpack Compose. In this episode, Nick and Romain are joined by Filip Pavlis, Jelle Fresen & Jose Alcérreca to talk about Testing in Compose. They discuss how Compose’s testing APIs were developed hand-in-hand with the UI toolkit, making them more deterministic and opening up new possibilities like manipulating time. They go on to discuss the semantics tree, interop testing, screenshot testing and the possibilities for host-side testing.\",\n    \"url\": \"https://adbackstage.libsyn.com/episode-171-compose-testing\",\n    \"headerImageUrl\": \"http://assets.libsyn.com/content/108505820?height=250&width=250&overlay=true\",\n    \"publishDate\": \"2021-06-29T23:00:00.000Z\",\n    \"type\": \"Podcast 🎙\",\n    \"topics\": [\n      \"3\",\n      \"6\"\n    ],\n    \"authors\": [\n      \"54\"\n    ]\n  },\n  {\n    \"id\": \"296\",\n    \"title\": \"DataStore reached release candidate status\",",
+      "metadata": {
+        "total_chunks": 132,
+        "chunk_index": 125,
+        "file_path": "core/network/src/main/assets/news.json",
+        "strategy": "basic",
+        "language": "json"
+      },
+      "similarity_score": 1.0435829162597656
+    },
+    {
+      "content": "\"publishDate\": \"2022-01-26T00:00:00.000Z\",\n    \"type\": \"Article 📚\",\n    \"topics\": [\n      \"19\"\n    ],\n    \"authors\": [\n      \"16\"\n    ]\n  },\n  {\n    \"id\": \"183\",\n    \"title\": \"Android Studio Bumblebee 🐝 stable\",\n    \"content\": \"Android Studio Bumblebee (2021.1.1) is now stable. We’ve since patched it to address some launch issues — so make sure to upgrade! It improves functionality across the typical developer workflow: Build and Deploy, Profiling and Inspection, and Design.\",\n    \"url\": \"https://android-developers.googleblog.com/2022/01/android-studio-bumblebee-202111-stable.html\",\n    \"headerImageUrl\": \"https://blogger.googleusercontent.com/img/a/AVvXsEhQ7R2ySipHb8y5jNJeiIj3pE8dZfWAV7EF0wQZ4rQ65lB4MsZroAT4R_7rSfznMZ30xBMLx9_dwnt05V6I0Du0EfI7mvLicK6LwdkuZsF_Gc3sPqrZGxkojTJpHCXFI3Kvr3bLyoSjElldtt1NUpGSBzHgG3O1pvS9BR02L9R2_FYTUgPLfUoNLWYQ\",\n    \"publishDate\": \"2022-01-25T00:00:00.000Z\",\n    \"type\": \"Article 📚\",\n    \"topics\": [\n      \"5\"\n    ],\n    \"authors\": [\n      \"17\"\n    ]\n  },\n  {\n    \"id\": \"184\",\n    \"title\": \"All about Preferences DataStore\",\n    \"content\": \"In this post, we will take a look at Preferences DataStore, one of two DataStore implementations. We will go over how to create it, read and write data, and how to handle exceptions, all of which should, hopefully, provide you with enough information to decide if it’s the right choice for your app.\",\n    \"url\": \"https://medium.com/androiddevelopers/all-about-preferences-datastore-cc7995679334\",\n    \"headerImageUrl\": \"https://miro.medium.com/max/1400/1*UtNu7pmbt3WEA213SW9p9Q.png\",\n    \"publishDate\": \"2022-01-24T00:00:00.000Z\",\n    \"type\": \"Article 📚\",\n    \"topics\": [\n      \"9\"\n    ],\n    \"authors\": [\n      \"3\"\n    ]\n  },\n  {\n    \"id\": \"185\",\n    \"title\": \"Building apps for Android Automotive OS 🚘\",",
+      "metadata": {
+        "strategy": "basic",
+        "file_path": "core/network/src/main/assets/news.json",
+        "chunk_index": 80,
+        "language": "json",
+        "total_chunks": 132
+      },
+      "similarity_score": 1.0833182334899902
+    },
+    {
+      "content": "@DevicePreviews\n@Composable\nfun InterestsScreenLoading() {\n    NiaTheme {\n        NiaBackground {\n            InterestsScreen(\n                uiState = InterestsUiState.Loading,\n                followTopic = { _, _ -> },\n                onTopicClick = {},\n            )\n        }\n    }\n}\n\n@DevicePreviews\n@Composable\nfun InterestsScreenEmpty() {\n    NiaTheme {\n        NiaBackground {\n            InterestsScreen(\n                uiState = InterestsUiState.Empty,\n                followTopic = { _, _ -> },\n                onTopicClick = {},\n            )\n        }\n    }\n}\n```",
+      "metadata": {
+        "total_chunks": 3,
+        "language": "kotlin",
+        "file_path": "feature/interests/src/main/java/com/google/samples/apps/nowinandroid/feature/interests/InterestsScreen.kt",
+        "strategy": "basic",
+        "chunk_index": 2
+      },
+      "similarity_score": 1.0900380611419678
+    },
+    {
+      "content": "@get:Rule\n    val composeTestRule = createAndroidComposeRule<ComponentActivity>()\n\n    private lateinit var interestsLoading: String\n    private lateinit var interestsEmptyHeader: String\n    private lateinit var interestsTopicCardFollowButton: String\n    private lateinit var interestsTopicCardUnfollowButton: String\n\n    @Before\n    fun setup() {\n        composeTestRule.activity.apply {\n            interestsLoading = getString(R.string.loading)\n            interestsEmptyHeader = getString(R.string.empty_header)\n            interestsTopicCardFollowButton =\n                getString(R.string.card_follow_button_content_desc)\n            interestsTopicCardUnfollowButton =\n                getString(R.string.card_unfollow_button_content_desc)\n        }\n    }\n\n    @Test\n    fun niaLoadingWheel_inTopics_whenScreenIsLoading_showLoading() {\n        composeTestRule.setContent {\n            InterestsScreen(uiState = InterestsUiState.Loading)\n        }\n\n        composeTestRule\n            .onNodeWithContentDescription(interestsLoading)\n            .assertExists()\n    }\n\n    @Test\n    fun interestsWithTopics_whenTopicsFollowed_showFollowedAndUnfollowedTopicsWithInfo() {\n        composeTestRule.setContent {\n            InterestsScreen(\n                uiState = InterestsUiState.Interests(topics = followableTopicTestData),\n            )\n        }\n\n        composeTestRule\n            .onNodeWithText(followableTopicTestData[0].topic.name)\n            .assertIsDisplayed()\n        composeTestRule\n            .onNodeWithText(followableTopicTestData[1].topic.name)\n            .assertIsDisplayed()\n        composeTestRule\n            .onNodeWithText(followableTopicTestData[2].topic.name)\n            .assertIsDisplayed()\n\n        composeTestRule\n            .onAllNodesWithContentDescription(interestsTopicCardFollowButton)\n            .assertCountEquals(numberOfUnfollowedTopics)\n    }",
+      "metadata": {
+        "chunk_index": 1,
+        "total_chunks": 3,
+        "file_path": "feature/interests/src/androidTest/java/com/google/samples/apps/nowinandroid/interests/InterestsScreenTest.kt",
+        "language": "kotlin",
+        "strategy": "basic"
+      },
+      "similarity_score": 1.1373586654663086
+    },
+    {
+      "content": "\"url\": \"https://adbackstage.libsyn.com/episode-180-kotlin-magic-platform\",\n    \"headerImageUrl\": \"https://ssl-static.libsyn.com/p/assets/2/6/2/5/262599d4ce76d20fa04421dee9605cbd/adb-181-kmp.png\",\n    \"publishDate\": \"2021-12-16T00:00:00.000Z\",\n    \"type\": \"Podcast 🎙\",\n    \"topics\": [\n      \"10\"\n    ],\n    \"authors\": [\n      \"30\",\n      \"31\",\n      \"32\",\n      \"34\"\n    ]\n  },\n  {\n    \"id\": \"212\",\n    \"title\": \"ADB Podcast 181: Architecture → Fewer bugs at the end\",\n    \"content\": \"In this episode, we chat with Yigit Boyar (again!) from the Android Toolkit Team and Manuel Vivo from the Developer Relations team about application architecture. The team has released new architecture guidance, and we talk about that guidance here, as well as how our architecture recommendations apply in the new Jetpack Compose world.\",\n    \"url\": \"https://adbackstage.libsyn.com/episode-181-architecture-fewer-bugs-at-the-end\",\n    \"headerImageUrl\": \"https://ssl-static.libsyn.com/p/assets/8/d/1/3/8d137b65f392a68c27a2322813b393ee/ADB_181_Architecture.png\",\n    \"publishDate\": \"2022-01-11T00:00:00.000Z\",\n    \"type\": \"Podcast 🎙\",\n    \"topics\": [\n      \"4\"\n    ],\n    \"authors\": [\n      \"31\",\n      \"31\",\n      \"32\",\n      \"23\"\n    ]\n  },\n  {\n    \"id\": \"213\",\n    \"title\": \"Android 12\",",
+      "metadata": {
+        "file_path": "core/network/src/main/assets/news.json",
+        "chunk_index": 93,
+        "total_chunks": 132,
+        "strategy": "basic",
+        "language": "json"
+      },
+      "similarity_score": 1.1422572135925293
+    },
+    {
+      "content": "package com.google.samples.apps.nowinandroid.sync.workers\n\nimport android.content.Context\nimport androidx.hilt.work.HiltWorker\nimport androidx.tracing.traceAsync\nimport androidx.work.CoroutineWorker\nimport androidx.work.ForegroundInfo\nimport androidx.work.OneTimeWorkRequestBuilder\nimport androidx.work.OutOfQuotaPolicy\nimport androidx.work.WorkerParameters\nimport com.google.samples.apps.nowinandroid.core.analytics.AnalyticsHelper\nimport com.google.samples.apps.nowinandroid.core.data.Synchronizer\nimport com.google.samples.apps.nowinandroid.core.data.repository.NewsRepository\nimport com.google.samples.apps.nowinandroid.core.data.repository.SearchContentsRepository\nimport com.google.samples.apps.nowinandroid.core.data.repository.TopicsRepository\nimport com.google.samples.apps.nowinandroid.core.datastore.ChangeListVersions\nimport com.google.samples.apps.nowinandroid.core.datastore.NiaPreferencesDataSource\nimport com.google.samples.apps.nowinandroid.core.network.Dispatcher\nimport com.google.samples.apps.nowinandroid.core.network.NiaDispatchers.IO\nimport com.google.samples.apps.nowinandroid.sync.initializers.SyncConstraints\nimport com.google.samples.apps.nowinandroid.sync.initializers.syncForegroundInfo\nimport com.google.samples.apps.nowinandroid.sync.status.SyncSubscriber\nimport dagger.assisted.Assisted\nimport dagger.assisted.AssistedInject\nimport kotlinx.coroutines.CoroutineDispatcher\nimport kotlinx.coroutines.async\nimport kotlinx.coroutines.awaitAll\nimport kotlinx.coroutines.withContext",
+      "metadata": {
+        "file_path": "sync/work/src/main/java/com/google/samples/apps/nowinandroid/sync/workers/SyncWorker.kt",
+        "chunk_index": 1,
+        "total_chunks": 4,
+        "strategy": "basic",
+        "language": "kotlin"
+      },
+      "similarity_score": 1.1532822847366333
+    },
+    {
+      "content": "@Composable\ninternal fun InterestsRoute(\n    onTopicClick: (String) -> Unit,\n    modifier: Modifier = Modifier,\n    viewModel: InterestsViewModel = hiltViewModel(),\n) {\n    val uiState by viewModel.uiState.collectAsStateWithLifecycle()\n\n    InterestsScreen(\n        uiState = uiState,\n        followTopic = viewModel::followTopic,\n        onTopicClick = onTopicClick,\n        modifier = modifier,\n    )\n}\n\n@Composable\ninternal fun InterestsScreen(\n    uiState: InterestsUiState,\n    followTopic: (String, Boolean) -> Unit,\n    onTopicClick: (String) -> Unit,\n    modifier: Modifier = Modifier,\n) {\n    Column(\n        modifier = modifier,\n        horizontalAlignment = Alignment.CenterHorizontally,\n    ) {\n        when (uiState) {\n            InterestsUiState.Loading ->\n                NiaLoadingWheel(\n                    modifier = modifier,\n                    contentDesc = stringResource(id = R.string.loading),\n                )\n            is InterestsUiState.Interests ->\n                TopicsTabContent(\n                    topics = uiState.topics,\n                    onTopicClick = onTopicClick,\n                    onFollowButtonClick = followTopic,\n                    modifier = modifier,\n                )\n            is InterestsUiState.Empty -> InterestsEmptyScreen()\n        }\n    }\n    TrackScreenViewEvent(screenName = \"Interests\")\n}\n\n@Composable\nprivate fun InterestsEmptyScreen() {\n    Text(text = stringResource(id = R.string.empty_header))\n}\n\n@DevicePreviews\n@Composable\nfun InterestsScreenPopulated(\n    @PreviewParameter(FollowableTopicPreviewParameterProvider::class)\n    followableTopics: List<FollowableTopic>,\n) {\n    NiaTheme {\n        NiaBackground {\n            InterestsScreen(\n                uiState = InterestsUiState.Interests(\n                    topics = followableTopics,\n                ),\n                followTopic = { _, _ -> },\n                onTopicClick = {},\n            )\n        }\n    }\n}",
+      "metadata": {
+        "language": "kotlin",
+        "chunk_index": 1,
+        "total_chunks": 3,
+        "file_path": "feature/interests/src/main/java/com/google/samples/apps/nowinandroid/feature/interests/InterestsScreen.kt",
+        "strategy": "basic"
+      },
+      "similarity_score": 1.1550394296646118
+    },
+    {
+      "content": "// Navigate to interests screen\n                device.findObject(By.text(\"Interests\")).click()\n                device.waitForIdle()\n            },\n        ) {\n            interestsWaitForTopics()\n            repeat(3) {\n                interestsToggleBookmarked()\n            }\n        }\n}\n```",
+      "metadata": {
+        "chunk_index": 1,
+        "strategy": "basic",
+        "file_path": "benchmarks/src/main/java/com/google/samples/apps/nowinandroid/interests/TopicsScreenRecompositionBenchmark.kt",
+        "total_chunks": 2,
+        "language": "kotlin"
+      },
+      "similarity_score": 1.1567833423614502
+    },
+    {
+      "content": "@Test\n    fun generate() =\n        baselineProfileRule.collectBaselineProfile(PACKAGE_NAME) {\n            // This block defines the app's critical user journey. Here we are interested in\n            // optimizing for app startup. But you can also navigate and scroll\n            // through your most important UI.\n\n            pressHome()\n            startActivityAndWait()\n\n            // Scroll the feed critical user journey\n            forYouWaitForContent()\n            forYouSelectTopics(true)\n            forYouScrollFeedDownUp()\n\n            // Navigate to saved screen\n            goToBookmarksScreen()\n            // TODO: we need to implement adding stuff to bookmarks before able to scroll it\n            // bookmarksScrollFeedDownUp()\n\n            // Navigate to interests screen\n            goToInterestsScreen()\n            interestsScrollTopicsDownUp()\n        }\n}\n```",
+      "metadata": {
+        "strategy": "basic",
+        "language": "kotlin",
+        "total_chunks": 2,
+        "file_path": "benchmarks/src/main/java/com/google/samples/apps/nowinandroid/baselineprofile/BaselineProfileGenerator.kt",
+        "chunk_index": 1
+      },
+      "similarity_score": 1.158421516418457
+    },
+    {
+      "content": "// Use the same flavor dimensions as the application to allow generating Baseline Profiles on prod,\n    // which is more close to what will be shipped to users (no fake data), but has ability to run the\n    // benchmarks on demo, so we benchmark on stable data. \n    configureFlavors(this) { flavor ->\n        buildConfigField(\n            \"String\",\n            \"APP_FLAVOR_SUFFIX\",\n            \"\\\"${flavor.applicationIdSuffix ?: \"\"}\\\"\"\n        )\n    }\n\n    targetProjectPath = \":app\"\n    experimentalProperties[\"android.experimental.self-instrumenting\"] = true\n}\n\ndependencies {\n    implementation(libs.androidx.benchmark.macro)\n    implementation(libs.androidx.test.core)\n    implementation(libs.androidx.test.espresso.core)\n    implementation(libs.androidx.test.ext)\n    implementation(libs.androidx.test.rules)\n    implementation(libs.androidx.test.runner)\n    implementation(libs.androidx.test.uiautomator)\n}\n\nandroidComponents {\n    beforeVariants {\n        it.enable = it.buildType == \"benchmark\"\n    }\n}\n```",
+      "metadata": {
+        "total_chunks": 2,
+        "file_path": "benchmarks/build.gradle.kts",
+        "chunk_index": 1,
+        "language": "text",
+        "strategy": "basic"
+      },
+      "similarity_score": 1.1602368354797363
+    },
+    {
+      "content": "import com.google.samples.apps.nowinandroid.core.designsystem.component.NiaOverlayLoadingWheel\nimport com.google.samples.apps.nowinandroid.core.designsystem.icon.NiaIcons\nimport com.google.samples.apps.nowinandroid.core.designsystem.theme.NiaTheme\nimport com.google.samples.apps.nowinandroid.core.model.data.UserNewsResource\nimport com.google.samples.apps.nowinandroid.core.ui.DevicePreviews\nimport com.google.samples.apps.nowinandroid.core.ui.NewsFeedUiState\nimport com.google.samples.apps.nowinandroid.core.ui.TrackScreenViewEvent\nimport com.google.samples.apps.nowinandroid.core.ui.TrackScrollJank\nimport com.google.samples.apps.nowinandroid.core.ui.UserNewsResourcePreviewParameterProvider\nimport com.google.samples.apps.nowinandroid.core.ui.launchCustomChromeTab\nimport com.google.samples.apps.nowinandroid.core.ui.newsFeed",
+      "metadata": {
+        "total_chunks": 15,
+        "file_path": "feature/foryou/src/main/java/com/google/samples/apps/nowinandroid/feature/foryou/ForYouScreen.kt",
+        "chunk_index": 3,
+        "language": "kotlin",
+        "strategy": "basic"
+      },
+      "similarity_score": 1.1608624458312988
+    },
+    {
+      "content": "fun MacrobenchmarkScope.interestsWaitForTopics() {\n    device.wait(Until.hasObject(By.text(\"Accessibility\")), 30_000)\n}\n\nfun MacrobenchmarkScope.interestsToggleBookmarked() {\n    val topicsList = device.findObject(By.res(\"interests:topics\"))\n    val checkable = topicsList.findObject(By.checkable(true))\n    checkable.click()\n    device.waitForIdle()\n}\n```",
+      "metadata": {
+        "chunk_index": 1,
+        "strategy": "basic",
+        "language": "kotlin",
+        "file_path": "benchmarks/src/main/java/com/google/samples/apps/nowinandroid/interests/InterestsActions.kt",
+        "total_chunks": 2
+      },
+      "similarity_score": 1.1609041690826416
+    },
+    {
+      "content": "import com.google.samples.apps.nowinandroid.core.designsystem.icon.NiaIcons\nimport com.google.samples.apps.nowinandroid.core.designsystem.theme.NiaTheme\nimport com.google.samples.apps.nowinandroid.core.model.data.FollowableTopic\nimport com.google.samples.apps.nowinandroid.core.model.data.UserNewsResource\nimport com.google.samples.apps.nowinandroid.core.ui.DevicePreviews\nimport com.google.samples.apps.nowinandroid.core.ui.TrackScreenViewEvent\nimport com.google.samples.apps.nowinandroid.core.ui.TrackScrollJank\nimport com.google.samples.apps.nowinandroid.core.ui.UserNewsResourcePreviewParameterProvider\nimport com.google.samples.apps.nowinandroid.core.ui.userNewsResourceCardItems\nimport com.google.samples.apps.nowinandroid.feature.topic.R.string\nimport com.google.samples.apps.nowinandroid.feature.topic.TopicUiState.Loading",
+      "metadata": {
+        "total_chunks": 8,
+        "strategy": "basic",
+        "file_path": "feature/topic/src/main/java/com/google/samples/apps/nowinandroid/feature/topic/TopicScreen.kt",
+        "language": "kotlin",
+        "chunk_index": 2
+      },
+      "similarity_score": 1.165795087814331
+    },
+    {
+      "content": "# File: app/benchmark-rules.pro (text)\n\n## Code Content:\n```text\n# Proguard rules for the `benchmark` build type.\n#\n# Obsfuscation must be disabled for the build variant that generates Baseline Profile, otherwise\n# wrong symbols would be generated. The generated Baseline Profile will be properly applied when generated\n# without obfuscation and your app is being obfuscated.\n-dontobfuscate\n\n# Please add these rules to your existing keep rules in order to suppress warnings.\n# This is generated automatically by the Android Gradle plugin.\n-dontwarn org.bouncycastle.jsse.BCSSLParameters\n-dontwarn org.bouncycastle.jsse.BCSSLSocket\n-dontwarn org.bouncycastle.jsse.provider.BouncyCastleJsseProvider\n-dontwarn org.conscrypt.Conscrypt$Version\n-dontwarn org.conscrypt.Conscrypt\n-dontwarn org.conscrypt.ConscryptHostnameVerifier\n-dontwarn org.openjsse.javax.net.ssl.SSLParameters\n-dontwarn org.openjsse.javax.net.ssl.SSLSocket\n-dontwarn org.openjsse.net.ssl.OpenJSSE\n```",
+      "metadata": {
+        "file_path": "app/benchmark-rules.pro",
+        "total_chunks": 1,
+        "strategy": "basic",
+        "language": "text",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.166344404220581
+    },
+    {
+      "content": "In this run configuration we leverage rerun parameter that always reruns the requested task regardless of cache.\n  We also leverage enable-display parameter to be able to verify the generator works as intended.\n  -->\n  <configuration default=\"false\" name=\"Generate Demo Baseline Profile\" type=\"GradleRunConfiguration\" factoryName=\"Gradle\">\n    <ExternalSystemSettings>\n      <option name=\"executionName\" />\n      <option name=\"externalProjectPath\" value=\"$PROJECT_DIR$\" />\n      <option name=\"externalSystemIdString\" value=\"GRADLE\" />\n      <option name=\"scriptParameters\" value=\"-Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.enabledRules=BaselineProfile\" />\n      <option name=\"taskDescriptions\">\n        <list />\n      </option>\n      <option name=\"taskNames\">\n        <list>\n          <option value=\":benchmark:pixel6Api31atdDemoBenchmarkAndroidTest\" />\n          <option value=\"--rerun\" />\n          <option value=\"--enable-display\" />\n        </list>\n      </option>\n      <option name=\"vmOptions\" />\n    </ExternalSystemSettings>\n    <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>\n    <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>\n    <DebugAllEnabled>false</DebugAllEnabled>\n    <method v=\"2\" />\n  </configuration>\n</component>\n```",
+      "metadata": {
+        "strategy": "basic",
+        "file_path": ".run/Generate Demo Baseline Profile.run.xml",
+        "total_chunks": 2,
+        "language": "xml",
+        "chunk_index": 1
+      },
+      "similarity_score": 1.1761505603790283
+    },
+    {
+      "content": "\"publishDate\": \"2022-09-26T23:00:00.000Z\",\n    \"type\": \"Article 📚\",\n    \"topics\": [\n      \"12\"\n    ],\n    \"authors\": [\n      \"74\"\n    ]\n  },\n  {\n    \"id\": \"12\",\n    \"title\": \"Deep Links Crash Course : Part 3 Troubleshooting Your Deep Links\",\n    \"content\": \"The Deep Links Crash Course continues with Summers writing an article on troubleshooting deep links. He goes over common issues that can occur with deep links and how to solve them.\",\n    \"url\": \"https://medium.com/androiddevelopers/deep-links-crash-course-part-3-troubleshooting-your-deep-links-61329fecb93\",\n    \"headerImageUrl\": \"https://miro.medium.com/max/1200/1*IsRqP0Fe9I6YLxrJybIG6Q.png\",\n    \"publishDate\": \"2022-09-15T23:00:00.000Z\",\n    \"type\": \"Article 📚\",\n    \"topics\": [\n      \"6\"\n    ],\n    \"authors\": [\n      \"79\"\n    ]\n  },\n  {\n    \"id\": \"13\",\n    \"title\": \"Jetpack Compose Composition Tracing\",\n    \"content\": \"Ben covered Compose Composition Tracing, a new feature that allows showing Jetpack Compose composable functions in the Android Studio Flamingo system trace profiler. This feature gives you the low intrusiveness from system tracing, with method tracing levels of detail in composition. This is great for checking your Compose app’s performance and working out why your app may not be performing as you expect. Learn more about this feature in the post!\",\n    \"url\": \"https://medium.com/androiddevelopers/jetpack-compose-composition-tracing-9ec2b3aea535\",\n    \"headerImageUrl\": \"https://miro.medium.com/max/700/1*jPVPY4GjPRK3prnJ2o09cQ.png\",\n    \"publishDate\": \"2022-09-19T23:00:00.000Z\",\n    \"type\": \"Article 📚\",\n    \"topics\": [\n      \"3\",\n      \"7\"\n    ],\n    \"authors\": [\n      \"80\"\n    ]\n  },\n  {\n    \"id\": \"14\",\n    \"title\": \"Android Studio: Dolphin is available\",",
+      "metadata": {
+        "language": "json",
+        "file_path": "core/network/src/main/assets/news.json",
+        "chunk_index": 6,
+        "strategy": "basic",
+        "total_chunks": 132
+      },
+      "similarity_score": 1.1807855367660522
+    },
+    {
+      "content": "\"headerImageUrl\": \"https://miro.medium.com/max/1400/1*YWg6uZkqSakAb5vW6uc-gg.png\",\n    \"publishDate\": \"2022-04-13T23:00:00.000Z\",\n    \"type\": \"Article 📚\",\n    \"topics\": [\n      \"2\"\n    ],\n    \"authors\": [\n      \"12\"\n    ]\n  },\n  {\n    \"id\": \"147\",\n    \"title\": \"AndroidX releases 🚀\",\n    \"content\": \"AppCompat AppCompat-Resources Version 1.5.0-alpha01 contains a bunch of bugfixes, as well as updated nullability to match Android 13 DP2 and a few small compatibility features involving TextView, AppCompatDialog, SearchView, and SwitchCompat.\\n\\nNavigation Version 2.4.2 has been released with all the new bugfixes backported from the 2.5 alpha releases.\",\n    \"url\": \"https://developer.android.com/jetpack/androidx/versions/all-channel\",\n    \"headerImageUrl\": \"https://blogger.googleusercontent.com/img/a/AVvXsEhxtjouMCgk8sv8wkvC5Aip4muxMo4TLnfSVtZ3Hw7ZpuqXQmk-EkV9qk9PKim0yVFVFlpjEJG-vqh6gCLFkQPuf2dQk6qEdQZM_9brvuxBA0dtOUlvUh7tMIQsF11RnSnSPWOPKDIzeiixfapL2ax4YgMahJppgG_a5rjs_4QBjzzgzqsDs9Wc-Ldx=w1200-h630-p-k-no-nu\",\n    \"publishDate\": \"2022-04-13T23:00:00.000Z\",\n    \"type\": \"Jetpack release 🚀\",\n    \"topics\": [\n      \"8\"\n    ],\n    \"authors\": []\n  },\n  {\n    \"id\": \"148\",\n    \"title\": \"ADB Podcast Episodes🎙184: Skia and AGSL - Shaders of Things to Come\",\n    \"content\": \"In this episode Tor, Chet, and Romain chat with Derek and Brian from the Skia team about Skia (the graphics layer that backs the Android Canvas APIs), pixel shaders, and the new “AGSL” API that lets you provide pixel shaders for advanced graphics effects, which was recently added as part of the Android T preview release. If you’re interested in graphics technology, this is the episode for you.\",\n    \"url\": \"https://adbackstage.libsyn.com/episode-184-skia-and-agsl-shaders-of-things-to-come\",\n    \"headerImageUrl\": \"https://ssl-static.libsyn.com/p/assets/9/4/d/b/94dbe077f2f14ee640be95ea3302a6a1/ADB184_Skia_and_AGSL.png\",\n    \"publishDate\": \"2022-04-13T23:00:00.000Z\",\n    \"type\": \"Podcast 🎙\",\n    \"topics\": [",
+      "metadata": {
+        "chunk_index": 64,
+        "total_chunks": 132,
+        "strategy": "basic",
+        "file_path": "core/network/src/main/assets/news.json",
+        "language": "json"
+      },
+      "similarity_score": 1.1819405555725098
+    },
+    {
+      "content": "\"url\": \"https://youtu.be/mk0XBWenod8\",\n    \"headerImageUrl\": \"https://i.ytimg.com/vi/mk0XBWenod8/maxresdefault.jpg\",\n    \"publishDate\": \"2021-11-15T00:00:00.000Z\",\n    \"type\": \"Video 📺\",\n    \"topics\": [\n      \"5\"\n    ],\n    \"authors\": [\n      \"25\"\n    ]\n  },\n  {\n    \"id\": \"238\",\n    \"title\": \"Intro to Gradle and AGP\",\n    \"content\": \"In the first episode of the Gradle MAD Skills series, Murat explains how the Android build system works, and how to configure your build.\",\n    \"url\": \"https://youtu.be/GjPS4xDMmQY\",\n    \"headerImageUrl\": \"https://i.ytimg.com/vi/GjPS4xDMmQY/maxresdefault.jpg\",\n    \"publishDate\": \"2021-11-15T00:00:00.000Z\",\n    \"type\": \"Video 📺\",\n    \"topics\": [\n      \"5\"\n    ],\n    \"authors\": [\n      \"25\"\n    ]\n  },\n  {\n    \"id\": \"239\",\n    \"title\": \"ADB Podcast episode 179 Hosts 3, Guests 0\",\n    \"content\": \"Chet, Romain and Tor sit down to chat about the Android Developer Summit, and in particular all the new features arriving in Android Studio, along with a few other topics like Chet’s new jank stats library, the Android 12L release, and more.\",\n    \"url\": \"https://adbackstage.libsyn.com/episode-178-hosts-3-guests-0\",\n    \"headerImageUrl\": \"http://assets.libsyn.com/show/332855?height=250&width=250&overlay=true\",\n    \"publishDate\": \"2021-11-15T00:00:00.000Z\",\n    \"type\": \"Podcast 🎙\",\n    \"topics\": [\n      \"5\",\n      \"7\",\n      \"13\"\n    ],\n    \"authors\": [\n      \"31\"\n    ]\n  },\n  {\n    \"id\": \"240\",\n    \"title\": \"The problem with emojis and how emoji2 can help out\",\n    \"content\": \"Meghan wrote about the new emoji2 library that just became stable.\",\n    \"url\": \"https://medium.com/androiddevelopers/support-modern-emoji-99f6dea8e57f\",\n    \"headerImageUrl\": \"https://miro.medium.com/max/1400/1*yAOOlpXKKUl5nWWsPkNb7g.png\",\n    \"publishDate\": \"2021-11-12T00:00:00.000Z\",\n    \"type\": \"Article 📚\",\n    \"topics\": [\n      \"8\",\n      \"2\"\n    ],\n    \"authors\": [\n      \"15\"\n    ]\n  },\n  {\n    \"id\": \"241\",\n    \"title\": \"Paging Q&A\",",
+      "metadata": {
+        "file_path": "core/network/src/main/assets/news.json",
+        "chunk_index": 102,
+        "language": "json",
+        "total_chunks": 132,
+        "strategy": "basic"
+      },
+      "similarity_score": 1.1886316537857056
+    },
+    {
+      "content": "Landroidx/sqlite/util/ProcessLock;\nLandroidx/startup/AppInitializer;\nLandroidx/startup/InitializationProvider;\nLandroidx/startup/Initializer;\nLandroidx/startup/StartupLogger;\nLandroidx/tracing/Trace;\nLandroidx/tracing/TraceApi29Impl$$ExternalSyntheticApiModelOutline0;\nLandroidx/tracing/TraceApi29Impl$$ExternalSyntheticApiModelOutline1;\nLandroidx/tracing/TraceApi29Impl$$ExternalSyntheticApiModelOutline2;\nLandroidx/tracing/TraceApi29Impl;\nLandroidx/tracing/perfetto/Tracing;\nLandroidx/window/core/Bounds;\nLandroidx/window/layout/ActivityCompatHelperApi30;\nLandroidx/window/layout/WindowMetrics;\nLandroidx/window/layout/WindowMetricsCalculator$Companion;\nLandroidx/window/layout/WindowMetricsCalculator;\nLandroidx/window/layout/WindowMetricsCalculatorCompat;\nLandroidx/work/Configuration$1;\nLandroidx/work/Configuration$Builder;\nLandroidx/work/Configuration;\nLandroidx/work/Constraints$Builder;\nLandroidx/work/Constraints;\nLandroidx/work/ContentUriTriggers;\nLandroidx/work/CoroutineWorker$1;\nLandroidx/work/CoroutineWorker$startWork$1;\nLandroidx/work/CoroutineWorker;\nLandroidx/work/Data$Builder;\nLandroidx/work/Data;\nLandroidx/work/ForegroundUpdater;\nLandroidx/work/InputMerger;\nLandroidx/work/InputMergerFactory$1;\nLandroidx/work/InputMergerFactory;\nLandroidx/work/ListenableWorker$Result$Failure;\nLandroidx/work/ListenableWorker$Result$Success;\nLandroidx/work/ListenableWorker$Result;\nLandroidx/work/ListenableWorker;\nLandroidx/work/Logger$LogcatLogger;\nLandroidx/work/Logger;\nLandroidx/work/NetworkType;\nLandroidx/work/OneTimeWorkRequest$Builder;\nLandroidx/work/OneTimeWorkRequest;\nLandroidx/work/Operation$State$FAILURE;\nLandroidx/work/Operation$State$IN_PROGRESS;\nLandroidx/work/Operation$State$SUCCESS;\nLandroidx/work/Operation$State;\nLandroidx/work/Operation;\nLandroidx/work/OverwritingInputMerger;\nLandroidx/work/WorkInfo$State;\nLandroidx/work/WorkInfo;\nLandroidx/work/WorkManager;\nLandroidx/work/WorkManagerInitializer;\nLandroidx/work/WorkRequest$Builder;\nLandroidx/work/WorkRequest;",
+      "metadata": {
+        "strategy": "basic",
+        "language": "text",
+        "file_path": "app/src/main/baseline-prof.txt",
+        "total_chunks": 764,
+        "chunk_index": 609
+      },
+      "similarity_score": 1.1907875537872314
+    }
+  ],
+  "enhanced": [
+    {
+      "content": "### Commit 2\n- ID: db5fe96c\n- Author: mlykotom (mlykotom@google.com)\n- Date: 2022-12-06 18:21:45\n- Message: Fix interests actions\n\nChange-Id: I3583d6c7c904f0cf1bf21892721551f41d89796f\n- Changes:\n```diff\n@@ -23,7 +23,7 @@ import com.google.samples.apps.nowinandroid.PACKAGE_NAME\n import com.google.samples.apps.nowinandroid.foryou.forYouScrollFeedDownUp\n import com.google.samples.apps.nowinandroid.foryou.forYouSelectTopics\n import com.google.samples.apps.nowinandroid.foryou.forYouWaitForContent\n-import com.google.samples.apps.nowinandroid.interests.interestsScrollPeopleDownUp\n+import com.google.samples.apps.nowinandroid.interests.goToInterestsScreen\n import com.google.samples.apps.nowinandroid.int...\n```\n\n### Commit 3\n- ID: 039ec8e9\n- Author: mlykotom (mlykotom@google.com)\n- Date: 2022-12-06 17:45:03\n- Message: Select topics to be able to scroll\n\nChange-Id: Ib7a2a3e87ab3b5d8da6c0fc1b77855f46ef5236a\n- Changes:\n```diff\n@@ -21,6 +21,7 @@ import androidx.benchmark.macro.junit4.BaselineProfileRule\n import androidx.test.uiautomator.By\n import com.google.samples.apps.nowinandroid.PACKAGE_NAME\n import com.google.samples.apps.nowinandroid.foryou.forYouScrollFeedDownUp\n+import com.google.samples.apps.nowinandroid.foryou.forYouSelectTopics\n import com.google.samples.apps.nowinandroid.foryou.forYouWaitForContent\n import com.google.samples.apps.nowinandroid.interests.interestsScrollPeopleDownUp\n import com.google.samples...\n```\n\n### Commit 4\n- ID: 4ba63c0d\n- Author: Jolanda Verhoef (JolandaVerhoef@users.noreply.github.com)\n- Date: 2022-11-21 18:23:44\n- Message: Remove author concept from app",
+      "metadata": {
+        "total_chunks": 4,
+        "strategy": "enhanced",
+        "language": "kotlin",
+        "chunk_index": 2,
+        "commit_count": 5,
+        "file_path": "benchmarks/src/main/java/com/google/samples/apps/nowinandroid/baselineprofile/BaselineProfileGenerator.kt"
+      },
+      "similarity_score": 0.8387865424156189
+    },
+    {
+      "content": "### Commit 3\n- ID: 8f42be51\n- Author: mlykotom (mlykotom@google.com)\n- Date: 2022-11-21 17:47:59\n- Message: Fix fling gestures\n- Changes:\n```diff\n@@ -18,21 +18,17 @@ package com.google.samples.apps.nowinandroid.interests\n \n import androidx.benchmark.macro.MacrobenchmarkScope\n import androidx.test.uiautomator.By\n-import androidx.test.uiautomator.Direction\n import androidx.test.uiautomator.Until\n+import com.google.samples.apps.nowinandroid.flingElementDownUp\n \n fun MacrobenchmarkScope.interestsScrollTopicsDownUp() {\n     val topicsList = device.findObject(By.res(\"interests:topics\"))\n-    topicsList.fling(Direction.DOWN)\n-    device.waitForI...\n```\n\n### Commit 4\n- ID: 7afc3562\n- Author: Wojtek Kaliciński (wkal@google.com)\n- Date: 2022-10-27 03:32:06\n- Message: Fix app id name clash in benchmark module\n\nChange-Id: I5889ef4b9338a940f43efc7629dca155068588ec\n- Changes:\n```diff\n@@ -0,0 +1,47 @@\n+/*\n+ * Copyright 2022 The Android Open Source Project\n+ *\n+ * Licensed under the Apache License, Version 2.0 (the \"License\");\n+ * you may not use this file except in compliance with the License.\n+ * You may obtain a copy of the License at\n+ *\n+ *     https://www.apache.org/licenses/LICENSE-2.0\n+ *\n+ * Unless required by applicable law or agreed to in writing, software\n+ * distributed under the License is distributed on an \"AS IS\" BASIS,\n+ * WITHOUT WARRANTIES OR CONDITIONS OF A...\n```",
+      "metadata": {
+        "file_path": "benchmarks/src/main/java/com/google/samples/apps/nowinandroid/interests/InterestsActions.kt",
+        "commit_count": 4,
+        "strategy": "enhanced",
+        "language": "kotlin",
+        "total_chunks": 3,
+        "chunk_index": 2
+      },
+      "similarity_score": 0.8615283966064453
+    },
+    {
+      "content": "\"type\": \"Article 📚\",\n    \"topics\": [\n      \"10\"\n    ],\n    \"authors\": [\n      \"1\"\n    ]\n  },\n  {\n    \"id\": \"35\",\n    \"title\": \"Mad Skills: Performance 🏎️💨\",\n    \"content\": \"The MAD Skills series on Performance continued with a blog post from \\nBen and a video from Tomáš that covers how to use the Macrobenchmark library along with UIAutomator to help generate Baseline Profiles for you. Baseline Profiles help your app to start and run faster by optimizing critical code paths ahead of time, allowing for a smoother user experience.\",\n    \"url\": \"https://medium.com/androiddevelopers/improving-performance-with-baseline-profiles-fdd0db0d8cc6\",\n    \"headerImageUrl\": \"https://miro.medium.com/max/1400/0*Tztd-PrhMpbWTXGC\",\n    \"publishDate\": \"2022-08-22T23:00:00.000Z\",\n    \"type\": \"Article 📚\",\n    \"topics\": [\n      \"7\"\n    ],\n    \"authors\": [\n      \"36\"\n    ]\n  },\n  {\n    \"id\": \"36\",\n    \"title\": \"AndroidX releases 🚀\",\n    \"content\": \"In AndroidX, the Wear Compose Version 1.0.1 release fixed a logic bug in ScalingLazyColumn. As mentioned before, we released Wear Tiles Version 1.1. Webkit Version 1.5 added setAlgorithmicDarkeningAllowed, and added support for setting an allow-list of URLs for the configured proxy.\",\n    \"url\": \"https://developer.android.com/jetpack/androidx/versions\",\n    \"headerImageUrl\": \"https://developer.android.com/images/social/android-developers.png\",\n    \"publishDate\": \"2022-10-25T23:00:00.000Z\",\n    \"type\": \"DAC - Android version features\",\n    \"topics\": [\n      \"8\",\n      \"19\"\n    ],\n    \"authors\": []\n  },\n  {\n    \"id\": \"37\",\n    \"title\": \"A story of App Excellence, featuring Tik Tok\",\n    \"content\": \"Over in video, we covered how TikTok used Android tools to improve app startup and make the user experience more seamless, and how it impacted app usage and Play Store ratings.\",\n    \"url\": \"https://youtu.be/k9Pdgiugleg\",\n    \"headerImageUrl\": \"https://i.ytimg.com/vi/k9Pdgiugleg/maxresdefault.jpg\",\n    \"publishDate\": \"2022-08-31T23:00:00.000Z\",",
+      "metadata": {
+        "strategy": "enhanced",
+        "chunk_index": 17,
+        "file_path": "core/network/src/main/assets/news.json",
+        "language": "json",
+        "commit_count": 1,
+        "total_chunks": 133
+      },
+      "similarity_score": 0.9253313541412354
+    },
+    {
+      "content": "// Navigate to interests screen\n                device.findObject(By.text(\"Interests\")).click()\n                device.waitForIdle()\n            },\n        ) {\n            interestsWaitForTopics()\n            repeat(3) {\n                interestsToggleBookmarked()\n            }\n        }\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 819dd494\n- Author: Márton Braun (zsmb@google.com)\n- Date: 2023-01-19 17:52:53\n- Message: Run Spotless to add trailing commas (and apply other rule updates)\n\nChange-Id: I5f8e49a3ef004c7e9e7dfe4bc55f0a35dc575209\n- Changes:\n```diff\n@@ -51,7 +51,7 @@ class TopicsScreenRecompositionBenchmark {\n                 // Navigate to interests screen\n                 device.findObject(By.text(\"Interests\")).click()\n                 device.waitForIdle()\n-            }\n+            },\n         ) {\n             interestsWaitForTopics()\n             repeat(3) {...\n```\n\n### Commit 2\n- ID: 7afc3562\n- Author: Wojtek Kaliciński (wkal@google.com)\n- Date: 2022-10-27 03:32:06\n- Message: Fix app id name clash in benchmark module\n\nChange-Id: I5889ef4b9338a940f43efc7629dca155068588ec\n- Changes:\n```diff\n@@ -0,0 +1,61 @@\n+/*\n+ * Copyright 2022 The Android Open Source Project\n+ *\n+ * Licensed under the Apache License, Version 2.0 (the \"License\");\n+ * you may not use this file except in compliance with the License.\n+ * You may obtain a copy of the License at\n+ *\n+ *     https://www.apache.org/licenses/LICENSE-2.0\n+ *\n+ * Unless required by applicable law or agreed to in writing, software\n+ * distributed under the License is distributed on an \"AS IS\" BASIS,\n+ * WITHOUT WARRANTIES OR CONDITIONS OF A...\n```",
+      "metadata": {
+        "chunk_index": 1,
+        "commit_count": 2,
+        "total_chunks": 2,
+        "file_path": "benchmarks/src/main/java/com/google/samples/apps/nowinandroid/interests/TopicsScreenRecompositionBenchmark.kt",
+        "strategy": "enhanced",
+        "language": "kotlin"
+      },
+      "similarity_score": 1.0165307521820068
+    },
+    {
+      "content": "fun MacrobenchmarkScope.interestsWaitForTopics() {\n    device.wait(Until.hasObject(By.text(\"Accessibility\")), 30_000)\n}\n\nfun MacrobenchmarkScope.interestsToggleBookmarked() {\n    val topicsList = device.findObject(By.res(\"interests:topics\"))\n    val checkable = topicsList.findObject(By.checkable(true))\n    checkable.click()\n    device.waitForIdle()\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 8c6b74d9\n- Author: mlykotom (mlykotom@google.com)\n- Date: 2022-12-06 20:49:52\n- Message: Fix wait for bookmarks to show\n\nChange-Id: Ia4dfb1eea89a6b211b80789ae6f4548a0c23121e\n- Changes:\n```diff\n@@ -25,8 +25,10 @@ fun MacrobenchmarkScope.goToInterestsScreen() {\n     device.findObject(By.text(\"Interests\")).click()\n     device.waitForIdle()\n     // Wait until interests are shown on screen\n+    device.wait(Until.hasObject(By.res(\"niaTopAppBar\")), 2_000)\n     val topAppBar = device.findObject(By.res(\"niaTopAppBar\"))\n     topAppBar.wait(Until.hasObject(By.text(\"Interests\")), 2_000)\n+\n     // Wait until content is loaded by checking if interests are loaded\n     device.wait(Until.gone(By.res(\"...\n```\n\n### Commit 2\n- ID: db5fe96c\n- Author: mlykotom (mlykotom@google.com)\n- Date: 2022-12-06 18:21:45\n- Message: Fix interests actions\n\nChange-Id: I3583d6c7c904f0cf1bf21892721551f41d89796f\n- Changes:\n```diff\n@@ -21,16 +21,21 @@ import androidx.test.uiautomator.By\n import androidx.test.uiautomator.Until\n import com.google.samples.apps.nowinandroid.flingElementDownUp\n \n+fun MacrobenchmarkScope.goToInterestsScreen() {\n+    device.findObject(By.text(\"Interests\")).click()\n+    device.waitForIdle()\n+    // Wait until interests are shown on screen\n+    val topAppBar = device.findObject(By.res(\"niaTopAppBar\"))\n+    topAppBar.wait(Until.hasObject(By.text(\"Interests\")), 2_000)\n+    // Wait until content is lo...\n```",
+      "metadata": {
+        "commit_count": 4,
+        "total_chunks": 3,
+        "chunk_index": 1,
+        "language": "kotlin",
+        "file_path": "benchmarks/src/main/java/com/google/samples/apps/nowinandroid/interests/InterestsActions.kt",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.0239282846450806
+    },
+    {
+      "content": "\"url\": \"https://android-developers.googleblog.com/2021/07/announcing-policy-updates-to-bolster.html\",\n    \"headerImageUrl\": \"https://1.bp.blogspot.com/-pWCVY7BR-z8/YQAzb9zCZsI/AAAAAAAAQzY/2-OetxLvjOUYhHlTFJNw5JSm_BVjkI0VwCLcBGAsYHQ/s0/Untitled.png\",\n    \"publishDate\": \"2021-07-27T23:00:00.000Z\",\n    \"type\": \"Article 📚\",\n    \"topics\": [\n      \"12\"\n    ],\n    \"authors\": [\n      \"10\"\n    ]\n  },\n  {\n    \"id\": \"294\",\n    \"title\": \"Identify performance bottlenecks using system trace\",\n    \"content\": \"System trace profiling within Android Studio with a detailed walkthrough of app startup performance.\",\n    \"url\": \"https://www.youtube.com/watch?v=aUrqx9AnDUg\",\n    \"headerImageUrl\": \"https://i.ytimg.com/vi/aUrqx9AnDUg/hqdefault.jpg\",\n    \"publishDate\": \"2021-07-25T23:00:00.000Z\",\n    \"type\": \"Video 📺\",\n    \"topics\": [\n      \"7\",\n      \"5\"\n    ],\n    \"authors\": [\n      \"37\"\n    ]\n  },\n  {\n    \"id\": \"295\",\n    \"title\": \"Testing in Compose\",\n    \"content\": \"ADB released episode #171, part of our continuing series on Jetpack Compose. In this episode, Nick and Romain are joined by Filip Pavlis, Jelle Fresen & Jose Alcérreca to talk about Testing in Compose. They discuss how Compose’s testing APIs were developed hand-in-hand with the UI toolkit, making them more deterministic and opening up new possibilities like manipulating time. They go on to discuss the semantics tree, interop testing, screenshot testing and the possibilities for host-side testing.\",\n    \"url\": \"https://adbackstage.libsyn.com/episode-171-compose-testing\",\n    \"headerImageUrl\": \"http://assets.libsyn.com/content/108505820?height=250&width=250&overlay=true\",\n    \"publishDate\": \"2021-06-29T23:00:00.000Z\",\n    \"type\": \"Podcast 🎙\",\n    \"topics\": [\n      \"3\",\n      \"6\"\n    ],\n    \"authors\": [\n      \"54\"\n    ]\n  },\n  {\n    \"id\": \"296\",\n    \"title\": \"DataStore reached release candidate status\",",
+      "metadata": {
+        "commit_count": 1,
+        "total_chunks": 133,
+        "language": "json",
+        "file_path": "core/network/src/main/assets/news.json",
+        "chunk_index": 125,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.0435829162597656
+    },
+    {
+      "content": "### Commit 4\n- ID: 4ba63c0d\n- Author: Jolanda Verhoef (JolandaVerhoef@users.noreply.github.com)\n- Date: 2022-11-21 18:23:44\n- Message: Remove author concept from app\n\nChange-Id: Icd03c0288ba5f3f23dbcbdbefbbe802db2815793\n- Changes:\n```diff\n@@ -21,7 +21,6 @@ import androidx.benchmark.macro.junit4.BaselineProfileRule\n import androidx.test.uiautomator.By\n import com.google.samples.apps.nowinandroid.PACKAGE_NAME\n import com.google.samples.apps.nowinandroid.foryou.forYouScrollFeedDownUp\n-import com.google.samples.apps.nowinandroid.foryou.forYouSelectAuthors\n import com.google.samples.apps.nowinandroid.foryou.forYouWaitForContent\n import com.google.samples.apps.nowinandroid.interests.interestsScrollPeopleDownUp\n import com.google.sample...\n```\n\n### Commit 5\n- ID: 11e828a8\n- Author: mlykotom (mlykotom@google.com)\n- Date: 2022-11-30 02:13:44\n- Message: Revert \"Latest alpha macrobenchmark\"\n\nThis reverts commit 8f73117f6ae68a21d4972c7ae45b2dab6baed0d4.\n- Changes:\n```diff\n@@ -16,6 +16,7 @@\n \n package com.google.samples.apps.nowinandroid.baselineprofile\n \n+import androidx.benchmark.macro.ExperimentalBaselineProfilesApi\n import androidx.benchmark.macro.junit4.BaselineProfileRule\n import androidx.test.uiautomator.By\n import com.google.samples.apps.nowinandroid.PACKAGE_NAME\n@@ -30,6 +31,7 @@ import org.junit.Test\n /**\n  * Generates a baseline profile which can be copied to `app/src/main/baseline-prof.txt`.\n  */\n+@ExperimentalBaselineProfilesApi\n class BaselineProfile...\n```",
+      "metadata": {
+        "file_path": "benchmarks/src/main/java/com/google/samples/apps/nowinandroid/baselineprofile/BaselineProfileGenerator.kt",
+        "language": "kotlin",
+        "strategy": "enhanced",
+        "total_chunks": 4,
+        "commit_count": 5,
+        "chunk_index": 3
+      },
+      "similarity_score": 1.061367392539978
+    },
+    {
+      "content": "@DevicePreviews\n@Composable\nfun InterestsScreenLoading() {\n    NiaTheme {\n        NiaBackground {\n            InterestsScreen(\n                uiState = InterestsUiState.Loading,\n                followTopic = { _, _ -> },\n                onTopicClick = {},\n            )\n        }\n    }\n}\n\n@DevicePreviews\n@Composable\nfun InterestsScreenEmpty() {\n    NiaTheme {\n        NiaBackground {\n            InterestsScreen(\n                uiState = InterestsUiState.Empty,\n                followTopic = { _, _ -> },\n                onTopicClick = {},\n            )\n        }\n    }\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 57c13d84\n- Author: James Rose (rosej@google.com)\n- Date: 2023-03-04 02:50:34\n- Message: Incorporate code review changes: Move UserNewsResourceRepository to data\nmodule; move UserNewsResource to model module. Implement unread dot for\nbookmarked articles. Keep the flows cold in UserNewsResourceRepository.\n- Changes:\n```diff\n@@ -29,7 +29,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle\n import com.google.samples.apps.nowinandroid.core.designsystem.component.NiaBackground\n import com.google.samples.apps.nowinandroid.core.designsystem.component.NiaLoadingWheel\n import com.google.samples.apps.nowinandroid.core.designsystem.theme.NiaTheme\n-import com.google.samples.apps.nowinandroid.core.domain.model.FollowableTopic\n+import com.google.samples.apps.nowinandroid.core.model.data.FollowableTopic\n import co...\n```\n\n### Commit 2\n- ID: 874c2d14\n- Author: Alex Vanyo (vanyo@google.com)\n- Date: 2023-02-15 03:31:55\n- Message: Merge pull request #561 from SimonMarquis/update/androidx-lifecycle",
+      "metadata": {
+        "strategy": "enhanced",
+        "language": "kotlin",
+        "chunk_index": 2,
+        "total_chunks": 5,
+        "file_path": "feature/interests/src/main/java/com/google/samples/apps/nowinandroid/feature/interests/InterestsScreen.kt",
+        "commit_count": 5
+      },
+      "similarity_score": 1.0715789794921875
+    },
+    {
+      "content": "### Commit 2\n- ID: 050db2cb\n- Author: James Rose (rosej@google.com)\n- Date: 2023-04-18 04:45:49\n- Message: Merge branch 'main' into jr/track-viewed\n- Changes:\n```diff\n@@ -21,6 +21,7 @@ import android.net.Uri\n import androidx.annotation.ColorInt\n import androidx.browser.customtabs.CustomTabColorSchemeParams\n import androidx.browser.customtabs.CustomTabsIntent\n+import androidx.compose.foundation.layout.padding\n import androidx.compose.foundation.lazy.LazyListScope\n import androidx.compose.foundation.lazy.grid.GridCells\n import androidx.compose.foundation.lazy.grid.LazyGridScope\n@@ -31,6 +32,7 @@ import androidx.compose.runtime.Composable\n import androidx.compos...\n```\n\n### Commit 3\n- ID: 2b2f6d48\n- Author: Milosz Moczkowski (mmoczkowski@google.com)\n- Date: 2023-04-13 21:49:35\n- Message: Merge pull request #600 from takagimeow/cleanup-unused-args\n\nRemove newsResourceTitle from AnalyticsHelper.logNewsResourceOpened method\n- Changes:\n```diff\n@@ -69,7 +69,6 @@ fun LazyGridScope.newsFeed(\n                     onClick = {\n                         analyticsHelper.logNewsResourceOpened(\n                             newsResourceId = userNewsResource.id,\n-                            newsResourceTitle = userNewsResource.title,\n                         )\n                         launchCustomChromeTab(context, resourceUrl, backgroundColor)\n                     },...\n```\n\n### Commit 4\n- ID: 93c01ad1\n- Author: Chris Sinco (csinco@google.com)\n- Date: 2023-03-25 00:38:19\n- Message: Fix trailing commas based on spotless check\n- Changes:\n```diff\n@@ -80,7 +80,7 @@ fun LazyGridScope.newsFeed(\n                         )\n                     },\n                     onTopicClick = onTopicClick,\n-                    modifier = Modifier.padding(horizontal = 8.dp)\n+                    modifier = Modifier.padding(horizontal = 8.dp),\n                 )\n             }\n         }...\n```",
+      "metadata": {
+        "chunk_index": 5,
+        "file_path": "core/ui/src/main/java/com/google/samples/apps/nowinandroid/core/ui/NewsFeed.kt",
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "language": "kotlin",
+        "total_chunks": 7
+      },
+      "similarity_score": 1.0785648822784424
+    },
+    {
+      "content": "### Commit 5\n- ID: 40cc8362\n- Author: Nick Rout (nickrout@google.com)\n- Date: 2022-12-15 15:20:11\n- Message: Fix spotless issues\n- Changes:\n```diff\n@@ -37,16 +37,16 @@ import androidx.compose.ui.Modifier\n import androidx.compose.ui.res.painterResource\n import androidx.compose.ui.unit.dp\n import com.google.accompanist.flowlayout.FlowRow\n-import com.google.samples.apps.nowinandroid.core.designsystem.component.NiaDropdownMenuButton\n import com.google.samples.apps.nowinandroid.core.designsystem.component.NiaButton\n+import com.google.samples.apps.nowinandroid.core.designsystem.component.NiaDropdownMenuButton\n import com.google.samples.apps.nowin...\n```",
+      "metadata": {
+        "commit_count": 5,
+        "total_chunks": 15,
+        "language": "kotlin",
+        "file_path": "app-nia-catalog/src/main/java/com/google/samples/apps/niacatalog/ui/Catalog.kt",
+        "strategy": "enhanced",
+        "chunk_index": 14
+      },
+      "similarity_score": 1.0827000141143799
+    },
+    {
+      "content": "\"publishDate\": \"2022-01-26T00:00:00.000Z\",\n    \"type\": \"Article 📚\",\n    \"topics\": [\n      \"19\"\n    ],\n    \"authors\": [\n      \"16\"\n    ]\n  },\n  {\n    \"id\": \"183\",\n    \"title\": \"Android Studio Bumblebee 🐝 stable\",\n    \"content\": \"Android Studio Bumblebee (2021.1.1) is now stable. We’ve since patched it to address some launch issues — so make sure to upgrade! It improves functionality across the typical developer workflow: Build and Deploy, Profiling and Inspection, and Design.\",\n    \"url\": \"https://android-developers.googleblog.com/2022/01/android-studio-bumblebee-202111-stable.html\",\n    \"headerImageUrl\": \"https://blogger.googleusercontent.com/img/a/AVvXsEhQ7R2ySipHb8y5jNJeiIj3pE8dZfWAV7EF0wQZ4rQ65lB4MsZroAT4R_7rSfznMZ30xBMLx9_dwnt05V6I0Du0EfI7mvLicK6LwdkuZsF_Gc3sPqrZGxkojTJpHCXFI3Kvr3bLyoSjElldtt1NUpGSBzHgG3O1pvS9BR02L9R2_FYTUgPLfUoNLWYQ\",\n    \"publishDate\": \"2022-01-25T00:00:00.000Z\",\n    \"type\": \"Article 📚\",\n    \"topics\": [\n      \"5\"\n    ],\n    \"authors\": [\n      \"17\"\n    ]\n  },\n  {\n    \"id\": \"184\",\n    \"title\": \"All about Preferences DataStore\",\n    \"content\": \"In this post, we will take a look at Preferences DataStore, one of two DataStore implementations. We will go over how to create it, read and write data, and how to handle exceptions, all of which should, hopefully, provide you with enough information to decide if it’s the right choice for your app.\",\n    \"url\": \"https://medium.com/androiddevelopers/all-about-preferences-datastore-cc7995679334\",\n    \"headerImageUrl\": \"https://miro.medium.com/max/1400/1*UtNu7pmbt3WEA213SW9p9Q.png\",\n    \"publishDate\": \"2022-01-24T00:00:00.000Z\",\n    \"type\": \"Article 📚\",\n    \"topics\": [\n      \"9\"\n    ],\n    \"authors\": [\n      \"3\"\n    ]\n  },\n  {\n    \"id\": \"185\",\n    \"title\": \"Building apps for Android Automotive OS 🚘\",",
+      "metadata": {
+        "file_path": "core/network/src/main/assets/news.json",
+        "total_chunks": 133,
+        "commit_count": 1,
+        "strategy": "enhanced",
+        "chunk_index": 80,
+        "language": "json"
+      },
+      "similarity_score": 1.0833182334899902
+    },
+    {
+      "content": "## Git Commit History\n\n### Commit 1\n- ID: 8c6b74d9\n- Author: mlykotom (mlykotom@google.com)\n- Date: 2022-12-06 20:49:52\n- Message: Fix wait for bookmarks to show\n\nChange-Id: Ia4dfb1eea89a6b211b80789ae6f4548a0c23121e\n- Changes:\n```diff\n@@ -25,6 +25,7 @@ fun MacrobenchmarkScope.goToBookmarksScreen() {\n     device.findObject(By.text(\"Saved\")).click()\n     device.waitForIdle()\n     // Wait until saved title are shown on screen\n+    device.wait(Until.hasObject(By.res(\"niaTopAppBar\")), 2_000)\n     val topAppBar = device.findObject(By.res(\"niaTopAppBar\"))\n     topAppBar.wait(Until.hasObject(By.text(\"Saved\")), 2_000)\n }...\n```\n\n### Commit 2\n- ID: 5687c8d3\n- Author: mlykotom (mlykotom@google.com)\n- Date: 2022-12-06 18:22:02\n- Message: Fix bookmarks actions\n\nChange-Id: I415d651414d68a312498d5faff799d72145a53ed\n- Changes:\n```diff\n@@ -18,8 +18,17 @@ package com.google.samples.apps.nowinandroid.bookmarks\n \n import androidx.benchmark.macro.MacrobenchmarkScope\n import androidx.test.uiautomator.By\n+import androidx.test.uiautomator.Until\n import com.google.samples.apps.nowinandroid.flingElementDownUp\n \n+fun MacrobenchmarkScope.goToBookmarksScreen() {\n+    device.findObject(By.text(\"Saved\")).click()\n+    device.waitForIdle()\n+    // Wait until saved title are shown on screen\n+    val topAppBar = device.findObject(By.res(\"niaTop...\n```\n\n### Commit 3\n- ID: 8f42be51\n- Author: mlykotom (mlykotom@google.com)\n- Date: 2022-11-21 17:47:59\n- Message: Fix fling gestures\n- Changes:\n```diff\n@@ -18,11 +18,9 @@ package com.google.samples.apps.nowinandroid.bookmarks\n \n import androidx.benchmark.macro.MacrobenchmarkScope\n import androidx.test.uiautomator.By\n-import androidx.test.uiautomator.Direction\n+import com.google.samples.apps.nowinandroid.flingElementDownUp\n \n fun MacrobenchmarkScope.bookmarksScrollFeedDownUp() {\n     val feedList = device.findObject(By.res(\"bookmarks:feed\"))\n-    feedList.fling(Direction.DOWN)\n-    device.waitForIdle()\n-    feedList.fling(Direction.UP)\n+    devi...\n```",
+      "metadata": {
+        "total_chunks": 3,
+        "file_path": "benchmarks/src/main/java/com/google/samples/apps/nowinandroid/bookmarks/BookmarksActions.kt",
+        "chunk_index": 1,
+        "language": "kotlin",
+        "strategy": "enhanced",
+        "commit_count": 4
+      },
+      "similarity_score": 1.1097718477249146
+    },
+    {
+      "content": "Change-Id: Ibeb9fd09bd862000794f41edcddd2cea434a9bb1\n- Changes:\n```diff\n@@ -21,18 +21,13 @@ import com.google.samples.apps.nowinandroid.core.data.repository.TopicsRepositor\n import com.google.samples.apps.nowinandroid.core.model.data.Topic\n import com.google.samples.apps.nowinandroid.core.network.Dispatcher\n import com.google.samples.apps.nowinandroid.core.network.NiaDispatchers.IO\n-import com.google.samples.apps.nowinandroid.core.network.fake.FakeAssetManager\n-import com.google.samples.apps.nowinandroid.core.network.fake.FakeDataSource\n-import com.google.samples.ap...\n```\n\n### Commit 5\n- ID: 67dea1c1\n- Author: Simon Marquis (contact@simon-marquis.fr)\n- Date: 2022-11-11 21:48:50\n- Message: Fix spotless issues\n- Changes:\n```diff\n@@ -24,6 +24,8 @@ import com.google.samples.apps.nowinandroid.core.network.NiaDispatchers.IO\n import com.google.samples.apps.nowinandroid.core.network.fake.FakeAssetManager\n import com.google.samples.apps.nowinandroid.core.network.fake.FakeDataSource\n import com.google.samples.apps.nowinandroid.core.network.model.NetworkTopic\n+import java.io.InputStream\n+import javax.inject.Inject\n import kotlinx.coroutines.CoroutineDispatcher\n import kotlinx.coroutines.flow.Flow\n import kotlinx.coroutines.flow....\n```",
+      "metadata": {
+        "file_path": "core/data/src/main/java/com/google/samples/apps/nowinandroid/core/data/repository/fake/FakeTopicsRepository.kt",
+        "chunk_index": 3,
+        "strategy": "enhanced",
+        "language": "kotlin",
+        "total_chunks": 4,
+        "commit_count": 5
+      },
+      "similarity_score": 1.1142373085021973
+    },
+    {
+      "content": "### Commit 4\n- ID: 4d4f7d4a\n- Author: Simon Marquis (contact@simon-marquis.fr)\n- Date: 2023-02-14 06:24:34\n- Message: Merge remote-tracking branch 'origin/main' into update/androidx-lifecycle\n- Changes:\n```diff\n@@ -63,6 +63,7 @@ import com.google.samples.apps.nowinandroid.feature.topic.TopicUiState.Loading\n @Composable\n internal fun TopicRoute(\n     onBackClick: () -> Unit,\n+    onTopicClick: (String) -> Unit,\n     modifier: Modifier = Modifier,\n     viewModel: TopicViewModel = hiltViewModel(),\n ) {\n@@ -76,6 +77,7 @@ internal fun TopicRoute(\n         onBackClick = onBackClick,\n         onFollowClick = viewModel::followTopicToggle,\n         onBookmarkChanged = viewModel::bookmarkNews,\n+        onTopicCl...\n```\n\n### Commit 5\n- ID: 4284e691\n- Author: Don Turner (donturner@google.com)\n- Date: 2023-02-09 22:56:24\n- Message: Merge remote-tracking branch 'github/main' into feb9automerger\n\n* github/main:\n  Bump version to 4\n  Remove unused DropdownMenu component\n  Route topic chip tap events up to NiaNavHost\n  Apply suggestions from code review\n  Migrate custom room configuration into a convention plugin\n  Update docs/ArchitectureLearningJourney.md - User action follow topic\n  Update docs/ArchitectureLearningJourney.md - Writing data\n\nChange-Id: I417abcaba792bbf297a8156bb1c4cf677dcb8bea\n- Changes:\n```diff\n@@ -66,6 +66,7 @@ import com.google.samples.apps.nowinandroid.feature.topic.TopicUiState.Loading\n @Composable\n internal fun TopicRoute(\n     onBackClick: () -> Unit,\n+    onTopicClick: (String) -> Unit,\n     modifier: Modifier = Modifier,\n     viewModel: TopicViewModel = hiltViewModel(),\n ) {\n@@ -80,6 +81,7 @@ internal fun TopicRoute(\n         onBackClick = onBackClick,\n         onFollowClick = viewModel::followTopicToggle,\n         onBookmarkChanged = viewModel::bookmarkNews,\n+        onTopicCl...\n```",
+      "metadata": {
+        "file_path": "feature/topic/src/main/java/com/google/samples/apps/nowinandroid/feature/topic/TopicScreen.kt",
+        "strategy": "enhanced",
+        "language": "kotlin",
+        "commit_count": 5,
+        "chunk_index": 9,
+        "total_chunks": 10
+      },
+      "similarity_score": 1.1194000244140625
+    },
+    {
+      "content": "### Commit 4\n- ID: 57c13d84\n- Author: James Rose (rosej@google.com)\n- Date: 2023-03-04 02:50:34\n- Message: Incorporate code review changes: Move UserNewsResourceRepository to data\nmodule; move UserNewsResource to model module. Implement unread dot for\nbookmarked articles. Keep the flows cold in UserNewsResourceRepository.\n- Changes:\n```diff\n@@ -54,7 +54,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle\n import com.google.samples.apps.nowinandroid.core.designsystem.component.NiaLoadingWheel\n import com.google.samples.apps.nowinandroid.core.designsystem.theme.LocalTintTheme\n import com.google.samples.apps.nowinandroid.core.designsystem.theme.NiaTheme\n-import com.google.samples.apps.nowinandroid.core.domain.model.UserNewsResource\n+import com.google.samples.apps.nowinandroid.core.model.data.UserNewsResource\n import com...\n```\n\n### Commit 5\n- ID: ebfbb5ba\n- Author: James Rose (rosej@google.com)\n- Date: 2023-01-21 05:57:39\n- Message: Display unread state on the news feed and bottom nav bar\n\nWhen a news resource is unread, display a dot on its card in the news\nfeed.  When the For You section has unread resources, display a dot on\nits icon in the navigation bar.\n\nUpdate the read status when a resource is opened.\n- Changes:\n```diff\n@@ -73,6 +73,7 @@ internal fun BookmarksRoute(\n     BookmarksScreen(\n         feedState = feedState,\n         removeFromBookmarks = viewModel::removeFromSavedResources,\n+        onNewsResourcesViewedChanged = viewModel::updateNewsResourceViewed,\n         onTopicClick = onTopicClick,\n         modifier = modifier,\n     )\n@@ -86,13 +87,14 @@ internal fun BookmarksRoute(\n internal fun BookmarksScreen(\n     feedState: NewsFeedUiState,\n     removeFromBookmarks: (String) -> Unit,\n+    onNewsResourcesVi...\n```",
+      "metadata": {
+        "file_path": "feature/bookmarks/src/main/java/com/google/samples/apps/nowinandroid/feature/bookmarks/BookmarksScreen.kt",
+        "total_chunks": 9,
+        "chunk_index": 8,
+        "commit_count": 5,
+        "language": "kotlin",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.12021005153656
+    },
+    {
+      "content": "\"url\": \"https://adbackstage.libsyn.com/episode-180-kotlin-magic-platform\",\n    \"headerImageUrl\": \"https://ssl-static.libsyn.com/p/assets/2/6/2/5/262599d4ce76d20fa04421dee9605cbd/adb-181-kmp.png\",\n    \"publishDate\": \"2021-12-16T00:00:00.000Z\",\n    \"type\": \"Podcast 🎙\",\n    \"topics\": [\n      \"10\"\n    ],\n    \"authors\": [\n      \"30\",\n      \"31\",\n      \"32\",\n      \"34\"\n    ]\n  },\n  {\n    \"id\": \"212\",\n    \"title\": \"ADB Podcast 181: Architecture → Fewer bugs at the end\",\n    \"content\": \"In this episode, we chat with Yigit Boyar (again!) from the Android Toolkit Team and Manuel Vivo from the Developer Relations team about application architecture. The team has released new architecture guidance, and we talk about that guidance here, as well as how our architecture recommendations apply in the new Jetpack Compose world.\",\n    \"url\": \"https://adbackstage.libsyn.com/episode-181-architecture-fewer-bugs-at-the-end\",\n    \"headerImageUrl\": \"https://ssl-static.libsyn.com/p/assets/8/d/1/3/8d137b65f392a68c27a2322813b393ee/ADB_181_Architecture.png\",\n    \"publishDate\": \"2022-01-11T00:00:00.000Z\",\n    \"type\": \"Podcast 🎙\",\n    \"topics\": [\n      \"4\"\n    ],\n    \"authors\": [\n      \"31\",\n      \"31\",\n      \"32\",\n      \"23\"\n    ]\n  },\n  {\n    \"id\": \"213\",\n    \"title\": \"Android 12\",",
+      "metadata": {
+        "commit_count": 1,
+        "chunk_index": 93,
+        "strategy": "enhanced",
+        "language": "json",
+        "total_chunks": 133,
+        "file_path": "core/network/src/main/assets/news.json"
+      },
+      "similarity_score": 1.1422572135925293
+    },
+    {
+      "content": "### Commit 4\n- ID: a0b22d8e\n- Author: Manuel Vivo (mvivo@google.com)\n- Date: 2022-10-21 07:16:24\n- Message: Updates Navigation approach with new guidance (#347)\n- Changes:\n```diff\n@@ -17,17 +17,36 @@\n package com.google.samples.apps.nowinandroid.navigation\n \n import com.google.samples.apps.nowinandroid.core.designsystem.icon.Icon\n-import com.google.samples.apps.nowinandroid.core.navigation.NiaNavigationDestination\n+import com.google.samples.apps.nowinandroid.core.designsystem.icon.Icon.DrawableResourceIcon\n+import com.google.samples.apps.nowinandroid.core.designsystem.icon.Icon.ImageVectorIcon\n+import com.google.samples.apps.nowinandroid.core.designsystem.icon.NiaIcons\n+i...\n```\n\n### Commit 5\n- ID: 0eee3620\n- Author: Manuel Vivo (mvivo@google.com)\n- Date: 2022-07-19 20:07:59\n- Message: Add state holder for NiaApp composable\n- Changes:\n```diff\n@@ -0,0 +1,33 @@\n+/*\n+ * Copyright 2022 The Android Open Source Project\n+ *\n+ * Licensed under the Apache License, Version 2.0 (the \"License\");\n+ * you may not use this file except in compliance with the License.\n+ * You may obtain a copy of the License at\n+ *\n+ *     https://www.apache.org/licenses/LICENSE-2.0\n+ *\n+ * Unless required by applicable law or agreed to in writing, software\n+ * distributed under the License is distributed on an \"AS IS\" BASIS,\n+ * WITHOUT WARRANTIES OR CONDITIONS OF A...\n```",
+      "metadata": {
+        "file_path": "app/src/main/java/com/google/samples/apps/nowinandroid/navigation/TopLevelDestination.kt",
+        "commit_count": 5,
+        "chunk_index": 3,
+        "language": "kotlin",
+        "total_chunks": 4,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.1426169872283936
+    },
+    {
+      "content": "### Commit 3\n- ID: cbdf6a2d\n- Author: Milosz Moczkowski (mmoczkowski@google.com)\n- Date: 2022-09-23 22:00:05\n- Message: Remove episodes related code\n- Changes:\n```diff\n@@ -17,7 +17,6 @@\n package com.google.samples.apps.nowinandroid.core.data.model\n \n import com.google.samples.apps.nowinandroid.core.database.model.AuthorEntity\n-import com.google.samples.apps.nowinandroid.core.database.model.EpisodeEntity\n import com.google.samples.apps.nowinandroid.core.database.model.NewsResourceAuthorCrossRef\n import com.google.samples.apps.nowinandroid.core.database.model.NewsResourceEntity\n import com.google.samples.apps.nowinandroid.core.database.model.NewsResourceTopicCro...\n```\n\n### Commit 4\n- ID: 3bd81154\n- Author: madroid (madroidmaq@gmail.com)\n- Date: 2022-08-24 23:22:11\n- Message: Move 'core-' module to core subfolder\n- Changes:\n```diff\n@@ -0,0 +1,108 @@\n+/*\n+ * Copyright 2022 The Android Open Source Project\n+ *\n+ * Licensed under the Apache License, Version 2.0 (the \"License\");\n+ * you may not use this file except in compliance with the License.\n+ * You may obtain a copy of the License at\n+ *\n+ *     https://www.apache.org/licenses/LICENSE-2.0\n+ *\n+ * Unless required by applicable law or agreed to in writing, software\n+ * distributed under the License is distributed on an \"AS IS\" BASIS,\n+ * WITHOUT WARRANTIES OR CONDITIONS OF ...\n```",
+      "metadata": {
+        "strategy": "enhanced",
+        "file_path": "core/data/src/main/java/com/google/samples/apps/nowinandroid/core/data/model/NewsResource.kt",
+        "language": "kotlin",
+        "total_chunks": 3,
+        "chunk_index": 2,
+        "commit_count": 4
+      },
+      "similarity_score": 1.1471681594848633
+    },
+    {
+      "content": "### Commit 5\n- ID: a0b22d8e\n- Author: Manuel Vivo (mvivo@google.com)\n- Date: 2022-10-21 07:16:24\n- Message: Updates Navigation approach with new guidance (#347)\n- Changes:\n```diff\n@@ -16,28 +16,30 @@\n \n package com.google.samples.apps.nowinandroid.feature.interests.navigation\n \n+import androidx.navigation.NavController\n import androidx.navigation.NavGraphBuilder\n+import androidx.navigation.NavOptions\n import androidx.navigation.compose.composable\n import androidx.navigation.navigation\n-import com.google.samples.apps.nowinandroid.core.navigation.NiaNavigationDestination\n import com.google.samples.apps.nowinandroid.feature.interests.InterestsRoute\n \n-object InterestsDestina...\n```",
+      "metadata": {
+        "file_path": "feature/interests/src/main/java/com/google/samples/apps/nowinandroid/feature/interests/navigation/InterestsNavigation.kt",
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "chunk_index": 3,
+        "total_chunks": 4,
+        "language": "kotlin"
+      },
+      "similarity_score": 1.1520180702209473
+    },
+    {
+      "content": "### Commit 4\n- ID: 4ba63c0d\n- Author: Jolanda Verhoef (JolandaVerhoef@users.noreply.github.com)\n- Date: 2022-11-21 18:23:44\n- Message: Remove author concept from app\n\nChange-Id: Icd03c0288ba5f3f23dbcbdbefbbe802db2815793\n- Changes:\n```diff\n@@ -20,9 +20,7 @@ import androidx.lifecycle.ViewModel\n import androidx.lifecycle.viewModelScope\n import com.google.samples.apps.nowinandroid.core.data.repository.UserDataRepository\n import com.google.samples.apps.nowinandroid.core.domain.GetFollowableTopicsUseCase\n-import com.google.samples.apps.nowinandroid.core.domain.GetSortedFollowableAuthorsUseCase\n import com.google.samples.apps.nowinandroid.core.domain.TopicSortField\n-import com.google.samples.apps.nowinandroid.core.domain.model.Followabl...\n```\n\n### Commit 5\n- ID: 9c22a7a4\n- Author: Márton Braun (zsmb@google.com)\n- Date: 2022-11-30 20:29:04\n- Message: Remove `Stream` suffixes\n\nChange-Id: I45decae965d7e35289d3fa31fc58b8c463fbead1\n- Changes:\n```diff\n@@ -19,8 +19,8 @@ package com.google.samples.apps.nowinandroid.feature.interests\n import androidx.lifecycle.ViewModel\n import androidx.lifecycle.viewModelScope\n import com.google.samples.apps.nowinandroid.core.data.repository.UserDataRepository\n-import com.google.samples.apps.nowinandroid.core.domain.GetFollowableTopicsStreamUseCase\n-import com.google.samples.apps.nowinandroid.core.domain.GetSortedFollowableAuthorsStreamUseCase\n+import com.google.samples.apps.nowinandroid.core.domain.GetFollowab...\n```",
+      "metadata": {
+        "chunk_index": 3,
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "language": "kotlin",
+        "total_chunks": 4,
+        "file_path": "feature/interests/src/main/java/com/google/samples/apps/nowinandroid/feature/interests/InterestsViewModel.kt"
+      },
+      "similarity_score": 1.1520514488220215
+    }
+  ],
+  "compressed": [
+    {
+      "content": "# File: benchmarks/src/main/java/com/google/samples/apps/nowinandroid/interests/InterestsActions.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.benchmark.macro.MacrobenchmarkScope\nimport androidx.test.uiautomator.By\nimport androidx.test.uiautomator.Until\nimport com.google.samples.apps.nowinandroid.flingElementDownUp\n\n## Recent Changes:\n- 8c6b74d9 by mlykotom (mlykotom@google.com): Fix wait for bookmarks to show\n\nChange-Id: Ia4dfb1eea89a6b211b80789ae6f4548a0c23121e...\n- db5fe96c by mlykotom (mlykotom@google.com): Fix interests actions\n\nChange-Id: I3583d6c7c904f0cf1bf21892721551f41d89796f...\n- 8f42be51 by mlykotom (mlykotom@google.com): Fix fling gestures...",
+      "metadata": {
+        "file_path": "benchmarks/src/main/java/com/google/samples/apps/nowinandroid/interests/InterestsActions.kt",
+        "chunk_index": 0,
+        "language": "kotlin",
+        "strategy": "compressed",
+        "commit_count": 4,
+        "total_chunks": 1
+      },
+      "similarity_score": 0.8333041071891785
+    },
+    {
+      "content": "# File: benchmarks/src/main/java/com/google/samples/apps/nowinandroid/baselineprofile/BaselineProfileGenerator.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.benchmark.macro.ExperimentalBaselineProfilesApi\nimport androidx.benchmark.macro.junit4.BaselineProfileRule\nimport com.google.samples.apps.nowinandroid.PACKAGE_NAME\nimport com.google.samples.apps.nowinandroid.bookmarks.goToBookmarksScreen\nimport com.google.samples.apps.nowinandroid.foryou.forYouScrollFeedDownUp\nimport com.google.samples.apps.nowinandroid.foryou.forYouSelectTopics\nimport com.google.samples.apps.nowinandroid.foryou.forYouWaitForContent\nimport com.google.samples.apps.nowinandroid.interests.goToInterestsScreen\nimport com.google.samples.apps.nowinandroid.interests.interestsScrollTopicsDownUp\nimport org.junit.Rule\nimport org.junit.Test\n@ExperimentalBaselineProfilesApi\nclass BaselineProfileGenerator {\n    @get:Rule val baselineProfileRule = BaselineProfileRule()\n    @Test\n\n## Recent Changes:\n- 5687c8d3 by mlykotom (mlykotom@google.com): Fix bookmarks actions\n\nChange-Id: I415d651414d68a312498d5faff799d72145a53ed...\n- db5fe96c by mlykotom (mlykotom@google.com): Fix interests actions\n\nChange-Id: I3583d6c7c904f0cf1bf21892721551f41d89796f...\n- 039ec8e9 by mlykotom (mlykotom@google.com): Select topics to be able to scroll\n\nChange-Id: Ib7a2a3e87ab3b5d8da6c0fc1b77855f46ef5236a...",
+      "metadata": {
+        "file_path": "benchmarks/src/main/java/com/google/samples/apps/nowinandroid/baselineprofile/BaselineProfileGenerator.kt",
+        "language": "kotlin",
+        "commit_count": 5,
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.9562197923660278
+    },
+    {
+      "content": "# File: benchmarks/src/main/java/com/google/samples/apps/nowinandroid/bookmarks/BookmarksActions.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.benchmark.macro.MacrobenchmarkScope\nimport androidx.test.uiautomator.By\nimport androidx.test.uiautomator.Until\nimport com.google.samples.apps.nowinandroid.flingElementDownUp\n\n## Recent Changes:\n- 8c6b74d9 by mlykotom (mlykotom@google.com): Fix wait for bookmarks to show\n\nChange-Id: Ia4dfb1eea89a6b211b80789ae6f4548a0c23121e...\n- 5687c8d3 by mlykotom (mlykotom@google.com): Fix bookmarks actions\n\nChange-Id: I415d651414d68a312498d5faff799d72145a53ed...\n- 8f42be51 by mlykotom (mlykotom@google.com): Fix fling gestures...",
+      "metadata": {
+        "language": "kotlin",
+        "file_path": "benchmarks/src/main/java/com/google/samples/apps/nowinandroid/bookmarks/BookmarksActions.kt",
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "commit_count": 4,
+        "total_chunks": 1
+      },
+      "similarity_score": 1.0334385633468628
+    },
+    {
+      "content": "# File: feature/interests/src/androidTest/java/com/google/samples/apps/nowinandroid/interests/InterestsScreenTest.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.activity.ComponentActivity\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.test.assertCountEquals\nimport androidx.compose.ui.test.assertIsDisplayed\nimport androidx.compose.ui.test.junit4.createAndroidComposeRule\nimport androidx.compose.ui.test.onAllNodesWithContentDescription\nimport androidx.compose.ui.test.onNodeWithContentDescription\nimport androidx.compose.ui.test.onNodeWithText\nimport com.google.samples.apps.nowinandroid.core.testing.data.followableTopicTestData\nimport com.google.samples.apps.nowinandroid.feature.interests.InterestsScreen\nimport com.google.samples.apps.nowinandroid.feature.interests.InterestsUiState\nimport com.google.samples.apps.nowinandroid.feature.interests.R\nimport org.junit.Before\nimport org.junit.Rule\nimport org.junit.Test\n\n## Recent Changes:\n- 322ff63d by Márton Braun (zsmb@google.com): Route topic chip tap events up to NiaNavHost\n\nChange-Id: I228c486f5cde1bb47530e8f115a435bfa34381a7...\n- bcb4d7d5 by Miłosz Moczkowski (mmoczkowski@google.com): Replace global variables with PreviewParameterProvider...\n- 819dd494 by Márton Braun (zsmb@google.com): Run Spotless to add trailing commas (and apply other rule updates)\n\nChange-Id: I5f8e49a3ef004c7e9e7d...",
+      "metadata": {
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "language": "kotlin",
+        "chunk_index": 0,
+        "commit_count": 5,
+        "file_path": "feature/interests/src/androidTest/java/com/google/samples/apps/nowinandroid/interests/InterestsScreenTest.kt"
+      },
+      "similarity_score": 1.0489132404327393
+    },
+    {
+      "content": "# File: feature/interests/src/test/java/com/google/samples/apps/nowinandroid/interests/InterestsViewModelTest.kt (kotlin)\n\n## Key Code Elements:\nimport com.google.samples.apps.nowinandroid.core.domain.GetFollowableTopicsUseCase\nimport com.google.samples.apps.nowinandroid.core.model.data.FollowableTopic\nimport com.google.samples.apps.nowinandroid.core.model.data.Topic\nimport com.google.samples.apps.nowinandroid.core.testing.repository.TestTopicsRepository\nimport com.google.samples.apps.nowinandroid.core.testing.repository.TestUserDataRepository\nimport com.google.samples.apps.nowinandroid.core.testing.util.MainDispatcherRule\nimport com.google.samples.apps.nowinandroid.feature.interests.InterestsUiState\nimport com.google.samples.apps.nowinandroid.feature.interests.InterestsViewModel\nimport kotlinx.coroutines.flow.collect\nimport kotlinx.coroutines.launch\nimport kotlinx.coroutines.test.UnconfinedTestDispatcher\nimport kotlinx.coroutines.test.runTest\nimport org.junit.Before\nimport org.junit.Rule\nimport org.junit.Test\n\n## Recent Changes:\n- 57c13d84 by James Rose (rosej@google.com): Incorporate code review changes: Move UserNewsResourceRepository to data\nmodule; move UserNewsResour...\n- 819dd494 by Márton Braun (zsmb@google.com): Run Spotless to add trailing commas (and apply other rule updates)\n\nChange-Id: I5f8e49a3ef004c7e9e7d...\n- 4ba63c0d by Jolanda Verhoef (JolandaVerhoef@users.noreply.github.com): Remove author concept from app\n\nChange-Id: Icd03c0288ba5f3f23dbcbdbefbbe802db2815793...",
+      "metadata": {
+        "strategy": "compressed",
+        "commit_count": 5,
+        "language": "kotlin",
+        "file_path": "feature/interests/src/test/java/com/google/samples/apps/nowinandroid/interests/InterestsViewModelTest.kt",
+        "chunk_index": 0,
+        "total_chunks": 1
+      },
+      "similarity_score": 1.0509448051452637
+    },
+    {
+      "content": "# File: app/src/main/java/com/google/samples/apps/nowinandroid/navigation/TopLevelDestination.kt (kotlin)\n\n## Key Code Elements:\nimport com.google.samples.apps.nowinandroid.R\nimport com.google.samples.apps.nowinandroid.core.designsystem.icon.Icon\nimport com.google.samples.apps.nowinandroid.core.designsystem.icon.Icon.DrawableResourceIcon\nimport com.google.samples.apps.nowinandroid.core.designsystem.icon.Icon.ImageVectorIcon\nimport com.google.samples.apps.nowinandroid.core.designsystem.icon.NiaIcons\nimport com.google.samples.apps.nowinandroid.feature.bookmarks.R as bookmarksR\nimport com.google.samples.apps.nowinandroid.feature.foryou.R as forYouR\nimport com.google.samples.apps.nowinandroid.feature.interests.R as interestsR\n\n## Recent Changes:\n- 819dd494 by Márton Braun (zsmb@google.com): Run Spotless to add trailing commas (and apply other rule updates)\n\nChange-Id: I5f8e49a3ef004c7e9e7d...\n- dbff140b by Don Turner (donturner@google.com): Fix minor issues...\n- 8c30ab9f by Don Turner (donturner@google.com): Add settings module, refactor top bar...",
+      "metadata": {
+        "language": "kotlin",
+        "commit_count": 5,
+        "total_chunks": 1,
+        "file_path": "app/src/main/java/com/google/samples/apps/nowinandroid/navigation/TopLevelDestination.kt",
+        "chunk_index": 0,
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.0798991918563843
+    },
+    {
+      "content": "# File: feature/interests/src/main/java/com/google/samples/apps/nowinandroid/feature/interests/InterestsViewModel.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.lifecycle.ViewModel\nimport androidx.lifecycle.viewModelScope\nimport com.google.samples.apps.nowinandroid.core.data.repository.UserDataRepository\nimport com.google.samples.apps.nowinandroid.core.domain.GetFollowableTopicsUseCase\nimport com.google.samples.apps.nowinandroid.core.domain.TopicSortField\nimport com.google.samples.apps.nowinandroid.core.model.data.FollowableTopic\nimport dagger.hilt.android.lifecycle.HiltViewModel\nimport kotlinx.coroutines.flow.SharingStarted\nimport kotlinx.coroutines.flow.StateFlow\nimport kotlinx.coroutines.flow.map\nimport kotlinx.coroutines.flow.stateIn\nimport kotlinx.coroutines.launch\nimport javax.inject.Inject\n@HiltViewModel\nclass InterestsViewModel @Inject constructor(\n\n## Recent Changes:\n- 57c13d84 by James Rose (rosej@google.com): Incorporate code review changes: Move UserNewsResourceRepository to data\nmodule; move UserNewsResour...\n- 819dd494 by Márton Braun (zsmb@google.com): Run Spotless to add trailing commas (and apply other rule updates)\n\nChange-Id: I5f8e49a3ef004c7e9e7d...\n- 154f05e2 by Alex Vanyo (vanyo@google.com): Remove tab state from InterestsViewModel\n\nChange-Id: I5c15015f27fa0aa7709d0c3959d761355c8d9722...",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "kotlin",
+        "strategy": "compressed",
+        "commit_count": 5,
+        "file_path": "feature/interests/src/main/java/com/google/samples/apps/nowinandroid/feature/interests/InterestsViewModel.kt",
+        "total_chunks": 1
+      },
+      "similarity_score": 1.0802631378173828
+    },
+    {
+      "content": "# File: benchmarks/src/main/java/com/google/samples/apps/nowinandroid/foryou/ForYouActions.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.benchmark.macro.MacrobenchmarkScope\nimport androidx.test.uiautomator.By\nimport androidx.test.uiautomator.Until\nimport androidx.test.uiautomator.untilHasChildren\nimport com.google.samples.apps.nowinandroid.flingElementDownUp\n    var index = 0\n    var visited = 0\n\n## Recent Changes:\n- 3d524d95 by mlykotom (mlykotom@google.com): Fix selecting topics\n\nChange-Id: I958ad68ead1dffce0916dd5d6b7bff275b201fc7...\n- 1c09d0a6 by mlykotom (mlykotom@google.com): Simplify selecting topics\n\nChange-Id: Icd5bcb361c7ccdf9ce907729ca3f65de41f34649...\n- 0c98a3fa by mlykotom (mlykotom@google.com): Add comment\n\nChange-Id: I8524c4fbd8c9b95274d82a28e19eceb12da3ef6a...",
+      "metadata": {
+        "language": "kotlin",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "file_path": "benchmarks/src/main/java/com/google/samples/apps/nowinandroid/foryou/ForYouActions.kt",
+        "strategy": "compressed",
+        "commit_count": 5
+      },
+      "similarity_score": 1.0955520868301392
+    },
+    {
+      "content": "# File: benchmarks/src/main/java/com/google/samples/apps/nowinandroid/interests/TopicsScreenRecompositionBenchmark.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.benchmark.macro.CompilationMode\nimport androidx.benchmark.macro.FrameTimingMetric\nimport androidx.benchmark.macro.StartupMode\nimport androidx.benchmark.macro.junit4.MacrobenchmarkRule\nimport androidx.test.ext.junit.runners.AndroidJUnit4\nimport androidx.test.uiautomator.By\nimport com.google.samples.apps.nowinandroid.PACKAGE_NAME\nimport org.junit.Rule\nimport org.junit.Test\nimport org.junit.runner.RunWith\n@RunWith(AndroidJUnit4::class)\nclass TopicsScreenRecompositionBenchmark {\n    @get:Rule\n    @Test\n\n## Recent Changes:\n- 819dd494 by Márton Braun (zsmb@google.com): Run Spotless to add trailing commas (and apply other rule updates)\n\nChange-Id: I5f8e49a3ef004c7e9e7d...\n- 7afc3562 by Wojtek Kaliciński (wkal@google.com): Fix app id name clash in benchmark module\n\nChange-Id: I5889ef4b9338a940f43efc7629dca155068588ec...",
+      "metadata": {
+        "language": "kotlin",
+        "file_path": "benchmarks/src/main/java/com/google/samples/apps/nowinandroid/interests/TopicsScreenRecompositionBenchmark.kt",
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "commit_count": 2
+      },
+      "similarity_score": 1.1040711402893066
+    },
+    {
+      "content": "# File: feature/bookmarks/src/main/java/com/google/samples/apps/nowinandroid/feature/bookmarks/navigation/BookmarksNavigation.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.navigation.NavController\nimport androidx.navigation.NavGraphBuilder\nimport androidx.navigation.NavOptions\nimport androidx.navigation.compose.composable\nimport com.google.samples.apps.nowinandroid.feature.bookmarks.BookmarksRoute\nconst val bookmarksRoute = \"bookmarks_route\"\n\n## Recent Changes:\n- 322ff63d by Márton Braun (zsmb@google.com): Route topic chip tap events up to NiaNavHost\n\nChange-Id: I228c486f5cde1bb47530e8f115a435bfa34381a7...\n- e5183e21 by Don Turner (donturner@google.com): Resolve conflict with navigation changes from main...\n- a0b22d8e by Manuel Vivo (mvivo@google.com): Updates Navigation approach with new guidance (#347)...",
+      "metadata": {
+        "total_chunks": 1,
+        "language": "kotlin",
+        "chunk_index": 0,
+        "file_path": "feature/bookmarks/src/main/java/com/google/samples/apps/nowinandroid/feature/bookmarks/navigation/BookmarksNavigation.kt",
+        "strategy": "compressed",
+        "commit_count": 4
+      },
+      "similarity_score": 1.1060247421264648
+    },
+    {
+      "content": "# File: benchmarks/src/main/java/com/google/samples/apps/nowinandroid/Utils.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.test.uiautomator.Direction\nimport androidx.test.uiautomator.UiDevice\nimport androidx.test.uiautomator.UiObject2\nimport com.google.samples.apps.nowinandroid.benchmarks.BuildConfig\n\n## Recent Changes:\n- 8f42be51 by mlykotom (mlykotom@google.com): Fix fling gestures...\n- 6c1f8394 by mlykotom (mlykotom@google.com): Fix flavors change...\n- 7afc3562 by Wojtek Kaliciński (wkal@google.com): Fix app id name clash in benchmark module\n\nChange-Id: I5889ef4b9338a940f43efc7629dca155068588ec...",
+      "metadata": {
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "file_path": "benchmarks/src/main/java/com/google/samples/apps/nowinandroid/Utils.kt",
+        "commit_count": 3,
+        "strategy": "compressed",
+        "language": "kotlin"
+      },
+      "similarity_score": 1.1103341579437256
+    },
+    {
+      "content": "# File: feature/interests/src/main/java/com/google/samples/apps/nowinandroid/feature/interests/navigation/InterestsNavigation.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.navigation.NavController\nimport androidx.navigation.NavGraphBuilder\nimport androidx.navigation.NavOptions\nimport androidx.navigation.compose.composable\nimport androidx.navigation.navigation\nimport com.google.samples.apps.nowinandroid.feature.interests.InterestsRoute\nconst val interestsRoute = \"interests_route\"\n\n## Recent Changes:\n- 322ff63d by Márton Braun (zsmb@google.com): Route topic chip tap events up to NiaNavHost\n\nChange-Id: I228c486f5cde1bb47530e8f115a435bfa34381a7...\n- 819dd494 by Márton Braun (zsmb@google.com): Run Spotless to add trailing commas (and apply other rule updates)\n\nChange-Id: I5f8e49a3ef004c7e9e7d...\n- 4ba63c0d by Jolanda Verhoef (JolandaVerhoef@users.noreply.github.com): Remove author concept from app\n\nChange-Id: Icd03c0288ba5f3f23dbcbdbefbbe802db2815793...",
+      "metadata": {
+        "language": "kotlin",
+        "chunk_index": 0,
+        "commit_count": 5,
+        "file_path": "feature/interests/src/main/java/com/google/samples/apps/nowinandroid/feature/interests/navigation/InterestsNavigation.kt",
+        "total_chunks": 1,
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.1125513315200806
+    },
+    {
+      "content": "# File: benchmarks/src/main/java/com/google/samples/apps/nowinandroid/foryou/ScrollForYouFeedBenchmark.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.benchmark.macro.CompilationMode\nimport androidx.benchmark.macro.FrameTimingMetric\nimport androidx.benchmark.macro.StartupMode\nimport androidx.benchmark.macro.junit4.MacrobenchmarkRule\nimport androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner\nimport com.google.samples.apps.nowinandroid.PACKAGE_NAME\nimport org.junit.Rule\nimport org.junit.Test\nimport org.junit.runner.RunWith\n@RunWith(AndroidJUnit4ClassRunner::class)\nclass ScrollForYouFeedBenchmark {\n    @get:Rule\n    @Test\n    @Test\n\n## Recent Changes:\n- 819dd494 by Márton Braun (zsmb@google.com): Run Spotless to add trailing commas (and apply other rule updates)\n\nChange-Id: I5f8e49a3ef004c7e9e7d...\n- 4bc29d9c by mlykotom (mlykotom@google.com): Fix scrolling benchmark\n\nChange-Id: Ifb43ab0ffe6e38b00d5aad63415fc8439534c112...\n- 4ba63c0d by Jolanda Verhoef (JolandaVerhoef@users.noreply.github.com): Remove author concept from app\n\nChange-Id: Icd03c0288ba5f3f23dbcbdbefbbe802db2815793...",
+      "metadata": {
+        "strategy": "compressed",
+        "commit_count": 4,
+        "file_path": "benchmarks/src/main/java/com/google/samples/apps/nowinandroid/foryou/ScrollForYouFeedBenchmark.kt",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "language": "kotlin"
+      },
+      "similarity_score": 1.1290433406829834
+    },
+    {
+      "content": "# File: benchmarks/src/main/java/androidx/test/uiautomator/UiAutomatorHelpers.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.test.uiautomator.HasChildrenOp.AT_LEAST\nimport androidx.test.uiautomator.HasChildrenOp.AT_MOST\nimport androidx.test.uiautomator.HasChildrenOp.EXACTLY\n\n## Recent Changes:\n- 819dd494 by Márton Braun (zsmb@google.com): Run Spotless to add trailing commas (and apply other rule updates)\n\nChange-Id: I5f8e49a3ef004c7e9e7d...\n- 1d23714e by mlykotom (mlykotom@google.com): Apply Spotless...\n- 1eb3a28f by mlykotom (mlykotom@google.com): Fix at most...",
+      "metadata": {
+        "language": "kotlin",
+        "total_chunks": 1,
+        "commit_count": 4,
+        "file_path": "benchmarks/src/main/java/androidx/test/uiautomator/UiAutomatorHelpers.kt",
+        "chunk_index": 0,
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.151773452758789
+    },
+    {
+      "content": "# File: feature/interests/src/main/java/com/google/samples/apps/nowinandroid/feature/interests/InterestsScreen.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.compose.foundation.layout.Column\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.getValue\nimport androidx.compose.ui.Alignment\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.res.stringResource\nimport androidx.compose.ui.tooling.preview.PreviewParameter\nimport androidx.hilt.navigation.compose.hiltViewModel\nimport androidx.lifecycle.compose.collectAsStateWithLifecycle\nimport com.google.samples.apps.nowinandroid.core.designsystem.component.NiaBackground\nimport com.google.samples.apps.nowinandroid.core.designsystem.component.NiaLoadingWheel\nimport com.google.samples.apps.nowinandroid.core.designsystem.theme.NiaTheme\nimport com.google.samples.apps.nowinandroid.core.model.data.FollowableTopic\nimport com.google.samples.apps.nowinandroid.core.ui.DevicePreviews\n\n## Recent Changes:\n- 57c13d84 by James Rose (rosej@google.com): Incorporate code review changes: Move UserNewsResourceRepository to data\nmodule; move UserNewsResour...\n- 874c2d14 by Alex Vanyo (vanyo@google.com): Merge pull request #561 from SimonMarquis/update/androidx-lifecycle\n\nUpdgrade androidx-lifecycle fro...\n- 4d4f7d4a by Simon Marquis (contact@simon-marquis.fr): Merge remote-tracking branch 'origin/main' into update/androidx-lifecycle...",
+      "metadata": {
+        "language": "kotlin",
+        "commit_count": 5,
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "file_path": "feature/interests/src/main/java/com/google/samples/apps/nowinandroid/feature/interests/InterestsScreen.kt",
+        "total_chunks": 1
+      },
+      "similarity_score": 1.1577807664871216
+    },
+    {
+      "content": "# File: core/datastore/src/main/java/com/google/samples/apps/nowinandroid/core/datastore/UserPreferencesSerializer.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.datastore.core.CorruptionException\nimport androidx.datastore.core.Serializer\nimport com.google.protobuf.InvalidProtocolBufferException\nimport java.io.InputStream\nimport java.io.OutputStream\nimport javax.inject.Inject\nclass UserPreferencesSerializer @Inject constructor() : Serializer<UserPreferences> {\n            @Suppress(\"BlockingMethodInNonBlockingContext\")\n        @Suppress(\"BlockingMethodInNonBlockingContext\")\n\n## Recent Changes:\n- 3bd81154 by madroid (madroidmaq@gmail.com): Move 'core-' module to core subfolder...",
+      "metadata": {
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "language": "kotlin",
+        "strategy": "compressed",
+        "file_path": "core/datastore/src/main/java/com/google/samples/apps/nowinandroid/core/datastore/UserPreferencesSerializer.kt",
+        "commit_count": 1
+      },
+      "similarity_score": 1.1587291955947876
+    },
+    {
+      "content": "# File: core/database/build.gradle.kts (text)\n\n## Recent Changes:\n- 459717f8 by Simon Marquis (contact@simon-marquis.fr): Remove `DSL_SCOPE_VIOLATION` suppression as it is now fixed in Gradle 8.1...\n- bcd4a6de by AlfianHanantio (amalhanaja@gmail.com): Remove redundant code block for managed virtual device creation...\n- 3409f937 by Simon Marquis (contact@simon-marquis.fr): Migrate custom room configuration into a convention plugin\n\nAnd use `CommandLineArgumentProvider` to...",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "language": "text",
+        "commit_count": 5,
+        "file_path": "core/database/build.gradle.kts"
+      },
+      "similarity_score": 1.164055585861206
+    },
+    {
+      "content": "# File: benchmarks/src/main/java/com/google/samples/apps/nowinandroid/startup/StartupBenchmark.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.benchmark.macro.BaselineProfileMode.Disable\nimport androidx.benchmark.macro.BaselineProfileMode.Require\nimport androidx.benchmark.macro.CompilationMode\nimport androidx.benchmark.macro.StartupMode\nimport androidx.benchmark.macro.StartupMode.COLD\nimport androidx.benchmark.macro.StartupMode.HOT\nimport androidx.benchmark.macro.StartupMode.WARM\nimport androidx.benchmark.macro.StartupTimingMetric\nimport androidx.benchmark.macro.junit4.MacrobenchmarkRule\nimport androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner\nimport com.google.samples.apps.nowinandroid.PACKAGE_NAME\nimport com.google.samples.apps.nowinandroid.foryou.forYouWaitForContent\nimport org.junit.Rule\nimport org.junit.Test\nimport org.junit.runner.RunWith\n\n## Recent Changes:\n- 819dd494 by Márton Braun (zsmb@google.com): Run Spotless to add trailing commas (and apply other rule updates)\n\nChange-Id: I5f8e49a3ef004c7e9e7d...\n- 7afc3562 by Wojtek Kaliciński (wkal@google.com): Fix app id name clash in benchmark module\n\nChange-Id: I5889ef4b9338a940f43efc7629dca155068588ec...",
+      "metadata": {
+        "total_chunks": 1,
+        "commit_count": 2,
+        "file_path": "benchmarks/src/main/java/com/google/samples/apps/nowinandroid/startup/StartupBenchmark.kt",
+        "chunk_index": 0,
+        "language": "kotlin",
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.1683943271636963
+    },
+    {
+      "content": "# File: benchmarks/src/main/AndroidManifest.xml (xml)\n\n## Recent Changes:\n- 7afc3562 by Wojtek Kaliciński (wkal@google.com): Fix app id name clash in benchmark module\n\nChange-Id: I5889ef4b9338a940f43efc7629dca155068588ec...",
+      "metadata": {
+        "strategy": "compressed",
+        "language": "xml",
+        "chunk_index": 0,
+        "file_path": "benchmarks/src/main/AndroidManifest.xml",
+        "total_chunks": 1,
+        "commit_count": 1
+      },
+      "similarity_score": 1.183671474456787
+    },
+    {
+      "content": "# File: app-nia-catalog/src/main/res/drawable/ic_launcher_background.xml (xml)\n\n## Recent Changes:\n- 203c8e1c by Alex Vanyo (vanyo@google.com): Configure spotless for kts and xml files\n\nFixes: 230874524\n\nChange-Id: I147b9f16d5424b3459435e3c5422...\n- 17005c3e by Simona Stojanovic (anomis@google.com): Add NiA Component Catalog app\n\nChange-Id: Ie586b1329e42c10811d29fab1d0fbe6aea8e7cfc...",
+      "metadata": {
+        "strategy": "compressed",
+        "language": "xml",
+        "commit_count": 2,
+        "file_path": "app-nia-catalog/src/main/res/drawable/ic_launcher_background.xml",
+        "total_chunks": 1,
+        "chunk_index": 0
+      },
+      "similarity_score": 1.1895596981048584
+    }
+  ]
+}

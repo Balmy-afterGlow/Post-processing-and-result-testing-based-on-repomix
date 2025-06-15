@@ -1,0 +1,7 @@
+{
+  "reason": "The issue occurs because rich tries to get the current working directory (cwd) unconditionally during import, which fails if the cwd has been deleted.",
+  "location": [
+    "rich/__init__.py"
+  ],
+  "fix": "Modify the `_IMPORT_CWD` assignment to handle the case when cwd doesn't exist by using a try-except block:\n\n```python\ntry:\n    _IMPORT_CWD = os.path.abspath(os.getcwd())\nexcept FileNotFoundError:\n    _IMPORT_CWD = None\n```"
+}

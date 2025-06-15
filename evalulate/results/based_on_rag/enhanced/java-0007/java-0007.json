@@ -1,0 +1,7 @@
+{
+  "reason": "The issue occurs when querying data containing Chinese characters in PostgreSQL through Sharding-Proxy, resulting in an 'extraneous data in \"D\" message' error. This suggests a character encoding mismatch or improper handling of UTF-8 encoded data in the PostgreSQL protocol implementation.",
+  "location": [
+    "sharding-proxy/sharding-proxy-transport/sharding-proxy-transport-postgresql/src/main/java/org/apache/shardingsphere/shardingproxy/transport/postgresql/packet/command/query/PostgreSQLColumnDescription.java"
+  ],
+  "fix": "Ensure proper UTF-8 encoding is used when constructing PostgreSQL column descriptions and result packets. Modify the PostgreSQLColumnDescription class to explicitly handle UTF-8 encoding for column names and data."
+}

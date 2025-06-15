@@ -1,0 +1,708 @@
+{
+  "basic": [
+    {
+      "content": "/**\n * Retries collection of the given flow when an exception occurs in the upstream flow and the\n * [predicate] returns true. The predicate also receives an `attempt` number as parameter,\n * starting from zero on the initial call. This operator is *transparent* to exceptions that occur\n * in downstream flow and does not retry on exceptions that are thrown to cancel the flow.\n *\n * For example, the following call retries the flow forever if the error is caused by `IOException`, but\n * stops after 3 retries on any other exception:\n *\n * ```\n * flow.retryWhen { cause, attempt -> cause is IOException || attempt < 3 }\n * ```\n *\n * To implement a simple retry logic with a limit on the number of retries use [retry] operator.\n *\n * Similarly to [catch] operator, the [predicate] code has [FlowCollector] as a receiver and can\n * [emit][FlowCollector.emit] values downstream.\n * The [predicate] is a suspending function, so it can be used to introduce delay before retry, for example:\n *\n * ```\n * flow.retryWhen { cause, attempt ->\n *     if (cause is IOException) {    // retry on IOException\n *         emit(RetryWrapperValue(e))\n *         delay(1000)                // delay for one second before retry\n *         true\n *     } else {                       // do not retry otherwise\n *         false\n *     }\n * }\n * ```\n *\n * See [catch] for more details.\n */\npublic fun <T> Flow<T>.retryWhen(predicate: suspend FlowCollector<T>.(cause: Throwable, attempt: Long) -> Boolean): Flow<T> =\n    flow {\n        var attempt = 0L\n        var shallRetry: Boolean\n        do {\n            shallRetry = false\n            val cause = catchImpl(this)\n            if (cause != null) {\n                if (predicate(cause, attempt)) {\n                    shallRetry = true\n                    attempt++\n                } else {\n                    throw cause\n                }\n            }\n        } while (shallRetry)\n    }",
+      "metadata": {
+        "strategy": "basic",
+        "total_chunks": 7,
+        "chunk_index": 3,
+        "file_path": "kotlinx-coroutines-core/common/src/flow/operators/Errors.kt",
+        "language": "kotlin"
+      },
+      "similarity_score": 0.5894627571105957
+    },
+    {
+      "content": "// Return exception from upstream or null\n@Suppress(\"NAME_SHADOWING\")\ninternal suspend fun <T> Flow<T>.catchImpl(\n    collector: FlowCollector<T>\n): Throwable? {\n    var fromDownstream: Throwable? = null\n    try {\n        collect {\n            try {\n                collector.emit(it)\n            } catch (e: Throwable) {\n                fromDownstream = e\n                throw e\n            }\n        }\n    } catch (e: Throwable) {\n        // Otherwise, smartcast is impossible\n        val fromDownstream = fromDownstream\n        /*\n         * First check ensures that we catch an original exception, not one rethrown by an operator.\n         * Seconds check ignores cancellation causes, they cannot be caught.\n         */\n        if (e.isSameExceptionAs(fromDownstream) || e.isCancellationCause(coroutineContext)) {\n            throw e // Rethrow exceptions from downstream and cancellation causes\n        } else {\n            /*\n             * The exception came from the upstream [semi-] independently.\n             * For pure failures, when the downstream functions normally, we handle the exception as intended.\n             * But if the downstream has failed prior to or concurrently\n             * with the upstream, we forcefully rethrow it, preserving the contextual information and ensuring  that it's not lost.\n             */\n            if (fromDownstream == null) {\n                return e\n            }\n            /*\n             * We consider the upstream exception as the superseding one when both upstream and downstream\n             * fail, suppressing the downstream exception, and operating similarly to `finally` block with\n             * the useful addition of adding the original downstream exception to suppressed ones.\n             *\n             * That's important for the following scenarios:\n             * ```\n             * flow {\n             *     val resource = ...\n             *     try {\n             *         ... emit as well ...",
+      "metadata": {
+        "language": "kotlin",
+        "chunk_index": 4,
+        "strategy": "basic",
+        "total_chunks": 7,
+        "file_path": "kotlinx-coroutines-core/common/src/flow/operators/Errors.kt"
+      },
+      "similarity_score": 0.5980379581451416
+    },
+    {
+      "content": "/**\n * Catches exceptions in the flow completion and calls a specified [action] with\n * the caught exception. This operator is *transparent* to exceptions that occur\n * in downstream flow and does not catch exceptions that are thrown to cancel the flow.\n *\n * For example:\n *\n * ```\n * flow { emitData() }\n *     .map { computeOne(it) }\n *     .catch { ... } // catches exceptions in emitData and computeOne\n *     .map { computeTwo(it) }\n *     .collect { process(it) } // throws exceptions from process and computeTwo\n * ```\n *\n * Conceptually, the action of `catch` operator is similar to wrapping the code of upstream flows with\n * `try { ... } catch (e: Throwable) { action(e) }`.\n *\n * Any exception in the [action] code itself proceeds downstream where it can be\n * caught by further `catch` operators if needed. If a particular exception does not need to be\n * caught it can be rethrown from the action of `catch` operator. For example:\n *\n * ```\n * flow.catch { e ->\n *     if (e !is IOException) throw e // rethrow all but IOException\n *     // e is IOException here\n *     ...\n * }\n * ```\n *\n * The [action] code has [FlowCollector] as a receiver and can [emit][FlowCollector.emit] values downstream.\n * For example, caught exception can be replaced with some wrapper value for errors:\n *\n * ```\n * flow.catch { e -> emit(ErrorWrapperValue(e)) }\n * ```\n *\n * The [action] can also use [emitAll] to fallback on some other flow in case of an error. However, to\n * retry an original flow use [retryWhen] operator that can retry the flow multiple times without\n * introducing ever-growing stack of suspending calls.\n */\npublic fun <T> Flow<T>.catch(action: suspend FlowCollector<T>.(cause: Throwable) -> Unit): Flow<T> =\n    flow {\n        val exception = catchImpl(this)\n        if (exception != null) action(exception)\n    }",
+      "metadata": {
+        "file_path": "kotlinx-coroutines-core/common/src/flow/operators/Errors.kt",
+        "total_chunks": 7,
+        "chunk_index": 1,
+        "strategy": "basic",
+        "language": "kotlin"
+      },
+      "similarity_score": 0.5989353656768799
+    },
+    {
+      "content": "*\n * ```\n * flow { emitData() }\n *     .map { computeOne(it) }\n *     .catch { ... } // catches exceptions in emitData and computeOne\n *     .map { computeTwo(it) }\n *     .collect { process(it) } // throws exceptions from process and computeTwo\n * ```\n * The same reasoning can be applied to the [onCompletion] operator that is a declarative replacement for the `finally` block.\n *\n * All exception-handling Flow operators follow the principle of exception suppression:\n *\n * If the upstream flow throws an exception during its completion when the downstream exception has been thrown,\n * the downstream exception becomes superseded and suppressed by the upstream exception, being a semantic\n * equivalent of throwing from `finally` block. However, this doesn't affect the operation of the exception-handling operators,\n * which consider the downstream exception to be the root cause and behave as if the upstream didn't throw anything.\n *\n * Failure to adhere to the exception transparency requirement can lead to strange behaviors which make\n * it hard to reason about the code because an exception in the `collect { ... }` could be somehow \"caught\"\n * by an upstream flow, limiting the ability of local reasoning about the code.\n *\n * Flow machinery enforces exception transparency at runtime and throws [IllegalStateException] on any attempt to emit a value,\n * if an exception has been thrown on previous attempt.\n *\n * ### Reactive streams\n *\n * Flow is [Reactive Streams](http://www.reactive-streams.org/) compliant, you can safely interop it with\n * reactive streams using [Flow.asPublisher] and [Publisher.asFlow] from `kotlinx-coroutines-reactive` module.\n *\n * ### Not stable for inheritance\n *\n * **The `Flow` interface is not stable for inheritance in 3rd party libraries**, as new methods\n * might be added to this interface in the future, but is stable for use.\n *\n * Use the `flow { ... }` builder function to create an implementation, or extend [AbstractFlow].",
+      "metadata": {
+        "strategy": "basic",
+        "chunk_index": 5,
+        "file_path": "kotlinx-coroutines-core/common/src/flow/Flow.kt",
+        "language": "kotlin",
+        "total_chunks": 9
+      },
+      "similarity_score": 0.6111071109771729
+    },
+    {
+      "content": "private fun exceptionTransparencyViolated(exception: DownstreamExceptionContext, value: Any?) {\n        /*\n         * Exception transparency ensures that if a `collect` block or any intermediate operator\n         * throws an exception, then no more values will be received by it.\n         * For example, the following code:\n         * ```\n         * val flow = flow {\n         *     emit(1)\n         *     try {\n         *          emit(2)\n         *     } catch (e: Exception) {\n         *          emit(3)\n         *     }\n         * }\n         * // Collector\n         * flow.collect { value ->\n         *     if (value == 2) {\n         *         throw CancellationException(\"No more elements required, received enough\")\n         *     } else {\n         *         println(\"Collected $value\")\n         *     }\n         * }\n         * ```\n         * is expected to print \"Collected 1\" and then \"No more elements required, received enough\" exception,\n         * but if exception transparency wasn't enforced, \"Collected 1\" and \"Collected 3\" would be printed instead.\n         */\n        error(\"\"\"\n            Flow exception transparency is violated:\n                Previous 'emit' call has thrown exception ${exception.e}, but then emission attempt of value '$value' has been detected.\n                Emissions from 'catch' blocks are prohibited in order to avoid unspecified behaviour, 'Flow.catch' operator can be used instead.\n                For a more detailed explanation, please refer to Flow documentation.\n            \"\"\".trimIndent())\n    }\n}\n\ninternal class DownstreamExceptionContext(\n    @JvmField val e: Throwable,\n    originalContext: CoroutineContext\n) : CoroutineContext by originalContext\n\nprivate object NoOpContinuation : Continuation<Any?> {\n    override val context: CoroutineContext = EmptyCoroutineContext\n\n    override fun resumeWith(result: Result<Any?>) {\n        // Nothing\n    }\n}\n```",
+      "metadata": {
+        "language": "kotlin",
+        "strategy": "basic",
+        "chunk_index": 3,
+        "file_path": "kotlinx-coroutines-core/jvm/src/flow/internal/SafeCollector.kt",
+        "total_chunks": 4
+      },
+      "similarity_score": 0.7502028942108154
+    },
+    {
+      "content": "/**\n * @suppress\n */\n@Deprecated(\n    message = \"SharedFlow never completes, so this operator typically has not effect, it can only \" +\n        \"catch exceptions from 'onSubscribe' operator\",\n    level = DeprecationLevel.WARNING,\n    replaceWith = ReplaceWith(\"this\")\n)\n@InlineOnly\npublic inline fun <T> SharedFlow<T>.catch(noinline action: suspend FlowCollector<T>.(cause: Throwable) -> Unit): Flow<T> =\n    (this as Flow<T>).catch(action)\n\n/**\n * @suppress\n */\n@Deprecated(\n    message = \"SharedFlow never completes, so this operator has no effect.\",\n    level = DeprecationLevel.WARNING,\n    replaceWith = ReplaceWith(\"this\")\n)\n@InlineOnly\npublic inline fun <T> SharedFlow<T>.retry(\n    retries: Long = Long.MAX_VALUE,\n    noinline predicate: suspend (cause: Throwable) -> Boolean = { true }\n): Flow<T> =\n    (this as Flow<T>).retry(retries, predicate)\n\n/**\n * @suppress\n */\n@Deprecated(\n    message = \"SharedFlow never completes, so this operator has no effect.\",\n    level = DeprecationLevel.WARNING,\n    replaceWith = ReplaceWith(\"this\")\n)\n@InlineOnly\npublic inline fun <T> SharedFlow<T>.retryWhen(noinline predicate: suspend FlowCollector<T>.(cause: Throwable, attempt: Long) -> Boolean): Flow<T> =\n    (this as Flow<T>).retryWhen(predicate)\n\n/**\n * @suppress\n */\n@Suppress(\"DeprecatedCallableAddReplaceWith\")\n@Deprecated(\n    message = \"SharedFlow never completes, so this terminal operation never completes.\",\n    level = DeprecationLevel.WARNING\n)\n@InlineOnly\npublic suspend inline fun <T> SharedFlow<T>.toList(): List<T> =\n    (this as Flow<T>).toList()\n\n/**\n * A specialized version of [Flow.toList] that returns [Nothing]\n * to indicate that [SharedFlow] collection never completes.\n */\n@InlineOnly\npublic suspend inline fun <T> SharedFlow<T>.toList(destination: MutableList<T>): Nothing {\n    (this as Flow<T>).toList(destination)\n    throw IllegalStateException(\"this code is supposed to be unreachable\")\n}",
+      "metadata": {
+        "language": "kotlin",
+        "chunk_index": 2,
+        "strategy": "basic",
+        "total_chunks": 4,
+        "file_path": "kotlinx-coroutines-core/common/src/flow/operators/Lint.kt"
+      },
+      "similarity_score": 0.80055832862854
+    },
+    {
+      "content": "/**\n * Flow analogue of `onErrorXxx` is [catch].\n * Use `catch { emitAll(fallback) }`.\n * @suppress\n */\n@Deprecated(\n    level = DeprecationLevel.ERROR,\n    message = \"Flow analogue of 'onErrorXxx' is 'catch'. Use 'catch { emitAll(fallback) }'\",\n    replaceWith = ReplaceWith(\"catch { emitAll(fallback) }\")\n)\npublic fun <T> Flow<T>.onErrorResume(fallback: Flow<T>): Flow<T> = noImpl()\n\n/**\n * Flow analogue of `onErrorXxx` is [catch].\n * Use `catch { emitAll(fallback) }`.\n * @suppress\n */\n@Deprecated(\n    level = DeprecationLevel.ERROR,\n    message = \"Flow analogue of 'onErrorXxx' is 'catch'. Use 'catch { emitAll(fallback) }'\",\n    replaceWith = ReplaceWith(\"catch { emitAll(fallback) }\")\n)\npublic fun <T> Flow<T>.onErrorResumeNext(fallback: Flow<T>): Flow<T> = noImpl()\n\n/**\n * `subscribe` is Rx-specific API that has no direct match in flows.\n * One can use [launchIn] instead, for example the following:\n * ```\n * flowable\n *     .observeOn(Schedulers.io())\n *     .subscribe({ println(\"Received $it\") }, { println(\"Exception $it happened\") }, { println(\"Flowable is completed successfully\") }\n * ```\n *\n * has the following Flow equivalent:\n * ```\n * flow\n *     .onEach { value -> println(\"Received $value\") }\n *     .onCompletion { cause -> if (cause == null) println(\"Flow is completed successfully\") }\n *     .catch { cause -> println(\"Exception $cause happened\") }\n *     .flowOn(Dispatchers.IO)\n *     .launchIn(myScope)\n * ```\n *\n * Note that resulting value of [launchIn] is not used because the provided scope takes care of cancellation.\n *\n * Or terminal operators like [single] can be used from suspend functions.\n * @suppress\n */\n@Deprecated(\n    message = \"Use 'launchIn' with 'onEach', 'onCompletion' and 'catch' instead\",\n    level = DeprecationLevel.ERROR\n)\npublic fun <T> Flow<T>.subscribe(): Unit = noImpl()",
+      "metadata": {
+        "file_path": "kotlinx-coroutines-core/common/src/flow/Migration.kt",
+        "total_chunks": 10,
+        "chunk_index": 2,
+        "language": "kotlin",
+        "strategy": "basic"
+      },
+      "similarity_score": 0.8262099027633667
+    },
+    {
+      "content": "/**\n * Terminal flow operator that collects the given flow with a provided [action] that takes the index of an element (zero-based) and the element.\n * If any exception occurs during collect or in the provided flow, this exception is rethrown from this method.\n *\n * See also [collect] and [withIndex].\n */\npublic suspend inline fun <T> Flow<T>.collectIndexed(crossinline action: suspend (index: Int, value: T) -> Unit): Unit =\n    collect(object : FlowCollector<T> {\n        private var index = 0\n        override suspend fun emit(value: T) = action(checkIndexOverflow(index++), value)\n    })\n\n/**\n * Terminal flow operator that collects the given flow with a provided [action].\n * The crucial difference from [collect] is that when the original flow emits a new value\n * then the [action] block for the previous value is cancelled.\n *\n * It can be demonstrated by the following example:\n *\n * ```\n * flow {\n *     emit(1)\n *     delay(50)\n *     emit(2)\n * }.collectLatest { value ->\n *     println(\"Collecting $value\")\n *     delay(100) // Emulate work\n *     println(\"$value collected\")\n * }\n * ```\n *\n * prints \"Collecting 1, Collecting 2, 2 collected\"\n */\npublic suspend fun <T> Flow<T>.collectLatest(action: suspend (value: T) -> Unit) {\n    /*\n     * Implementation note:\n     * buffer(0) is inserted here to fulfil user's expectations in sequential usages, e.g.:\n     * ```\n     * flowOf(1, 2, 3).collectLatest {\n     *     delay(1)\n     *     println(it) // Expect only 3 to be printed\n     * }\n     * ```\n     *\n     * It's not the case for intermediate operators which users mostly use for interactive UI,\n     * where performance of dispatch is more important.\n     */\n    mapLatest(action).buffer(0).collect()\n}\n\n/**\n * Collects all the values from the given [flow] and emits them to the collector.\n * It is a shorthand for `flow.collect { value -> emit(value) }`.\n */\npublic suspend fun <T> FlowCollector<T>.emitAll(flow: Flow<T>) {\n    ensureActive()\n    flow.collect(this)\n}",
+      "metadata": {
+        "total_chunks": 3,
+        "language": "kotlin",
+        "file_path": "kotlinx-coroutines-core/common/src/flow/terminal/Collect.kt",
+        "strategy": "basic",
+        "chunk_index": 1
+      },
+      "similarity_score": 0.8339983224868774
+    },
+    {
+      "content": "@Deprecated(level = DeprecationLevel.HIDDEN, message = \"Since 1.4.0, binary compatibility with earlier versions\")\npublic fun <T> Flow<T>.buffer(capacity: Int = BUFFERED): Flow<T> = buffer(capacity)\n\n/**\n * Conflates flow emissions via conflated channel and runs collector in a separate coroutine.\n * The effect of this is that emitter is never suspended due to a slow collector, but collector\n * always gets the most recent value emitted.\n *\n * For example, consider the flow that emits integers from 1 to 30 with 100 ms delay between them:\n *\n * ```\n * val flow = flow {\n *     for (i in 1..30) {\n *         delay(100)\n *         emit(i)\n *     }\n * }\n * ```\n *\n * Applying `conflate()` operator to it allows a collector that delays 1 second on each element to get\n * integers 1, 10, 20, 30:\n *\n * ```\n * val result = flow.conflate().onEach { delay(1000) }.toList()\n * assertEquals(listOf(1, 10, 20, 30), result)\n * ```\n *\n * Note that `conflate` operator is a shortcut for [buffer] with `capacity` of [Channel.CONFLATED][Channel.CONFLATED],\n * which is, in turn, a shortcut to a buffer that only keeps the latest element as\n * created by `buffer(onBufferOverflow = `[`BufferOverflow.DROP_OLDEST`][BufferOverflow.DROP_OLDEST]`)`.\n *\n * ### Operator fusion\n *\n * Adjacent applications of `conflate`/[buffer], [channelFlow], [flowOn] and [produceIn] are\n * always fused so that only one properly configured channel is used for execution.\n * **Conflation takes precedence over `buffer()` calls with any other capacity.**\n *\n * Note that any instance of [StateFlow] already behaves as if `conflate` operator is\n * applied to it, so applying `conflate` to a `StateFlow` has no effect.\n * See [StateFlow] documentation on Operator Fusion.\n */\npublic fun <T> Flow<T>.conflate(): Flow<T> = buffer(CONFLATED)",
+      "metadata": {
+        "strategy": "basic",
+        "language": "kotlin",
+        "file_path": "kotlinx-coroutines-core/common/src/flow/operators/Context.kt",
+        "total_chunks": 9,
+        "chunk_index": 5
+      },
+      "similarity_score": 0.8363629579544067
+    },
+    {
+      "content": "/**\n * Same as [startUndispatchedOrReturn], but ignores [TimeoutCancellationException] on fast-path.\n */\ninternal fun <T, R> ScopeCoroutine<T>.startUndispatchedOrReturnIgnoreTimeout(\n    receiver: R, block: suspend R.() -> T\n): Any? {\n    return undispatchedResult({ e -> !(e is TimeoutCancellationException && e.coroutine === this) }) {\n        block.startCoroutineUninterceptedOrReturn(receiver, this)\n    }\n}\n\nprivate inline fun <T> ScopeCoroutine<T>.undispatchedResult(\n    shouldThrow: (Throwable) -> Boolean,\n    startBlock: () -> Any?\n): Any? {\n    val result = try {\n        startBlock()\n    } catch (e: Throwable) {\n        CompletedExceptionally(e)\n    }\n    /*\n     * We're trying to complete our undispatched block here and have three code-paths:\n     * (1) Coroutine is suspended.\n     * Otherwise, coroutine had returned result, so we are completing our block (and its job).\n     * (2) If we can't complete it or started waiting for children, we suspend.\n     * (3) If we have successfully completed the coroutine state machine here,\n     *     then we take the actual final state of the coroutine from makeCompletingOnce and return it.\n     *\n     * shouldThrow parameter is a special code path for timeout coroutine:\n     * If timeout is exceeded, but withTimeout() block was not suspended, we would like to return block value,\n     * not a timeout exception.\n     */\n    if (result === COROUTINE_SUSPENDED) return COROUTINE_SUSPENDED // (1)\n    val state = makeCompletingOnce(result)\n    if (state === COMPLETING_WAITING_CHILDREN) return COROUTINE_SUSPENDED // (2)\n    return if (state is CompletedExceptionally) { // (3)\n        when {\n            shouldThrow(state.cause) -> throw recoverStackTrace(state.cause, uCont)\n            result is CompletedExceptionally -> throw recoverStackTrace(result.cause, uCont)\n            else -> result\n        }\n    } else {\n        state.unboxState()\n    }\n}\n```",
+      "metadata": {
+        "strategy": "basic",
+        "total_chunks": 3,
+        "language": "kotlin",
+        "chunk_index": 2,
+        "file_path": "kotlinx-coroutines-core/common/src/intrinsics/Undispatched.kt"
+      },
+      "similarity_score": 0.8370756506919861
+    },
+    {
+      "content": "*\n * Example of usage that converts a multi-shot callback API to a flow.\n * For single-shot callbacks use [suspendCancellableCoroutine].\n *\n * ```\n * fun flowFrom(api: CallbackBasedApi): Flow<T> = callbackFlow {\n *     val callback = object : Callback { // Implementation of some callback interface\n *         override fun onNextValue(value: T) {\n *             // To avoid blocking you can configure channel capacity using\n *             // either buffer(Channel.CONFLATED) or buffer(Channel.UNLIMITED) to avoid overfill\n *             trySendBlocking(value)\n *                 .onFailure { throwable ->\n *                     // Downstream has been cancelled or failed, can log here\n *                 }\n *         }\n *         override fun onApiError(cause: Throwable) {\n *             cancel(CancellationException(\"API Error\", cause))\n *         }\n *         override fun onCompleted() = channel.close()\n *     }\n *     api.register(callback)\n *     /*\n *      * Suspends until either 'onCompleted'/'onApiError' from the callback is invoked\n *      * or flow collector is cancelled (e.g. by 'take(1)' or because a collector's coroutine was cancelled).\n *      * In both cases, callback will be properly unregistered.\n *      */\n *     awaitClose { api.unregister(callback) }\n * }\n * ```\n *\n * > The callback `register`/`unregister` methods provided by an external API must be thread-safe, because\n * > `awaitClose` block can be called at any time due to asynchronous nature of cancellation, even\n * > concurrently with the call of the callback.\n */\npublic fun <T> callbackFlow(@BuilderInference block: suspend ProducerScope<T>.() -> Unit): Flow<T> = CallbackFlowBuilder(block)",
+      "metadata": {
+        "chunk_index": 5,
+        "total_chunks": 8,
+        "file_path": "kotlinx-coroutines-core/common/src/flow/Builders.kt",
+        "language": "kotlin",
+        "strategy": "basic"
+      },
+      "similarity_score": 0.8486517071723938
+    },
+    {
+      "content": "The emitter can use a [catch] operator that preserves this exception transparency and allows encapsulation\nof its exception handling. The body of the `catch` operator can analyze an exception\nand react to it in different ways depending on which exception was caught:\n\n* Exceptions can be rethrown using `throw`.\n* Exceptions can be turned into emission of values using [emit][FlowCollector.emit] from the body of [catch].\n* Exceptions can be ignored, logged, or processed by some other code.\n\nFor example, let us emit the text on catching an exception:\n\n```kotlin\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.flow.*\n\nfun simple(): Flow<String> = \n    flow {\n        for (i in 1..3) {\n            println(\"Emitting $i\")\n            emit(i) // emit next value\n        }\n    }\n    .map { value ->\n        check(value <= 1) { \"Crashed on $value\" }                 \n        \"string $value\"\n    }\n\nfun main() = runBlocking<Unit> {\n//sampleStart\n    simple()\n        .catch { e -> emit(\"Caught $e\") } // emit on exception\n        .collect { value -> println(value) }\n//sampleEnd\n}            \n```\n{kotlin-runnable=\"true\" kotlin-min-compiler-version=\"1.3\"}\n\n> You can get the full code from [here](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-28.kt).\n>\n{type=\"note\"} \n \nThe output of the example is the same, even though we do not have `try/catch` around the code anymore. \n\n<!--- TEST  \nEmitting 1\nstring 1\nEmitting 2\nCaught java.lang.IllegalStateException: Crashed on 2\n-->\n\n### Transparent catch\n\nThe [catch] intermediate operator, honoring exception transparency, catches only upstream exceptions\n(that is an exception from all the operators above `catch`, but not below it).\nIf the block in `collect { ... }` (placed below `catch`) throws an exception then it escapes:  \n\n```kotlin\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.flow.*\n\n//sampleStart\nfun simple(): Flow<Int> = flow {\n    for (i in 1..3) {\n        println(\"Emitting $i\")\n        emit(i)\n    }\n}",
+      "metadata": {
+        "file_path": "docs/topics/flow.md",
+        "chunk_index": 22,
+        "strategy": "basic",
+        "language": "markdown",
+        "total_chunks": 37
+      },
+      "similarity_score": 0.855880081653595
+    },
+    {
+      "content": "/**\n * Invokes the given [action] when this flow completes without emitting any elements.\n * The receiver of the [action] is [FlowCollector], so `onEmpty` can emit additional elements.\n * For example:\n *\n * ```\n * emptyFlow<Int>().onEmpty {\n *     emit(1)\n *     emit(2)\n * }.collect { println(it) } // prints 1, 2\n * ```\n */\npublic fun <T> Flow<T>.onEmpty(\n    action: suspend FlowCollector<T>.() -> Unit\n): Flow<T> = unsafeFlow {\n    var isEmpty = true\n    collect {\n        isEmpty = false\n        emit(it)\n    }\n    if (isEmpty) {\n        val collector = SafeCollector(this, currentCoroutineContext())\n        try {\n            collector.action()\n        } finally {\n            collector.releaseIntercepted()\n        }\n    }\n}\n\n/*\n * 'emitAll' methods call this to fail-fast before starting to collect\n * their sources (that may not have any elements for a long time).\n */\ninternal fun FlowCollector<*>.ensureActive() {\n    if (this is ThrowingCollector) throw e\n}\n\ninternal class ThrowingCollector(@JvmField val e: Throwable) : FlowCollector<Any?> {\n    override suspend fun emit(value: Any?) {\n        throw e\n    }\n}\n\nprivate suspend fun <T> FlowCollector<T>.invokeSafely(\n    action: suspend FlowCollector<T>.(cause: Throwable?) -> Unit,\n    cause: Throwable?\n) {\n    try {\n        action(cause)\n    } catch (e: Throwable) {\n        if (cause !== null && cause !== e) e.addSuppressedThrowable(cause)\n        throw e\n    }\n}\n```",
+      "metadata": {
+        "language": "kotlin",
+        "total_chunks": 5,
+        "file_path": "kotlinx-coroutines-core/common/src/flow/operators/Emitters.kt",
+        "strategy": "basic",
+        "chunk_index": 4
+      },
+      "similarity_score": 0.8625019788742065
+    },
+    {
+      "content": "/**\n * Represents the given receive channel as a hot flow and [consumes][ReceiveChannel.consume] the channel\n * on the first collection from this flow. The resulting flow can be collected just once and throws\n * [IllegalStateException] when trying to collect it more than once.\n *\n * See also [receiveAsFlow] which supports multiple collectors of the resulting flow.\n *\n * ### Cancellation semantics\n *\n * * Flow collector is cancelled when the original channel is [closed][SendChannel.close] with an exception.\n * * Flow collector completes normally when the original channel is [closed][SendChannel.close] normally.\n * * If the flow collector fails with an exception, the source channel is [cancelled][ReceiveChannel.cancel].\n *\n * ### Operator fusion\n *\n * Adjacent applications of [flowOn], [buffer], [conflate], and [produceIn] to the result of `consumeAsFlow` are fused.\n * In particular, [produceIn] returns the original channel (but throws [IllegalStateException] on repeated calls).\n * Calls to [flowOn] have generally no effect, unless [buffer] is used to explicitly request buffering.\n */\npublic fun <T> ReceiveChannel<T>.consumeAsFlow(): Flow<T> = ChannelAsFlow(this, consume = true)\n\n/**\n * Represents an existing [channel] as [ChannelFlow] implementation.\n * It fuses with subsequent [flowOn] operators, but for the most part ignores the specified context.\n * However, additional [buffer] calls cause a separate buffering channel to be created and that is where\n * the context might play a role, because it is used by the producing coroutine.\n */\nprivate class ChannelAsFlow<T>(\n    private val channel: ReceiveChannel<T>,\n    private val consume: Boolean,\n    context: CoroutineContext = EmptyCoroutineContext,\n    capacity: Int = Channel.OPTIONAL_CHANNEL,\n    onBufferOverflow: BufferOverflow = BufferOverflow.SUSPEND\n) : ChannelFlow<T>(context, capacity, onBufferOverflow) {\n    private val consumed = atomic(false)",
+      "metadata": {
+        "strategy": "basic",
+        "total_chunks": 5,
+        "language": "kotlin",
+        "file_path": "kotlinx-coroutines-core/common/src/flow/Channels.kt",
+        "chunk_index": 2
+      },
+      "similarity_score": 0.8759387731552124
+    },
+    {
+      "content": "override fun onCompleted(value: T) {\n        if (value == null) sink.success() else sink.success(value)\n    }\n\n    override fun onCancelled(cause: Throwable, handled: Boolean) {\n        /** Cancellation exceptions that were caused by [dispose], that is, came from downstream, are not errors. */\n        val unwrappedCause = unwrap(cause)\n        if (getCancellationException() !== unwrappedCause || !disposed) {\n            try {\n                /** If [sink] turns out to already be in a terminal state, this exception will be passed through the\n                 * [Hooks.onOperatorError] hook, which is the way to signal undeliverable exceptions in Reactor. */\n                sink.error(cause)\n            } catch (e: Throwable) {\n                // In case of improper error implementation or fatal exceptions\n                cause.addSuppressed(e)\n                handleCoroutineException(context, cause)\n            }\n        }\n    }\n\n    override fun dispose() {\n        disposed = true\n        cancel()\n    }\n\n    override fun isDisposed(): Boolean = disposed\n}\n\n/**\n * @suppress\n */\n@Deprecated(\n    message = \"CoroutineScope.mono is deprecated in favour of top-level mono\",\n    level = DeprecationLevel.HIDDEN,\n    replaceWith = ReplaceWith(\"mono(context, block)\")\n) // Since 1.3.0, will be error in 1.3.1 and hidden in 1.4.0\npublic fun <T> CoroutineScope.mono(\n    context: CoroutineContext = EmptyCoroutineContext,\n    block: suspend CoroutineScope.() -> T?\n): Mono<T> = monoInternal(this, context, block)",
+      "metadata": {
+        "strategy": "basic",
+        "file_path": "reactive/kotlinx-coroutines-reactor/src/Mono.kt",
+        "chunk_index": 3,
+        "total_chunks": 9,
+        "language": "kotlin"
+      },
+      "similarity_score": 0.8780466318130493
+    },
+    {
+      "content": "): Flow<T> = unsafeFlow { // Note: unsafe flow is used here, but safe collector is used to invoke completion action\n    try {\n        collect(this)\n    } catch (e: Throwable) {\n        /*\n         * Use throwing collector to prevent any emissions from the\n         * completion sequence when downstream has failed, otherwise it may\n         * lead to a non-sequential behaviour impossible with `finally`\n         */\n        ThrowingCollector(e).invokeSafely(action, e)\n        throw e\n    }\n    // Normal completion\n    val sc = SafeCollector(this, currentCoroutineContext())\n    try {\n        sc.action(null)\n    } finally {\n        sc.releaseIntercepted()\n    }\n}",
+      "metadata": {
+        "chunk_index": 3,
+        "file_path": "kotlinx-coroutines-core/common/src/flow/operators/Emitters.kt",
+        "total_chunks": 5,
+        "strategy": "basic",
+        "language": "kotlin"
+      },
+      "similarity_score": 0.8886399269104004
+    },
+    {
+      "content": "internal class StacklessCancellationException() : CancellationException() {\n        override fun fillInStackTrace(): Throwable = this\n    }\n\n    public fun <T> Flow<T>.originalTake(count: Int): Flow<T> {\n        return unsafeFlow {\n            var consumed = 0\n            try {\n                collect { value ->\n                    emit(value)\n                    if (++consumed == count) {\n                        throw StacklessCancellationException()\n                    }\n                }\n            } catch (e: StacklessCancellationException) {\n                // Nothing, bail out\n            }\n        }\n    }\n\n    private suspend fun <T> FlowCollector<T>.emitAbort(value: T) {\n        emit(value)\n        throw StacklessCancellationException()\n    }\n\n    public fun <T> Flow<T>.fastPathTake(count: Int): Flow<T> {\n        return unsafeFlow {\n            var consumed = 0\n            try {\n                collect { value ->\n                    if (++consumed < count) {\n                        return@collect emit(value)\n                    } else {\n                        return@collect emitAbort(value)\n                    }\n                }\n            } catch (e: StacklessCancellationException) {\n                // Nothing, bail out\n            }\n        }\n    }\n\n\n    public fun <T> Flow<T>.mergedStateMachineTake(count: Int): Flow<T> {\n        return unsafeFlow() {\n            try {\n                val takeCollector = FlowTakeCollector(count, this)\n                collect(takeCollector)\n            } catch (e: StacklessCancellationException) {\n                // Nothing, bail out\n            }\n        }\n    }",
+      "metadata": {
+        "strategy": "basic",
+        "chunk_index": 1,
+        "file_path": "benchmarks/src/jmh/kotlin/benchmarks/flow/TakeBenchmark.kt",
+        "language": "kotlin",
+        "total_chunks": 3
+      },
+      "similarity_score": 0.8965865969657898
+    },
+    {
+      "content": "* can be configured by using the [catch] or [retry] operators before the `shareIn` operator.\n * For example, to retry connection on any `IOException` with 1 second delay between attempts, use:\n *\n * ```\n * val messages = backendMessages\n *     .retry { e ->\n *         val shallRetry = e is IOException // other exception are bugs - handle them\n *         if (shallRetry) delay(1000)\n *         shallRetry\n *     }\n *     .shareIn(scope, SharingStarted.Eagerly)\n * ```\n *\n * ### Initial value\n *\n * When a special initial value is needed to signal to subscribers that the upstream is still loading the data,\n * use the [onStart] operator on the upstream flow. For example:\n *\n * ```\n * backendMessages\n *     .onStart { emit(UpstreamIsStartingMessage) }\n *     .shareIn(scope, SharingStarted.Eagerly, 1) // replay one most recent message\n * ```\n *\n * ### Buffering and conflation\n *\n * The `shareIn` operator runs the upstream flow in a separate coroutine, and buffers emissions from upstream as explained\n * in the [buffer] operator's description, using a buffer of [replay] size or the default (whichever is larger).\n * This default buffering can be overridden with an explicit buffer configuration by preceding the `shareIn` call\n * with [buffer] or [conflate], for example:\n *\n * * `buffer(0).shareIn(scope, started, 0)` &mdash; overrides the default buffer size and creates a [SharedFlow] without a buffer.\n *   Effectively, it configures sequential processing between the upstream emitter and subscribers,\n *   as the emitter is suspended until all subscribers process the value. Note, that the value is still immediately\n *   discarded when there are no subscribers.\n * * `buffer(b).shareIn(scope, started, r)` &mdash; creates a [SharedFlow] with `replay = r` and `extraBufferCapacity = b`.\n * * `conflate().shareIn(scope, started, r)` &mdash; creates a [SharedFlow] with `replay = r`, `onBufferOverflow = DROP_OLDEST`,",
+      "metadata": {
+        "file_path": "kotlinx-coroutines-core/common/src/flow/operators/Share.kt",
+        "language": "kotlin",
+        "chunk_index": 3,
+        "strategy": "basic",
+        "total_chunks": 14
+      },
+      "similarity_score": 0.9093031883239746
+    },
+    {
+      "content": "/**\n     * Tries to emit a [value] to this shared flow without suspending. It returns `true` if the value was\n     * emitted successfully (see below). When this function returns `false`, it means that a call to a plain [emit]\n     * function would suspend until there is buffer space available.\n     *\n     * This call can return `false` only when the [BufferOverflow] strategy is\n     * [SUSPEND][BufferOverflow.SUSPEND] **and** there are subscribers collecting this shared flow.\n     *\n     * If there are no subscribers, the buffer is not used.\n     * Instead, the most recently emitted value is simply stored into\n     * the replay cache if one was configured, displacing the older elements there,\n     * or dropped if no replay cache was configured. In any case, `tryEmit` returns `true`.\n     *\n     * This method is **thread-safe** and can be safely invoked from concurrent coroutines without\n     * external synchronization.\n     */\n    public fun tryEmit(value: T): Boolean",
+      "metadata": {
+        "language": "kotlin",
+        "strategy": "basic",
+        "chunk_index": 7,
+        "file_path": "kotlinx-coroutines-core/common/src/flow/SharedFlow.kt",
+        "total_chunks": 24
+      },
+      "similarity_score": 0.9467484354972839
+    },
+    {
+      "content": "> You can get the full code from [here](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-25.kt).\n>\n{type=\"note\"}\n\nThe output here in this example is a good demonstration of how [flatMapLatest] works:\n\n```text                      \n1: First at 142 ms from start\n2: First at 322 ms from start\n3: First at 425 ms from start\n3: Second at 931 ms from start\n```                                               \n\n<!--- TEST ARBITRARY_TIME -->\n  \n> Note that [flatMapLatest] cancels all the code in its block (`{ requestFlow(it) }` in this example) when a new value\n> is received. \n> It makes no difference in this particular example, because the call to `requestFlow` itself is fast, not-suspending,\n> and cannot be cancelled. However, a differnce in output would be visible if we were to use suspending functions \n> like `delay` in `requestFlow`.\n>\n{type=\"note\"}\n\n## Flow exceptions\n\nFlow collection can complete with an exception when an emitter or code inside the operators throw an exception. \nThere are several ways to handle these exceptions.\n\n### Collector try and catch\n\nA collector can use Kotlin's [`try/catch`][exceptions] block to handle exceptions: \n\n```kotlin\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.flow.*\n\n//sampleStart\nfun simple(): Flow<Int> = flow {\n    for (i in 1..3) {\n        println(\"Emitting $i\")\n        emit(i) // emit next value\n    }\n}\n\nfun main() = runBlocking<Unit> {\n    try {\n        simple().collect { value ->         \n            println(value)\n            check(value <= 1) { \"Collected $value\" }\n        }\n    } catch (e: Throwable) {\n        println(\"Caught $e\")\n    } \n}            \n//sampleEnd\n```\n{kotlin-runnable=\"true\" kotlin-min-compiler-version=\"1.3\"}\n\n> You can get the full code from [here](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-26.kt).\n>\n{type=\"note\"}\n\nThis code successfully catches an exception in [collect] terminal operator and, \nas we see, no more values are emitted after that:",
+      "metadata": {
+        "file_path": "docs/topics/flow.md",
+        "strategy": "basic",
+        "language": "markdown",
+        "chunk_index": 20,
+        "total_chunks": 37
+      },
+      "similarity_score": 0.9568102359771729
+    }
+  ],
+  "enhanced": [
+    {
+      "content": "/**\n * Retries collection of the given flow when an exception occurs in the upstream flow and the\n * [predicate] returns true. The predicate also receives an `attempt` number as parameter,\n * starting from zero on the initial call. This operator is *transparent* to exceptions that occur\n * in downstream flow and does not retry on exceptions that are thrown to cancel the flow.\n *\n * For example, the following call retries the flow forever if the error is caused by `IOException`, but\n * stops after 3 retries on any other exception:\n *\n * ```\n * flow.retryWhen { cause, attempt -> cause is IOException || attempt < 3 }\n * ```\n *\n * To implement a simple retry logic with a limit on the number of retries use [retry] operator.\n *\n * Similarly to [catch] operator, the [predicate] code has [FlowCollector] as a receiver and can\n * [emit][FlowCollector.emit] values downstream.\n * The [predicate] is a suspending function, so it can be used to introduce delay before retry, for example:\n *\n * ```\n * flow.retryWhen { cause, attempt ->\n *     if (cause is IOException) {    // retry on IOException\n *         emit(RetryWrapperValue(e))\n *         delay(1000)                // delay for one second before retry\n *         true\n *     } else {                       // do not retry otherwise\n *         false\n *     }\n * }\n * ```\n *\n * See [catch] for more details.\n */\npublic fun <T> Flow<T>.retryWhen(predicate: suspend FlowCollector<T>.(cause: Throwable, attempt: Long) -> Boolean): Flow<T> =\n    flow {\n        var attempt = 0L\n        var shallRetry: Boolean\n        do {\n            shallRetry = false\n            val cause = catchImpl(this)\n            if (cause != null) {\n                if (predicate(cause, attempt)) {\n                    shallRetry = true\n                    attempt++\n                } else {\n                    throw cause\n                }\n            }\n        } while (shallRetry)\n    }",
+      "metadata": {
+        "file_path": "kotlinx-coroutines-core/common/src/flow/operators/Errors.kt",
+        "commit_count": 5,
+        "total_chunks": 9,
+        "language": "kotlin",
+        "chunk_index": 3,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.5894627571105957
+    },
+    {
+      "content": "// Return exception from upstream or null\n@Suppress(\"NAME_SHADOWING\")\ninternal suspend fun <T> Flow<T>.catchImpl(\n    collector: FlowCollector<T>\n): Throwable? {\n    var fromDownstream: Throwable? = null\n    try {\n        collect {\n            try {\n                collector.emit(it)\n            } catch (e: Throwable) {\n                fromDownstream = e\n                throw e\n            }\n        }\n    } catch (e: Throwable) {\n        // Otherwise, smartcast is impossible\n        val fromDownstream = fromDownstream\n        /*\n         * First check ensures that we catch an original exception, not one rethrown by an operator.\n         * Seconds check ignores cancellation causes, they cannot be caught.\n         */\n        if (e.isSameExceptionAs(fromDownstream) || e.isCancellationCause(coroutineContext)) {\n            throw e // Rethrow exceptions from downstream and cancellation causes\n        } else {\n            /*\n             * The exception came from the upstream [semi-] independently.\n             * For pure failures, when the downstream functions normally, we handle the exception as intended.\n             * But if the downstream has failed prior to or concurrently\n             * with the upstream, we forcefully rethrow it, preserving the contextual information and ensuring  that it's not lost.\n             */\n            if (fromDownstream == null) {\n                return e\n            }\n            /*\n             * We consider the upstream exception as the superseding one when both upstream and downstream\n             * fail, suppressing the downstream exception, and operating similarly to `finally` block with\n             * the useful addition of adding the original downstream exception to suppressed ones.\n             *\n             * That's important for the following scenarios:\n             * ```\n             * flow {\n             *     val resource = ...\n             *     try {\n             *         ... emit as well ...",
+      "metadata": {
+        "chunk_index": 4,
+        "language": "kotlin",
+        "strategy": "enhanced",
+        "file_path": "kotlinx-coroutines-core/common/src/flow/operators/Errors.kt",
+        "total_chunks": 9,
+        "commit_count": 5
+      },
+      "similarity_score": 0.5980379581451416
+    },
+    {
+      "content": "/**\n * Catches exceptions in the flow completion and calls a specified [action] with\n * the caught exception. This operator is *transparent* to exceptions that occur\n * in downstream flow and does not catch exceptions that are thrown to cancel the flow.\n *\n * For example:\n *\n * ```\n * flow { emitData() }\n *     .map { computeOne(it) }\n *     .catch { ... } // catches exceptions in emitData and computeOne\n *     .map { computeTwo(it) }\n *     .collect { process(it) } // throws exceptions from process and computeTwo\n * ```\n *\n * Conceptually, the action of `catch` operator is similar to wrapping the code of upstream flows with\n * `try { ... } catch (e: Throwable) { action(e) }`.\n *\n * Any exception in the [action] code itself proceeds downstream where it can be\n * caught by further `catch` operators if needed. If a particular exception does not need to be\n * caught it can be rethrown from the action of `catch` operator. For example:\n *\n * ```\n * flow.catch { e ->\n *     if (e !is IOException) throw e // rethrow all but IOException\n *     // e is IOException here\n *     ...\n * }\n * ```\n *\n * The [action] code has [FlowCollector] as a receiver and can [emit][FlowCollector.emit] values downstream.\n * For example, caught exception can be replaced with some wrapper value for errors:\n *\n * ```\n * flow.catch { e -> emit(ErrorWrapperValue(e)) }\n * ```\n *\n * The [action] can also use [emitAll] to fallback on some other flow in case of an error. However, to\n * retry an original flow use [retryWhen] operator that can retry the flow multiple times without\n * introducing ever-growing stack of suspending calls.\n */\npublic fun <T> Flow<T>.catch(action: suspend FlowCollector<T>.(cause: Throwable) -> Unit): Flow<T> =\n    flow {\n        val exception = catchImpl(this)\n        if (exception != null) action(exception)\n    }",
+      "metadata": {
+        "commit_count": 5,
+        "file_path": "kotlinx-coroutines-core/common/src/flow/operators/Errors.kt",
+        "language": "kotlin",
+        "chunk_index": 1,
+        "strategy": "enhanced",
+        "total_chunks": 9
+      },
+      "similarity_score": 0.5989353656768799
+    },
+    {
+      "content": "*\n * ```\n * flow { emitData() }\n *     .map { computeOne(it) }\n *     .catch { ... } // catches exceptions in emitData and computeOne\n *     .map { computeTwo(it) }\n *     .collect { process(it) } // throws exceptions from process and computeTwo\n * ```\n * The same reasoning can be applied to the [onCompletion] operator that is a declarative replacement for the `finally` block.\n *\n * All exception-handling Flow operators follow the principle of exception suppression:\n *\n * If the upstream flow throws an exception during its completion when the downstream exception has been thrown,\n * the downstream exception becomes superseded and suppressed by the upstream exception, being a semantic\n * equivalent of throwing from `finally` block. However, this doesn't affect the operation of the exception-handling operators,\n * which consider the downstream exception to be the root cause and behave as if the upstream didn't throw anything.\n *\n * Failure to adhere to the exception transparency requirement can lead to strange behaviors which make\n * it hard to reason about the code because an exception in the `collect { ... }` could be somehow \"caught\"\n * by an upstream flow, limiting the ability of local reasoning about the code.\n *\n * Flow machinery enforces exception transparency at runtime and throws [IllegalStateException] on any attempt to emit a value,\n * if an exception has been thrown on previous attempt.\n *\n * ### Reactive streams\n *\n * Flow is [Reactive Streams](http://www.reactive-streams.org/) compliant, you can safely interop it with\n * reactive streams using [Flow.asPublisher] and [Publisher.asFlow] from `kotlinx-coroutines-reactive` module.\n *\n * ### Not stable for inheritance\n *\n * **The `Flow` interface is not stable for inheritance in 3rd party libraries**, as new methods\n * might be added to this interface in the future, but is stable for use.\n *\n * Use the `flow { ... }` builder function to create an implementation, or extend [AbstractFlow].",
+      "metadata": {
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "file_path": "kotlinx-coroutines-core/common/src/flow/Flow.kt",
+        "chunk_index": 5,
+        "language": "kotlin",
+        "total_chunks": 11
+      },
+      "similarity_score": 0.6111071109771729
+    },
+    {
+      "content": "It solves the problem of graceful shutdown: when the upstream fails unwillingly (e.g. `file.close()` has thrown in `finally` block), we cannot treat it as an exception transparency violation (hint: `finally` is a shortcut for `catch` + body that rethrows in the end), but we also cannot leave things as is, otherwise, it leads to unforeseen consequences such as successful `retry` and `catch` operators that may, or may not, then fail with an exception on an attempt to emit.\n\nUpstream exception supersedes the downstream exception only if it is not an instance of `CancellationException`, semantically emulating cancellation-friendly 'use' block.\n\nFixes #2860\n- Changes:\n```diff\n@@ -186,6 +186,7 @@ public fun <T> Flow<T>.retryWhen(predicate: suspend FlowCollector<T>.(cause: Thr\n     }\n \n // Return exception from upstream or null\n+@Suppress(\"NAME_SHADOWING\")\n internal suspend fun <T> Flow<T>.catchImpl(\n     collector: FlowCollector<T>\n ): Throwable? {\n@@ -200,6 +201,8 @@ internal suspend fun <T> Flow<T>.catchImpl(\n             }\n         }\n     } catch (e: Throwable) {\n+        // Otherwise, smartcast is impossible\n+        val fromDownstream = fromDownstream\n         /*...\n```\n\n### Commit 3\n- ID: 41a2e30d\n- Author: Vsevolod Tolstopyatov (qwwdfsad@gmail.com)\n- Date: 2021-02-04 23:16:48\n- Message: Update copyright year (#2520)\n- Changes:\n```diff\n@@ -1,5 +1,5 @@\n /*\n- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.\n+ * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.\n  */\n \n @file:JvmMultifileClass...\n```\n\n### Commit 4\n- ID: 5b00e48e\n- Author: Vsevolod Tolstopyatov (qwwdfsad@gmail.com)\n- Date: 2020-04-28 17:13:53\n- Message: Remove experimental status from Flow API (#1963)",
+      "metadata": {
+        "file_path": "kotlinx-coroutines-core/common/src/flow/operators/Errors.kt",
+        "language": "kotlin",
+        "strategy": "enhanced",
+        "chunk_index": 7,
+        "total_chunks": 9,
+        "commit_count": 5
+      },
+      "similarity_score": 0.6186908483505249
+    },
+    {
+      "content": "Upstream exception supersedes the downstream exception only if it is not an instance of `CancellationException`, semantically emulating cancellation-friendly 'use' block.\n\nFixes #2860\n- Changes:\n```diff\n@@ -104,4 +104,61 @@ class RetryTest : TestBase() {\n         job.cancelAndJoin()\n         finish(3)\n     }\n-}\n\\ No newline at end of file\n+\n+    @Test\n+    fun testUpstreamExceptionConcurrentWithDownstream() = runTest {\n+        val flow = flow {\n+            try {\n+                expect(1)\n+                emit(1)\n+            } finally {\n+                expect(3)\n+                throw TestException()\n+            }\n+        }.retry { expectUnreached(); true }.onEach {\n+            expect(2)...\n```\n\n### Commit 2\n- ID: 91d9f7c3\n- Author: Roman Elizarov (elizarov@gmail.com)\n- Date: 2019-06-25 00:32:21\n- Message: Flow exceptions handling facilities (#1280)\n\n* Flow documentation introduces and explains \"exception transparency\"\n  concept in detail.\n* Introduce exception handling operators:\n  * catch intermediate operator.\n  * retry and retryWhen intermediate operators.\n  * collect() without lambda terminal operator.\n* onErrorXxx operators deprecated and moved to migration file when\n  it was appropriate.\n- Changes:\n```diff\n@@ -8,6 +8,25 @@ import kotlinx.coroutines.*\n import kotlin.test.*\n \n class RetryTest : TestBase() {\n+    @Test\n+    fun testRetryWhen() = runTest {\n+        expect(1)\n+        val flow = flow {\n+            emit(1)\n+            throw TestException()\n+        }\n+        val sum = flow.retryWhen { cause, attempt ->\n+            assertTrue(cause is TestException)\n+            expect(2 + attempt.toInt())\n+            attempt < 3\n+        }.catch { cause ->\n+            expect(6)\n+            assert...\n```\n\n### Commit 3\n- ID: 997d2f23\n- Author: Vsevolod Tolstopyatov (qwwdfsad@gmail.com)\n- Date: 2019-05-24 17:41:40\n- Message: Ignore cancellation cause thrown from the upstream suspension point in retry and onError",
+      "metadata": {
+        "total_chunks": 5,
+        "file_path": "kotlinx-coroutines-core/common/test/flow/operators/RetryTest.kt",
+        "language": "kotlin",
+        "chunk_index": 3,
+        "strategy": "enhanced",
+        "commit_count": 3
+      },
+      "similarity_score": 0.7260783314704895
+    },
+    {
+      "content": "private fun exceptionTransparencyViolated(exception: DownstreamExceptionContext, value: Any?) {\n        /*\n         * Exception transparency ensures that if a `collect` block or any intermediate operator\n         * throws an exception, then no more values will be received by it.\n         * For example, the following code:\n         * ```\n         * val flow = flow {\n         *     emit(1)\n         *     try {\n         *          emit(2)\n         *     } catch (e: Exception) {\n         *          emit(3)\n         *     }\n         * }\n         * // Collector\n         * flow.collect { value ->\n         *     if (value == 2) {\n         *         throw CancellationException(\"No more elements required, received enough\")\n         *     } else {\n         *         println(\"Collected $value\")\n         *     }\n         * }\n         * ```\n         * is expected to print \"Collected 1\" and then \"No more elements required, received enough\" exception,\n         * but if exception transparency wasn't enforced, \"Collected 1\" and \"Collected 3\" would be printed instead.\n         */\n        error(\"\"\"\n            Flow exception transparency is violated:\n                Previous 'emit' call has thrown exception ${exception.e}, but then emission attempt of value '$value' has been detected.\n                Emissions from 'catch' blocks are prohibited in order to avoid unspecified behaviour, 'Flow.catch' operator can be used instead.\n                For a more detailed explanation, please refer to Flow documentation.\n            \"\"\".trimIndent())\n    }\n}\n\ninternal class DownstreamExceptionContext(\n    @JvmField val e: Throwable,\n    originalContext: CoroutineContext\n) : CoroutineContext by originalContext\n\nprivate object NoOpContinuation : Continuation<Any?> {\n    override val context: CoroutineContext = EmptyCoroutineContext\n\n    override fun resumeWith(result: Result<Any?>) {\n        // Nothing\n    }\n}\n```\n\n## Git Commit History",
+      "metadata": {
+        "total_chunks": 7,
+        "file_path": "kotlinx-coroutines-core/jvm/src/flow/internal/SafeCollector.kt",
+        "chunk_index": 3,
+        "language": "kotlin",
+        "commit_count": 5,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.7502028942108154
+    },
+    {
+      "content": "## Git Commit History\n\n### Commit 1\n- ID: 9099b030\n- Author: Vsevolod Tolstopyatov (qwwdfsad@gmail.com)\n- Date: 2021-11-17 00:10:14\n- Message: Improve exception transparency: explicitly allow throwing exceptions … (#3017)\n\n* Improve exception transparency: explicitly allow throwing exceptions from the upstream when the downstream has been failed, suppress the downstream exception by the new one, but still ignore it in the exception handling operators, that still consider the flow failed.\n\nIt solves the problem of graceful shutdown: when the upstream fails unwillingly (e.g. `file.close()` has thrown in `finally` block), we cannot treat it as an exception transparency violation (hint: `finally` is a shortcut for `catch` + body that rethrows in the end), but we also cannot leave things as is, otherwise, it leads to unforeseen consequences such as successful `retry` and `catch` operators that may, or may not, then fail with an exception on an attempt to emit.\n\nUpstream exception supersedes the downstream exception only if it is not an instance of `CancellationException`, semantically emulating cancellation-friendly 'use' block.\n\nFixes #2860\n- Changes:\n```diff\n@@ -0,0 +1,74 @@\n+/*\n+ * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.\n+ */\n+\n+package kotlinx.coroutines.exceptions\n+\n+import kotlinx.coroutines.*\n+import kotlinx.coroutines.flow.*\n+import org.junit.*\n+import org.junit.Test\n+import kotlin.test.*\n+\n+class FlowSuppressionTest : TestBase() {\n+    @Test\n+    fun testSuppressionForPrimaryException() = runTest {\n+        val flow = flow {\n+            try {\n+                emit(1)\n+            } ...\n```",
+      "metadata": {
+        "file_path": "kotlinx-coroutines-core/jvm/test/exceptions/FlowSuppressionTest.kt",
+        "chunk_index": 1,
+        "commit_count": 1,
+        "total_chunks": 2,
+        "strategy": "enhanced",
+        "language": "kotlin"
+      },
+      "similarity_score": 0.7641533017158508
+    },
+    {
+      "content": "* Remove unnecessary newline (#3756)\n* Properly name Flow.timeout param in the documentation\n\n\n---------\n\nCo-authored-by: Hanbit Kang <58168528+hanbikan@users.noreply.github.com>\n- Changes:\n```diff\n@@ -376,7 +376,7 @@ public fun <T> Flow<T>.sample(period: Duration): Flow<T> = sample(period.toDelay\n  *\n  * Note that delaying on the downstream doesn't trigger the timeout.\n  *\n- * @param timeout period. If non-positive, the flow is timed out immediately\n+ * @param timeout Timeout duration. If non-positive, the flow is timed out immediately\n  */\n @FlowPreview\n public fun <T> Flow<T>.timeout(...\n```\n\n### Commit 2\n- ID: d2503c0a\n- Author: Pablo Baxter (pablobaxter@msn.com)\n- Date: 2022-10-05 23:56:55\n- Message: Add timeout operator to Flow as @FlowPreview (#3148)\n\nFixes #2624\n\nCo-authored-by: Vsevolod Tolstopyatov <qwwdfsad@gmail.com>\n- Changes:\n```diff\n@@ -18,7 +18,6 @@ import kotlin.time.*\n <!--- TEST_NAME FlowDelayTest -->\n <!--- PREFIX .*-duration-.*\n ----- INCLUDE .*-duration-.*\n-import kotlin.time.*\n ----- INCLUDE .*\n import kotlinx.coroutines.*\n import kotlinx.coroutines.flow.*\n@@ -345,3 +344,61 @@ internal fun CoroutineScope.fixedPeriodTicker(delayMillis: Long, initialDelayMil\n  */\n @FlowPreview\n public fun <T> Flow<T>.sample(period: Duration): Flow<T> = sample(period.toDelayMillis())\n+\n+/**\n+ * Returns a flow that will emit a [TimeoutC...\n```\n\n### Commit 3\n- ID: ff9359a9\n- Author: Vsevolod Tolstopyatov (qwwdfsad@gmail.com)\n- Date: 2021-11-25 21:48:06\n- Message: Get rid of @ExperimentalTime where it is no longer necessary (#3041)\n\n* Get rid of @ExperimentalTime where it is no longer necessary",
+      "metadata": {
+        "language": "kotlin",
+        "commit_count": 5,
+        "total_chunks": 11,
+        "chunk_index": 8,
+        "strategy": "enhanced",
+        "file_path": "kotlinx-coroutines-core/common/src/flow/operators/Delay.kt"
+      },
+      "similarity_score": 0.7746027708053589
+    },
+    {
+      "content": "### Commit 1\n- ID: a3b60437\n- Author: Vsevolod Tolstopyatov (qwwdfsad@gmail.com)\n- Date: 2021-05-13 17:16:05\n- Message: Fail-fast in emitAll implementation from onCompletion (#2700)\n\nIt is helpful to prevent bugs like KT-46013 and potential deadlocks or delayed cancellations\n- Changes:\n```diff\n@@ -194,7 +194,15 @@ public fun <T> Flow<T>.onEmpty(\n     }\n }\n \n-private class ThrowingCollector(private val e: Throwable) : FlowCollector<Any?> {\n+/*\n+ * 'emitAll' methods call this to fail-fast before starting to collect\n+ * their sources (that may not have any elements for a long time).\n+ */\n+internal fun FlowCollector<*>.ensureActive() {\n+    if (this is ThrowingCollector) throw e\n+}\n+\n+internal class ThrowingCollector(@JvmField val e: Throwable) : FlowCollector<Any?> {\n     override suspen...\n```\n\n### Commit 2\n- ID: 41a2e30d\n- Author: Vsevolod Tolstopyatov (qwwdfsad@gmail.com)\n- Date: 2021-02-04 23:16:48\n- Message: Update copyright year (#2520)\n- Changes:\n```diff\n@@ -1,5 +1,5 @@\n /*\n- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.\n+ * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.\n  */\n \n @file:JvmMultifileClass...\n```\n\n### Commit 3\n- ID: e16eb9d3\n- Author: Vsevolod Tolstopyatov (qwwdfsad@gmail.com)\n- Date: 2020-10-26 22:05:06\n- Message: Update experimental declarations (#2316)\n\n* Gracefully increase deprecation level on Channel operators instead of removing them, a warning was not strict enough\n* Remove hidden onCompletion from -M release\n* Promote StateFlow and SharedFlow to stable API\n* Lift out experimentality where it is applicable",
+      "metadata": {
+        "language": "kotlin",
+        "commit_count": 5,
+        "chunk_index": 5,
+        "total_chunks": 9,
+        "strategy": "enhanced",
+        "file_path": "kotlinx-coroutines-core/common/src/flow/operators/Emitters.kt"
+      },
+      "similarity_score": 0.7938640117645264
+    },
+    {
+      "content": "/**\n * @suppress\n */\n@Deprecated(\n    message = \"SharedFlow never completes, so this operator typically has not effect, it can only \" +\n        \"catch exceptions from 'onSubscribe' operator\",\n    level = DeprecationLevel.WARNING,\n    replaceWith = ReplaceWith(\"this\")\n)\n@InlineOnly\npublic inline fun <T> SharedFlow<T>.catch(noinline action: suspend FlowCollector<T>.(cause: Throwable) -> Unit): Flow<T> =\n    (this as Flow<T>).catch(action)\n\n/**\n * @suppress\n */\n@Deprecated(\n    message = \"SharedFlow never completes, so this operator has no effect.\",\n    level = DeprecationLevel.WARNING,\n    replaceWith = ReplaceWith(\"this\")\n)\n@InlineOnly\npublic inline fun <T> SharedFlow<T>.retry(\n    retries: Long = Long.MAX_VALUE,\n    noinline predicate: suspend (cause: Throwable) -> Boolean = { true }\n): Flow<T> =\n    (this as Flow<T>).retry(retries, predicate)\n\n/**\n * @suppress\n */\n@Deprecated(\n    message = \"SharedFlow never completes, so this operator has no effect.\",\n    level = DeprecationLevel.WARNING,\n    replaceWith = ReplaceWith(\"this\")\n)\n@InlineOnly\npublic inline fun <T> SharedFlow<T>.retryWhen(noinline predicate: suspend FlowCollector<T>.(cause: Throwable, attempt: Long) -> Boolean): Flow<T> =\n    (this as Flow<T>).retryWhen(predicate)\n\n/**\n * @suppress\n */\n@Suppress(\"DeprecatedCallableAddReplaceWith\")\n@Deprecated(\n    message = \"SharedFlow never completes, so this terminal operation never completes.\",\n    level = DeprecationLevel.WARNING\n)\n@InlineOnly\npublic suspend inline fun <T> SharedFlow<T>.toList(): List<T> =\n    (this as Flow<T>).toList()\n\n/**\n * A specialized version of [Flow.toList] that returns [Nothing]\n * to indicate that [SharedFlow] collection never completes.\n */\n@InlineOnly\npublic suspend inline fun <T> SharedFlow<T>.toList(destination: MutableList<T>): Nothing {\n    (this as Flow<T>).toList(destination)\n    throw IllegalStateException(\"this code is supposed to be unreachable\")\n}",
+      "metadata": {
+        "language": "kotlin",
+        "commit_count": 5,
+        "chunk_index": 2,
+        "file_path": "kotlinx-coroutines-core/common/src/flow/operators/Lint.kt",
+        "total_chunks": 6,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.80055832862854
+    },
+    {
+      "content": "private class FlowCoroutine<T>(\n    context: CoroutineContext,\n    uCont: Continuation<T>\n) : ScopeCoroutine<T>(context, uCont) {\n    override fun childCancelled(cause: Throwable): Boolean {\n        if (cause is ChildCancelledException) return true\n        return cancelImpl(cause)\n    }\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 80af4990\n- Author: Vsevolod Tolstopyatov (qwwdfsad@gmail.com)\n- Date: 2021-10-20 19:31:25\n- Message: Do not propagate cancellation to the upstream in Flow flat* operators (#2964)\n\n* Do not propagate cancellation to the upstream in Flow flat* operators\n\nFixes #2964\n- Changes:\n```diff\n@@ -51,33 +51,11 @@ internal fun <R> scopedFlow(@BuilderInference block: suspend CoroutineScope.(Flo\n         flowScope { block(this@flow) }\n     }\n \n-internal fun <T> CoroutineScope.flowProduce(\n-    context: CoroutineContext,\n-    capacity: Int = 0,\n-    @BuilderInference block: suspend ProducerScope<T>.() -> Unit\n-): ReceiveChannel<T> {\n-    val channel = Channel<T>(capacity)\n-    val newContext = newCoroutineContext(context)\n-    val coroutine = FlowProduceCoroutine(newContext, channel)\n-   ...\n```\n\n### Commit 2\n- ID: 41a2e30d\n- Author: Vsevolod Tolstopyatov (qwwdfsad@gmail.com)\n- Date: 2021-02-04 23:16:48\n- Message: Update copyright year (#2520)\n- Changes:\n```diff\n@@ -1,5 +1,5 @@\n /*\n- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.\n+ * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.\n  */\n \n package kotlinx.coroutines.flow.internal...\n```\n\n### Commit 3\n- ID: 4a53d235\n- Author: Vsevolod Tolstopyatov (qwwdfsad@gmail.com)\n- Date: 2020-03-03 20:33:40\n- Message: Atomically start coroutines in intermediate Flow operators in order to ensure proper termination, including finally blocks and onCompletion operators (#1829)",
+      "metadata": {
+        "chunk_index": 1,
+        "file_path": "kotlinx-coroutines-core/common/src/flow/internal/FlowCoroutine.kt",
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "total_chunks": 3,
+        "language": "kotlin"
+      },
+      "similarity_score": 0.8098669052124023
+    },
+    {
+      "content": "### Commit 5\n- ID: 91d9f7c3\n- Author: Roman Elizarov (elizarov@gmail.com)\n- Date: 2019-06-25 00:32:21\n- Message: Flow exceptions handling facilities (#1280)\n\n* Flow documentation introduces and explains \"exception transparency\"\n  concept in detail.\n* Introduce exception handling operators:\n  * catch intermediate operator.\n  * retry and retryWhen intermediate operators.\n  * collect() without lambda terminal operator.\n* onErrorXxx operators deprecated and moved to migration file when\n  it was appropriate.\n- Changes:\n```diff\n@@ -0,0 +1,13 @@\n+/*\n+ * Copyright 2016-2019 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.\n+ */\n+\n+package kotlinx.coroutines.flow.internal\n+\n+import kotlinx.coroutines.flow.*\n+\n+internal object NopCollector : ConcurrentFlowCollector<Any?> {\n+    override suspend fun emit(value: Any?) {\n+        // does nothing\n+    }\n+}\n\\ No newline at end of file...\n```",
+      "metadata": {
+        "chunk_index": 2,
+        "language": "kotlin",
+        "total_chunks": 3,
+        "strategy": "enhanced",
+        "file_path": "kotlinx-coroutines-core/common/src/flow/internal/NopCollector.kt",
+        "commit_count": 5
+      },
+      "similarity_score": 0.8254624605178833
+    },
+    {
+      "content": "/**\n * Flow analogue of `onErrorXxx` is [catch].\n * Use `catch { emitAll(fallback) }`.\n * @suppress\n */\n@Deprecated(\n    level = DeprecationLevel.ERROR,\n    message = \"Flow analogue of 'onErrorXxx' is 'catch'. Use 'catch { emitAll(fallback) }'\",\n    replaceWith = ReplaceWith(\"catch { emitAll(fallback) }\")\n)\npublic fun <T> Flow<T>.onErrorResume(fallback: Flow<T>): Flow<T> = noImpl()\n\n/**\n * Flow analogue of `onErrorXxx` is [catch].\n * Use `catch { emitAll(fallback) }`.\n * @suppress\n */\n@Deprecated(\n    level = DeprecationLevel.ERROR,\n    message = \"Flow analogue of 'onErrorXxx' is 'catch'. Use 'catch { emitAll(fallback) }'\",\n    replaceWith = ReplaceWith(\"catch { emitAll(fallback) }\")\n)\npublic fun <T> Flow<T>.onErrorResumeNext(fallback: Flow<T>): Flow<T> = noImpl()\n\n/**\n * `subscribe` is Rx-specific API that has no direct match in flows.\n * One can use [launchIn] instead, for example the following:\n * ```\n * flowable\n *     .observeOn(Schedulers.io())\n *     .subscribe({ println(\"Received $it\") }, { println(\"Exception $it happened\") }, { println(\"Flowable is completed successfully\") }\n * ```\n *\n * has the following Flow equivalent:\n * ```\n * flow\n *     .onEach { value -> println(\"Received $value\") }\n *     .onCompletion { cause -> if (cause == null) println(\"Flow is completed successfully\") }\n *     .catch { cause -> println(\"Exception $cause happened\") }\n *     .flowOn(Dispatchers.IO)\n *     .launchIn(myScope)\n * ```\n *\n * Note that resulting value of [launchIn] is not used because the provided scope takes care of cancellation.\n *\n * Or terminal operators like [single] can be used from suspend functions.\n * @suppress\n */\n@Deprecated(\n    message = \"Use 'launchIn' with 'onEach', 'onCompletion' and 'catch' instead\",\n    level = DeprecationLevel.ERROR\n)\npublic fun <T> Flow<T>.subscribe(): Unit = noImpl()",
+      "metadata": {
+        "file_path": "kotlinx-coroutines-core/common/src/flow/Migration.kt",
+        "language": "kotlin",
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "total_chunks": 13,
+        "chunk_index": 2
+      },
+      "similarity_score": 0.8262099027633667
+    },
+    {
+      "content": "/**\n * Terminal flow operator that collects the given flow with a provided [action] that takes the index of an element (zero-based) and the element.\n * If any exception occurs during collect or in the provided flow, this exception is rethrown from this method.\n *\n * See also [collect] and [withIndex].\n */\npublic suspend inline fun <T> Flow<T>.collectIndexed(crossinline action: suspend (index: Int, value: T) -> Unit): Unit =\n    collect(object : FlowCollector<T> {\n        private var index = 0\n        override suspend fun emit(value: T) = action(checkIndexOverflow(index++), value)\n    })\n\n/**\n * Terminal flow operator that collects the given flow with a provided [action].\n * The crucial difference from [collect] is that when the original flow emits a new value\n * then the [action] block for the previous value is cancelled.\n *\n * It can be demonstrated by the following example:\n *\n * ```\n * flow {\n *     emit(1)\n *     delay(50)\n *     emit(2)\n * }.collectLatest { value ->\n *     println(\"Collecting $value\")\n *     delay(100) // Emulate work\n *     println(\"$value collected\")\n * }\n * ```\n *\n * prints \"Collecting 1, Collecting 2, 2 collected\"\n */\npublic suspend fun <T> Flow<T>.collectLatest(action: suspend (value: T) -> Unit) {\n    /*\n     * Implementation note:\n     * buffer(0) is inserted here to fulfil user's expectations in sequential usages, e.g.:\n     * ```\n     * flowOf(1, 2, 3).collectLatest {\n     *     delay(1)\n     *     println(it) // Expect only 3 to be printed\n     * }\n     * ```\n     *\n     * It's not the case for intermediate operators which users mostly use for interactive UI,\n     * where performance of dispatch is more important.\n     */\n    mapLatest(action).buffer(0).collect()\n}\n\n/**\n * Collects all the values from the given [flow] and emits them to the collector.\n * It is a shorthand for `flow.collect { value -> emit(value) }`.\n */\npublic suspend fun <T> FlowCollector<T>.emitAll(flow: Flow<T>) {\n    ensureActive()\n    flow.collect(this)\n}",
+      "metadata": {
+        "chunk_index": 1,
+        "total_chunks": 5,
+        "language": "kotlin",
+        "file_path": "kotlinx-coroutines-core/common/src/flow/terminal/Collect.kt",
+        "strategy": "enhanced",
+        "commit_count": 5
+      },
+      "similarity_score": 0.8339983224868774
+    },
+    {
+      "content": "@Deprecated(level = DeprecationLevel.HIDDEN, message = \"Since 1.4.0, binary compatibility with earlier versions\")\npublic fun <T> Flow<T>.buffer(capacity: Int = BUFFERED): Flow<T> = buffer(capacity)\n\n/**\n * Conflates flow emissions via conflated channel and runs collector in a separate coroutine.\n * The effect of this is that emitter is never suspended due to a slow collector, but collector\n * always gets the most recent value emitted.\n *\n * For example, consider the flow that emits integers from 1 to 30 with 100 ms delay between them:\n *\n * ```\n * val flow = flow {\n *     for (i in 1..30) {\n *         delay(100)\n *         emit(i)\n *     }\n * }\n * ```\n *\n * Applying `conflate()` operator to it allows a collector that delays 1 second on each element to get\n * integers 1, 10, 20, 30:\n *\n * ```\n * val result = flow.conflate().onEach { delay(1000) }.toList()\n * assertEquals(listOf(1, 10, 20, 30), result)\n * ```\n *\n * Note that `conflate` operator is a shortcut for [buffer] with `capacity` of [Channel.CONFLATED][Channel.CONFLATED],\n * which is, in turn, a shortcut to a buffer that only keeps the latest element as\n * created by `buffer(onBufferOverflow = `[`BufferOverflow.DROP_OLDEST`][BufferOverflow.DROP_OLDEST]`)`.\n *\n * ### Operator fusion\n *\n * Adjacent applications of `conflate`/[buffer], [channelFlow], [flowOn] and [produceIn] are\n * always fused so that only one properly configured channel is used for execution.\n * **Conflation takes precedence over `buffer()` calls with any other capacity.**\n *\n * Note that any instance of [StateFlow] already behaves as if `conflate` operator is\n * applied to it, so applying `conflate` to a `StateFlow` has no effect.\n * See [StateFlow] documentation on Operator Fusion.\n */\npublic fun <T> Flow<T>.conflate(): Flow<T> = buffer(CONFLATED)",
+      "metadata": {
+        "language": "kotlin",
+        "file_path": "kotlinx-coroutines-core/common/src/flow/operators/Context.kt",
+        "strategy": "enhanced",
+        "chunk_index": 5,
+        "total_chunks": 11,
+        "commit_count": 5
+      },
+      "similarity_score": 0.8363629579544067
+    },
+    {
+      "content": "/**\n * Same as [startUndispatchedOrReturn], but ignores [TimeoutCancellationException] on fast-path.\n */\ninternal fun <T, R> ScopeCoroutine<T>.startUndispatchedOrReturnIgnoreTimeout(\n    receiver: R, block: suspend R.() -> T\n): Any? {\n    return undispatchedResult({ e -> !(e is TimeoutCancellationException && e.coroutine === this) }) {\n        block.startCoroutineUninterceptedOrReturn(receiver, this)\n    }\n}\n\nprivate inline fun <T> ScopeCoroutine<T>.undispatchedResult(\n    shouldThrow: (Throwable) -> Boolean,\n    startBlock: () -> Any?\n): Any? {\n    val result = try {\n        startBlock()\n    } catch (e: Throwable) {\n        CompletedExceptionally(e)\n    }\n    /*\n     * We're trying to complete our undispatched block here and have three code-paths:\n     * (1) Coroutine is suspended.\n     * Otherwise, coroutine had returned result, so we are completing our block (and its job).\n     * (2) If we can't complete it or started waiting for children, we suspend.\n     * (3) If we have successfully completed the coroutine state machine here,\n     *     then we take the actual final state of the coroutine from makeCompletingOnce and return it.\n     *\n     * shouldThrow parameter is a special code path for timeout coroutine:\n     * If timeout is exceeded, but withTimeout() block was not suspended, we would like to return block value,\n     * not a timeout exception.\n     */\n    if (result === COROUTINE_SUSPENDED) return COROUTINE_SUSPENDED // (1)\n    val state = makeCompletingOnce(result)\n    if (state === COMPLETING_WAITING_CHILDREN) return COROUTINE_SUSPENDED // (2)\n    return if (state is CompletedExceptionally) { // (3)\n        when {\n            shouldThrow(state.cause) -> throw recoverStackTrace(state.cause, uCont)\n            result is CompletedExceptionally -> throw recoverStackTrace(result.cause, uCont)\n            else -> result\n        }\n    } else {\n        state.unboxState()\n    }\n}\n```\n\n## Git Commit History",
+      "metadata": {
+        "strategy": "enhanced",
+        "language": "kotlin",
+        "commit_count": 5,
+        "total_chunks": 6,
+        "chunk_index": 2,
+        "file_path": "kotlinx-coroutines-core/common/src/intrinsics/Undispatched.kt"
+      },
+      "similarity_score": 0.8370756506919861
+    },
+    {
+      "content": "*\n * Example of usage that converts a multi-shot callback API to a flow.\n * For single-shot callbacks use [suspendCancellableCoroutine].\n *\n * ```\n * fun flowFrom(api: CallbackBasedApi): Flow<T> = callbackFlow {\n *     val callback = object : Callback { // Implementation of some callback interface\n *         override fun onNextValue(value: T) {\n *             // To avoid blocking you can configure channel capacity using\n *             // either buffer(Channel.CONFLATED) or buffer(Channel.UNLIMITED) to avoid overfill\n *             trySendBlocking(value)\n *                 .onFailure { throwable ->\n *                     // Downstream has been cancelled or failed, can log here\n *                 }\n *         }\n *         override fun onApiError(cause: Throwable) {\n *             cancel(CancellationException(\"API Error\", cause))\n *         }\n *         override fun onCompleted() = channel.close()\n *     }\n *     api.register(callback)\n *     /*\n *      * Suspends until either 'onCompleted'/'onApiError' from the callback is invoked\n *      * or flow collector is cancelled (e.g. by 'take(1)' or because a collector's coroutine was cancelled).\n *      * In both cases, callback will be properly unregistered.\n *      */\n *     awaitClose { api.unregister(callback) }\n * }\n * ```\n *\n * > The callback `register`/`unregister` methods provided by an external API must be thread-safe, because\n * > `awaitClose` block can be called at any time due to asynchronous nature of cancellation, even\n * > concurrently with the call of the callback.\n */\npublic fun <T> callbackFlow(@BuilderInference block: suspend ProducerScope<T>.() -> Unit): Flow<T> = CallbackFlowBuilder(block)",
+      "metadata": {
+        "file_path": "kotlinx-coroutines-core/common/src/flow/Builders.kt",
+        "strategy": "enhanced",
+        "total_chunks": 10,
+        "language": "kotlin",
+        "chunk_index": 5,
+        "commit_count": 5
+      },
+      "similarity_score": 0.8486517071723938
+    },
+    {
+      "content": "The emitter can use a [catch] operator that preserves this exception transparency and allows encapsulation\nof its exception handling. The body of the `catch` operator can analyze an exception\nand react to it in different ways depending on which exception was caught:\n\n* Exceptions can be rethrown using `throw`.\n* Exceptions can be turned into emission of values using [emit][FlowCollector.emit] from the body of [catch].\n* Exceptions can be ignored, logged, or processed by some other code.\n\nFor example, let us emit the text on catching an exception:\n\n```kotlin\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.flow.*\n\nfun simple(): Flow<String> = \n    flow {\n        for (i in 1..3) {\n            println(\"Emitting $i\")\n            emit(i) // emit next value\n        }\n    }\n    .map { value ->\n        check(value <= 1) { \"Crashed on $value\" }                 \n        \"string $value\"\n    }\n\nfun main() = runBlocking<Unit> {\n//sampleStart\n    simple()\n        .catch { e -> emit(\"Caught $e\") } // emit on exception\n        .collect { value -> println(value) }\n//sampleEnd\n}            \n```\n{kotlin-runnable=\"true\" kotlin-min-compiler-version=\"1.3\"}\n\n> You can get the full code from [here](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-28.kt).\n>\n{type=\"note\"} \n \nThe output of the example is the same, even though we do not have `try/catch` around the code anymore. \n\n<!--- TEST  \nEmitting 1\nstring 1\nEmitting 2\nCaught java.lang.IllegalStateException: Crashed on 2\n-->\n\n### Transparent catch\n\nThe [catch] intermediate operator, honoring exception transparency, catches only upstream exceptions\n(that is an exception from all the operators above `catch`, but not below it).\nIf the block in `collect { ... }` (placed below `catch`) throws an exception then it escapes:  \n\n```kotlin\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.flow.*\n\n//sampleStart\nfun simple(): Flow<Int> = flow {\n    for (i in 1..3) {\n        println(\"Emitting $i\")\n        emit(i)\n    }\n}",
+      "metadata": {
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "language": "markdown",
+        "file_path": "docs/topics/flow.md",
+        "total_chunks": 39,
+        "chunk_index": 22
+      },
+      "similarity_score": 0.855880081653595
+    },
+    {
+      "content": "/**\n * Invokes the given [action] when this flow completes without emitting any elements.\n * The receiver of the [action] is [FlowCollector], so `onEmpty` can emit additional elements.\n * For example:\n *\n * ```\n * emptyFlow<Int>().onEmpty {\n *     emit(1)\n *     emit(2)\n * }.collect { println(it) } // prints 1, 2\n * ```\n */\npublic fun <T> Flow<T>.onEmpty(\n    action: suspend FlowCollector<T>.() -> Unit\n): Flow<T> = unsafeFlow {\n    var isEmpty = true\n    collect {\n        isEmpty = false\n        emit(it)\n    }\n    if (isEmpty) {\n        val collector = SafeCollector(this, currentCoroutineContext())\n        try {\n            collector.action()\n        } finally {\n            collector.releaseIntercepted()\n        }\n    }\n}\n\n/*\n * 'emitAll' methods call this to fail-fast before starting to collect\n * their sources (that may not have any elements for a long time).\n */\ninternal fun FlowCollector<*>.ensureActive() {\n    if (this is ThrowingCollector) throw e\n}\n\ninternal class ThrowingCollector(@JvmField val e: Throwable) : FlowCollector<Any?> {\n    override suspend fun emit(value: Any?) {\n        throw e\n    }\n}\n\nprivate suspend fun <T> FlowCollector<T>.invokeSafely(\n    action: suspend FlowCollector<T>.(cause: Throwable?) -> Unit,\n    cause: Throwable?\n) {\n    try {\n        action(cause)\n    } catch (e: Throwable) {\n        if (cause !== null && cause !== e) e.addSuppressedThrowable(cause)\n        throw e\n    }\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: a3b60437\n- Author: Vsevolod Tolstopyatov (qwwdfsad@gmail.com)\n- Date: 2021-05-13 17:16:05\n- Message: Fail-fast in emitAll implementation from onCompletion (#2700)",
+      "metadata": {
+        "strategy": "enhanced",
+        "file_path": "kotlinx-coroutines-core/common/src/flow/operators/Emitters.kt",
+        "chunk_index": 4,
+        "commit_count": 5,
+        "total_chunks": 9,
+        "language": "kotlin"
+      },
+      "similarity_score": 0.8625019788742065
+    }
+  ],
+  "compressed": [
+    {
+      "content": "# File: kotlinx-coroutines-core/common/src/flow/operators/Errors.kt (kotlin)\n\n## Key Code Elements:\n@file:JvmMultifileClass\n@file:JvmName(\"FlowKt\")\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.internal.*\nimport kotlin.coroutines.*\nimport kotlin.jvm.*\nimport kotlinx.coroutines.flow.internal.unsafeFlow as flow\n * For example:\n * caught it can be rethrown from the action of `catch` operator. For example:\n * For example, caught exception can be replaced with some wrapper value for errors:\n * and [predicate] is not called when it reaches the given number of [retries]:\n * so it can be also used to introduce delay before retry, for example:\n * stops after 3 retries on any other exception:\n * The [predicate] is a suspending function, so it can be used to introduce delay before retry, for example:\n        var attempt = 0L\n\n## Recent Changes:\n- ae0c842d by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Promote deprecation levels for release 1.6.0 (#3024)...\n- 9099b030 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Improve exception transparency: explicitly allow throwing exceptions … (#3017)\n\n* Improve exception ...\n- 41a2e30d by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Update copyright year (#2520)...",
+      "metadata": {
+        "language": "kotlin",
+        "commit_count": 5,
+        "file_path": "kotlinx-coroutines-core/common/src/flow/operators/Errors.kt",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.8092643022537231
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/common/src/flow/operators/Share.kt (kotlin)\n\n## Key Code Elements:\n@file:JvmMultifileClass\n@file:JvmName(\"FlowKt\")\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.channels.*\nimport kotlinx.coroutines.flow.internal.*\nimport kotlin.coroutines.*\nimport kotlin.jvm.*\n * time to establish. Conceptually, it might be implemented like this:\n * and establish it eagerly like this:\n * `shareIn` operator to emit a special value in this case, like this:\n * For example, to retry connection on any `IOException` with 1 second delay between attempts, use:\n * use the [onStart] operator on the upstream flow. For example:\n * with [buffer] or [conflate], for example:\n    @Suppress(\"UNCHECKED_CAST\")\n    @JvmField val upstream: Flow<T>,\n\n## Recent Changes:\n- 17bc90bb by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Non-conflating subscription count in SharedFlow and StateFlow (#2872)\n\n* Non-conflating subscription...\n- c2d218a0 by Dominic Fischer (dominicfischer7@gmail.com): Fix typo in shareIn documentation (#2726)...\n- 95b7a13d by Roman Elizarov (elizarov@gmail.com): Flows returned by stateIn/shareIn keep strong reference to sharing job (#2701)\n\n* Flows returned by ...",
+      "metadata": {
+        "chunk_index": 0,
+        "commit_count": 5,
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "file_path": "kotlinx-coroutines-core/common/src/flow/operators/Share.kt",
+        "language": "kotlin"
+      },
+      "similarity_score": 0.9019920825958252
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/common/test/flow/operators/RetryTest.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.coroutines.*\nimport kotlin.test.*\nclass RetryTest : TestBase() {\n    @Test\n    @Test\n        var counter = 0\n    @Test\n        var counter = 0\n    @Test\n        var executed = 0\n    @Test\n        var state = 0\n    @Test\n    @Test\n    @Test\n\n## Recent Changes:\n- 9099b030 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Improve exception transparency: explicitly allow throwing exceptions … (#3017)\n\n* Improve exception ...\n- 91d9f7c3 by Roman Elizarov (elizarov@gmail.com): Flow exceptions handling facilities (#1280)\n\n* Flow documentation introduces and explains \"exception...\n- 997d2f23 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Ignore cancellation cause thrown from the upstream suspension point in retry and onError\n\n\nFixes #11...",
+      "metadata": {
+        "total_chunks": 1,
+        "commit_count": 3,
+        "file_path": "kotlinx-coroutines-core/common/test/flow/operators/RetryTest.kt",
+        "language": "kotlin",
+        "strategy": "compressed",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.9386854767799377
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/common/src/flow/Flow.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.flow.internal.*\nimport kotlin.coroutines.*\n * execution of all the flow operations in the upstream. The most basic terminal operator is [collect], for example:\n * There are the following basic ways to create a flow:\n * All implementations of the `Flow` interface must adhere to two key properties described in detail below:\n * This reasoning can be demonstrated in practice:\n * Its implementation prevents most of the development mistakes:\n * the [flow] builder can be used alongside a [coroutineScope] or [supervisorScope] instead:\n * throw any unhandled exceptions that occur in their code or in upstream flows, for example:\n * All exception-handling Flow operators follow the principle of exception suppression:\n     * This method can be used along with SAM-conversion of [FlowCollector]:\n * Example of the implementation:\n@ExperimentalCoroutinesApi\n     * A valid implementation of this method has the following constraints:\n\n## Recent Changes:\n- c3b7b20e by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Promote @FlowPreview API to stable/experimental (#3548)\n\n\n* Promote @FlowPreview-marked API to stabl...\n- ed3445f9 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Improve Flow documentation (#3127)\n\nCo-authored-by: dkhalanskyjb <52952525+dkhalanskyjb@users.norepl...\n- 7a249c31 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Fix typo...",
+      "metadata": {
+        "strategy": "compressed",
+        "commit_count": 5,
+        "language": "kotlin",
+        "total_chunks": 1,
+        "file_path": "kotlinx-coroutines-core/common/src/flow/Flow.kt",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.025862693786621
+    },
+    {
+      "content": "# File: reactive/kotlinx-coroutines-rx2/test/FlowableExceptionHandlingTest.kt (kotlin)\n\n## Key Code Elements:\nimport io.reactivex.exceptions.*\nimport kotlinx.coroutines.*\nimport org.junit.*\nimport org.junit.Test\nimport kotlin.test.*\nclass FlowableExceptionHandlingTest : TestBase() {\n    @Before\n    @Test\n    @Test\n    @Test\n    @Test\n    @Test\n    @Test\n    @Test\n    @Test\n\n## Recent Changes:\n- 8bb5210c by dkhalanskyjb (52952525+dkhalanskyjb@users.noreply.github.com): Consistently handle exceptions in reactive streams (#2646)\n\n* Fixed `PublisherCoroutine`, `rxObserva...\n- a930b0cd by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Consistently handle undeliverable exceptions in RxJava and Reactor integrations\n\nUse tryOnError in R...\n- 97863c36 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Report fatal errors to both onError (to comply the spec fully) and to coroutine context (to eagerly ...",
+      "metadata": {
+        "language": "kotlin",
+        "commit_count": 4,
+        "file_path": "reactive/kotlinx-coroutines-rx2/test/FlowableExceptionHandlingTest.kt",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.037470817565918
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/common/src/flow/terminal/Collect.kt (kotlin)\n\n## Key Code Elements:\n@file:JvmMultifileClass\n@file:JvmName(\"FlowKt\")\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.flow.internal.*\nimport kotlin.jvm.*\n * handle an exception that might occur in the upstream flow or during processing, for example:\n * handle an exception that might occur in the upstream flow or during processing, for example:\n * It can be demonstrated by the following example:\n     * Implementation note:\n     * buffer(0) is inserted here to fulfil user's expectations in sequential usages, e.g.:\n@Deprecated(level = DeprecationLevel.HIDDEN, message = \"Backwards compatibility with JS and K/N\")\n\n## Recent Changes:\n- 69bc2a39 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Restore MPP backwards compatibility on K/JS and K/N (#3104)...\n- e9eb0efb by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Make FlowCollector fun interface, remove redundant extensions (#3047)\n\n* It also saves us from the c...\n- e60685ff by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Introduce SharedFlow collect overload and override that return Nothing (#2803)\n\n* Introduce SharedFl...",
+      "metadata": {
+        "total_chunks": 1,
+        "language": "kotlin",
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "file_path": "kotlinx-coroutines-core/common/src/flow/terminal/Collect.kt",
+        "commit_count": 5
+      },
+      "similarity_score": 1.045640468597412
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/common/test/flow/operators/TimeoutTest.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.flow.*\nimport kotlin.test.*\nimport kotlin.time.Duration.Companion.milliseconds\nclass TimeoutTest : TestBase() {\n    @Test\n    @Test\n    @Test\n    @Test\n    @Test\n    @Test\n    @Test\n    @Test\n    @Test\n    @Test\n\n## Recent Changes:\n- b6e18395 by Dmitry Khalanskiy (52952525+dkhalanskyjb@users.noreply.github.com): Explain the test framework behavior in the withTimeout message (#3623)\n\nFixes #3588...\n- 1656a0d3 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Get rid of real time in TimeoutTest\n\n* To avoid races on very slow Windows-virtualized TC agents...\n- 27396e7a by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Fix flakiness of TimeoutTest (#3477)\n\n* Fix flakiness of TimeoutTest\n\nIncrease timeout, so it's neve...",
+      "metadata": {
+        "file_path": "kotlinx-coroutines-core/common/test/flow/operators/TimeoutTest.kt",
+        "total_chunks": 1,
+        "commit_count": 4,
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "language": "kotlin"
+      },
+      "similarity_score": 1.057766079902649
+    },
+    {
+      "content": "# File: reactive/kotlinx-coroutines-reactive/test/FlowAsPublisherTest.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.CancellationException\nimport kotlinx.coroutines.flow.*\nimport org.junit.Test\nimport org.reactivestreams.*\nimport java.util.concurrent.*\nimport kotlin.test.*\nclass FlowAsPublisherTest : TestBase() {\n    @Test\n    @Test\n    @Test\n    @Test\n    @Test\n\n## Recent Changes:\n- 8bb5210c by dkhalanskyjb (52952525+dkhalanskyjb@users.noreply.github.com): Consistently handle exceptions in reactive streams (#2646)\n\n* Fixed `PublisherCoroutine`, `rxObserva...\n- 1a6beba5 by Roman Elizarov (elizarov@gmail.com): Support context in Flow.asPublisher and similar methods (#2156)\n\n\nFixes #2155\n\nCo-authored-by: Vsevo...\n- d7189701 by Roman Elizarov (elizarov@gmail.com): Fix race in Flow.asPublisher (#2124)\n\nThe race was leading to emitting more items via onNext than re...",
+      "metadata": {
+        "total_chunks": 1,
+        "language": "kotlin",
+        "strategy": "compressed",
+        "commit_count": 4,
+        "chunk_index": 0,
+        "file_path": "reactive/kotlinx-coroutines-reactive/test/FlowAsPublisherTest.kt"
+      },
+      "similarity_score": 1.0577878952026367
+    },
+    {
+      "content": "# File: reactive/kotlinx-coroutines-jdk9/test/PublishTest.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.channels.*\nimport org.junit.Test\nimport java.util.concurrent.Flow as JFlow\nimport kotlin.test.*\nclass PublishTest : TestBase() {\n    @Test\n    @Test\n    @Test\n    @Test\n        var sub: JFlow.Subscription? = null\n    @Test\n    @Test\n    @Test\n            var producerScope: ProducerScope<Int>? = null\n\n## Recent Changes:\n- fe9f50bb by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Fix deprecation error...\n- 8bb5210c by dkhalanskyjb (52952525+dkhalanskyjb@users.noreply.github.com): Consistently handle exceptions in reactive streams (#2646)\n\n* Fixed `PublisherCoroutine`, `rxObserva...\n- a25bf36f by dkhalanskyjb (52952525+dkhalanskyjb@users.noreply.github.com): JDK9 Flow integration (#1783)\n\nJDK9 Flow integration is implemented as thin\nwrappers around the Reac...",
+      "metadata": {
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "commit_count": 3,
+        "file_path": "reactive/kotlinx-coroutines-jdk9/test/PublishTest.kt",
+        "language": "kotlin"
+      },
+      "similarity_score": 1.0735517740249634
+    },
+    {
+      "content": "# File: reactive/kotlinx-coroutines-rx3/test/FlowableExceptionHandlingTest.kt (kotlin)\n\n## Key Code Elements:\nimport io.reactivex.rxjava3.exceptions.*\nimport kotlinx.coroutines.*\nimport org.junit.*\nimport org.junit.Test\nimport kotlin.test.*\nclass FlowableExceptionHandlingTest : TestBase() {\n    @Before\n    @Test\n    @Test\n    @Test\n    @Test\n    @Test\n    @Test\n    @Test\n    @Test\n\n## Recent Changes:\n- 8bb5210c by dkhalanskyjb (52952525+dkhalanskyjb@users.noreply.github.com): Consistently handle exceptions in reactive streams (#2646)\n\n* Fixed `PublisherCoroutine`, `rxObserva...\n- 3250e474 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Integration with RxJava3 (#1950)\n\nFixes #1883\n\nCo-authored-by: Zac Sweers <zsweers@slack-corp.com>...",
+      "metadata": {
+        "file_path": "reactive/kotlinx-coroutines-rx3/test/FlowableExceptionHandlingTest.kt",
+        "strategy": "compressed",
+        "commit_count": 2,
+        "chunk_index": 0,
+        "language": "kotlin",
+        "total_chunks": 1
+      },
+      "similarity_score": 1.0820772647857666
+    },
+    {
+      "content": "# File: reactive/kotlinx-coroutines-jdk9/test/IntegrationTest.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.exceptions.*\nimport org.junit.Test\nimport kotlinx.coroutines.flow.flowOn\nimport org.junit.runner.*\nimport org.junit.runners.*\nimport kotlin.contracts.*\nimport java.util.concurrent.Flow as JFlow\nimport kotlin.coroutines.*\nimport kotlin.test.*\n@RunWith(Parameterized::class)\nclass IntegrationTest(\n        @Parameterized.Parameters(name = \"ctx={0}, delay={1}\")\n        @JvmStatic\n    @Test\n\n## Recent Changes:\n- 8bb5210c by dkhalanskyjb (52952525+dkhalanskyjb@users.noreply.github.com): Consistently handle exceptions in reactive streams (#2646)\n\n* Fixed `PublisherCoroutine`, `rxObserva...\n- a25bf36f by dkhalanskyjb (52952525+dkhalanskyjb@users.noreply.github.com): JDK9 Flow integration (#1783)\n\nJDK9 Flow integration is implemented as thin\nwrappers around the Reac...",
+      "metadata": {
+        "file_path": "reactive/kotlinx-coroutines-jdk9/test/IntegrationTest.kt",
+        "commit_count": 2,
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "language": "kotlin",
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.0843045711517334
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/jvm/test/flow/CallbackFlowTest.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.channels.*\nimport org.junit.Test\nimport kotlin.concurrent.*\nimport kotlin.test.*\nclass CallbackFlowTest : TestBase() {\n        var started = false\n        @Volatile\n        var stopped = false\n    @Test(timeout = 5_000L)\n        var i = 0\n        var receivedConsensus = 0\n        var isDone = false\n        var exception: Throwable? = null\n    @Test(timeout = 5_000L)\n\n## Recent Changes:\n- 3c83c0cf by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Deprecate SendChannel.offer and ReceiveChannel.poll, replace their usages along the codebase (#2644)...\n- 4aa38803 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Detect missing awaitClose calls in callbackFlow and close channel wit… (#1771)\n\n\nFixes #1762\nFixes #...\n- 684a97b5 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Use regular produce instead of flowProduce in channelFlow\n\nConcurrent work is already properly decom...",
+      "metadata": {
+        "total_chunks": 1,
+        "file_path": "kotlinx-coroutines-core/jvm/test/flow/CallbackFlowTest.kt",
+        "strategy": "compressed",
+        "commit_count": 5,
+        "language": "kotlin",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.0868638753890991
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/jvm/test/examples/example-timeout-duration-01.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.flow.*\nimport kotlin.time.Duration.Companion.milliseconds\n\n## Recent Changes:\n- d2503c0a by Pablo Baxter (pablobaxter@msn.com): Add timeout operator to Flow as @FlowPreview (#3148)\n\nFixes #2624\n\nCo-authored-by: Vsevolod Tolstopy...",
+      "metadata": {
+        "file_path": "kotlinx-coroutines-core/jvm/test/examples/example-timeout-duration-01.kt",
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "language": "kotlin",
+        "commit_count": 1,
+        "chunk_index": 0
+      },
+      "similarity_score": 1.0882631540298462
+    },
+    {
+      "content": "# File: reactive/kotlinx-coroutines-jdk9/test/FlowAsPublisherTest.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.flow.*\nimport org.junit.Test\nimport java.util.concurrent.Flow as JFlow\nimport kotlin.test.*\nclass FlowAsPublisherTest : TestBase() {\n    @Test\n    @Test\n    @Test\n\n## Recent Changes:\n- 8bb5210c by dkhalanskyjb (52952525+dkhalanskyjb@users.noreply.github.com): Consistently handle exceptions in reactive streams (#2646)\n\n* Fixed `PublisherCoroutine`, `rxObserva...\n- d7189701 by Roman Elizarov (elizarov@gmail.com): Fix race in Flow.asPublisher (#2124)\n\nThe race was leading to emitting more items via onNext than re...\n- a25bf36f by dkhalanskyjb (52952525+dkhalanskyjb@users.noreply.github.com): JDK9 Flow integration (#1783)\n\nJDK9 Flow integration is implemented as thin\nwrappers around the Reac...",
+      "metadata": {
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "commit_count": 3,
+        "total_chunks": 1,
+        "language": "kotlin",
+        "file_path": "reactive/kotlinx-coroutines-jdk9/test/FlowAsPublisherTest.kt"
+      },
+      "similarity_score": 1.100950002670288
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/common/test/flow/operators/CatchTest.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.coroutines.*\nimport kotlin.coroutines.*\nimport kotlin.test.*\nclass CatchTest : TestBase() {\n    @Test\n    @Test\n        var executed = 0\n    @Test\n    @Test\n        var executed = 0\n    @Test\n    @Test\n    @Test\n    @Test\n    @Test\n\n## Recent Changes:\n- 9099b030 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Improve exception transparency: explicitly allow throwing exceptions … (#3017)\n\n* Improve exception ...\n- 8baa7363 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Migrate from deprecated API...\n- 8773a269 by Roman Elizarov (elizarov@gmail.com): Breaking: Get rid of atomic cancellation and provide a replacement (#1937)\n\nThis is a problematic fo...",
+      "metadata": {
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "commit_count": 5,
+        "language": "kotlin",
+        "file_path": "kotlinx-coroutines-core/common/test/flow/operators/CatchTest.kt",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.1042300462722778
+    },
+    {
+      "content": "# File: reactive/kotlinx-coroutines-rx3/test/IntegrationTest.kt (kotlin)\n\n## Key Code Elements:\nimport io.reactivex.rxjava3.core.*\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.flow.consumeAsFlow\nimport org.junit.Test\nimport org.junit.runner.*\nimport org.junit.runners.*\nimport kotlin.coroutines.*\nimport kotlin.test.*\n@RunWith(Parameterized::class)\nclass IntegrationTest(\n        @Parameterized.Parameters(name = \"ctx={0}, delay={1}\")\n        @JvmStatic\n    @Test\n        var cnt = 0\n    @Test\n\n## Recent Changes:\n- 8bb5210c by dkhalanskyjb (52952525+dkhalanskyjb@users.noreply.github.com): Consistently handle exceptions in reactive streams (#2646)\n\n* Fixed `PublisherCoroutine`, `rxObserva...\n- 3250e474 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Integration with RxJava3 (#1950)\n\nFixes #1883\n\nCo-authored-by: Zac Sweers <zsweers@slack-corp.com>...",
+      "metadata": {
+        "commit_count": 2,
+        "language": "kotlin",
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "file_path": "reactive/kotlinx-coroutines-rx3/test/IntegrationTest.kt"
+      },
+      "similarity_score": 1.1058729887008667
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/jvm/test/examples/example-delay-duration-01.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.flow.*\nimport kotlin.time.Duration.Companion.milliseconds\n\n## Recent Changes:\n- d2503c0a by Pablo Baxter (pablobaxter@msn.com): Add timeout operator to Flow as @FlowPreview (#3148)\n\nFixes #2624\n\nCo-authored-by: Vsevolod Tolstopy...\n- ff9359a9 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Get rid of @ExperimentalTime where it is no longer necessary (#3041)\n\n* Get rid of @ExperimentalTime...\n- 09d1975e by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Update Kotlin to 1.6.0-RC (#2980)...",
+      "metadata": {
+        "file_path": "kotlinx-coroutines-core/jvm/test/examples/example-delay-duration-01.kt",
+        "commit_count": 4,
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "language": "kotlin"
+      },
+      "similarity_score": 1.106705665588379
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/jvm/test/examples/example-delay-duration-03.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.flow.*\nimport kotlin.time.Duration.Companion.milliseconds\n\n## Recent Changes:\n- d2503c0a by Pablo Baxter (pablobaxter@msn.com): Add timeout operator to Flow as @FlowPreview (#3148)\n\nFixes #2624\n\nCo-authored-by: Vsevolod Tolstopy...\n- ff9359a9 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Get rid of @ExperimentalTime where it is no longer necessary (#3041)\n\n* Get rid of @ExperimentalTime...\n- 09d1975e by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Update Kotlin to 1.6.0-RC (#2980)...",
+      "metadata": {
+        "file_path": "kotlinx-coroutines-core/jvm/test/examples/example-delay-duration-03.kt",
+        "chunk_index": 0,
+        "language": "kotlin",
+        "commit_count": 4,
+        "total_chunks": 1,
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.1084189414978027
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/jvm/test/examples/example-delay-duration-02.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.flow.*\nimport kotlin.time.Duration.Companion.milliseconds\n\n## Recent Changes:\n- d2503c0a by Pablo Baxter (pablobaxter@msn.com): Add timeout operator to Flow as @FlowPreview (#3148)\n\nFixes #2624\n\nCo-authored-by: Vsevolod Tolstopy...\n- ff9359a9 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Get rid of @ExperimentalTime where it is no longer necessary (#3041)\n\n* Get rid of @ExperimentalTime...\n- 09d1975e by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Update Kotlin to 1.6.0-RC (#2980)...",
+      "metadata": {
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "file_path": "kotlinx-coroutines-core/jvm/test/examples/example-delay-duration-02.kt",
+        "strategy": "compressed",
+        "language": "kotlin",
+        "commit_count": 5
+      },
+      "similarity_score": 1.1090456247329712
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/common/src/flow/operators/Delay.kt (kotlin)\n\n## Key Code Elements:\n@file:JvmMultifileClass\n@file:JvmName(\"FlowKt\")\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.channels.*\nimport kotlinx.coroutines.flow.internal.*\nimport kotlinx.coroutines.selects.*\nimport kotlin.jvm.*\nimport kotlin.time.*\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.flow.*\nimport kotlin.time.Duration.Companion.milliseconds\n * Example:\n@FlowPreview\n * Example:\n@FlowPreview\n\n## Recent Changes:\n- c5ce96a9 by Pablo Baxter (pablobaxter@msn.com): Minor documentation fixes (#3762)\n\n\n* Remove unnecessary newline (#3756)\n* Properly name Flow.timeou...\n- d2503c0a by Pablo Baxter (pablobaxter@msn.com): Add timeout operator to Flow as @FlowPreview (#3148)\n\nFixes #2624\n\nCo-authored-by: Vsevolod Tolstopy...\n- ff9359a9 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Get rid of @ExperimentalTime where it is no longer necessary (#3041)\n\n* Get rid of @ExperimentalTime...",
+      "metadata": {
+        "language": "kotlin",
+        "strategy": "compressed",
+        "commit_count": 5,
+        "chunk_index": 0,
+        "file_path": "kotlinx-coroutines-core/common/src/flow/operators/Delay.kt",
+        "total_chunks": 1
+      },
+      "similarity_score": 1.1110846996307373
+    }
+  ]
+}

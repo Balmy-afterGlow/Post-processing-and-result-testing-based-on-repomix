@@ -1,0 +1,7 @@
+{
+  "reason": "The settings dialog state (shouldShowSettingsDialog) is not persisted through activity recreation, causing the dialog to close when the activity is recreated due to configuration changes like rotation or resizing.",
+  "location": [
+    "app/src/main/java/com/google/samples/apps/nowinandroid/ui/NiaAppState.kt"
+  ],
+  "fix": "Modify the NiaAppState class to save and restore the shouldShowSettingsDialog state using saved instance state. Add the following code:\n\n```kotlin\nfun saveState(outState: Bundle) {\n    outState.putBoolean(\"shouldShowSettingsDialog\", shouldShowSettingsDialog)\n}\n\nfun restoreState(savedState: Bundle?) {\n    shouldShowSettingsDialog = savedState?.getBoolean(\"shouldShowSettingsDialog\") ?: false\n}\n```\n\nThen call these methods from the activity's onSaveInstanceState and onCreate methods respectively."
+}

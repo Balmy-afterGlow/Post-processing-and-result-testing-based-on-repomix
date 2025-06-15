@@ -1,0 +1,7 @@
+{
+  "reason": "The RadioButton parent lacks the selectableGroup modifier, which is necessary for proper TalkBack accessibility support. Children with selectable modifier should also have their role set to RadioButton.",
+  "location": [
+    "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/question/ChoiceQuestion.kt"
+  ],
+  "fix": "Add the selectableGroup modifier to the parent Column and ensure each RadioButton has the correct role. Example fix:\n\nColumn(\n    modifier = Modifier.selectableGroup()\n) {\n    options.forEach { option ->\n        Row(\n            modifier = Modifier\n                .fillMaxWidth()\n                .selectable(\n                    selected = (option == selectedOption),\n                    onClick = { onOptionSelected(option) },\n                    role = Role.RadioButton\n                )\n                .padding(vertical = 8.dp)\n        ) {\n            RadioButton(\n                selected = (option == selectedOption),\n                onClick = null\n            )\n            Text(\n                text = stringResource(id = option.textResId),\n                modifier = Modifier.padding(start = 16.dp)\n            )\n        }\n    }\n}"
+}

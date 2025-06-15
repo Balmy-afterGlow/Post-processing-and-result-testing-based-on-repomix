@@ -1,0 +1,708 @@
+{
+  "basic": [
+    {
+      "content": "onNodeWithText(saved).performClick()\n            onNodeWithContentDescription(settings).assertExists()\n\n            onNodeWithText(interests).performClick()\n            onNodeWithContentDescription(settings).assertExists()\n        }\n    }\n\n    @Test\n    fun whenSettingsIconIsClicked_settingsDialogIsShown() {\n        composeTestRule.apply {\n            onNodeWithContentDescription(settings).performClick()\n\n            // Check that one of the settings is actually displayed.\n            onNodeWithText(brand).assertExists()\n        }\n    }\n\n    @Test\n    fun whenSettingsDialogDismissed_previousScreenIsDisplayed() {\n        composeTestRule.apply {\n            // Navigate to the saved screen, open the settings dialog, then close it.\n            onNodeWithText(saved).performClick()\n            onNodeWithContentDescription(settings).performClick()\n            onNodeWithText(ok).performClick()\n\n            // Check that the saved screen is still visible and selected.\n            onNode(\n                hasText(saved) and\n                    hasAnyAncestor(\n                        hasTestTag(\"NiaBottomBar\") or hasTestTag(\"NiaNavRail\"),\n                    ),\n            ).assertIsSelected()\n        }\n    }\n\n    /*\n     * There should always be at most one instance of a top-level destination at the same time.\n     */\n    @Test(expected = NoActivityResumedException::class)\n    fun homeDestination_back_quitsApp() {\n        composeTestRule.apply {\n            // GIVEN the user navigates to the Interests destination\n            onNodeWithText(interests).performClick()\n            // and then navigates to the For you destination\n            onNodeWithText(forYou).performClick()\n            // WHEN the user uses the system button/gesture to go back\n            Espresso.pressBack()\n            // THEN the app quits\n        }\n    }",
+      "metadata": {
+        "total_chunks": 7,
+        "strategy": "basic",
+        "chunk_index": 5,
+        "file_path": "app/src/androidTest/java/com/google/samples/apps/nowinandroid/ui/NavigationTest.kt",
+        "language": "kotlin"
+      },
+      "similarity_score": 0.872703492641449
+    },
+    {
+      "content": "@Composable\nfun SettingsDialog(\n    onDismiss: () -> Unit,\n    viewModel: SettingsViewModel = hiltViewModel(),\n) {\n    val settingsUiState by viewModel.settingsUiState.collectAsStateWithLifecycle()\n    SettingsDialog(\n        onDismiss = onDismiss,\n        settingsUiState = settingsUiState,\n        onChangeThemeBrand = viewModel::updateThemeBrand,\n        onChangeDynamicColorPreference = viewModel::updateDynamicColorPreference,\n        onChangeDarkThemeConfig = viewModel::updateDarkThemeConfig,\n    )\n}\n\n@OptIn(ExperimentalComposeUiApi::class)\n@Composable\nfun SettingsDialog(\n    settingsUiState: SettingsUiState,\n    supportDynamicColor: Boolean = supportsDynamicTheming(),\n    onDismiss: () -> Unit,\n    onChangeThemeBrand: (themeBrand: ThemeBrand) -> Unit,\n    onChangeDynamicColorPreference: (useDynamicColor: Boolean) -> Unit,\n    onChangeDarkThemeConfig: (darkThemeConfig: DarkThemeConfig) -> Unit,\n) {\n    val configuration = LocalConfiguration.current",
+      "metadata": {
+        "strategy": "basic",
+        "chunk_index": 3,
+        "language": "kotlin",
+        "total_chunks": 10,
+        "file_path": "feature/settings/src/main/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsDialog.kt"
+      },
+      "similarity_score": 0.9191351532936096
+    },
+    {
+      "content": "// Check that the correct settings are selected.\n        composeTestRule.onNodeWithText(getString(R.string.brand_android)).assertIsSelected()\n        composeTestRule.onNodeWithText(getString(R.string.dark_mode_config_dark)).assertIsSelected()\n    }\n\n    @Test\n    fun whenStateIsSuccess_supportsDynamicColor_usesDefaultBrand_DynamicColorOptionIsDisplayed() {\n        composeTestRule.setContent {\n            SettingsDialog(\n                settingsUiState = Success(\n                    UserEditableSettings(\n                        brand = DEFAULT,\n                        darkThemeConfig = DARK,\n                        useDynamicColor = false,\n                    ),\n                ),\n                supportDynamicColor = true,\n                onDismiss = {},\n                onChangeDynamicColorPreference = {},\n                onChangeThemeBrand = {},\n                onChangeDarkThemeConfig = {},\n            )\n        }\n\n        composeTestRule.onNodeWithText(getString(R.string.dynamic_color_preference)).assertExists()\n        composeTestRule.onNodeWithText(getString(R.string.dynamic_color_yes)).assertExists()\n        composeTestRule.onNodeWithText(getString(R.string.dynamic_color_no)).assertExists()\n\n        // Check that the correct default dynamic color setting is selected.\n        composeTestRule.onNodeWithText(getString(R.string.dynamic_color_no)).assertIsSelected()\n    }",
+      "metadata": {
+        "strategy": "basic",
+        "chunk_index": 2,
+        "language": "kotlin",
+        "file_path": "feature/settings/src/androidTest/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsDialogTest.kt",
+        "total_chunks": 5
+      },
+      "similarity_score": 1.0403436422348022
+    },
+    {
+      "content": "/**\n     * usePlatformDefaultWidth = false is use as a temporary fix to allow\n     * height recalculation during recomposition. This, however, causes\n     * Dialog's to occupy full width in Compact mode. Therefore max width\n     * is configured below. This should be removed when there's fix to\n     * https://issuetracker.google.com/issues/221643630\n     */\n    AlertDialog(\n        properties = DialogProperties(usePlatformDefaultWidth = false),\n        modifier = Modifier.widthIn(max = configuration.screenWidthDp.dp - 80.dp),\n        onDismissRequest = { onDismiss() },\n        title = {\n            Text(\n                text = stringResource(string.settings_title),\n                style = MaterialTheme.typography.titleLarge,\n            )\n        },\n        text = {\n            Divider()\n            Column(Modifier.verticalScroll(rememberScrollState())) {\n                when (settingsUiState) {\n                    Loading -> {\n                        Text(\n                            text = stringResource(string.loading),\n                            modifier = Modifier.padding(vertical = 16.dp),\n                        )\n                    }",
+      "metadata": {
+        "language": "kotlin",
+        "total_chunks": 10,
+        "file_path": "feature/settings/src/main/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsDialog.kt",
+        "chunk_index": 4,
+        "strategy": "basic"
+      },
+      "similarity_score": 1.0812538862228394
+    },
+    {
+      "content": "@get:Rule\n    val composeTestRule = createAndroidComposeRule<ComponentActivity>()\n\n    private fun getString(id: Int) = composeTestRule.activity.resources.getString(id)\n\n    @Test\n    fun whenLoading_showsLoadingText() {\n        composeTestRule.setContent {\n            SettingsDialog(\n                settingsUiState = Loading,\n                onDismiss = {},\n                onChangeDynamicColorPreference = {},\n                onChangeThemeBrand = {},\n                onChangeDarkThemeConfig = {},\n            )\n        }\n\n        composeTestRule\n            .onNodeWithText(getString(R.string.loading))\n            .assertExists()\n    }\n\n    @Test\n    fun whenStateIsSuccess_allDefaultSettingsAreDisplayed() {\n        composeTestRule.setContent {\n            SettingsDialog(\n                settingsUiState = Success(\n                    UserEditableSettings(\n                        brand = ANDROID,\n                        useDynamicColor = false,\n                        darkThemeConfig = DARK,\n                    ),\n                ),\n                onDismiss = { },\n                onChangeDynamicColorPreference = {},\n                onChangeThemeBrand = {},\n                onChangeDarkThemeConfig = {},\n            )\n        }\n\n        // Check that all the possible settings are displayed.\n        composeTestRule.onNodeWithText(getString(R.string.brand_default)).assertExists()\n        composeTestRule.onNodeWithText(getString(R.string.brand_android)).assertExists()\n        composeTestRule.onNodeWithText(\n            getString(R.string.dark_mode_config_system_default),\n        ).assertExists()\n        composeTestRule.onNodeWithText(getString(R.string.dark_mode_config_light)).assertExists()\n        composeTestRule.onNodeWithText(getString(R.string.dark_mode_config_dark)).assertExists()",
+      "metadata": {
+        "strategy": "basic",
+        "chunk_index": 1,
+        "total_chunks": 5,
+        "language": "kotlin",
+        "file_path": "feature/settings/src/androidTest/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsDialogTest.kt"
+      },
+      "similarity_score": 1.096297264099121
+    },
+    {
+      "content": "private lateinit var viewModel: SettingsViewModel\n\n    @Before\n    fun setup() {\n        viewModel = SettingsViewModel(userDataRepository)\n    }\n\n    @Test\n    fun stateIsInitiallyLoading() = runTest {\n        assertEquals(Loading, viewModel.settingsUiState.value)\n    }\n\n    @Test\n    fun stateIsSuccessAfterUserDataLoaded() = runTest {\n        val collectJob =\n            launch(UnconfinedTestDispatcher()) { viewModel.settingsUiState.collect() }\n\n        userDataRepository.setThemeBrand(ANDROID)\n        userDataRepository.setDarkThemeConfig(DARK)\n\n        assertEquals(\n            Success(\n                UserEditableSettings(\n                    brand = ANDROID,\n                    darkThemeConfig = DARK,\n                    useDynamicColor = false,\n                ),\n            ),\n            viewModel.settingsUiState.value,\n        )\n\n        collectJob.cancel()\n    }\n}\n```",
+      "metadata": {
+        "strategy": "basic",
+        "language": "kotlin",
+        "total_chunks": 2,
+        "chunk_index": 1,
+        "file_path": "feature/settings/src/test/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsViewModelTest.kt"
+      },
+      "similarity_score": 1.1004586219787598
+    },
+    {
+      "content": "@HiltViewModel\nclass SettingsViewModel @Inject constructor(\n    private val userDataRepository: UserDataRepository,\n) : ViewModel() {\n    val settingsUiState: StateFlow<SettingsUiState> =\n        userDataRepository.userData\n            .map { userData ->\n                Success(\n                    settings = UserEditableSettings(\n                        brand = userData.themeBrand,\n                        useDynamicColor = userData.useDynamicColor,\n                        darkThemeConfig = userData.darkThemeConfig,\n                    ),\n                )\n            }\n            .stateIn(\n                scope = viewModelScope,\n                // Starting eagerly means the user data is ready when the SettingsDialog is laid out\n                // for the first time. Without this, due to b/221643630 the layout is done using the\n                // \"Loading\" text, then replaced with the user editable fields once loaded, however,\n                // the layout height doesn't change meaning all the fields are squashed into a small\n                // scrollable column.\n                // TODO: Change to SharingStarted.WhileSubscribed(5_000) when b/221643630 is fixed\n                started = SharingStarted.Eagerly,\n                initialValue = Loading,\n            )\n\n    fun updateThemeBrand(themeBrand: ThemeBrand) {\n        viewModelScope.launch {\n            userDataRepository.setThemeBrand(themeBrand)\n        }\n    }\n\n    fun updateDarkThemeConfig(darkThemeConfig: DarkThemeConfig) {\n        viewModelScope.launch {\n            userDataRepository.setDarkThemeConfig(darkThemeConfig)\n        }\n    }\n\n    fun updateDynamicColorPreference(useDynamicColor: Boolean) {\n        viewModelScope.launch {\n            userDataRepository.setDynamicColorPreference(useDynamicColor)\n        }\n    }\n}",
+      "metadata": {
+        "chunk_index": 1,
+        "strategy": "basic",
+        "file_path": "feature/settings/src/main/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsViewModel.kt",
+        "total_chunks": 3,
+        "language": "kotlin"
+      },
+      "similarity_score": 1.1148548126220703
+    },
+    {
+      "content": "@Composable\nprivate fun SettingsPanel(\n    settings: UserEditableSettings,\n    supportDynamicColor: Boolean,\n    onChangeThemeBrand: (themeBrand: ThemeBrand) -> Unit,\n    onChangeDynamicColorPreference: (useDynamicColor: Boolean) -> Unit,\n    onChangeDarkThemeConfig: (darkThemeConfig: DarkThemeConfig) -> Unit,\n) {\n    SettingsDialogSectionTitle(text = stringResource(string.theme))\n    Column(Modifier.selectableGroup()) {\n        SettingsDialogThemeChooserRow(\n            text = stringResource(string.brand_default),\n            selected = settings.brand == DEFAULT,\n            onClick = { onChangeThemeBrand(DEFAULT) },\n        )\n        SettingsDialogThemeChooserRow(\n            text = stringResource(string.brand_android),\n            selected = settings.brand == ANDROID,\n            onClick = { onChangeThemeBrand(ANDROID) },\n        )\n    }\n    if (settings.brand == DEFAULT && supportDynamicColor) {\n        SettingsDialogSectionTitle(text = stringResource(R.string.dynamic_color_preference))\n        Column(Modifier.selectableGroup()) {\n            SettingsDialogThemeChooserRow(\n                text = stringResource(string.dynamic_color_yes),\n                selected = settings.useDynamicColor,\n                onClick = { onChangeDynamicColorPreference(true) },\n            )\n            SettingsDialogThemeChooserRow(\n                text = stringResource(string.dynamic_color_no),\n                selected = !settings.useDynamicColor,\n                onClick = { onChangeDynamicColorPreference(false) },\n            )\n        }\n    }\n    SettingsDialogSectionTitle(text = stringResource(R.string.dark_mode_preference))\n    Column(Modifier.selectableGroup()) {\n        SettingsDialogThemeChooserRow(\n            text = stringResource(string.dark_mode_config_system_default),\n            selected = settings.darkThemeConfig == FOLLOW_SYSTEM,\n            onClick = { onChangeDarkThemeConfig(FOLLOW_SYSTEM) },\n        )\n        SettingsDialogThemeChooserRow(",
+      "metadata": {
+        "chunk_index": 6,
+        "language": "kotlin",
+        "file_path": "feature/settings/src/main/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsDialog.kt",
+        "strategy": "basic",
+        "total_chunks": 10
+      },
+      "similarity_score": 1.118929147720337
+    },
+    {
+      "content": "composeTestRule.onNodeWithText(getString(R.string.dynamic_color_preference))\n            .assertDoesNotExist()\n        composeTestRule.onNodeWithText(getString(R.string.dynamic_color_yes)).assertDoesNotExist()\n        composeTestRule.onNodeWithText(getString(R.string.dynamic_color_no)).assertDoesNotExist()\n    }\n\n    @Test\n    fun whenStateIsSuccess_allLinksAreDisplayed() {\n        composeTestRule.setContent {\n            SettingsDialog(\n                settingsUiState = Success(\n                    UserEditableSettings(\n                        brand = ANDROID,\n                        darkThemeConfig = DARK,\n                        useDynamicColor = false,\n                    ),\n                ),\n                onDismiss = {},\n                onChangeDynamicColorPreference = {},\n                onChangeThemeBrand = {},\n                onChangeDarkThemeConfig = {},\n            )\n        }\n\n        composeTestRule.onNodeWithText(getString(R.string.privacy_policy)).assertExists()\n        composeTestRule.onNodeWithText(getString(R.string.licenses)).assertExists()\n        composeTestRule.onNodeWithText(getString(R.string.brand_guidelines)).assertExists()\n        composeTestRule.onNodeWithText(getString(R.string.feedback)).assertExists()\n    }\n}\n```",
+      "metadata": {
+        "total_chunks": 5,
+        "strategy": "basic",
+        "file_path": "feature/settings/src/androidTest/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsDialogTest.kt",
+        "language": "kotlin",
+        "chunk_index": 4
+      },
+      "similarity_score": 1.1301403045654297
+    },
+    {
+      "content": "fun setShowSettingsDialog(shouldShow: Boolean) {\n        shouldShowSettingsDialog = shouldShow\n    }\n\n    fun navigateToSearch() {\n        navController.navigateToSearch()\n    }\n}\n\n/**\n * Stores information about navigation events to be used with JankStats\n */\n@Composable\nprivate fun NavigationTrackingSideEffect(navController: NavHostController) {\n    TrackDisposableJank(navController) { metricsHolder ->\n        val listener = NavController.OnDestinationChangedListener { _, destination, _ ->\n            metricsHolder.state?.putState(\"Navigation\", destination.route.toString())\n        }\n\n        navController.addOnDestinationChangedListener(listener)\n\n        onDispose {\n            navController.removeOnDestinationChangedListener(listener)\n        }\n    }\n}\n```",
+      "metadata": {
+        "chunk_index": 6,
+        "file_path": "app/src/main/java/com/google/samples/apps/nowinandroid/ui/NiaAppState.kt",
+        "strategy": "basic",
+        "total_chunks": 7,
+        "language": "kotlin"
+      },
+      "similarity_score": 1.148121953010559
+    },
+    {
+      "content": "// Check that the correct default dynamic color setting is selected.\n        composeTestRule.onNodeWithText(getString(R.string.dynamic_color_no)).assertIsSelected()\n    }\n\n    @Test\n    fun whenStateIsSuccess_notSupportDynamicColor_DynamicColorOptionIsNotDisplayed() {\n        composeTestRule.setContent {\n            SettingsDialog(\n                settingsUiState = Success(\n                    UserEditableSettings(\n                        brand = ANDROID,\n                        darkThemeConfig = DARK,\n                        useDynamicColor = false,\n                    ),\n                ),\n                onDismiss = {},\n                onChangeDynamicColorPreference = {},\n                onChangeThemeBrand = {},\n                onChangeDarkThemeConfig = {},\n            )\n        }\n\n        composeTestRule.onNodeWithText(getString(R.string.dynamic_color_preference))\n            .assertDoesNotExist()\n        composeTestRule.onNodeWithText(getString(R.string.dynamic_color_yes)).assertDoesNotExist()\n        composeTestRule.onNodeWithText(getString(R.string.dynamic_color_no)).assertDoesNotExist()\n    }\n\n    @Test\n    fun whenStateIsSuccess_usesAndroidBrand_DynamicColorOptionIsNotDisplayed() {\n        composeTestRule.setContent {\n            SettingsDialog(\n                settingsUiState = Success(\n                    UserEditableSettings(\n                        brand = ANDROID,\n                        darkThemeConfig = DARK,\n                        useDynamicColor = false,\n                    ),\n                ),\n                onDismiss = {},\n                onChangeDynamicColorPreference = {},\n                onChangeThemeBrand = {},\n                onChangeDarkThemeConfig = {},\n            )\n        }",
+      "metadata": {
+        "total_chunks": 5,
+        "language": "kotlin",
+        "file_path": "feature/settings/src/androidTest/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsDialogTest.kt",
+        "chunk_index": 3,
+        "strategy": "basic"
+      },
+      "similarity_score": 1.1665793657302856
+    },
+    {
+      "content": "fun updateDynamicColorPreference(useDynamicColor: Boolean) {\n        viewModelScope.launch {\n            userDataRepository.setDynamicColorPreference(useDynamicColor)\n        }\n    }\n}\n\n/**\n * Represents the settings which the user can edit within the app.\n */\ndata class UserEditableSettings(\n    val brand: ThemeBrand,\n    val useDynamicColor: Boolean,\n    val darkThemeConfig: DarkThemeConfig,\n)\n\nsealed interface SettingsUiState {\n    object Loading : SettingsUiState\n    data class Success(val settings: UserEditableSettings) : SettingsUiState\n}\n```",
+      "metadata": {
+        "chunk_index": 2,
+        "total_chunks": 3,
+        "file_path": "feature/settings/src/main/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsViewModel.kt",
+        "strategy": "basic",
+        "language": "kotlin"
+      },
+      "similarity_score": 1.1809539794921875
+    },
+    {
+      "content": "setContent {\n            val systemUiController = rememberSystemUiController()\n            val darkTheme = shouldUseDarkTheme(uiState)\n\n            // Update the dark content of the system bars to match the theme\n            DisposableEffect(systemUiController, darkTheme) {\n                systemUiController.systemBarsDarkContentEnabled = !darkTheme\n                onDispose {}\n            }\n\n            CompositionLocalProvider(LocalAnalyticsHelper provides analyticsHelper) {\n                NiaTheme(\n                    darkTheme = darkTheme,\n                    androidTheme = shouldUseAndroidTheme(uiState),\n                    disableDynamicTheming = shouldDisableDynamicTheming(uiState),\n                ) {\n                    NiaApp(\n                        networkMonitor = networkMonitor,\n                        windowSizeClass = calculateWindowSizeClass(this),\n                        userNewsResourceRepository = userNewsResourceRepository,\n                    )\n                }\n            }\n        }\n    }\n\n    override fun onResume() {\n        super.onResume()\n        lazyStats.get().isTrackingEnabled = true\n    }\n\n    override fun onPause() {\n        super.onPause()\n        lazyStats.get().isTrackingEnabled = false\n    }\n}\n\n/**\n * Returns `true` if the Android theme should be used, as a function of the [uiState].\n */\n@Composable\nprivate fun shouldUseAndroidTheme(\n    uiState: MainActivityUiState,\n): Boolean = when (uiState) {\n    Loading -> false\n    is Success -> when (uiState.userData.themeBrand) {\n        ThemeBrand.DEFAULT -> false\n        ThemeBrand.ANDROID -> true\n    }\n}\n\n/**\n * Returns `true` if the dynamic color is disabled, as a function of the [uiState].\n */\n@Composable\nprivate fun shouldDisableDynamicTheming(\n    uiState: MainActivityUiState,\n): Boolean = when (uiState) {\n    Loading -> false\n    is Success -> !uiState.userData.useDynamicColor\n}",
+      "metadata": {
+        "total_chunks": 5,
+        "file_path": "app/src/main/java/com/google/samples/apps/nowinandroid/MainActivity.kt",
+        "language": "kotlin",
+        "strategy": "basic",
+        "chunk_index": 3
+      },
+      "similarity_score": 1.2125768661499023
+    },
+    {
+      "content": "@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)\n@AndroidEntryPoint\nclass MainActivity : ComponentActivity() {\n\n    /**\n     * Lazily inject [JankStats], which is used to track jank throughout the app.\n     */\n    @Inject\n    lateinit var lazyStats: dagger.Lazy<JankStats>\n\n    @Inject\n    lateinit var networkMonitor: NetworkMonitor\n\n    @Inject\n    lateinit var analyticsHelper: AnalyticsHelper\n\n    @Inject\n    lateinit var userNewsResourceRepository: UserNewsResourceRepository\n\n    val viewModel: MainActivityViewModel by viewModels()\n\n    override fun onCreate(savedInstanceState: Bundle?) {\n        val splashScreen = installSplashScreen()\n        super.onCreate(savedInstanceState)\n\n        var uiState: MainActivityUiState by mutableStateOf(Loading)\n\n        // Update the uiState\n        lifecycleScope.launch {\n            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {\n                viewModel.uiState\n                    .onEach {\n                        uiState = it\n                    }\n                    .collect()\n            }\n        }\n\n        // Keep the splash screen on-screen until the UI state is loaded. This condition is\n        // evaluated each time the app needs to be redrawn so it should be fast to avoid blocking\n        // the UI.\n        splashScreen.setKeepOnScreenCondition {\n            when (uiState) {\n                Loading -> true\n                is Success -> false\n            }\n        }\n\n        // Turn off the decor fitting system windows, which allows us to handle insets,\n        // including IME animations\n        WindowCompat.setDecorFitsSystemWindows(window, false)\n\n        setContent {\n            val systemUiController = rememberSystemUiController()\n            val darkTheme = shouldUseDarkTheme(uiState)",
+      "metadata": {
+        "chunk_index": 2,
+        "language": "kotlin",
+        "strategy": "basic",
+        "file_path": "app/src/main/java/com/google/samples/apps/nowinandroid/MainActivity.kt",
+        "total_chunks": 5
+      },
+      "similarity_score": 1.2183648347854614
+    },
+    {
+      "content": "Landroidx/activity/ViewTreeOnBackPressedDispatcherOwner$findViewTreeOnBackPressedDispatcherOwner$2;\nLandroidx/activity/compose/ComponentActivityKt;\nLandroidx/activity/compose/LocalOnBackPressedDispatcherOwner$LocalOnBackPressedDispatcherOwner$1;\nLandroidx/activity/compose/LocalOnBackPressedDispatcherOwner;\nLandroidx/activity/contextaware/ContextAwareHelper;\nLandroidx/activity/contextaware/OnContextAvailableListener;\nLandroidx/activity/result/ActivityResult$$ExternalSyntheticOutline0;\nLandroidx/activity/result/ActivityResultRegistry;\nLandroidx/appcompat/R$bool;\nLandroidx/appcompat/R$style;\nLandroidx/appcompat/resources/R$drawable;\nLandroidx/appcompat/view/SupportMenuInflater$$ExternalSyntheticOutline0;\nLandroidx/appcompat/widget/AppCompatTextHelper$Api28Impl$$ExternalSyntheticApiModelOutline0;\nLandroidx/arch/core/executor/ArchTaskExecutor$2;\nLandroidx/arch/core/executor/ArchTaskExecutor;\nLandroidx/arch/core/executor/DefaultTaskExecutor$$ExternalSyntheticApiModelOutline0;\nLandroidx/arch/core/executor/DefaultTaskExecutor$1;\nLandroidx/arch/core/executor/DefaultTaskExecutor;\nLandroidx/arch/core/executor/TaskExecutor;\nLandroidx/arch/core/internal/FastSafeIterableMap;\nLandroidx/arch/core/internal/SafeIterableMap$AscendingIterator;\nLandroidx/arch/core/internal/SafeIterableMap$Entry;\nLandroidx/arch/core/internal/SafeIterableMap$IteratorWithAdditions;\nLandroidx/arch/core/internal/SafeIterableMap$ListIterator;\nLandroidx/arch/core/internal/SafeIterableMap$SupportRemove;\nLandroidx/arch/core/internal/SafeIterableMap;\nLandroidx/arch/core/util/Function;\nLandroidx/collection/ArrayMap$KeyIterator;\nLandroidx/collection/ArrayMap$KeySet;\nLandroidx/collection/ArrayMap;\nLandroidx/collection/ArraySet;\nLandroidx/collection/IndexBasedArrayIterator;\nLandroidx/collection/LruCache;\nLandroidx/collection/SimpleArrayMap;\nLandroidx/collection/SparseArrayCompat;\nLandroidx/collection/SparseArrayKt$valueIterator$1;\nLandroidx/compose/animation/AnimatedEnterExitMeasurePolicy$measure$1;",
+      "metadata": {
+        "language": "text",
+        "chunk_index": 534,
+        "strategy": "basic",
+        "total_chunks": 764,
+        "file_path": "app/src/main/baseline-prof.txt"
+      },
+      "similarity_score": 1.2260549068450928
+    },
+    {
+      "content": "HSPLandroidx/activity/OnBackPressedDispatcher$Api33Impl$$ExternalSyntheticLambda0;-><init>(Ljava/lang/Runnable;)V\nHSPLandroidx/activity/OnBackPressedDispatcher$Api33Impl;->createOnBackInvokedCallback(Ljava/lang/Runnable;)Landroid/window/OnBackInvokedCallback;\nHSPLandroidx/activity/OnBackPressedDispatcher$LifecycleOnBackPressedCancellable;-><init>(Landroidx/activity/OnBackPressedDispatcher;Landroidx/lifecycle/Lifecycle;Landroidx/activity/OnBackPressedCallback;)V\nHSPLandroidx/activity/OnBackPressedDispatcher$LifecycleOnBackPressedCancellable;->onStateChanged(Landroidx/lifecycle/LifecycleOwner;Landroidx/lifecycle/Lifecycle$Event;)V\nHSPLandroidx/activity/OnBackPressedDispatcher$OnBackPressedCancellable;-><init>(Landroidx/activity/OnBackPressedDispatcher;Landroidx/activity/OnBackPressedCallback;)V\nHSPLandroidx/activity/OnBackPressedDispatcher;-><init>(Ljava/lang/Runnable;)V\nHSPLandroidx/activity/OnBackPressedDispatcher;->addCallback(Landroidx/lifecycle/LifecycleOwner;Landroidx/activity/OnBackPressedCallback;)V\nHSPLandroidx/activity/OnBackPressedDispatcher;->updateBackInvokedCallbackState()V\nHSPLandroidx/activity/ViewTreeOnBackPressedDispatcherOwner$findViewTreeOnBackPressedDispatcherOwner$1;-><clinit>()V\nHSPLandroidx/activity/ViewTreeOnBackPressedDispatcherOwner$findViewTreeOnBackPressedDispatcherOwner$1;-><init>()V\nHSPLandroidx/activity/ViewTreeOnBackPressedDispatcherOwner$findViewTreeOnBackPressedDispatcherOwner$1;->invoke(Ljava/lang/Object;)Ljava/lang/Object;\nHSPLandroidx/activity/ViewTreeOnBackPressedDispatcherOwner$findViewTreeOnBackPressedDispatcherOwner$2;-><clinit>()V\nHSPLandroidx/activity/ViewTreeOnBackPressedDispatcherOwner$findViewTreeOnBackPressedDispatcherOwner$2;-><init>()V\nHSPLandroidx/activity/ViewTreeOnBackPressedDispatcherOwner$findViewTreeOnBackPressedDispatcherOwner$2;->invoke(Ljava/lang/Object;)Ljava/lang/Object;\nHSPLandroidx/activity/compose/ComponentActivityKt;-><clinit>()V",
+      "metadata": {
+        "chunk_index": 12,
+        "strategy": "basic",
+        "file_path": "app/src/main/baseline-prof.txt",
+        "total_chunks": 764,
+        "language": "text"
+      },
+      "similarity_score": 1.226508617401123
+    },
+    {
+      "content": "import com.google.samples.apps.nowinandroid.core.model.data.DarkThemeConfig.DARK\nimport com.google.samples.apps.nowinandroid.core.model.data.DarkThemeConfig.FOLLOW_SYSTEM\nimport com.google.samples.apps.nowinandroid.core.model.data.DarkThemeConfig.LIGHT\nimport com.google.samples.apps.nowinandroid.core.model.data.ThemeBrand\nimport com.google.samples.apps.nowinandroid.core.model.data.ThemeBrand.ANDROID\nimport com.google.samples.apps.nowinandroid.core.model.data.ThemeBrand.DEFAULT\nimport com.google.samples.apps.nowinandroid.core.ui.TrackScreenViewEvent\nimport com.google.samples.apps.nowinandroid.feature.settings.R.string\nimport com.google.samples.apps.nowinandroid.feature.settings.SettingsUiState.Loading\nimport com.google.samples.apps.nowinandroid.feature.settings.SettingsUiState.Success",
+      "metadata": {
+        "language": "kotlin",
+        "file_path": "feature/settings/src/main/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsDialog.kt",
+        "chunk_index": 2,
+        "total_chunks": 10,
+        "strategy": "basic"
+      },
+      "similarity_score": 1.237040638923645
+    },
+    {
+      "content": "composeTestRule\n            .onNodeWithContentDescription(\n                composeTestRule.activity.resources.getString(R.string.for_you_loading),\n            )\n            .assertExists()\n    }\n\n    @Test\n    fun topicSelector_whenNoTopicsSelected_showsTopicChipsAndDisabledDoneButton() {\n        val testData = followableTopicTestData.map { it -> it.copy(isFollowed = false) }\n\n        composeTestRule.setContent {\n            BoxWithConstraints {\n                ForYouScreen(\n                    isSyncing = false,\n                    onboardingUiState = OnboardingUiState.Shown(\n                        topics = testData,\n                    ),\n                    feedState = NewsFeedUiState.Success(\n                        feed = emptyList(),\n                    ),\n                    deepLinkedUserNewsResource = null,\n                    onTopicCheckedChanged = { _, _ -> },\n                    onTopicClick = {},\n                    saveFollowedTopics = {},\n                    onNewsResourcesCheckedChanged = { _, _ -> },\n                    onNewsResourceViewed = {},\n                    onDeepLinkOpened = {},\n                )\n            }\n        }\n\n        testData.forEach { testTopic ->\n            composeTestRule\n                .onNodeWithText(testTopic.topic.name)\n                .assertExists()\n                .assertHasClickAction()\n        }\n\n        // Scroll until the Done button is visible\n        composeTestRule\n            .onAllNodes(hasScrollToNodeAction())\n            .onFirst()\n            .performScrollToNode(doneButtonMatcher)\n\n        composeTestRule\n            .onNode(doneButtonMatcher)\n            .assertExists()\n            .assertIsNotEnabled()\n            .assertHasClickAction()\n    }",
+      "metadata": {
+        "total_chunks": 6,
+        "chunk_index": 2,
+        "file_path": "feature/foryou/src/androidTest/java/com/google/samples/apps/nowinandroid/feature/foryou/ForYouScreenTest.kt",
+        "strategy": "basic",
+        "language": "kotlin"
+      },
+      "similarity_score": 1.2396750450134277
+    },
+    {
+      "content": "HSPLandroidx/activity/compose/ComponentActivityKt;-><clinit>()V\nHSPLandroidx/activity/compose/LocalOnBackPressedDispatcherOwner$LocalOnBackPressedDispatcherOwner$1;-><clinit>()V\nHSPLandroidx/activity/compose/LocalOnBackPressedDispatcherOwner$LocalOnBackPressedDispatcherOwner$1;-><init>()V\nHSPLandroidx/activity/compose/LocalOnBackPressedDispatcherOwner$LocalOnBackPressedDispatcherOwner$1;->invoke()Ljava/lang/Object;\nHSPLandroidx/activity/compose/LocalOnBackPressedDispatcherOwner;-><clinit>()V\nHSPLandroidx/activity/contextaware/ContextAwareHelper;-><init>()V\nHSPLandroidx/activity/result/ActivityResult$$ExternalSyntheticOutline0;->m(Ljava/lang/String;)Ljava/lang/StringBuilder;\nHSPLandroidx/activity/result/ActivityResultRegistry;-><init>()V\nHSPLandroidx/appcompat/R$bool;->stringResource(ILandroidx/compose/runtime/Composer;I)Ljava/lang/String;\nHSPLandroidx/appcompat/R$style;->build(Lkotlin/collections/builders/SetBuilder;)Lkotlin/collections/builders/SetBuilder;\nHSPLandroidx/appcompat/resources/R$drawable;->get(Landroid/view/View;)Landroidx/lifecycle/LifecycleOwner;\nHSPLandroidx/appcompat/view/SupportMenuInflater$$ExternalSyntheticOutline0;->m(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;\nHSPLandroidx/appcompat/widget/AppCompatTextHelper$Api28Impl$$ExternalSyntheticApiModelOutline0;->m(Landroid/graphics/Typeface;IZ)Landroid/graphics/Typeface;\nHSPLandroidx/arch/core/executor/ArchTaskExecutor$2;-><init>()V\nHSPLandroidx/arch/core/executor/ArchTaskExecutor$2;->execute(Ljava/lang/Runnable;)V\nHSPLandroidx/arch/core/executor/ArchTaskExecutor;-><clinit>()V\nHSPLandroidx/arch/core/executor/ArchTaskExecutor;-><init>()V\nHSPLandroidx/arch/core/executor/ArchTaskExecutor;->getInstance()Landroidx/arch/core/executor/ArchTaskExecutor;\nHSPLandroidx/arch/core/executor/ArchTaskExecutor;->isMainThread()Z\nHSPLandroidx/arch/core/executor/ArchTaskExecutor;->postToMainThread(Ljava/lang/Runnable;)V",
+      "metadata": {
+        "chunk_index": 13,
+        "strategy": "basic",
+        "language": "text",
+        "file_path": "app/src/main/baseline-prof.txt",
+        "total_chunks": 764
+      },
+      "similarity_score": 1.2474126815795898
+    },
+    {
+      "content": "selected = settings.darkThemeConfig == FOLLOW_SYSTEM,\n            onClick = { onChangeDarkThemeConfig(FOLLOW_SYSTEM) },\n        )\n        SettingsDialogThemeChooserRow(\n            text = stringResource(string.dark_mode_config_light),\n            selected = settings.darkThemeConfig == LIGHT,\n            onClick = { onChangeDarkThemeConfig(LIGHT) },\n        )\n        SettingsDialogThemeChooserRow(\n            text = stringResource(string.dark_mode_config_dark),\n            selected = settings.darkThemeConfig == DARK,\n            onClick = { onChangeDarkThemeConfig(DARK) },\n        )\n    }\n}",
+      "metadata": {
+        "strategy": "basic",
+        "language": "kotlin",
+        "file_path": "feature/settings/src/main/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsDialog.kt",
+        "total_chunks": 10,
+        "chunk_index": 7
+      },
+      "similarity_score": 1.2512154579162598
+    }
+  ],
+  "enhanced": [
+    {
+      "content": "@Composable\nfun SettingsDialog(\n    onDismiss: () -> Unit,\n    viewModel: SettingsViewModel = hiltViewModel(),\n) {\n    val settingsUiState by viewModel.settingsUiState.collectAsStateWithLifecycle()\n    SettingsDialog(\n        onDismiss = onDismiss,\n        settingsUiState = settingsUiState,\n        onChangeThemeBrand = viewModel::updateThemeBrand,\n        onChangeDynamicColorPreference = viewModel::updateDynamicColorPreference,\n        onChangeDarkThemeConfig = viewModel::updateDarkThemeConfig,\n    )\n}\n\n@OptIn(ExperimentalComposeUiApi::class)\n@Composable\nfun SettingsDialog(\n    settingsUiState: SettingsUiState,\n    supportDynamicColor: Boolean = supportsDynamicTheming(),\n    onDismiss: () -> Unit,\n    onChangeThemeBrand: (themeBrand: ThemeBrand) -> Unit,\n    onChangeDynamicColorPreference: (useDynamicColor: Boolean) -> Unit,\n    onChangeDarkThemeConfig: (darkThemeConfig: DarkThemeConfig) -> Unit,\n) {\n    val configuration = LocalConfiguration.current",
+      "metadata": {
+        "total_chunks": 12,
+        "language": "kotlin",
+        "file_path": "feature/settings/src/main/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsDialog.kt",
+        "chunk_index": 3,
+        "commit_count": 5,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.9191351532936096
+    },
+    {
+      "content": "/**\n     * usePlatformDefaultWidth = false is use as a temporary fix to allow\n     * height recalculation during recomposition. This, however, causes\n     * Dialog's to occupy full width in Compact mode. Therefore max width\n     * is configured below. This should be removed when there's fix to\n     * https://issuetracker.google.com/issues/221643630\n     */\n    AlertDialog(\n        properties = DialogProperties(usePlatformDefaultWidth = false),\n        modifier = Modifier.widthIn(max = configuration.screenWidthDp.dp - 80.dp),\n        onDismissRequest = { onDismiss() },\n        title = {\n            Text(\n                text = stringResource(string.settings_title),\n                style = MaterialTheme.typography.titleLarge,\n            )\n        },\n        text = {\n            Divider()\n            Column(Modifier.verticalScroll(rememberScrollState())) {\n                when (settingsUiState) {\n                    Loading -> {\n                        Text(\n                            text = stringResource(string.loading),\n                            modifier = Modifier.padding(vertical = 16.dp),\n                        )\n                    }",
+      "metadata": {
+        "strategy": "enhanced",
+        "language": "kotlin",
+        "total_chunks": 12,
+        "commit_count": 5,
+        "chunk_index": 4,
+        "file_path": "feature/settings/src/main/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsDialog.kt"
+      },
+      "similarity_score": 1.0812538862228394
+    },
+    {
+      "content": "fun setShowSettingsDialog(shouldShow: Boolean) {\n        shouldShowSettingsDialog = shouldShow\n    }\n\n    fun navigateToSearch() {\n        navController.navigateToSearch()\n    }\n}\n\n/**\n * Stores information about navigation events to be used with JankStats\n */\n@Composable\nprivate fun NavigationTrackingSideEffect(navController: NavHostController) {\n    TrackDisposableJank(navController) { metricsHolder ->\n        val listener = NavController.OnDestinationChangedListener { _, destination, _ ->\n            metricsHolder.state?.putState(\"Navigation\", destination.route.toString())\n        }\n\n        navController.addOnDestinationChangedListener(listener)\n\n        onDispose {\n            navController.removeOnDestinationChangedListener(listener)\n        }\n    }\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: b3cdc172\n- Author: Takeshi Hagikura (thagikura@google.com)\n- Date: 2023-04-26 12:13:54\n- Message: Implement search feature (#685)\n\nImplement search feature\n\n- Add a feature module named \"search\"\n- Add a SearchScreen that is navigated by tapping the search icon at the top left corner\n- Add a data layer that takes care of populating the *Fts tables and querying them by a search query\n- Add a SearchViewModel that wires up the data layer of the Fts tables with the SearchScreen",
+      "metadata": {
+        "language": "kotlin",
+        "chunk_index": 6,
+        "file_path": "app/src/main/java/com/google/samples/apps/nowinandroid/ui/NiaAppState.kt",
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "total_chunks": 9
+      },
+      "similarity_score": 1.1148509979248047
+    },
+    {
+      "content": "@HiltViewModel\nclass SettingsViewModel @Inject constructor(\n    private val userDataRepository: UserDataRepository,\n) : ViewModel() {\n    val settingsUiState: StateFlow<SettingsUiState> =\n        userDataRepository.userData\n            .map { userData ->\n                Success(\n                    settings = UserEditableSettings(\n                        brand = userData.themeBrand,\n                        useDynamicColor = userData.useDynamicColor,\n                        darkThemeConfig = userData.darkThemeConfig,\n                    ),\n                )\n            }\n            .stateIn(\n                scope = viewModelScope,\n                // Starting eagerly means the user data is ready when the SettingsDialog is laid out\n                // for the first time. Without this, due to b/221643630 the layout is done using the\n                // \"Loading\" text, then replaced with the user editable fields once loaded, however,\n                // the layout height doesn't change meaning all the fields are squashed into a small\n                // scrollable column.\n                // TODO: Change to SharingStarted.WhileSubscribed(5_000) when b/221643630 is fixed\n                started = SharingStarted.Eagerly,\n                initialValue = Loading,\n            )\n\n    fun updateThemeBrand(themeBrand: ThemeBrand) {\n        viewModelScope.launch {\n            userDataRepository.setThemeBrand(themeBrand)\n        }\n    }\n\n    fun updateDarkThemeConfig(darkThemeConfig: DarkThemeConfig) {\n        viewModelScope.launch {\n            userDataRepository.setDarkThemeConfig(darkThemeConfig)\n        }\n    }\n\n    fun updateDynamicColorPreference(useDynamicColor: Boolean) {\n        viewModelScope.launch {\n            userDataRepository.setDynamicColorPreference(useDynamicColor)\n        }\n    }\n}",
+      "metadata": {
+        "file_path": "feature/settings/src/main/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsViewModel.kt",
+        "strategy": "enhanced",
+        "total_chunks": 5,
+        "language": "kotlin",
+        "commit_count": 5,
+        "chunk_index": 1
+      },
+      "similarity_score": 1.1148548126220703
+    },
+    {
+      "content": "@Composable\nprivate fun SettingsPanel(\n    settings: UserEditableSettings,\n    supportDynamicColor: Boolean,\n    onChangeThemeBrand: (themeBrand: ThemeBrand) -> Unit,\n    onChangeDynamicColorPreference: (useDynamicColor: Boolean) -> Unit,\n    onChangeDarkThemeConfig: (darkThemeConfig: DarkThemeConfig) -> Unit,\n) {\n    SettingsDialogSectionTitle(text = stringResource(string.theme))\n    Column(Modifier.selectableGroup()) {\n        SettingsDialogThemeChooserRow(\n            text = stringResource(string.brand_default),\n            selected = settings.brand == DEFAULT,\n            onClick = { onChangeThemeBrand(DEFAULT) },\n        )\n        SettingsDialogThemeChooserRow(\n            text = stringResource(string.brand_android),\n            selected = settings.brand == ANDROID,\n            onClick = { onChangeThemeBrand(ANDROID) },\n        )\n    }\n    if (settings.brand == DEFAULT && supportDynamicColor) {\n        SettingsDialogSectionTitle(text = stringResource(R.string.dynamic_color_preference))\n        Column(Modifier.selectableGroup()) {\n            SettingsDialogThemeChooserRow(\n                text = stringResource(string.dynamic_color_yes),\n                selected = settings.useDynamicColor,\n                onClick = { onChangeDynamicColorPreference(true) },\n            )\n            SettingsDialogThemeChooserRow(\n                text = stringResource(string.dynamic_color_no),\n                selected = !settings.useDynamicColor,\n                onClick = { onChangeDynamicColorPreference(false) },\n            )\n        }\n    }\n    SettingsDialogSectionTitle(text = stringResource(R.string.dark_mode_preference))\n    Column(Modifier.selectableGroup()) {\n        SettingsDialogThemeChooserRow(\n            text = stringResource(string.dark_mode_config_system_default),\n            selected = settings.darkThemeConfig == FOLLOW_SYSTEM,\n            onClick = { onChangeDarkThemeConfig(FOLLOW_SYSTEM) },\n        )\n        SettingsDialogThemeChooserRow(",
+      "metadata": {
+        "language": "kotlin",
+        "file_path": "feature/settings/src/main/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsDialog.kt",
+        "total_chunks": 12,
+        "chunk_index": 6,
+        "strategy": "enhanced",
+        "commit_count": 5
+      },
+      "similarity_score": 1.118929147720337
+    },
+    {
+      "content": "## Git Commit History\n\n### Commit 1\n- ID: 33a3e360\n- Author: AnirudhPudari (anirudhgoud013@gmail.com)\n- Date: 2023-04-16 16:04:35\n- Message: Deprecated FlowLayouts from accompanist\n- Changes:\n```diff\n@@ -17,6 +17,8 @@\n package com.google.samples.apps.niacatalog.ui\n \n import androidx.compose.foundation.layout.Arrangement\n+import androidx.compose.foundation.layout.ExperimentalLayoutApi\n+import androidx.compose.foundation.layout.FlowRow\n import androidx.compose.foundation.layout.WindowInsets\n import androidx.compose.foundation.layout.add\n import androidx.compose.foundation.layout.asPaddingValues\n@@ -36,7 +38,6 @@ import androidx.compose.runtime.setValue\n import androidx.compose.ui.Modifier\n imp...\n```\n\n### Commit 2\n- ID: 237375f5\n- Author: Márton Braun (zsmb@google.com)\n- Date: 2023-01-19 17:58:23\n- Message: Remove unused DropdownMenu component\n\nChange-Id: I7ee7e8f1995667c7e54459f4333594c4605cc5a9\n- Changes:\n```diff\n@@ -38,7 +38,6 @@ import androidx.compose.ui.res.painterResource\n import androidx.compose.ui.unit.dp\n import com.google.accompanist.flowlayout.FlowRow\n import com.google.samples.apps.nowinandroid.core.designsystem.component.NiaButton\n-import com.google.samples.apps.nowinandroid.core.designsystem.component.NiaDropdownMenuButton\n import com.google.samples.apps.nowinandroid.core.designsystem.component.NiaFilterChip\n import com.google.samples.apps.nowinandroid.core.designsystem.component.NiaIconTogg...\n```\n\n### Commit 3\n- ID: 322ff63d\n- Author: Márton Braun (zsmb@google.com)\n- Date: 2023-01-18 17:45:04\n- Message: Route topic chip tap events up to NiaNavHost",
+      "metadata": {
+        "language": "kotlin",
+        "commit_count": 5,
+        "total_chunks": 15,
+        "strategy": "enhanced",
+        "file_path": "app-nia-catalog/src/main/java/com/google/samples/apps/niacatalog/ui/Catalog.kt",
+        "chunk_index": 12
+      },
+      "similarity_score": 1.12628173828125
+    },
+    {
+      "content": "### Commit 4\n- ID: 756e45eb\n- Author: Don Turner (donturner@google.com)\n- Date: 2022-10-22 04:52:43\n- Message: Add note about b/221643630\n- Changes:\n```diff\n@@ -48,10 +48,11 @@ class SettingsViewModel @Inject constructor(\n             .stateIn(\n                 scope = viewModelScope,\n                 // Starting eagerly means the user data is ready when the SettingsDialog is laid out\n-                // for the first time. Without this the layout is done using the \"Loading\" text,\n-                // then replaced with the user editable fields once loaded, however, the layout\n-                // height doesn't change meaning all the fields are squas...\n```\n\n### Commit 5\n- ID: 76daa393\n- Author: Don Turner (donturner@google.com)\n- Date: 2022-10-21 23:46:23\n- Message: Address review feedback from Manu\n- Changes:\n```diff\n@@ -33,7 +33,7 @@ import kotlinx.coroutines.launch\n \n @HiltViewModel\n class SettingsViewModel @Inject constructor(\n-    private val userDataRepository: UserDataRepository\n+    private val userDataRepository: UserDataRepository,\n ) : ViewModel() {\n     val settingsUiState: StateFlow<SettingsUiState> =\n         userDataRepository.userDataStream...\n```",
+      "metadata": {
+        "file_path": "feature/settings/src/main/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsViewModel.kt",
+        "language": "kotlin",
+        "total_chunks": 5,
+        "strategy": "enhanced",
+        "chunk_index": 4,
+        "commit_count": 5
+      },
+      "similarity_score": 1.1338001489639282
+    },
+    {
+      "content": "fun dismissOnboarding() {\n        viewModelScope.launch {\n            userDataRepository.setShouldHideOnboarding(true)\n        }\n    }\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: ef97cb94\n- Author: TJ Dahunsi (dahunsi@google.com)\n- Date: 2023-05-06 18:01:31\n- Message: Route notification deep link through for you screen\n- Changes:\n```diff\n@@ -16,18 +16,23 @@\n \n package com.google.samples.apps.nowinandroid.feature.foryou\n \n+import androidx.lifecycle.SavedStateHandle\n import androidx.lifecycle.ViewModel\n import androidx.lifecycle.viewModelScope\n+import com.google.samples.apps.nowinandroid.core.data.repository.NewsResourceQuery\n import com.google.samples.apps.nowinandroid.core.data.repository.UserDataRepository\n import com.google.samples.apps.nowinandroid.core.data.repository.UserNewsResourceRepository\n import com.google.samples.app...\n```\n\n### Commit 2\n- ID: 050db2cb\n- Author: James Rose (rosej@google.com)\n- Date: 2023-04-18 04:45:49\n- Message: Merge branch 'main' into jr/track-viewed\n- Changes:\n```diff\n@@ -20,7 +20,7 @@ import androidx.lifecycle.ViewModel\n import androidx.lifecycle.viewModelScope\n import com.google.samples.apps.nowinandroid.core.data.repository.UserDataRepository\n import com.google.samples.apps.nowinandroid.core.data.repository.UserNewsResourceRepository\n-import com.google.samples.apps.nowinandroid.core.data.util.SyncStatusMonitor\n+import com.google.samples.apps.nowinandroid.core.data.util.SyncManager\n import com.google.samples.apps.nowinandroid.core.domain.GetFollowableTopics...\n```\n\n### Commit 3\n- ID: 08956492\n- Author: Adetunji Dahunsi (dahunsi@google.com)\n- Date: 2023-03-21 21:37:24\n- Message: Backend triggered sync",
+      "metadata": {
+        "commit_count": 5,
+        "chunk_index": 3,
+        "strategy": "enhanced",
+        "file_path": "feature/foryou/src/main/java/com/google/samples/apps/nowinandroid/feature/foryou/ForYouViewModel.kt",
+        "language": "kotlin",
+        "total_chunks": 6
+      },
+      "similarity_score": 1.1401780843734741
+    },
+    {
+      "content": "## Git Commit History\n\n### Commit 1\n- ID: 0ebd0ab6\n- Author: Simon Marquis (contact@simon-marquis.fr)\n- Date: 2023-05-08 16:34:05\n- Message: Remove unused import\n- Changes:\n```diff\n@@ -46,7 +46,6 @@ import androidx.compose.ui.semantics.Role\n import androidx.compose.ui.tooling.preview.Preview\n import androidx.compose.ui.unit.dp\n import androidx.compose.ui.window.DialogProperties\n-import androidx.core.content.ContextCompat\n import androidx.hilt.navigation.compose.hiltViewModel\n import androidx.lifecycle.compose.collectAsStateWithLifecycle\n import com.google.samples.apps.nowinandroid.core.designsystem.theme.NiaTheme...\n```\n\n### Commit 2\n- ID: 2291eb0f\n- Author: Simon Marquis (contact@simon-marquis.fr)\n- Date: 2023-05-08 16:31:35\n- Message: Remove unused imports\n- Changes:\n```diff\n@@ -16,8 +16,6 @@\n \n package com.google.samples.apps.nowinandroid.feature.settings\n \n-import android.content.Intent\n-import android.net.Uri\n import androidx.compose.foundation.clickable\n import androidx.compose.foundation.layout.Column\n import androidx.compose.foundation.layout.Row\n@@ -42,7 +40,6 @@ import androidx.compose.ui.Alignment\n import androidx.compose.ui.ExperimentalComposeUiApi\n import androidx.compose.ui.Modifier\n import androidx.compose.ui.platform.LocalConfiguration\n-import androidx...\n```\n\n### Commit 3\n- ID: 634e7f02\n- Author: Simon Marquis (contact@simon-marquis.fr)\n- Date: 2023-05-08 16:28:05\n- Message: Remove `toUri()`\n- Changes:\n```diff\n@@ -50,7 +50,6 @@ import androidx.compose.ui.tooling.preview.Preview\n import androidx.compose.ui.unit.dp\n import androidx.compose.ui.window.DialogProperties\n import androidx.core.content.ContextCompat\n-import androidx.core.net.toUri\n import androidx.hilt.navigation.compose.hiltViewModel\n import androidx.lifecycle.compose.collectAsStateWithLifecycle\n import com.google.samples.apps.nowinandroid.core.designsystem.theme.NiaTheme\n@@ -287,7 +286,7 @@ private fun TextLink(text: String, url: String) {\n ...\n```",
+      "metadata": {
+        "language": "kotlin",
+        "strategy": "enhanced",
+        "total_chunks": 12,
+        "chunk_index": 10,
+        "commit_count": 5,
+        "file_path": "feature/settings/src/main/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsDialog.kt"
+      },
+      "similarity_score": 1.1907631158828735
+    },
+    {
+      "content": "### Commit 2\n- ID: 6046f6e9\n- Author: Angie Sasmita (asasmita@google.com)\n- Date: 2023-01-19 13:57:36\n- Message: Add dynamic color option in settings for API >=32\n\nChange-Id: Ib42c1cbd0208e98ef7610a1c8aca5d721aa464e6\n- Changes:\n```diff\n@@ -41,6 +41,7 @@ class SettingsViewModel @Inject constructor(\n                 Success(\n                     settings = UserEditableSettings(\n                         brand = userData.themeBrand,\n+                        useDynamicColor = userData.useDynamicColor,\n                         darkThemeConfig = userData.darkThemeConfig\n                     )\n                 )\n@@ -68,12 +69,22 @@ class SettingsViewModel @Inject constructor(\n             userDataRepository.setDarkThemeConfig(darkThem...\n```\n\n### Commit 3\n- ID: 9c22a7a4\n- Author: Márton Braun (zsmb@google.com)\n- Date: 2022-11-30 20:29:04\n- Message: Remove `Stream` suffixes\n\nChange-Id: I45decae965d7e35289d3fa31fc58b8c463fbead1\n- Changes:\n```diff\n@@ -36,7 +36,7 @@ class SettingsViewModel @Inject constructor(\n     private val userDataRepository: UserDataRepository,\n ) : ViewModel() {\n     val settingsUiState: StateFlow<SettingsUiState> =\n-        userDataRepository.userDataStream\n+        userDataRepository.userData\n             .map { userData ->\n                 Success(\n                     settings = UserEditableSettings(...\n```",
+      "metadata": {
+        "strategy": "enhanced",
+        "file_path": "feature/settings/src/main/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsViewModel.kt",
+        "chunk_index": 3,
+        "language": "kotlin",
+        "commit_count": 5,
+        "total_chunks": 5
+      },
+      "similarity_score": 1.2035412788391113
+    },
+    {
+      "content": "setContent {\n            val systemUiController = rememberSystemUiController()\n            val darkTheme = shouldUseDarkTheme(uiState)\n\n            // Update the dark content of the system bars to match the theme\n            DisposableEffect(systemUiController, darkTheme) {\n                systemUiController.systemBarsDarkContentEnabled = !darkTheme\n                onDispose {}\n            }\n\n            CompositionLocalProvider(LocalAnalyticsHelper provides analyticsHelper) {\n                NiaTheme(\n                    darkTheme = darkTheme,\n                    androidTheme = shouldUseAndroidTheme(uiState),\n                    disableDynamicTheming = shouldDisableDynamicTheming(uiState),\n                ) {\n                    NiaApp(\n                        networkMonitor = networkMonitor,\n                        windowSizeClass = calculateWindowSizeClass(this),\n                        userNewsResourceRepository = userNewsResourceRepository,\n                    )\n                }\n            }\n        }\n    }\n\n    override fun onResume() {\n        super.onResume()\n        lazyStats.get().isTrackingEnabled = true\n    }\n\n    override fun onPause() {\n        super.onPause()\n        lazyStats.get().isTrackingEnabled = false\n    }\n}\n\n/**\n * Returns `true` if the Android theme should be used, as a function of the [uiState].\n */\n@Composable\nprivate fun shouldUseAndroidTheme(\n    uiState: MainActivityUiState,\n): Boolean = when (uiState) {\n    Loading -> false\n    is Success -> when (uiState.userData.themeBrand) {\n        ThemeBrand.DEFAULT -> false\n        ThemeBrand.ANDROID -> true\n    }\n}\n\n/**\n * Returns `true` if the dynamic color is disabled, as a function of the [uiState].\n */\n@Composable\nprivate fun shouldDisableDynamicTheming(\n    uiState: MainActivityUiState,\n): Boolean = when (uiState) {\n    Loading -> false\n    is Success -> !uiState.userData.useDynamicColor\n}",
+      "metadata": {
+        "total_chunks": 7,
+        "language": "kotlin",
+        "strategy": "enhanced",
+        "file_path": "app/src/main/java/com/google/samples/apps/nowinandroid/MainActivity.kt",
+        "chunk_index": 3,
+        "commit_count": 5
+      },
+      "similarity_score": 1.2125768661499023
+    },
+    {
+      "content": "### Commit 5\n- ID: 4d4f7d4a\n- Author: Simon Marquis (contact@simon-marquis.fr)\n- Date: 2023-02-14 06:24:34\n- Message: Merge remote-tracking branch 'origin/main' into update/androidx-lifecycle\n- Changes:\n```diff\n@@ -176,10 +176,7 @@ fun NiaApp(\n                             )\n                         }\n \n-                        NiaNavHost(\n-                            navController = appState.navController,\n-                            onBackClick = appState::onBackClick,\n-                        )\n+                        NiaNavHost(appState.navController)\n                     }\n \n                     // TODO: We may want to add padding or spacer when the snackbar is shown so that...\n```",
+      "metadata": {
+        "file_path": "app/src/main/java/com/google/samples/apps/nowinandroid/ui/NiaApp.kt",
+        "strategy": "enhanced",
+        "chunk_index": 12,
+        "language": "kotlin",
+        "total_chunks": 13,
+        "commit_count": 5
+      },
+      "similarity_score": 1.215099811553955
+    },
+    {
+      "content": "@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)\n@AndroidEntryPoint\nclass MainActivity : ComponentActivity() {\n\n    /**\n     * Lazily inject [JankStats], which is used to track jank throughout the app.\n     */\n    @Inject\n    lateinit var lazyStats: dagger.Lazy<JankStats>\n\n    @Inject\n    lateinit var networkMonitor: NetworkMonitor\n\n    @Inject\n    lateinit var analyticsHelper: AnalyticsHelper\n\n    @Inject\n    lateinit var userNewsResourceRepository: UserNewsResourceRepository\n\n    val viewModel: MainActivityViewModel by viewModels()\n\n    override fun onCreate(savedInstanceState: Bundle?) {\n        val splashScreen = installSplashScreen()\n        super.onCreate(savedInstanceState)\n\n        var uiState: MainActivityUiState by mutableStateOf(Loading)\n\n        // Update the uiState\n        lifecycleScope.launch {\n            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {\n                viewModel.uiState\n                    .onEach {\n                        uiState = it\n                    }\n                    .collect()\n            }\n        }\n\n        // Keep the splash screen on-screen until the UI state is loaded. This condition is\n        // evaluated each time the app needs to be redrawn so it should be fast to avoid blocking\n        // the UI.\n        splashScreen.setKeepOnScreenCondition {\n            when (uiState) {\n                Loading -> true\n                is Success -> false\n            }\n        }\n\n        // Turn off the decor fitting system windows, which allows us to handle insets,\n        // including IME animations\n        WindowCompat.setDecorFitsSystemWindows(window, false)\n\n        setContent {\n            val systemUiController = rememberSystemUiController()\n            val darkTheme = shouldUseDarkTheme(uiState)",
+      "metadata": {
+        "chunk_index": 2,
+        "total_chunks": 7,
+        "file_path": "app/src/main/java/com/google/samples/apps/nowinandroid/MainActivity.kt",
+        "strategy": "enhanced",
+        "language": "kotlin",
+        "commit_count": 5
+      },
+      "similarity_score": 1.2183648347854614
+    },
+    {
+      "content": "Landroidx/activity/ViewTreeOnBackPressedDispatcherOwner$findViewTreeOnBackPressedDispatcherOwner$2;\nLandroidx/activity/compose/ComponentActivityKt;\nLandroidx/activity/compose/LocalOnBackPressedDispatcherOwner$LocalOnBackPressedDispatcherOwner$1;\nLandroidx/activity/compose/LocalOnBackPressedDispatcherOwner;\nLandroidx/activity/contextaware/ContextAwareHelper;\nLandroidx/activity/contextaware/OnContextAvailableListener;\nLandroidx/activity/result/ActivityResult$$ExternalSyntheticOutline0;\nLandroidx/activity/result/ActivityResultRegistry;\nLandroidx/appcompat/R$bool;\nLandroidx/appcompat/R$style;\nLandroidx/appcompat/resources/R$drawable;\nLandroidx/appcompat/view/SupportMenuInflater$$ExternalSyntheticOutline0;\nLandroidx/appcompat/widget/AppCompatTextHelper$Api28Impl$$ExternalSyntheticApiModelOutline0;\nLandroidx/arch/core/executor/ArchTaskExecutor$2;\nLandroidx/arch/core/executor/ArchTaskExecutor;\nLandroidx/arch/core/executor/DefaultTaskExecutor$$ExternalSyntheticApiModelOutline0;\nLandroidx/arch/core/executor/DefaultTaskExecutor$1;\nLandroidx/arch/core/executor/DefaultTaskExecutor;\nLandroidx/arch/core/executor/TaskExecutor;\nLandroidx/arch/core/internal/FastSafeIterableMap;\nLandroidx/arch/core/internal/SafeIterableMap$AscendingIterator;\nLandroidx/arch/core/internal/SafeIterableMap$Entry;\nLandroidx/arch/core/internal/SafeIterableMap$IteratorWithAdditions;\nLandroidx/arch/core/internal/SafeIterableMap$ListIterator;\nLandroidx/arch/core/internal/SafeIterableMap$SupportRemove;\nLandroidx/arch/core/internal/SafeIterableMap;\nLandroidx/arch/core/util/Function;\nLandroidx/collection/ArrayMap$KeyIterator;\nLandroidx/collection/ArrayMap$KeySet;\nLandroidx/collection/ArrayMap;\nLandroidx/collection/ArraySet;\nLandroidx/collection/IndexBasedArrayIterator;\nLandroidx/collection/LruCache;\nLandroidx/collection/SimpleArrayMap;\nLandroidx/collection/SparseArrayCompat;\nLandroidx/collection/SparseArrayKt$valueIterator$1;\nLandroidx/compose/animation/AnimatedEnterExitMeasurePolicy$measure$1;",
+      "metadata": {
+        "chunk_index": 534,
+        "commit_count": 5,
+        "file_path": "app/src/main/baseline-prof.txt",
+        "total_chunks": 767,
+        "strategy": "enhanced",
+        "language": "text"
+      },
+      "similarity_score": 1.2260549068450928
+    },
+    {
+      "content": "HSPLandroidx/activity/OnBackPressedDispatcher$Api33Impl$$ExternalSyntheticLambda0;-><init>(Ljava/lang/Runnable;)V\nHSPLandroidx/activity/OnBackPressedDispatcher$Api33Impl;->createOnBackInvokedCallback(Ljava/lang/Runnable;)Landroid/window/OnBackInvokedCallback;\nHSPLandroidx/activity/OnBackPressedDispatcher$LifecycleOnBackPressedCancellable;-><init>(Landroidx/activity/OnBackPressedDispatcher;Landroidx/lifecycle/Lifecycle;Landroidx/activity/OnBackPressedCallback;)V\nHSPLandroidx/activity/OnBackPressedDispatcher$LifecycleOnBackPressedCancellable;->onStateChanged(Landroidx/lifecycle/LifecycleOwner;Landroidx/lifecycle/Lifecycle$Event;)V\nHSPLandroidx/activity/OnBackPressedDispatcher$OnBackPressedCancellable;-><init>(Landroidx/activity/OnBackPressedDispatcher;Landroidx/activity/OnBackPressedCallback;)V\nHSPLandroidx/activity/OnBackPressedDispatcher;-><init>(Ljava/lang/Runnable;)V\nHSPLandroidx/activity/OnBackPressedDispatcher;->addCallback(Landroidx/lifecycle/LifecycleOwner;Landroidx/activity/OnBackPressedCallback;)V\nHSPLandroidx/activity/OnBackPressedDispatcher;->updateBackInvokedCallbackState()V\nHSPLandroidx/activity/ViewTreeOnBackPressedDispatcherOwner$findViewTreeOnBackPressedDispatcherOwner$1;-><clinit>()V\nHSPLandroidx/activity/ViewTreeOnBackPressedDispatcherOwner$findViewTreeOnBackPressedDispatcherOwner$1;-><init>()V\nHSPLandroidx/activity/ViewTreeOnBackPressedDispatcherOwner$findViewTreeOnBackPressedDispatcherOwner$1;->invoke(Ljava/lang/Object;)Ljava/lang/Object;\nHSPLandroidx/activity/ViewTreeOnBackPressedDispatcherOwner$findViewTreeOnBackPressedDispatcherOwner$2;-><clinit>()V\nHSPLandroidx/activity/ViewTreeOnBackPressedDispatcherOwner$findViewTreeOnBackPressedDispatcherOwner$2;-><init>()V\nHSPLandroidx/activity/ViewTreeOnBackPressedDispatcherOwner$findViewTreeOnBackPressedDispatcherOwner$2;->invoke(Ljava/lang/Object;)Ljava/lang/Object;\nHSPLandroidx/activity/compose/ComponentActivityKt;-><clinit>()V",
+      "metadata": {
+        "chunk_index": 12,
+        "total_chunks": 767,
+        "strategy": "enhanced",
+        "language": "text",
+        "commit_count": 5,
+        "file_path": "app/src/main/baseline-prof.txt"
+      },
+      "similarity_score": 1.226508617401123
+    },
+    {
+      "content": "/**\n * A side-effect which records a screen view event.\n */\n@Composable\nfun TrackScreenViewEvent(\n    screenName: String,\n    analyticsHelper: AnalyticsHelper = LocalAnalyticsHelper.current,\n) = DisposableEffect(Unit) {\n    analyticsHelper.logScreenView(screenName)\n    onDispose {}\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 072364e7\n- Author: Keisuke Takagi (mit@takagi.app)\n- Date: 2023-02-17 23:41:33\n- Message: remove newsResourceTitle\n- Changes:\n```diff\n@@ -39,7 +39,7 @@ fun AnalyticsHelper.logScreenView(screenName: String) {\n     )\n }\n \n-fun AnalyticsHelper.logNewsResourceOpened(newsResourceId: String, newsResourceTitle: String) {\n+fun AnalyticsHelper.logNewsResourceOpened(newsResourceId: String) {\n     logEvent(\n         event = AnalyticsEvent(\n             type = \"news_resource_opened\",...\n```\n\n### Commit 2\n- ID: 2a4d0434\n- Author: Don Turner (donturner@google.com)\n- Date: 2023-02-08 06:23:50\n- Message: Add Firebase analytics. See go/nia-firebase-services.\n\nChange-Id: I0cbbda0bba761d8019241f6165db231fe94fb689\n- Changes:\n```diff\n@@ -0,0 +1,63 @@\n+/*\n+ * Copyright 2023 The Android Open Source Project\n+ *\n+ * Licensed under the Apache License, Version 2.0 (the \"License\");\n+ * you may not use this file except in compliance with the License.\n+ * You may obtain a copy of the License at\n+ *\n+ *     https://www.apache.org/licenses/LICENSE-2.0\n+ *\n+ * Unless required by applicable law or agreed to in writing, software\n+ * distributed under the License is distributed on an \"AS IS\" BASIS,\n+ * WITHOUT WARRANTIES OR CONDITIONS OF A...\n```",
+      "metadata": {
+        "file_path": "core/ui/src/main/java/com/google/samples/apps/nowinandroid/core/ui/AnalyticsExtensions.kt",
+        "total_chunks": 2,
+        "chunk_index": 1,
+        "language": "kotlin",
+        "commit_count": 2,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.2301292419433594
+    },
+    {
+      "content": "import com.google.samples.apps.nowinandroid.core.model.data.DarkThemeConfig.DARK\nimport com.google.samples.apps.nowinandroid.core.model.data.DarkThemeConfig.FOLLOW_SYSTEM\nimport com.google.samples.apps.nowinandroid.core.model.data.DarkThemeConfig.LIGHT\nimport com.google.samples.apps.nowinandroid.core.model.data.ThemeBrand\nimport com.google.samples.apps.nowinandroid.core.model.data.ThemeBrand.ANDROID\nimport com.google.samples.apps.nowinandroid.core.model.data.ThemeBrand.DEFAULT\nimport com.google.samples.apps.nowinandroid.core.ui.TrackScreenViewEvent\nimport com.google.samples.apps.nowinandroid.feature.settings.R.string\nimport com.google.samples.apps.nowinandroid.feature.settings.SettingsUiState.Loading\nimport com.google.samples.apps.nowinandroid.feature.settings.SettingsUiState.Success",
+      "metadata": {
+        "strategy": "enhanced",
+        "file_path": "feature/settings/src/main/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsDialog.kt",
+        "chunk_index": 2,
+        "total_chunks": 12,
+        "language": "kotlin",
+        "commit_count": 5
+      },
+      "similarity_score": 1.237040638923645
+    },
+    {
+      "content": "### Commit 3\n- ID: 867cc549\n- Author: mlykotom (mlykotom@google.com)\n- Date: 2022-11-25 20:55:56\n- Message: Update BLP\n- Changes:\n```diff\n@@ -1,5980 +1,13591 @@\n-HPLandroidx/activity/ComponentActivity;->getLifecycle()Landroidx/lifecycle/Lifecycle;\n-HPLandroidx/activity/ViewTreeOnBackPressedDispatcherOwner$findViewTreeOnBackPressedDispatcherOwner$1;->invoke(Landroid/view/View;)Landroid/view/View;\n-HPLandroidx/arch/core/executor/ArchTaskExecutor;->getInstance()Landroidx/arch/core/executor/ArchTaskExecutor;\n-HPLandroidx/arch/core/executor/ArchTaskExecutor;->isMainThread()Z\n-HPLandroidx/arch/core/executor/DefaultTaskExecutor;->isMainT...\n```\n\n### Commit 4\n- ID: 3ab60025\n- Author: Ben Weiss (benweiss@google.com)\n- Date: 2022-10-04 18:26:09\n- Message: New baseline profile\n\nChange-Id: I8a20ab2f44b198afaf57f26d1bee20054ed1ce6d\n- Changes:\n```diff\n@@ -1,148 +1,1074 @@\n+HPLandroidx/activity/ComponentActivity;->getLifecycle()Landroidx/lifecycle/Lifecycle;\n+HPLandroidx/activity/ViewTreeOnBackPressedDispatcherOwner$findViewTreeOnBackPressedDispatcherOwner$1;->invoke(Landroid/view/View;)Landroid/view/View;\n+HPLandroidx/arch/core/executor/ArchTaskExecutor;->getInstance()Landroidx/arch/core/executor/ArchTaskExecutor;\n+HPLandroidx/arch/core/executor/ArchTaskExecutor;->isMainThread()Z\n+HPLandroidx/arch/core/executor/DefaultTaskExecutor;->isMainThr...\n```\n\n### Commit 5\n- ID: a4e74888\n- Author: Tomáš Mlynarič (mlykotom@google.com)\n- Date: 2022-06-28 00:22:41\n- Message: Update baseline profile\n\nContains CUJs:\n- scrolling for you feed\n- scrolling interests topics\n- scrolling interests people",
+      "metadata": {
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "language": "text",
+        "chunk_index": 765,
+        "total_chunks": 767,
+        "file_path": "app/src/main/baseline-prof.txt"
+      },
+      "similarity_score": 1.2380926609039307
+    },
+    {
+      "content": "### Commit 5\n- ID: 56c06458\n- Author: Don Turner (donturner@google.com)\n- Date: 2022-10-20 01:18:39\n- Message: Add tests\n- Changes:\n```diff\n@@ -26,4 +26,5 @@\n     <string name=\"dark_mode_config_system_default\">System default</string>\n     <string name=\"dark_mode_config_light\">Light</string>\n     <string name=\"dark_mode_config_dark\">Dark</string>\n+    <string name=\"dismiss_dialog_button_text\">OK</string>\n </resources>\n\\ No newline at end of file...\n```",
+      "metadata": {
+        "language": "xml",
+        "file_path": "feature/settings/src/main/res/values/strings.xml",
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "total_chunks": 4,
+        "chunk_index": 3
+      },
+      "similarity_score": 1.2387633323669434
+    },
+    {
+      "content": "### Commit 4\n- ID: 3b7e7e3c\n- Author: mlykotom (mlykotom@google.com)\n- Date: 2023-03-31 21:38:02\n- Message: Use ReportDrawnWhen\n\nChange-Id: I77b4db63f72f43c6c826e66358f7672792ef137d\n- Changes:\n```diff\n@@ -16,7 +16,7 @@\n \n package com.google.samples.apps.nowinandroid.feature.foryou\n \n-import android.app.Activity\n+import androidx.activity.compose.ReportDrawnWhen\n import androidx.compose.animation.AnimatedVisibility\n import androidx.compose.animation.fadeIn\n import androidx.compose.animation.fadeOut\n@@ -57,13 +57,11 @@ import androidx.compose.material3.MaterialTheme\n import androidx.compose.material3.Surface\n import androidx.compose.material3.Text\n import androidx.compose.runtime.Composable\n-imp...\n```\n\n### Commit 5\n- ID: 93c01ad1\n- Author: Chris Sinco (csinco@google.com)\n- Date: 2023-03-25 00:38:19\n- Message: Fix trailing commas based on spotless check\n- Changes:\n```diff\n@@ -268,7 +268,7 @@ private fun LazyGridScope.onboarding(\n                             modifier = Modifier\n                                 .padding(horizontal = 24.dp)\n                                 .widthIn(364.dp)\n-                                .fillMaxWidth()\n+                                .fillMaxWidth(),\n                         ) {\n                             Text(\n                                 text = stringResource(R.string.done),...\n```",
+      "metadata": {
+        "language": "kotlin",
+        "file_path": "feature/foryou/src/main/java/com/google/samples/apps/nowinandroid/feature/foryou/ForYouScreen.kt",
+        "commit_count": 5,
+        "total_chunks": 17,
+        "chunk_index": 16,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.2431540489196777
+    }
+  ],
+  "compressed": [
+    {
+      "content": "# File: feature/settings/src/androidTest/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsDialogTest.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.activity.ComponentActivity\nimport androidx.compose.ui.test.assertIsSelected\nimport androidx.compose.ui.test.junit4.createAndroidComposeRule\nimport androidx.compose.ui.test.onNodeWithText\nimport com.google.samples.apps.nowinandroid.core.model.data.DarkThemeConfig.DARK\nimport com.google.samples.apps.nowinandroid.core.model.data.ThemeBrand.ANDROID\nimport com.google.samples.apps.nowinandroid.core.model.data.ThemeBrand.DEFAULT\nimport com.google.samples.apps.nowinandroid.feature.settings.SettingsUiState.Loading\nimport com.google.samples.apps.nowinandroid.feature.settings.SettingsUiState.Success\nimport org.junit.Rule\nimport org.junit.Test\nclass SettingsDialogTest {\n    @get:Rule\n    @Test\n    @Test\n\n## Recent Changes:\n- 819dd494 by Márton Braun (zsmb@google.com): Run Spotless to add trailing commas (and apply other rule updates)\n\nChange-Id: I5f8e49a3ef004c7e9e7d...\n- 19efc1b5 by Angie Sasmita (asasmita@google.com): Fix Spotless issue manually\n\nChange-Id: Icd560e6ceaaeee0a6f502fe49b3403ab07f926ef...\n- 6046f6e9 by Angie Sasmita (asasmita@google.com): Add dynamic color option in settings for API >=32\n\nChange-Id: Ib42c1cbd0208e98ef7610a1c8aca5d721aa46...",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "feature/settings/src/androidTest/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsDialogTest.kt",
+        "language": "kotlin",
+        "commit_count": 5,
+        "total_chunks": 1,
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.0204641819000244
+    },
+    {
+      "content": "# File: app/src/main/java/com/google/samples/apps/nowinandroid/ui/NiaAppState.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.compose.material3.windowsizeclass.WindowSizeClass\nimport androidx.compose.material3.windowsizeclass.WindowWidthSizeClass\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.Stable\nimport androidx.compose.runtime.getValue\nimport androidx.compose.runtime.mutableStateOf\nimport androidx.compose.runtime.remember\nimport androidx.compose.runtime.rememberCoroutineScope\nimport androidx.compose.runtime.setValue\nimport androidx.navigation.NavController\nimport androidx.navigation.NavDestination\nimport androidx.navigation.NavGraph.Companion.findStartDestination\nimport androidx.navigation.NavHostController\nimport androidx.navigation.compose.currentBackStackEntryAsState\nimport androidx.navigation.compose.rememberNavController\n\n## Recent Changes:\n- b3cdc172 by Takeshi Hagikura (thagikura@google.com): Implement search feature (#685)\n\nImplement search feature\n\n- Add a feature module named \"search\"\n- A...\n- b49767a8 by James Rose (rosej@google.com): Rename getUserNewsResources to observeAll...\n- 57c13d84 by James Rose (rosej@google.com): Incorporate code review changes: Move UserNewsResourceRepository to data\nmodule; move UserNewsResour...",
+      "metadata": {
+        "commit_count": 5,
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "file_path": "app/src/main/java/com/google/samples/apps/nowinandroid/ui/NiaAppState.kt",
+        "language": "kotlin",
+        "total_chunks": 1
+      },
+      "similarity_score": 1.2606053352355957
+    },
+    {
+      "content": "# File: core/ui/src/main/java/com/google/samples/apps/nowinandroid/core/ui/NewsResourceCardList.kt (kotlin)\n\n## Key Code Elements:\nimport android.net.Uri\nimport androidx.compose.foundation.lazy.LazyListScope\nimport androidx.compose.foundation.lazy.items\nimport androidx.compose.material3.MaterialTheme\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.graphics.toArgb\nimport androidx.compose.ui.platform.LocalContext\nimport com.google.samples.apps.nowinandroid.core.analytics.LocalAnalyticsHelper\nimport com.google.samples.apps.nowinandroid.core.model.data.UserNewsResource\n\n## Recent Changes:\n- 050db2cb by James Rose (rosej@google.com): Merge branch 'main' into jr/track-viewed...\n- 57c13d84 by James Rose (rosej@google.com): Incorporate code review changes: Move UserNewsResourceRepository to data\nmodule; move UserNewsResour...\n- ebfbb5ba by James Rose (rosej@google.com): Display unread state on the news feed and bottom nav bar\n\nWhen a news resource is unread, display a ...",
+      "metadata": {
+        "strategy": "compressed",
+        "language": "kotlin",
+        "commit_count": 5,
+        "total_chunks": 1,
+        "file_path": "core/ui/src/main/java/com/google/samples/apps/nowinandroid/core/ui/NewsResourceCardList.kt",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.2723512649536133
+    },
+    {
+      "content": "# File: app/src/main/java/com/google/samples/apps/nowinandroid/MainActivity.kt (kotlin)\n\n## Key Code Elements:\nimport android.os.Bundle\nimport androidx.activity.ComponentActivity\nimport androidx.activity.compose.setContent\nimport androidx.activity.viewModels\nimport androidx.compose.foundation.isSystemInDarkTheme\nimport androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi\nimport androidx.compose.material3.windowsizeclass.calculateWindowSizeClass\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.CompositionLocalProvider\nimport androidx.compose.runtime.DisposableEffect\nimport androidx.compose.runtime.getValue\nimport androidx.compose.runtime.mutableStateOf\nimport androidx.compose.runtime.setValue\nimport androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen\nimport androidx.core.view.WindowCompat\n\n## Recent Changes:\n- 57c13d84 by James Rose (rosej@google.com): Incorporate code review changes: Move UserNewsResourceRepository to data\nmodule; move UserNewsResour...\n- ebfbb5ba by James Rose (rosej@google.com): Display unread state on the news feed and bottom nav bar\n\nWhen a news resource is unread, display a ...\n- 2a4d0434 by Don Turner (donturner@google.com): Add Firebase analytics. See go/nia-firebase-services.\n\nChange-Id: I0cbbda0bba761d8019241f6165db231fe...",
+      "metadata": {
+        "total_chunks": 1,
+        "commit_count": 5,
+        "strategy": "compressed",
+        "language": "kotlin",
+        "chunk_index": 0,
+        "file_path": "app/src/main/java/com/google/samples/apps/nowinandroid/MainActivity.kt"
+      },
+      "similarity_score": 1.2729089260101318
+    },
+    {
+      "content": "# File: app-nia-catalog/src/main/java/com/google/samples/apps/niacatalog/ui/Catalog.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.compose.foundation.layout.Arrangement\nimport androidx.compose.foundation.layout.ExperimentalLayoutApi\nimport androidx.compose.foundation.layout.FlowRow\nimport androidx.compose.foundation.layout.WindowInsets\nimport androidx.compose.foundation.layout.add\nimport androidx.compose.foundation.layout.asPaddingValues\nimport androidx.compose.foundation.layout.fillMaxSize\nimport androidx.compose.foundation.layout.padding\nimport androidx.compose.foundation.layout.systemBars\nimport androidx.compose.foundation.lazy.LazyColumn\nimport androidx.compose.material3.Icon\nimport androidx.compose.material3.MaterialTheme\nimport androidx.compose.material3.Surface\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\n\n## Recent Changes:\n- 33a3e360 by AnirudhPudari (anirudhgoud013@gmail.com): Deprecated FlowLayouts from accompanist...\n- 237375f5 by Márton Braun (zsmb@google.com): Remove unused DropdownMenu component\n\nChange-Id: I7ee7e8f1995667c7e54459f4333594c4605cc5a9...\n- 322ff63d by Márton Braun (zsmb@google.com): Route topic chip tap events up to NiaNavHost\n\nChange-Id: I228c486f5cde1bb47530e8f115a435bfa34381a7...",
+      "metadata": {
+        "file_path": "app-nia-catalog/src/main/java/com/google/samples/apps/niacatalog/ui/Catalog.kt",
+        "strategy": "compressed",
+        "commit_count": 5,
+        "language": "kotlin",
+        "chunk_index": 0,
+        "total_chunks": 1
+      },
+      "similarity_score": 1.2830644845962524
+    },
+    {
+      "content": "# File: feature/foryou/build.gradle.kts (text)\n\n## Key Code Elements:\nimport com.android.build.api.dsl.ManagedVirtualDevice\n\n## Recent Changes:\n- 2499c0a0 by TJ Dahunsi (dahunsi@google.com): Notify users when news are updated...\n- 33a3e360 by AnirudhPudari (anirudhgoud013@gmail.com): Deprecated FlowLayouts from accompanist...\n- 3b7e7e3c by mlykotom (mlykotom@google.com): Use ReportDrawnWhen\n\nChange-Id: I77b4db63f72f43c6c826e66358f7672792ef137d...",
+      "metadata": {
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "file_path": "feature/foryou/build.gradle.kts",
+        "chunk_index": 0,
+        "language": "text",
+        "commit_count": 5
+      },
+      "similarity_score": 1.296390414237976
+    },
+    {
+      "content": "# File: feature/settings/src/main/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsDialog.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.compose.foundation.clickable\nimport androidx.compose.foundation.layout.Column\nimport androidx.compose.foundation.layout.Row\nimport androidx.compose.foundation.layout.Spacer\nimport androidx.compose.foundation.layout.fillMaxWidth\nimport androidx.compose.foundation.layout.height\nimport androidx.compose.foundation.layout.padding\nimport androidx.compose.foundation.layout.width\nimport androidx.compose.foundation.layout.widthIn\nimport androidx.compose.foundation.rememberScrollState\nimport androidx.compose.foundation.selection.selectable\nimport androidx.compose.foundation.selection.selectableGroup\nimport androidx.compose.foundation.verticalScroll\nimport androidx.compose.material3.AlertDialog\nimport androidx.compose.material3.Divider\n\n## Recent Changes:\n- 0ebd0ab6 by Simon Marquis (contact@simon-marquis.fr): Remove unused import...\n- 2291eb0f by Simon Marquis (contact@simon-marquis.fr): Remove unused imports...\n- 634e7f02 by Simon Marquis (contact@simon-marquis.fr): Remove `toUri()`...",
+      "metadata": {
+        "strategy": "compressed",
+        "commit_count": 5,
+        "language": "kotlin",
+        "chunk_index": 0,
+        "file_path": "feature/settings/src/main/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsDialog.kt",
+        "total_chunks": 1
+      },
+      "similarity_score": 1.3004857301712036
+    },
+    {
+      "content": "# File: feature/settings/src/main/AndroidManifest.xml (xml)\n\n## Recent Changes:\n- 8c30ab9f by Don Turner (donturner@google.com): Add settings module, refactor top bar...",
+      "metadata": {
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "language": "xml",
+        "commit_count": 1,
+        "file_path": "feature/settings/src/main/AndroidManifest.xml",
+        "total_chunks": 1
+      },
+      "similarity_score": 1.3038192987442017
+    },
+    {
+      "content": "# File: tools/nowinandroid-codestyle.xml (xml)\n\n## Recent Changes:\n- 008bca14 by Don Turner (donturner@google.com): Add initial app scaffolding\n\nChange-Id: If8ff7226949b534e5f0fcaf4c3b58351ffe86d93...",
+      "metadata": {
+        "total_chunks": 1,
+        "file_path": "tools/nowinandroid-codestyle.xml",
+        "chunk_index": 0,
+        "language": "xml",
+        "strategy": "compressed",
+        "commit_count": 1
+      },
+      "similarity_score": 1.3095581531524658
+    },
+    {
+      "content": "# File: core/ui/src/main/java/com/google/samples/apps/nowinandroid/core/ui/DevicePreviews.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.compose.ui.tooling.preview.Preview\n@Preview(name = \"phone\", device = \"spec:shape=Normal,width=360,height=640,unit=dp,dpi=480\")\n@Preview(name = \"landscape\", device = \"spec:shape=Normal,width=640,height=360,unit=dp,dpi=480\")\n@Preview(name = \"foldable\", device = \"spec:shape=Normal,width=673,height=841,unit=dp,dpi=480\")\n@Preview(name = \"tablet\", device = \"spec:shape=Normal,width=1280,height=800,unit=dp,dpi=480\")\n\n## Recent Changes:\n- 9ae03c35 by Takeshi Hagikura (thagikura@google.com): Fix the lint warnings...",
+      "metadata": {
+        "total_chunks": 1,
+        "language": "kotlin",
+        "commit_count": 1,
+        "strategy": "compressed",
+        "file_path": "core/ui/src/main/java/com/google/samples/apps/nowinandroid/core/ui/DevicePreviews.kt",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.3212456703186035
+    },
+    {
+      "content": "# File: feature/settings/src/main/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsViewModel.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.lifecycle.ViewModel\nimport androidx.lifecycle.viewModelScope\nimport com.google.samples.apps.nowinandroid.core.data.repository.UserDataRepository\nimport com.google.samples.apps.nowinandroid.core.model.data.DarkThemeConfig\nimport com.google.samples.apps.nowinandroid.core.model.data.ThemeBrand\nimport com.google.samples.apps.nowinandroid.feature.settings.SettingsUiState.Loading\nimport com.google.samples.apps.nowinandroid.feature.settings.SettingsUiState.Success\nimport dagger.hilt.android.lifecycle.HiltViewModel\nimport kotlinx.coroutines.flow.SharingStarted\nimport kotlinx.coroutines.flow.StateFlow\nimport kotlinx.coroutines.flow.map\nimport kotlinx.coroutines.flow.stateIn\nimport kotlinx.coroutines.launch\nimport javax.inject.Inject\n@HiltViewModel\n\n## Recent Changes:\n- 819dd494 by Márton Braun (zsmb@google.com): Run Spotless to add trailing commas (and apply other rule updates)\n\nChange-Id: I5f8e49a3ef004c7e9e7d...\n- 6046f6e9 by Angie Sasmita (asasmita@google.com): Add dynamic color option in settings for API >=32\n\nChange-Id: Ib42c1cbd0208e98ef7610a1c8aca5d721aa46...\n- 9c22a7a4 by Márton Braun (zsmb@google.com): Remove `Stream` suffixes\n\nChange-Id: I45decae965d7e35289d3fa31fc58b8c463fbead1...",
+      "metadata": {
+        "total_chunks": 1,
+        "language": "kotlin",
+        "strategy": "compressed",
+        "file_path": "feature/settings/src/main/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsViewModel.kt",
+        "chunk_index": 0,
+        "commit_count": 5
+      },
+      "similarity_score": 1.3254806995391846
+    },
+    {
+      "content": "# File: sync/sync-test/src/main/AndroidManifest.xml (xml)\n\n## Recent Changes:\n- dcc23829 by Wojtek Kaliciński (wkal@google.com): Migrate packages to namespaces in build files\n\nChange-Id: I21e021caa0ea72a7097dfd9af04a3c07a0cc9aa5...\n- c4debb74 by Adetunji Dahunsi (dahunsi@google.com): Give feedback when syncing on ForYouScreen\n\nChange-Id: I10a646e8a17f81d96351e69d36f0cb6ccf28e05c...",
+      "metadata": {
+        "file_path": "sync/sync-test/src/main/AndroidManifest.xml",
+        "commit_count": 2,
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "language": "xml",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.3272513151168823
+    },
+    {
+      "content": "# File: core/designsystem/src/main/java/com/google/samples/apps/nowinandroid/core/designsystem/component/Background.kt (kotlin)\n\n## Key Code Elements:\nimport android.content.res.Configuration\nimport androidx.compose.foundation.layout.Box\nimport androidx.compose.foundation.layout.fillMaxSize\nimport androidx.compose.foundation.layout.size\nimport androidx.compose.material3.LocalAbsoluteTonalElevation\nimport androidx.compose.material3.Surface\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.CompositionLocalProvider\nimport androidx.compose.runtime.getValue\nimport androidx.compose.runtime.rememberUpdatedState\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.draw.drawWithCache\nimport androidx.compose.ui.geometry.Offset\nimport androidx.compose.ui.graphics.Brush\nimport androidx.compose.ui.graphics.Color\n\n## Recent Changes:\n- 819dd494 by Márton Braun (zsmb@google.com): Run Spotless to add trailing commas (and apply other rule updates)\n\nChange-Id: I5f8e49a3ef004c7e9e7d...\n- 6046f6e9 by Angie Sasmita (asasmita@google.com): Add dynamic color option in settings for API >=32\n\nChange-Id: Ib42c1cbd0208e98ef7610a1c8aca5d721aa46...\n- 0917cdeb by Don Turner (donturner@google.com): Refactor NiaGradientBackground to accept GradientColors\n\nChange-Id: I55840b22e123490097710570bf11554...",
+      "metadata": {
+        "language": "kotlin",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "file_path": "core/designsystem/src/main/java/com/google/samples/apps/nowinandroid/core/designsystem/component/Background.kt",
+        "commit_count": 5,
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.327679991722107
+    },
+    {
+      "content": "# File: build-logic/convention/src/main/kotlin/AndroidApplicationConventionPlugin.kt (kotlin)\n\n## Key Code Elements:\nimport com.android.build.api.dsl.ApplicationExtension\nimport com.google.samples.apps.nowinandroid.configureGradleManagedDevices\nimport com.android.build.api.variant.ApplicationAndroidComponentsExtension\nimport com.google.samples.apps.nowinandroid.configureKotlinAndroid\nimport com.google.samples.apps.nowinandroid.configurePrintApksTask\nimport org.gradle.api.Plugin\nimport org.gradle.api.Project\nimport org.gradle.kotlin.dsl.configure\nclass AndroidApplicationConventionPlugin : Plugin<Project> {\n\n## Recent Changes:\n- 36eeb19d by Don Turner (donturner@google.com): Merge remote-tracking branch 'goog/main' into feb13-merge\n\n* goog/main:\n  Revert \"Revert \"Revert \"Re...\n- 2a4d0434 by Don Turner (donturner@google.com): Add Firebase analytics. See go/nia-firebase-services.\n\nChange-Id: I0cbbda0bba761d8019241f6165db231fe...\n- 6146dd55 by Alex Vanyo (vanyo@google.com): Switch GMD to use a convention plugin\n\nChange-Id: Ia4f94cd7533c9168752ee39e3f960108fe802ab4...",
+      "metadata": {
+        "strategy": "compressed",
+        "commit_count": 5,
+        "file_path": "build-logic/convention/src/main/kotlin/AndroidApplicationConventionPlugin.kt",
+        "language": "kotlin",
+        "chunk_index": 0,
+        "total_chunks": 1
+      },
+      "similarity_score": 1.3303570747375488
+    },
+    {
+      "content": "# File: app-nia-catalog/src/main/java/com/google/samples/apps/niacatalog/NiaCatalogActivity.kt (kotlin)\n\n## Key Code Elements:\nimport android.os.Bundle\nimport androidx.activity.ComponentActivity\nimport androidx.activity.compose.setContent\nimport androidx.core.view.WindowCompat\nimport com.google.samples.apps.niacatalog.ui.NiaCatalog\nclass NiaCatalogActivity : ComponentActivity() {\n\n## Recent Changes:\n- 17005c3e by Simona Stojanovic (anomis@google.com): Add NiA Component Catalog app\n\nChange-Id: Ie586b1329e42c10811d29fab1d0fbe6aea8e7cfc...",
+      "metadata": {
+        "chunk_index": 0,
+        "commit_count": 1,
+        "language": "kotlin",
+        "file_path": "app-nia-catalog/src/main/java/com/google/samples/apps/niacatalog/NiaCatalogActivity.kt",
+        "total_chunks": 1,
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.3313308954238892
+    },
+    {
+      "content": "# File: feature/foryou/src/androidTest/java/com/google/samples/apps/nowinandroid/feature/foryou/ForYouScreenTest.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.activity.ComponentActivity\nimport androidx.compose.foundation.layout.BoxWithConstraints\nimport androidx.compose.ui.test.assertHasClickAction\nimport androidx.compose.ui.test.assertIsEnabled\nimport androidx.compose.ui.test.assertIsNotEnabled\nimport androidx.compose.ui.test.hasScrollToNodeAction\nimport androidx.compose.ui.test.hasText\nimport androidx.compose.ui.test.junit4.createAndroidComposeRule\nimport androidx.compose.ui.test.onFirst\nimport androidx.compose.ui.test.onNodeWithContentDescription\nimport androidx.compose.ui.test.onNodeWithText\nimport androidx.compose.ui.test.performScrollToNode\nimport com.google.samples.apps.nowinandroid.core.testing.data.followableTopicTestData\nimport com.google.samples.apps.nowinandroid.core.testing.data.userNewsResourcesTestData\nimport com.google.samples.apps.nowinandroid.core.ui.NewsFeedUiState\n\n## Recent Changes:\n- ef97cb94 by TJ Dahunsi (dahunsi@google.com): Route notification deep link through for you screen...\n- 57c13d84 by James Rose (rosej@google.com): Incorporate code review changes: Move UserNewsResourceRepository to data\nmodule; move UserNewsResour...\n- ebfbb5ba by James Rose (rosej@google.com): Display unread state on the news feed and bottom nav bar\n\nWhen a news resource is unread, display a ...",
+      "metadata": {
+        "commit_count": 5,
+        "file_path": "feature/foryou/src/androidTest/java/com/google/samples/apps/nowinandroid/feature/foryou/ForYouScreenTest.kt",
+        "total_chunks": 1,
+        "language": "kotlin",
+        "strategy": "compressed",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.3318281173706055
+    },
+    {
+      "content": "# File: core/ui/src/main/java/com/google/samples/apps/nowinandroid/core/ui/AnalyticsExtensions.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.DisposableEffect\nimport com.google.samples.apps.nowinandroid.core.analytics.AnalyticsEvent\nimport com.google.samples.apps.nowinandroid.core.analytics.AnalyticsEvent.Param\nimport com.google.samples.apps.nowinandroid.core.analytics.AnalyticsEvent.ParamKeys\nimport com.google.samples.apps.nowinandroid.core.analytics.AnalyticsEvent.Types\nimport com.google.samples.apps.nowinandroid.core.analytics.AnalyticsHelper\nimport com.google.samples.apps.nowinandroid.core.analytics.LocalAnalyticsHelper\n@Composable\n\n## Recent Changes:\n- 072364e7 by Keisuke Takagi (mit@takagi.app): remove newsResourceTitle...\n- 2a4d0434 by Don Turner (donturner@google.com): Add Firebase analytics. See go/nia-firebase-services.\n\nChange-Id: I0cbbda0bba761d8019241f6165db231fe...",
+      "metadata": {
+        "commit_count": 2,
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "file_path": "core/ui/src/main/java/com/google/samples/apps/nowinandroid/core/ui/AnalyticsExtensions.kt",
+        "language": "kotlin"
+      },
+      "similarity_score": 1.3419902324676514
+    },
+    {
+      "content": "# File: feature/settings/src/test/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsViewModelTest.kt (kotlin)\n\n## Key Code Elements:\nimport com.google.samples.apps.nowinandroid.core.model.data.DarkThemeConfig.DARK\nimport com.google.samples.apps.nowinandroid.core.model.data.ThemeBrand.ANDROID\nimport com.google.samples.apps.nowinandroid.core.testing.repository.TestUserDataRepository\nimport com.google.samples.apps.nowinandroid.core.testing.util.MainDispatcherRule\nimport com.google.samples.apps.nowinandroid.feature.settings.SettingsUiState.Loading\nimport com.google.samples.apps.nowinandroid.feature.settings.SettingsUiState.Success\nimport kotlinx.coroutines.flow.collect\nimport kotlinx.coroutines.launch\nimport kotlinx.coroutines.test.UnconfinedTestDispatcher\nimport kotlinx.coroutines.test.runTest\nimport org.junit.Before\nimport org.junit.Rule\nimport org.junit.Test\nimport kotlin.test.assertEquals\nclass SettingsViewModelTest {\n\n## Recent Changes:\n- 819dd494 by Márton Braun (zsmb@google.com): Run Spotless to add trailing commas (and apply other rule updates)\n\nChange-Id: I5f8e49a3ef004c7e9e7d...\n- 6046f6e9 by Angie Sasmita (asasmita@google.com): Add dynamic color option in settings for API >=32\n\nChange-Id: Ib42c1cbd0208e98ef7610a1c8aca5d721aa46...\n- 90dc3007 by Simon Marquis (contact@simon-marquis.fr): Migrate from JUnit assertions to Kotlin's test framework\n\nFixes #419...",
+      "metadata": {
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "language": "kotlin",
+        "file_path": "feature/settings/src/test/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsViewModelTest.kt",
+        "commit_count": 5
+      },
+      "similarity_score": 1.3426086902618408
+    },
+    {
+      "content": "# File: core/designsystem/src/main/java/com/google/samples/apps/nowinandroid/core/designsystem/component/Tag.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.compose.foundation.layout.Box\nimport androidx.compose.material3.ButtonDefaults\nimport androidx.compose.material3.MaterialTheme\nimport androidx.compose.material3.ProvideTextStyle\nimport androidx.compose.material3.TextButton\nimport androidx.compose.material3.contentColorFor\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.Modifier\n@Composable\n    const val UnfollowedTopicTagContainerAlpha = 0.5f\n    // TODO: File bug\n    const val DisabledTopicTagContainerAlpha = 0.12f\n\n## Recent Changes:\n- 322ff63d by Márton Braun (zsmb@google.com): Route topic chip tap events up to NiaNavHost\n\nChange-Id: I228c486f5cde1bb47530e8f115a435bfa34381a7...\n- 819dd494 by Márton Braun (zsmb@google.com): Run Spotless to add trailing commas (and apply other rule updates)\n\nChange-Id: I5f8e49a3ef004c7e9e7d...\n- c12fe1fb by Nick Rout (nickrout@google.com): Update :core-designsystem module based on Figma file...",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "core/designsystem/src/main/java/com/google/samples/apps/nowinandroid/core/designsystem/component/Tag.kt",
+        "language": "kotlin",
+        "strategy": "compressed",
+        "commit_count": 4,
+        "total_chunks": 1
+      },
+      "similarity_score": 1.3463776111602783
+    },
+    {
+      "content": "# File: app/src/main/java/com/google/samples/apps/nowinandroid/ui/NiaApp.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.compose.foundation.layout.Column\nimport androidx.compose.foundation.layout.ExperimentalLayoutApi\nimport androidx.compose.foundation.layout.Row\nimport androidx.compose.foundation.layout.WindowInsets\nimport androidx.compose.foundation.layout.WindowInsetsSides\nimport androidx.compose.foundation.layout.consumeWindowInsets\nimport androidx.compose.foundation.layout.fillMaxSize\nimport androidx.compose.foundation.layout.only\nimport androidx.compose.foundation.layout.padding\nimport androidx.compose.foundation.layout.safeDrawing\nimport androidx.compose.foundation.layout.safeDrawingPadding\nimport androidx.compose.foundation.layout.windowInsetsPadding\nimport androidx.compose.material3.ExperimentalMaterial3Api\nimport androidx.compose.material3.Icon\nimport androidx.compose.material3.MaterialTheme\n\n## Recent Changes:\n- b3cdc172 by Takeshi Hagikura (thagikura@google.com): Implement search feature (#685)\n\nImplement search feature\n\n- Add a feature module named \"search\"\n- A...\n- 57c13d84 by James Rose (rosej@google.com): Incorporate code review changes: Move UserNewsResourceRepository to data\nmodule; move UserNewsResour...\n- ebfbb5ba by James Rose (rosej@google.com): Display unread state on the news feed and bottom nav bar\n\nWhen a news resource is unread, display a ...",
+      "metadata": {
+        "language": "kotlin",
+        "file_path": "app/src/main/java/com/google/samples/apps/nowinandroid/ui/NiaApp.kt",
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "commit_count": 5,
+        "chunk_index": 0
+      },
+      "similarity_score": 1.3492591381072998
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "reason": "The crash occurs due to an invalid resource ID being accessed in RootViewWatcher. The error suggests that the resource with ID 0x7f050008 (type boolean) is not found when trying to check if a view should be ignored for leak detection.",
+  "location": [
+    "leakcanary.RootViewWatcher"
+  ],
+  "fix": "Ensure the resource ID being accessed exists in the project's resources. The fix would involve either adding the missing boolean resource or modifying the RootViewWatcher to handle cases where the resource is not found. Here's a suggested fix for the onRootViewAdded method:\n\n```kotlin\nfun onRootViewAdded(view: View) {\n    try {\n        if (view.context.resources.getBoolean(R.bool.leak_canary_watcher_ignore_view)) {\n            return\n        }\n    } catch (e: Resources.NotFoundException) {\n        // Resource not found, proceed with watching the view\n    }\n    // Rest of the method logic\n}\n```"
+}

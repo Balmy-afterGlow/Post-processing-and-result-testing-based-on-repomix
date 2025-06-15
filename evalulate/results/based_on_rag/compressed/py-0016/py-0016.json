@@ -1,0 +1,7 @@
+{
+  "reason": "The issue occurs because `docker-compose logs` fails when any service has a non-readable logging driver (like 'none'), even when no specific service is specified. The current implementation doesn't filter out services with non-readable logging drivers when no specific service is requested.",
+  "location": [
+    "compose/cli/log_printer.py"
+  ],
+  "fix": "Modify the log printer logic to skip services with non-readable logging drivers when no specific service is requested, and only fail when explicitly requesting logs for a service with a non-readable logging driver. The fix should involve checking the logging driver configuration before attempting to attach to logs and skipping those containers with non-readable drivers when no specific service is requested."
+}

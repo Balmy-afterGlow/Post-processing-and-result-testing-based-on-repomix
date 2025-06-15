@@ -1,0 +1,7 @@
+{
+  "reason": "The settings dialog state (shouldShowSettingsDialog) is not being persisted during activity recreation, causing the dialog to close when the activity is recreated due to configuration changes like rotation or resizing.",
+  "location": [
+    "feature/settings/src/main/java/com/google/samples/apps/nowinandroid/feature/settings/SettingsViewModel.kt"
+  ],
+  "fix": "In the SettingsViewModel, add a saved state handle to persist the dialog state. Modify the ViewModel to use SavedStateHandle to save and restore the shouldShowSettingsDialog state. Example:\n\n@HiltViewModel\nclass SettingsViewModel @Inject constructor(\n    private val userDataRepository: UserDataRepository,\n    savedStateHandle: SavedStateHandle\n) : ViewModel() {\n    private val _shouldShowSettingsDialog = savedStateHandle.getStateFlow(\"shouldShowSettingsDialog\", false)\n    val shouldShowSettingsDialog: StateFlow<Boolean> = _shouldShowSettingsDialog\n\n    fun onShowSettingsDialog(show: Boolean) {\n        savedStateHandle[\"shouldShowSettingsDialog\"] = show\n    }\n}"
+}

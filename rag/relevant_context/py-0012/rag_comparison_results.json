@@ -1,0 +1,708 @@
+{
+  "basic": [
+    {
+      "content": "```bash\nserverless invoke local --function functionName --data '{\"a\":\"bar\"}'\n```\n\n### Local function invocation with data from standard input\n\n```bash\nnode dataGenerator.js | serverless invoke local --function functionName\n```\n\n### Local function invocation with data passing\n\n```bash\nserverless invoke local --function functionName --path lib/data.json\n```\n\nThis example will pass the json data in the `lib/data.json` file (relative to the root of the service) while invoking the specified/deployed function.\n\n### Example `data.json`\n\n```json\n{\n  \"resource\": \"/\",\n  \"path\": \"/\",\n  \"httpMethod\": \"GET\",\n  //  etc. //\n}\n```\n\n### Local function invocation with custom context\n\n```bash\nserverless invoke local --function functionName --context \"hello world\"\n```\n\n### Local function invocation with context passing\n\n```bash\nserverless invoke local --function functionName --contextPath lib/context.json\n```\nThis example will pass the json context in the `lib/context.json` file (relative to the root of the service) while invoking the specified/deployed function.\n\n### Local function invocation, setting environment variables\n\n```bash\nserverless invoke local -f functionName -e VAR1=value1\n\n# Or more than one variable\n\nserverless invoke local -f functionName -e VAR1=value1 -e VAR2=value2\n```\n\n### Limitations\n\nCurrently, `invoke local` only supports the NodeJs, Python & Java runtimes.\n\n**Note:** In order to get correct output when using Java runtime, your Response class must implement `toString()` method.\n\n## Resource permissions\n\nLambda functions assume an *IAM role* during execution: the framework creates this role, and set all the permission provided in the `iamRoleStatements` section of `serverless.yml`.\n\nUnless you explicitly state otherwise, every call to the AWS SDK inside the lambda function is made using this role (a temporary pair of key / secret is generated and set by AWS as environment variables, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`).",
+      "metadata": {
+        "strategy": "basic",
+        "language": "markdown",
+        "file_path": "docs/providers/aws/cli-reference/invoke-local.md",
+        "chunk_index": 2,
+        "total_chunks": 4
+      },
+      "similarity_score": 0.979194700717926
+    },
+    {
+      "content": "## Examples\n\n### Local function invocation\n\n```bash\nserverless invoke local --function functionName\n```\n\nThis example will locally invoke your function.\n\n### Local function invocation with data\n\n```bash\nserverless invoke --function functionName --data \"hello world\"\n```\n\n```bash\nserverless invoke --function functionName --data '{\"a\":\"bar\"}'\n```\n\n### Local function invocation with data from standard input\n\n```bash\nnode dataGenerator.js | serverless invoke local --function functionName\n```\n\n### Local function invocation with data passing\n\n```bash\nserverless invoke local --function functionName --path lib/data.json\n```\n\nThis example will pass the json data in the `lib/data.json` file (relative to the root of the service) while invoking the specified/deployed function.\n\n### Local function invocation, setting environment variables\n\n```bash\nserverless invoke local -f functionName -e VAR1=value1\n\n# Or more than one variable\n\nserverless invoke local -f functionName -e VAR1=value1 -e VAR2=value2\n```\n\n### Limitations\n\nCurrently, `invoke local` only supports the NodeJs and Python runtimes.\n```",
+      "metadata": {
+        "strategy": "basic",
+        "language": "markdown",
+        "total_chunks": 2,
+        "chunk_index": 1,
+        "file_path": "docs/providers/openwhisk/cli-reference/invoke-local.md"
+      },
+      "similarity_score": 1.0132495164871216
+    },
+    {
+      "content": "```bash\nserverless invoke --function functionName --log\n```\n\nJust like the first example, but will also outputs logging information about your invocation.\n\n#### Function invocation with data passing\n\n```bash\nserverless invoke --function functionName --path lib/data.json\n```\n\nThis example will pass the json data in the `lib/data.json` file (relative to the root of the service) while invoking\nthe specified/deployed function.\n```",
+      "metadata": {
+        "total_chunks": 2,
+        "file_path": "docs/providers/kubeless/cli-reference/invoke.md",
+        "language": "markdown",
+        "strategy": "basic",
+        "chunk_index": 1
+      },
+      "similarity_score": 1.0228867530822754
+    },
+    {
+      "content": "# File: lib/plugins/create/templates/aws-python3/handler.py (python)\n\n## Code Content:\n```python\nimport json\n\n\ndef hello(event, context):\n    body = {\n        \"message\": \"Go Serverless v1.0! Your function executed successfully!\",\n        \"input\": event\n    }\n\n    response = {\n        \"statusCode\": 200,\n        \"body\": json.dumps(body)\n    }\n\n    return response\n\n    # Use this code if you don't use the http event with the LAMBDA-PROXY\n    # integration\n    \"\"\"\n    return {\n        \"message\": \"Go Serverless v1.0! Your function executed successfully!\",\n        \"event\": event\n    }\n    \"\"\"\n```",
+      "metadata": {
+        "file_path": "lib/plugins/create/templates/aws-python3/handler.py",
+        "strategy": "basic",
+        "language": "python",
+        "chunk_index": 0,
+        "total_chunks": 1
+      },
+      "similarity_score": 1.0354918241500854
+    },
+    {
+      "content": "#### Function invocation with logging\n\n```bash\nserverless invoke --function functionName --stage dev --region us-east-1 --log\n```\n\nJust like the first example, but will also outputs logging information about your invocation.\n\n#### Function invocation with data passing\n\n```bash\nserverless invoke --function functionName --stage dev --region us-east-1 --path lib/data.json\n```\n\nThis example will pass the json data in the `lib/data.json` file (relative to the root of the service) while invoking\nthe specified/deployed function.\n\n#### Example `data.json`\n\n```json\n{\n  \"resource\": \"/\",\n  \"path\": \"/\",\n  \"httpMethod\": \"GET\",\n  //  etc. //\n}\n```\n\n### Local function invocation with custom context\n\n```bash\nserverless invoke local --function functionName --context \"hello world\"\n```\n\n### Local function invocation with context passing\n```bash\nserverless invoke local --function functionName --contextPath lib/context.json\n```\nThis example will pass the json context in the `lib/context.json` file (relative to the root of the service) while invoking the specified/deployed function.\n\n### Limitations\n\nCurrently, `invoke local` only supports the NodeJs and Python runtimes.\n\n## Resource permissions\n\nLambda functions assume an *IAM role* during execution: the framework creates this role, and set all the permission provided in the `iamRoleStatements` section of `serverless.yml`.\n\nUnless you explicitly state otherwise, every call to the AWS SDK inside the lambda function is made using this role (a temporary pair of key / secret is generated and set by AWS as environment variables, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`).\n\nWhen you use `serverless invoke local`, the situation is quite different: the role isn't available (the function is executed on your local machine), so unless you set a different user directly in the code (or via a key pair of environment variables), the AWS SDK will use the default profile specified inside you AWS credential configuration file.",
+      "metadata": {
+        "file_path": "docs/providers/aws/cli-reference/invoke.md",
+        "language": "markdown",
+        "total_chunks": 4,
+        "strategy": "basic",
+        "chunk_index": 2
+      },
+      "similarity_score": 1.0386264324188232
+    },
+    {
+      "content": "# File: docs/providers/aws/cli-reference/invoke.md (markdown)\n\n## Code Content:\n```markdown\n<!--\ntitle: Serverless Framework Commands - AWS Lambda - Invoke\nmenuText: invoke\nmenuOrder: 8\ndescription: Invoke an AWS Lambda Function using the Serverless Framework\nlayout: Doc\n-->\n\n<!-- DOCS-SITE-LINK:START automatically generated  -->\n### [Read this on the main serverless docs site](https://www.serverless.com/framework/docs/providers/aws/cli-reference/invoke)\n<!-- DOCS-SITE-LINK:END -->\n\n# AWS - Invoke\n\nInvokes deployed function. It allows to send event data to the function, read logs and display other important information of the function invocation.\n\n```bash\nserverless invoke [local] --function functionName\n```\n\n**Note:** Please refer to [this guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-set-up-simple-proxy.html#api-gateway-simple-proxy-for-lambda-input-format) for event data passing when your function uses the `http` event with a Lambda Proxy integration.\n\n## Options\n- `--function` or `-f` The name of the function in your service that you want to invoke. **Required**.\n- `--stage` or `-s` The stage in your service you want to invoke your function in.\n- `--region` or `-r` The region in your stage that you want to invoke your function in.\n- `--data` or `-d` String data to be passed as an event to your function. By default data is read from standard input.\n- `--raw` Pass data as a raw string even if it is JSON. If not set, JSON data are parsed and passed as an object.\n- `--path` or `-p` The path to a json file with input data to be passed to the invoked function. This path is relative to the root directory of the service.\n- `--type` or `-t` The type of invocation. Either `RequestResponse`, `Event` or `DryRun`. Default is `RequestResponse`.\n- `--log` or `-l` If set to `true` and invocation type is `RequestResponse`, it will output logging data of the invocation. Default is `false`.\n\n## Provided lifecycle events\n- `invoke:invoke`",
+      "metadata": {
+        "file_path": "docs/providers/aws/cli-reference/invoke.md",
+        "language": "markdown",
+        "chunk_index": 0,
+        "total_chunks": 4,
+        "strategy": "basic"
+      },
+      "similarity_score": 1.0427427291870117
+    },
+    {
+      "content": "```\nsls invoke -f hello\n```\n\nInvoke deployed function with command `invoke` and `--function` or shorthand `-f`.\n\nIn your terminal window you should see the response from AWS Lambda.\n\n```bash\n{\n    \"Message\": \"Go Serverless v1.0! Your function executed successfully!\",\n    \"Request\": {\n        \"Key1\": null,\n        \"Key2\": null,\n        \"Key3\": null\n    }\n}\n```\n\nCongrats you have deployed and ran your Hello World function!\n```",
+      "metadata": {
+        "strategy": "basic",
+        "chunk_index": 1,
+        "total_chunks": 2,
+        "language": "markdown",
+        "file_path": "docs/providers/aws/examples/hello-world/csharp/README.md"
+      },
+      "similarity_score": 1.055958867073059
+    },
+    {
+      "content": "```\nsls invoke -f hello\n```\n\nInvoke deployed function with command `invoke` and `--function` or shorthand `-f`.\n\nIn your terminal window you should see the response from AWS Lambda.\n\n```bash\n{\n    \"Message\": \"Go Serverless v1.0! Your function executed successfully!\",\n    \"Request\": {\n        \"Key1\": null,\n        \"Key2\": null,\n        \"Key3\": null\n    }\n}\n```\n\nCongrats you have deployed and ran your Hello World function!\n```",
+      "metadata": {
+        "chunk_index": 1,
+        "strategy": "basic",
+        "total_chunks": 2,
+        "file_path": "docs/providers/aws/examples/hello-world/fsharp/README.md",
+        "language": "markdown"
+      },
+      "similarity_score": 1.055958867073059
+    },
+    {
+      "content": "# File: lib/plugins/create/templates/aws-python/handler.py (python)\n\n## Code Content:\n```python\nimport json\n\n\ndef hello(event, context):\n    body = {\n        \"message\": \"Go Serverless v1.0! Your function executed successfully!\",\n        \"input\": event\n    }\n\n    response = {\n        \"statusCode\": 200,\n        \"body\": json.dumps(body)\n    }\n\n    return response\n\n    # Use this code if you don't use the http event with the LAMBDA-PROXY\n    # integration\n    \"\"\"\n    return {\n        \"message\": \"Go Serverless v1.0! Your function executed successfully!\",\n        \"event\": event\n    }\n    \"\"\"\n```",
+      "metadata": {
+        "file_path": "lib/plugins/create/templates/aws-python/handler.py",
+        "language": "python",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "strategy": "basic"
+      },
+      "similarity_score": 1.0563279390335083
+    },
+    {
+      "content": "3. **Invoke the Function**\n\nInvokes the Function and returns results.\n \n```bash\nserverless invoke --function helloWorld\n\nHello world\n```\n\nNote that for `invoke`, your Function must have the `events` field populated in order for the `serverless` tool to know exactly which route to request. Defining the `headers` field is optional.\n\n```yml\n# serverless.yml\n...\nfoo:\n    worker: foo_script\n    script: bar\n    events:\n      - http:\n          url: example.com/foo/bar\n          # Defines the method used by serverless when the `invoke` command is used. Cloudflare Workers only support GET requests for now\n          method: GET\n          headers:\n            someKey: someValue\n```\n\n\n## Cleanup\nIf at any point, you no longer need your service, you can run the following command to remove the Functions, Events and Resources that were created.\n \n```bash\nserverless remove\n```\n```",
+      "metadata": {
+        "strategy": "basic",
+        "language": "markdown",
+        "chunk_index": 2,
+        "total_chunks": 3,
+        "file_path": "docs/providers/cloudflare/guide/quick-start.md"
+      },
+      "similarity_score": 1.0672811269760132
+    },
+    {
+      "content": "#### Function invocation with data passing\n\n```bash\nserverless invoke --function functionName --path lib/data.json\n```\n\nThis example will pass the json data in the `lib/data.json` file (relative to the root of the service) while invoking\nthe specified/deployed function.\n```",
+      "metadata": {
+        "strategy": "basic",
+        "file_path": "docs/providers/fn/cli-reference/invoke.md",
+        "total_chunks": 2,
+        "chunk_index": 1,
+        "language": "markdown"
+      },
+      "similarity_score": 1.0721269845962524
+    },
+    {
+      "content": "# File: docs/providers/aws/examples/hello-world/python/serverless.yml (yaml)\n\n## Code Content:\n```yaml\n# Hello World for AWS Lambda\nservice: hello-world # Service Name\n\nprovider:\n  name: aws\n  runtime: python2.7\n\nfunctions:\n  helloWorld:\n    handler: handler.helloWorldHandler\n```",
+      "metadata": {
+        "file_path": "docs/providers/aws/examples/hello-world/python/serverless.yml",
+        "strategy": "basic",
+        "total_chunks": 1,
+        "language": "yaml",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.0802803039550781
+    },
+    {
+      "content": "service: users\n\nprovider:\n  name: aws\n  runtime: nodejs6.10\n  memorySize: 512\n\n…\n```\n\n#### Version Range\n\n```yml\n# serverless.yml\n\nframeworkVersion: \">=1.0.0 <2.0.0\"\n\nservice: users\n\nprovider:\n  name: aws\n  runtime: nodejs6.10\n  memorySize: 512\n\n…\n```\n\n## Installing Serverless in an existing service\n\nIf you already have a Serverless service, and would prefer to lock down the framework version using `package.json`, then you can install Serverless as follows:\n\n```bash\n# from within a service\nnpm install serverless --save-dev\n```\n\n### Invoking Serverless locally\n\nTo execute the locally installed Serverless executable you have to reference the binary out of the node modules directory.\n\nExample:\n```\nnode ./node_modules/serverless/bin/serverless deploy\n```\n```",
+      "metadata": {
+        "file_path": "docs/providers/aws/guide/services.md",
+        "total_chunks": 7,
+        "language": "markdown",
+        "chunk_index": 6,
+        "strategy": "basic"
+      },
+      "similarity_score": 1.0857466459274292
+    },
+    {
+      "content": "beforeEach(function () { // eslint-disable-line prefer-arrow-callback\n      serverlessInstance = new Serverless();\n      serverlessInstance.init();\n\n      // Cannot rely on shebang in severless.js to invoke script using NodeJS on Windows.\n      const execPrefix = os.platform() === 'win32' ? 'node ' : '';\n      serverlessExec = execPrefix + path.join(serverlessInstance.config.serverlessPath,\n              '..', 'bin', 'serverless');\n      const tmpDir = testUtils.getTmpDirPath();\n      serviceDir = path.join(tmpDir, 'service');\n      fse.mkdirsSync(serviceDir);\n      process.chdir(serviceDir);\n\n      execSync(`${serverlessExec} create --template aws-nodejs`);\n    });\n\n    it('should expose a working integration between the CLI and the plugin system', () => {\n      expect(serverlessInstance.utils\n        .fileExistsSync(path.join(serviceDir, 'serverless.yml'))).to.equal(true);\n      expect(serverlessInstance.utils\n        .fileExistsSync(path.join(serviceDir, 'handler.js'))).to.equal(true);\n    });\n\n    it('should load plugins relatively to the working directory', () => {\n      const localPluginDir = path.join(serviceDir, 'node_modules', 'local-plugin');\n      const parentPluginDir = path.join(serviceDir, '..', 'node_modules', 'parent-plugin');\n      testUtils.installPlugin(localPluginDir, SynchronousPluginMock);\n      testUtils.installPlugin(parentPluginDir, PromisePluginMock);\n\n      fs.appendFileSync(path.join(serviceDir, 'serverless.yml'),\n        'plugins:\\n  - local-plugin\\n  - parent-plugin');\n\n      const output = execSync(serverlessExec);\n      const stringifiedOutput = (new Buffer(output, 'base64').toString());\n      expect(stringifiedOutput).to.contain('SynchronousPluginMock');\n      expect(stringifiedOutput).to.contain('PromisePluginMock');\n    });",
+      "metadata": {
+        "file_path": "lib/classes/PluginManager.test.js",
+        "language": "javascript",
+        "strategy": "basic",
+        "total_chunks": 33,
+        "chunk_index": 31
+      },
+      "similarity_score": 1.0901148319244385
+    },
+    {
+      "content": "## Examples\n\n### Local function invocation\n\n```bash\nserverless invoke local -f functionName\n```\n\n### Local function invocation with data\n\n```bash\nserverless invoke local -f functionName -d '{ \"data\": \"hello world\" }'\n```\n\n### Local function invocation with data passing\n\n```bash\nserverless invoke local -f functionName -p path/to/file.json\n\n# OR\n\nserverless invoke local -f functionName -p path/to/file.yaml\n```\n\n### Local function invocation, setting environment variables\n\n```bash\nserverless invoke local -f functionName -e VAR1=value1\n\n# Or more than one variable\n\nserverless invoke local -f functionName -e VAR1=value1 -e VAR2=value2\n```\n```",
+      "metadata": {
+        "total_chunks": 2,
+        "file_path": "docs/providers/google/cli-reference/invoke-local.md",
+        "strategy": "basic",
+        "chunk_index": 1,
+        "language": "markdown"
+      },
+      "similarity_score": 1.0928071737289429
+    },
+    {
+      "content": "## Provided lifecycle events\n- `invoke:invoke`\n\n# Invoke Local\n\nInvokes a function locally for testing and logs the output. Keep in mind that we mock the `context` with simple mock data.\n\n```bash\nserverless invoke local --function functionName\n```\n\n## Options\n\n- `--function` or `-f` The name of the function in your service that you want to invoke locally. **Required**.\n- `--path` or `-p` The path to a json file holding input data to be passed to the invoked function as the `event`. This path is relative to the\nroot directory of the service.\n- `--data` or `-d` String data to be passed as an event to your function. Keep in mind that if you pass both `--path` and `--data`, the data included in the `--path` file will overwrite the data you passed with the `--data` flag.\n- `--raw` Pass data as a raw string even if it is JSON. If not set, JSON data are parsed and passed as an object.\n- `--contextPath` or `-x`, The path to a json file holding input context to be passed to the invoked function. This path is relative to the root directory of the service.\n- `--context` or `-c`, String data to be passed as a context to your function. Same like with `--data`, context included in `--contextPath` will overwrite the context you passed with `--context` flag.\n\n## Examples\n\n### AWS\n\n```bash\nserverless invoke --function functionName --stage dev --region us-east-1\n```\n\nThis example will invoke your deployed function named `functionName` in region `us-east-1` in stage `dev`. This will\noutput the result of the invocation in your terminal.\n\n#### Function invocation with data\n\n```bash\nserverless invoke --function functionName --stage dev --region us-east-1 --data \"hello world\"\n```\n\n#### Function invocation with data from standard input\n\n```bash\nnode dataGenerator.js | serverless invoke --function functionName --stage dev --region us-east-1\n```\n\n#### Function invocation with logging\n\n```bash\nserverless invoke --function functionName --stage dev --region us-east-1 --log\n```",
+      "metadata": {
+        "language": "markdown",
+        "strategy": "basic",
+        "total_chunks": 4,
+        "chunk_index": 1,
+        "file_path": "docs/providers/aws/cli-reference/invoke.md"
+      },
+      "similarity_score": 1.0958105325698853
+    },
+    {
+      "content": "## Version Pinning\n\nThe Serverless framework is usually installed globally via `npm install -g serverless`. This way you have the Serverless CLI available for all your services.\n\nInstalling tools globally has the downside that the version can't be pinned inside package.json. This can lead to issues if you upgrade Serverless, but your colleagues or CI system don't.\n\n### Pinning a Version\n\nTo configure version pinning define a `frameworkVersion` property in your serverless.yml. Whenever you run a Serverless command from the CLI it checks if your current Serverless version is matching the `frameworkVersion` range. The CLI uses [Semantic Versioning](http://semver.org/) so you can pin it to an exact version or provide a range. In general we recommend to pin to an exact version to ensure everybody in your team has the exact same setup and no unexpected problems happen.\n\n### Examples\n\n#### Exact Version\n\n```yml\n# serverless.yml\nframeworkVersion: \"=1.20\"\n\nservice: users\n\nprovider:\n  name: kubeless\n  runtime: python2.7\n…\n```\n\n#### Version Range\n\n```yml\n# serverless.yml\n\nframeworkVersion: \">=1.20 <2.0.0\"\n\nservice: users\n\nprovider:\n  name: kubeless\n  runtime: python2.7\n\n…\n```\n```",
+      "metadata": {
+        "language": "markdown",
+        "total_chunks": 4,
+        "strategy": "basic",
+        "chunk_index": 3,
+        "file_path": "docs/providers/kubeless/guide/services.md"
+      },
+      "similarity_score": 1.0965174436569214
+    },
+    {
+      "content": "### Examples\n\n#### Exact Version\n\n```yml\n# serverless.yml\n\nframeworkVersion: \"=1.0.3\"\n```\n\n#### Version Range\n\n```yml\n# serverless.yml\n\nframeworkVersion: \">=1.0.0 <2.0.0\"\n```\n\n\n## Installing Serverless in an existing service\n\nIf you already have a Serverless service, and would prefer to lock down the framework version using `package.json`, then you can install Serverless as follows:\n\n```bash\n# from within a service\nnpm install serverless --save-dev\n```\n\n### Invoking Serverless locally\n\nTo execute the locally installed Serverless executable you have to reference the binary out of the node modules directory.\n\nExample:\n```\nnode ./node_modules/serverless/bin/serverless deploy\n```\n```",
+      "metadata": {
+        "language": "markdown",
+        "total_chunks": 4,
+        "file_path": "docs/providers/google/guide/services.md",
+        "strategy": "basic",
+        "chunk_index": 3
+      },
+      "similarity_score": 1.099593162536621
+    },
+    {
+      "content": "// Ignored because it fails in CI\n  // See https://github.com/serverless/serverless/pull/4047#issuecomment-320460285\n  describe.skip('#invokeLocalPython', () => {\n    beforeEach(() => {\n      awsInvokeLocal.options = {\n        functionObj: {\n          name: '',\n        },\n      };\n\n      sinon.stub(serverless.cli, 'consoleLog');\n    });\n\n    afterEach(() => {\n      serverless.cli.consoleLog.restore();\n    });\n\n    describe('context.remainingTimeInMillis', () => {\n      it('should become lower over time', () => {\n        awsInvokeLocal.serverless.config.servicePath = __dirname;\n\n        return awsInvokeLocal.invokeLocalPython(\n          'python2.7',\n          'fixture/handler',\n          'withRemainingTime').then(() => {\n            const remainingTimes = JSON.parse(serverless.cli.consoleLog.lastCall.args[0]);\n            expect(remainingTimes.start).to.be.above(remainingTimes.stop);\n          });\n      });\n    });\n  });\n\n  describe('#callJavaBridge()', () => {\n    let awsInvokeLocalMocked;\n    let writeChildStub;\n    let endChildStub;\n\n    beforeEach(() => {\n      writeChildStub = sinon.stub();\n      endChildStub = sinon.stub();\n\n      mockRequire('child_process', {\n        spawn: () => ({\n          stderr: new EventEmitter().on('data', () => {}),\n          stdout: new EventEmitter().on('data', () => {}),\n          stdin: {\n            write: writeChildStub,\n            end: endChildStub,\n          },\n          on: (key, callback) => callback(),\n        }),\n      });\n\n      // Remove Node.js internal \"require cache\" contents and re-require ./index.js\n      delete require.cache[require.resolve('./index')];\n      delete require.cache[require.resolve('child_process')];\n\n      const AwsInvokeLocalMocked = require('./index'); // eslint-disable-line global-require",
+      "metadata": {
+        "strategy": "basic",
+        "language": "javascript",
+        "file_path": "lib/plugins/aws/invokeLocal/index.test.js",
+        "total_chunks": 19,
+        "chunk_index": 15
+      },
+      "similarity_score": 1.109637975692749
+    },
+    {
+      "content": "Please keep this gotcha in mind when using this event. We will fix it in an upcoming release.\n\n### Example\n\nUpdate your `serverless.yml` file as follows and run `serverless deploy`.\n\n```yml\nfunctions:\n  hello1:\n    handler: handler.hello1\n    events:\n      - cloudwatchLog: '/aws/lambda/hello1'\n  hello2:\n    handler: handler.hello2\n    events:\n      - cloudwatchLog: '/aws/lambda/hello2'\n```\n\nNext up, edit `serverless.yml` and swap out the `logGroup` names. After that run `serverless deploy` again (the deployment will fail).\n\n```yml\nfunctions:\n  hello1:\n    handler: handler.hello1\n    events:\n      - cloudwatchLog: '/aws/lambda/hello2'\n  hello2:\n    handler: handler.hello2\n    events:\n      - cloudwatchLog: '/aws/lambda/hello1'\n```\n```",
+      "metadata": {
+        "total_chunks": 2,
+        "chunk_index": 1,
+        "strategy": "basic",
+        "language": "markdown",
+        "file_path": "docs/providers/aws/events/cloudwatch-log.md"
+      },
+      "similarity_score": 1.132908582687378
+    }
+  ],
+  "enhanced": [
+    {
+      "content": "```\nsls invoke -f hello\n```\n\nInvoke deployed function with command `invoke` and `--function` or shorthand `-f`.\n\nIn your terminal window you should see the response from AWS Lambda.\n\n```bash\n{\n    \"Message\": \"Go Serverless v1.0! Your function executed successfully!\",\n    \"Request\": {\n        \"Key1\": null,\n        \"Key2\": null,\n        \"Key3\": null\n    }\n}\n```\n\nCongrats you have deployed and ran your Hello World function!\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: e9df95b2\n- Author: anilat007 (anilat007@gmail.com)\n- Date: 2018-09-15 04:20:00\n- Message: Update README.md\n- Changes:\n```diff\n@@ -15,7 +15,7 @@ Make sure `serverless` is installed. [See installation guide](../../../guide/ins\n \n Once installed the Serverless CLI can be called with `serverless` or the shorthand `sls` command.\n \n-If `sls` command retuns an error in PowerShell, please user `serverless` command.\n+If `sls` command retuns an error in PowerShell, please use `serverless` command.\n \n ```\n $ sls...\n```\n\n### Commit 2\n- ID: abbd68a1\n- Author: paritosh baghel (paritoshmmmec@gmail.com)\n- Date: 2018-05-13 00:15:38\n- Message: Use serverless instead of sls command.\n\nI got following error while invoking sls create command\n\nSelect-String : A positional parameter cannot be found that accepts argument 'aws-csharp'.\n- Changes:\n```diff\n@@ -15,6 +15,8 @@ Make sure `serverless` is installed. [See installation guide](../../../guide/ins\n \n Once installed the Serverless CLI can be called with `serverless` or the shorthand `sls` command.\n \n+If `sls` command retuns an error in PowerShell, please user `serverless` command.\n+\n ```\n $ sls...\n```",
+      "metadata": {
+        "commit_count": 5,
+        "file_path": "docs/providers/aws/examples/hello-world/csharp/README.md",
+        "chunk_index": 1,
+        "strategy": "enhanced",
+        "language": "markdown",
+        "total_chunks": 3
+      },
+      "similarity_score": 1.0082504749298096
+    },
+    {
+      "content": "# File: lib/plugins/create/templates/aws-python3/handler.py (python)\n\n## Code Content:\n```python\nimport json\n\n\ndef hello(event, context):\n    body = {\n        \"message\": \"Go Serverless v1.0! Your function executed successfully!\",\n        \"input\": event\n    }\n\n    response = {\n        \"statusCode\": 200,\n        \"body\": json.dumps(body)\n    }\n\n    return response\n\n    # Use this code if you don't use the http event with the LAMBDA-PROXY\n    # integration\n    \"\"\"\n    return {\n        \"message\": \"Go Serverless v1.0! Your function executed successfully!\",\n        \"event\": event\n    }\n    \"\"\"\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 9ed93109\n- Author: Mislav Cimperšak (mislav.cimpersak@styria.hr)\n- Date: 2017-08-30 20:36:59\n- Message: making python templates pep8 compliant\n- Changes:\n```diff\n@@ -1,5 +1,6 @@\n import json\n \n+\n def hello(event, context):\n     body = {\n         \"message\": \"Go Serverless v1.0! Your function executed successfully!\",\n@@ -13,7 +14,8 @@ def hello(event, context):\n \n     return response\n \n-    # Use this code if you don't use the http event with the LAMBDA-PROXY integration\n+    # Use this code if you don't use the http event with the LAMBDA-PROXY\n+    # integration\n     \"\"\"\n     return {\n         \"message\": \"Go Serverless v1.0! Your function executed success...\n```\n\n### Commit 2\n- ID: e1c27c35\n- Author: Daniel Schep (dschep@gmail.com)\n- Date: 2017-04-19 05:53:03\n- Message: :snake::snake::snake: Python3.6 support is coming to Lambda!\n\ncloses #3482",
+      "metadata": {
+        "file_path": "lib/plugins/create/templates/aws-python3/handler.py",
+        "chunk_index": 0,
+        "strategy": "enhanced",
+        "total_chunks": 2,
+        "language": "python",
+        "commit_count": 2
+      },
+      "similarity_score": 1.0707789659500122
+    },
+    {
+      "content": "### Commit 4\n- ID: c961dee9\n- Author: bhaskarbalusani (42063253+bhaskarbalusani@users.noreply.github.com)\n- Date: 2018-08-06 16:52:22\n- Message: Update index.js\n- Changes:\n```diff\n@@ -174,7 +174,7 @@ class AwsInvokeLocal {\n \n     return new BbPromise(resolve => {\n       const python = spawn(runtime,\n-        ['-u', path.join(__dirname, 'invoke.py'), handlerPath, handlerName], \n+        ['-u', path.join(__dirname, 'invoke.py'), handlerPath, handlerName],\n         { env: process.env }, { shell: true });\n       python.stdout.on('data', (buf) => this.serverless.cli.consoleLog(buf.toString()));\n       python.stderr.on('data', (buf) => this.serverless.cli.consoleLog(buf.toStrin...\n```\n\n### Commit 5\n- ID: a1876717\n- Author: bhaskarbalusani (42063253+bhaskarbalusani@users.noreply.github.com)\n- Date: 2018-08-06 15:47:39\n- Message: Update index.js\n- Changes:\n```diff\n@@ -174,7 +174,8 @@ class AwsInvokeLocal {\n \n     return new BbPromise(resolve => {\n       const python = spawn(runtime,\n-        ['-u', path.join(__dirname, 'invoke.py'), handlerPath, handlerName], { env: process.env }, { shell: true });\n+        ['-u', path.join(__dirname, 'invoke.py'), handlerPath, handlerName], \n+        { env: process.env }, { shell: true });\n       python.stdout.on('data', (buf) => this.serverless.cli.consoleLog(buf.toString()));\n       python.stderr.on('data', (buf) => th...\n```",
+      "metadata": {
+        "commit_count": 5,
+        "chunk_index": 8,
+        "file_path": "lib/plugins/aws/invokeLocal/index.js",
+        "language": "javascript",
+        "strategy": "enhanced",
+        "total_chunks": 9
+      },
+      "similarity_score": 1.0756865739822388
+    },
+    {
+      "content": "# File: lib/plugins/aws/invokeLocal/fixture/handlerWithLoadingError.js (javascript)\n\n## Code Content:\n```javascript\n'use strict';\nthrow new Error('loading exception');\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: cf1260a3\n- Author: GuruRAM (tiav87@gmail.com)\n- Date: 2018-04-04 04:13:04\n- Message: #4852 fix by rethrowing a module loading exception in aws invoke local\n- Changes:\n```diff\n@@ -0,0 +1,2 @@\n+'use strict';\n+throw new Error('loading exception');...\n```",
+      "metadata": {
+        "chunk_index": 0,
+        "commit_count": 1,
+        "file_path": "lib/plugins/aws/invokeLocal/fixture/handlerWithLoadingError.js",
+        "strategy": "enhanced",
+        "total_chunks": 1,
+        "language": "javascript"
+      },
+      "similarity_score": 1.0803005695343018
+    },
+    {
+      "content": "### Commit 5\n- ID: f44bed1d\n- Author: jeffnoehren (jeffrey@spotintst.com)\n- Date: 2017-10-20 05:56:25\n- Message: Spotinst- cosmetic change to docs\n- Changes:\n```diff\n@@ -18,10 +18,14 @@ Make sure `serverless` is installed.\n \n \n ## 2. Deploy\n-`serverless deploy`  \n+```bash \n+ serverless deploy\n+```  \n \n ## 3. Invoke deployed function\n-`serverless invoke --function hello` \n+```bash\n+serverless invoke --function hello\n+``` \n \n In your terminal window you should see the response...\n```",
+      "metadata": {
+        "strategy": "enhanced",
+        "chunk_index": 2,
+        "total_chunks": 3,
+        "file_path": "docs/providers/spotinst/examples/ruby/README.md",
+        "language": "markdown",
+        "commit_count": 5
+      },
+      "similarity_score": 1.0808019638061523
+    },
+    {
+      "content": "# File: lib/plugins/create/templates/aws-python/handler.py (python)\n\n## Code Content:\n```python\nimport json\n\n\ndef hello(event, context):\n    body = {\n        \"message\": \"Go Serverless v1.0! Your function executed successfully!\",\n        \"input\": event\n    }\n\n    response = {\n        \"statusCode\": 200,\n        \"body\": json.dumps(body)\n    }\n\n    return response\n\n    # Use this code if you don't use the http event with the LAMBDA-PROXY\n    # integration\n    \"\"\"\n    return {\n        \"message\": \"Go Serverless v1.0! Your function executed successfully!\",\n        \"event\": event\n    }\n    \"\"\"\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 9ed93109\n- Author: Mislav Cimperšak (mislav.cimpersak@styria.hr)\n- Date: 2017-08-30 20:36:59\n- Message: making python templates pep8 compliant\n- Changes:\n```diff\n@@ -1,5 +1,6 @@\n import json\n \n+\n def hello(event, context):\n     body = {\n         \"message\": \"Go Serverless v1.0! Your function executed successfully!\",\n@@ -13,7 +14,8 @@ def hello(event, context):\n \n     return response\n \n-    # Use this code if you don't use the http event with the LAMBDA-PROXY integration\n+    # Use this code if you don't use the http event with the LAMBDA-PROXY\n+    # integration\n     \"\"\"\n     return {\n         \"message\": \"Go Serverless v1.0! Your function executed success...\n```\n\n### Commit 2\n- ID: 9d715297\n- Author: Alex Eftimie (alex@eftimie.ro)\n- Date: 2016-10-21 19:31:09\n- Message: Minor typo: no need for a semicolon\n- Changes:\n```diff\n@@ -9,7 +9,7 @@ def hello(event, context):\n     response = {\n         \"statusCode\": 200,\n         \"body\": json.dumps(body)\n-    };\n+    }\n \n     return response...\n```",
+      "metadata": {
+        "file_path": "lib/plugins/create/templates/aws-python/handler.py",
+        "language": "python",
+        "chunk_index": 0,
+        "commit_count": 5,
+        "total_chunks": 3,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.0848381519317627
+    },
+    {
+      "content": "beforeEach(function () { // eslint-disable-line prefer-arrow-callback\n      serverlessInstance = new Serverless();\n      serverlessInstance.init();\n\n      // Cannot rely on shebang in severless.js to invoke script using NodeJS on Windows.\n      const execPrefix = os.platform() === 'win32' ? 'node ' : '';\n      serverlessExec = execPrefix + path.join(serverlessInstance.config.serverlessPath,\n              '..', 'bin', 'serverless');\n      const tmpDir = testUtils.getTmpDirPath();\n      serviceDir = path.join(tmpDir, 'service');\n      fse.mkdirsSync(serviceDir);\n      process.chdir(serviceDir);\n\n      execSync(`${serverlessExec} create --template aws-nodejs`);\n    });\n\n    it('should expose a working integration between the CLI and the plugin system', () => {\n      expect(serverlessInstance.utils\n        .fileExistsSync(path.join(serviceDir, 'serverless.yml'))).to.equal(true);\n      expect(serverlessInstance.utils\n        .fileExistsSync(path.join(serviceDir, 'handler.js'))).to.equal(true);\n    });\n\n    it('should load plugins relatively to the working directory', () => {\n      const localPluginDir = path.join(serviceDir, 'node_modules', 'local-plugin');\n      const parentPluginDir = path.join(serviceDir, '..', 'node_modules', 'parent-plugin');\n      testUtils.installPlugin(localPluginDir, SynchronousPluginMock);\n      testUtils.installPlugin(parentPluginDir, PromisePluginMock);\n\n      fs.appendFileSync(path.join(serviceDir, 'serverless.yml'),\n        'plugins:\\n  - local-plugin\\n  - parent-plugin');\n\n      const output = execSync(serverlessExec);\n      const stringifiedOutput = (new Buffer(output, 'base64').toString());\n      expect(stringifiedOutput).to.contain('SynchronousPluginMock');\n      expect(stringifiedOutput).to.contain('PromisePluginMock');\n    });",
+      "metadata": {
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "file_path": "lib/classes/PluginManager.test.js",
+        "chunk_index": 31,
+        "total_chunks": 34,
+        "language": "javascript"
+      },
+      "similarity_score": 1.0901148319244385
+    },
+    {
+      "content": "### Commit 5\n- ID: f44bed1d\n- Author: jeffnoehren (jeffrey@spotintst.com)\n- Date: 2017-10-20 05:56:25\n- Message: Spotinst- cosmetic change to docs\n- Changes:\n```diff\n@@ -18,10 +18,15 @@ Make sure `serverless` is installed.\n \n \n ## 2. Deploy\n-`serverless deploy`  \n+```bash \n+ serverless deploy\n+```  \n \n ## 3. Invoke deployed function\n-`serverless invoke --function hello` \n+```bash\n+serverless invoke --function hello\n+``` \n+\n \n In your terminal window you should see the response...\n```",
+      "metadata": {
+        "total_chunks": 3,
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "file_path": "docs/providers/spotinst/examples/python/README.md",
+        "language": "markdown",
+        "chunk_index": 2
+      },
+      "similarity_score": 1.093022346496582
+    },
+    {
+      "content": "### Commit 2\n- ID: e1c27c35\n- Author: Daniel Schep (dschep@gmail.com)\n- Date: 2017-04-19 05:53:03\n- Message: :snake::snake::snake: Python3.6 support is coming to Lambda!\n\ncloses #3482\n\nhttps://aws.amazon.com/releasenotes/5198208415517126\n- Changes:\n```diff\n@@ -0,0 +1,22 @@\n+import json\n+\n+def hello(event, context):\n+    body = {\n+        \"message\": \"Go Serverless v1.0! Your function executed successfully!\",\n+        \"input\": event\n+    }\n+\n+    response = {\n+        \"statusCode\": 200,\n+        \"body\": json.dumps(body)\n+    }\n+\n+    return response\n+\n+    # Use this code if you don't use the http event with the LAMBDA-PROXY integration\n+    \"\"\"\n+    return {\n+        \"message\": \"Go Serverless v1.0! Your function executed successfully!\",\n+        \"e...\n```",
+      "metadata": {
+        "strategy": "enhanced",
+        "file_path": "lib/plugins/create/templates/aws-python3/handler.py",
+        "language": "python",
+        "chunk_index": 1,
+        "commit_count": 2,
+        "total_chunks": 2
+      },
+      "similarity_score": 1.098639726638794
+    },
+    {
+      "content": "// Ignored because it fails in CI\n  // See https://github.com/serverless/serverless/pull/4047#issuecomment-320460285\n  describe.skip('#invokeLocalPython', () => {\n    beforeEach(() => {\n      awsInvokeLocal.options = {\n        functionObj: {\n          name: '',\n        },\n      };\n\n      sinon.stub(serverless.cli, 'consoleLog');\n    });\n\n    afterEach(() => {\n      serverless.cli.consoleLog.restore();\n    });\n\n    describe('context.remainingTimeInMillis', () => {\n      it('should become lower over time', () => {\n        awsInvokeLocal.serverless.config.servicePath = __dirname;\n\n        return awsInvokeLocal.invokeLocalPython(\n          'python2.7',\n          'fixture/handler',\n          'withRemainingTime').then(() => {\n            const remainingTimes = JSON.parse(serverless.cli.consoleLog.lastCall.args[0]);\n            expect(remainingTimes.start).to.be.above(remainingTimes.stop);\n          });\n      });\n    });\n  });\n\n  describe('#callJavaBridge()', () => {\n    let awsInvokeLocalMocked;\n    let writeChildStub;\n    let endChildStub;\n\n    beforeEach(() => {\n      writeChildStub = sinon.stub();\n      endChildStub = sinon.stub();\n\n      mockRequire('child_process', {\n        spawn: () => ({\n          stderr: new EventEmitter().on('data', () => {}),\n          stdout: new EventEmitter().on('data', () => {}),\n          stdin: {\n            write: writeChildStub,\n            end: endChildStub,\n          },\n          on: (key, callback) => callback(),\n        }),\n      });\n\n      // Remove Node.js internal \"require cache\" contents and re-require ./index.js\n      delete require.cache[require.resolve('./index')];\n      delete require.cache[require.resolve('child_process')];\n\n      const AwsInvokeLocalMocked = require('./index'); // eslint-disable-line global-require",
+      "metadata": {
+        "file_path": "lib/plugins/aws/invokeLocal/index.test.js",
+        "total_chunks": 21,
+        "chunk_index": 15,
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "language": "javascript"
+      },
+      "similarity_score": 1.109637975692749
+    },
+    {
+      "content": "### Commit 2\n- ID: 6b6a4941\n- Author: Daniel Schildt (daniel.schildt@gmail.com)\n- Date: 2018-01-19 11:06:51\n- Message: docs(google) update hello-world example's invoke\n\nIf a new user creates a new service with the `google-nodejs` template,\nthe pre-configured function is named as `first` instead of `helloWorld`.\n\nMore details from the configuration file of the template:\n- https://github.com/serverless/boilerplate-googlecloudfunctions-nodejs/blob/master/serverless.yml#L22\n- Changes:\n```diff\n@@ -31,7 +31,7 @@ Update the `credentials` and your `project` property in the `serverless.yml` fil\n \n ## 5. Invoke deployed function\n \n-`serverless invoke --function helloWorld`\n+`serverless invoke --function first`\n \n In your terminal window you should see a response from the Google Cloud...\n```\n\n### Commit 3\n- ID: 50be33dc\n- Author: Philipp Muens (raute1337@gmx.de)\n- Date: 2017-05-17 17:05:32\n- Message: Add Google Node.js service template and update docs\n- Changes:\n```diff\n@@ -15,7 +15,7 @@ Make sure [`serverless` is installed](../../../guide/installation.md) and you ha\n \n ## 1. Create a service\n \n-`serverless install --url https://github.com/serverless/boilerplate-googlecloudfunctions-nodejs --name <my-service>`\n+`serverless create --template google-nodejs --path my-service`\n \n ## 2. Install Provider Plugin...\n```",
+      "metadata": {
+        "language": "markdown",
+        "commit_count": 5,
+        "total_chunks": 3,
+        "file_path": "docs/providers/google/examples/hello-world/node/README.md",
+        "strategy": "enhanced",
+        "chunk_index": 1
+      },
+      "similarity_score": 1.118391990661621
+    },
+    {
+      "content": "### Commit 5\n- ID: 60aff96d\n- Author: Philipp Muens (raute1337@gmx.de)\n- Date: 2016-10-06 05:58:38\n- Message: Update aws-python handler file\n- Changes:\n```diff\n@@ -1,5 +1,27 @@\n+import json\n+\n def hello(event, context):\n+    # This code is used so that your function can repond to HTTP events\n+    # which use the LAMBDA-PROXY integration\n+    body = {\n+        \"message\": \"Go Serverless v1.0! Your function executed successfully!\",\n+        \"input\": event\n+    }\n+\n+    response = {\n+        \"statusCode\": 200,\n+        \"headers\": {\n+            \"custom-header\": \"Custom header value\"\n+        },\n+        \"body\": json.dumps(body)\n+    };\n+\n+    return respon...\n```",
+      "metadata": {
+        "total_chunks": 3,
+        "chunk_index": 2,
+        "file_path": "lib/plugins/create/templates/aws-python/handler.py",
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "language": "python"
+      },
+      "similarity_score": 1.1224944591522217
+    },
+    {
+      "content": "```\nsls invoke -f hello\n```\n\nInvoke deployed function with command `invoke` and `--function` or shorthand `-f`.\n\nIn your terminal window you should see the response from AWS Lambda.\n\n```bash\n{\n    \"Message\": \"Go Serverless v1.0! Your function executed successfully!\",\n    \"Request\": {\n        \"Key1\": null,\n        \"Key2\": null,\n        \"Key3\": null\n    }\n}\n```\n\nCongrats you have deployed and ran your Hello World function!\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 9c94e083\n- Author: Yunspace (yun@yunspace.com)\n- Date: 2018-02-27 21:26:20\n- Message: consistent README and zip installation for both aws-csharp and aws-fsharp\n- Changes:\n```diff\n@@ -5,6 +5,10 @@ description: Create a F# Hello World Lambda function\n layout: Doc\n -->\n \n+<!-- DOCS-SITE-LINK:START automatically generated  -->\n+### [Read this on the main serverless docs site](https://www.serverless.com/framework/docs/providers/aws/examples/hello-world/fsharp/)\n+<!-- DOCS-SITE-LINK:END -->\n+\n # Hello World F# Example\n \n Make sure `serverless` is installed. [See installation guide](../../../guide/installation.md)....\n```\n\n### Commit 2\n- ID: 0d652f28\n- Author: Yunspace (yun@yunspace.com)\n- Date: 2018-02-23 17:50:00\n- Message: upgraded fsharp example to dotnet 2.0, updated docs, unit and integration tests. Removed duplicate code from docs section\n- Changes:\n```diff\n@@ -23,15 +23,15 @@ Commands\n \n ## 1. Create a service\n \n-```\n-sls create --template aws-fsharp --path myService\n-```\n-\n-Using the `create` command we can specify one of the available [templates](https://serverless.com/framework/docs/providers/aws/cli-reference/create#available-templates). For this example use aws-fsharp with the `--template` or shorthand `-t` flag.\n-\n-The `--path` or shorthand `-p` is the location to be created with the template service files. Change directories into this new f...\n```",
+      "metadata": {
+        "total_chunks": 3,
+        "language": "markdown",
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "file_path": "docs/providers/aws/examples/hello-world/fsharp/README.md",
+        "chunk_index": 1
+      },
+      "similarity_score": 1.125169277191162
+    },
+    {
+      "content": "## Git Commit History\n\n### Commit 1\n- ID: 4578245d\n- Author: Daniel Schep (dschep@gmail.com)\n- Date: 2018-11-02 19:27:12\n- Message: Merge pull request #5210 from serverless/pythonxy\n\nUse pythonX instead of pythonX.Y in invoke local(take 3)\n- Changes:\n```diff\n@@ -173,7 +173,7 @@ class AwsInvokeLocal {\n     }\n \n     return new BbPromise(resolve => {\n-      const python = spawn(runtime,\n+      const python = spawn(runtime.split('.')[0],\n         ['-u', path.join(__dirname, 'invoke.py'), handlerPath, handlerName],\n         { env: process.env }, { shell: true });\n       python.stdout.on('data', (buf) => this.serverless.cli.consoleLog(buf.toString()));...\n```\n\n### Commit 2\n- ID: 9b003ec3\n- Author: Mariusz Nowak (medyk@medikoo.com)\n- Date: 2018-10-11 21:26:02\n- Message: Remove invalid log\n- Changes:\n```diff\n@@ -249,7 +249,6 @@ class AwsInvokeLocal {\n   }\n \n   invokeLocalNodeJs(handlerPath, handlerName, event, customContext) {\n-    this.serverless.cli.log('INVOKING INVOKE');\n     let lambda;\n     let pathToHandler;\n     let hasResponded = false;...\n```\n\n### Commit 3\n- ID: f353efcf\n- Author: horike37 (horike37@gmail.com)\n- Date: 2018-08-13 21:56:48\n- Message: Use pythonX instead of pythonX.Y in invoke local\n- Changes:\n```diff\n@@ -173,7 +173,7 @@ class AwsInvokeLocal {\n     }\n \n     return new BbPromise(resolve => {\n-      const python = spawn(runtime,\n+      const python = spawn(runtime.split('.')[0],\n         ['-u', path.join(__dirname, 'invoke.py'), handlerPath, handlerName],\n         { env: process.env }, { shell: true });\n       python.stdout.on('data', (buf) => this.serverless.cli.consoleLog(buf.toString()));...\n```",
+      "metadata": {
+        "language": "javascript",
+        "total_chunks": 9,
+        "chunk_index": 7,
+        "commit_count": 5,
+        "file_path": "lib/plugins/aws/invokeLocal/index.js",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.1268632411956787
+    },
+    {
+      "content": "# File: docs/providers/aws/examples/hello-world/python/README.md (markdown)\n\n## Code Content:\n```markdown\n<!--\ntitle: Hello World Python Example\nmenuText: Hello World Python Example\ndescription: Create a Python Hello World Lambda function\nlayout: Doc\n-->\n\n<!-- DOCS-SITE-LINK:START automatically generated  -->\n### [Read this on the main serverless docs site](https://www.serverless.com/framework/docs/providers/aws/examples/hello-world/python/)\n<!-- DOCS-SITE-LINK:END -->\n\n# Hello World Python Example\n\nMake sure `serverless` is installed. [See installation guide](../../../guide/installation.md).\n\nOnce installed the Serverless CLI can be called with `serverless` or the shorthand `sls` command.\n\n```\n$ sls\n\nCommands\n* You can run commands with \"serverless\" or the shortcut \"sls\"\n* Pass \"--verbose\" to this command to get in-depth plugin info\n* Pass \"--no-color\" to disable CLI colors\n* Pass \"--help\" after any <command> for contextual help\n```\n\n## 1. Create a service\n\n```\nsls create --template aws-python --path myService\n```\n\nUsing the `create` command we can specify one of the available [templates](https://serverless.com/framework/docs/providers/aws/cli-reference/create#available-templates). For this example use aws-python with the `--template` or shorthand `-t` flag.\n\nThe `--path` or shorthand `-p` is the location to be created with the template service files. Change directories into this new folder.\n\n## 2. Deploy\n\n```\nsls deploy\n```\n\nThis will deploy your function to AWS Lambda based on the settings in `serverless.yml`.\n\n## 3. Invoke deployed function\n\n```\nsls invoke -f hello\n```\n\nInvoke deployed function with command `invoke` and `--function` or shorthand `-f`.\n\nIn your terminal window you should see the response from AWS Lambda.\n\n```bash\n{\n    \"statusCode\": 200,\n    \"body\": \"{\\\"message\\\":\\\"Go Serverless v1.0! Your function executed successfully!\\\",\\\"input\\\":{}}\"\n}\n```\n\nCongrats you have deployed and ran your Hello World function!\n```\n\n## Git Commit History",
+      "metadata": {
+        "commit_count": 5,
+        "total_chunks": 3,
+        "strategy": "enhanced",
+        "file_path": "docs/providers/aws/examples/hello-world/python/README.md",
+        "language": "markdown",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.1373646259307861
+    },
+    {
+      "content": "### Commit 4\n- ID: f636f4f7\n- Author: jeffnoehren (jeffrey@spotinst.com)\n- Date: 2017-10-04 08:07:24\n- Message: added permissions to the guide, created hello world examples, updated main readme\n- Changes:\n```diff\n@@ -0,0 +1,18 @@\n+<!--\n+title: Hello World Example\n+menuText: Hello World Example\n+description: Example of creating a Hello World function in Node.js and Python with the Serverless framework\n+layout: Doc\n+-->\n+\n+<!-- DOCS-SITE-LINK:START automatically generated  -->\n+### [Read this on the main serverless docs site](https://www.serverless.com/framework/docs/providers/aws/examples/hello-world/)\n+<!-- DOCS-SITE-LINK:END -->\n+\n+# Hello World Serverless Example \n+\n+Pick your language of choice:\n+\n+* ...\n```",
+      "metadata": {
+        "chunk_index": 1,
+        "language": "markdown",
+        "total_chunks": 2,
+        "file_path": "docs/providers/spotinst/examples/README.md",
+        "commit_count": 4,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.1399550437927246
+    },
+    {
+      "content": "_.merge(process.env, lambdaDefaultEnvVars, providerEnvVars, functionEnvVars);\n\n    return BbPromise.resolve();\n  }\n\n  invokeLocal() {\n    const runtime = this.options.functionObj.runtime\n      || this.serverless.service.provider.runtime\n      || 'nodejs4.3';\n    const handler = this.options.functionObj.handler;\n\n    if (runtime.startsWith('nodejs')) {\n      const handlerPath = handler.split('.')[0];\n      const handlerName = handler.split('.')[1];\n      return this.invokeLocalNodeJs(\n        handlerPath,\n        handlerName,\n        this.options.data,\n        this.options.context);\n    }\n\n    if (runtime === 'python2.7' || runtime === 'python3.6') {\n      const handlerComponents = handler.split(/\\./);\n      const handlerPath = handlerComponents.slice(0, -1).join('.');\n      const handlerName = handlerComponents.pop();\n      return this.invokeLocalPython(\n        process.platform === 'win32' ? 'python.exe' : runtime,\n        handlerPath,\n        handlerName,\n        this.options.data,\n        this.options.context);\n    }\n\n    if (runtime === 'java8') {\n      const className = handler.split('::')[0];\n      const handlerName = handler.split('::')[1] || 'handleRequest';\n      return this.invokeLocalJava(\n        'java',\n        className,\n        handlerName,\n        this.serverless.service.package.artifact,\n        this.options.data,\n        this.options.context);\n    }\n\n    throw new this.serverless.classes\n      .Error('You can only invoke Node.js, Python & Java functions locally.');\n  }\n\n  invokeLocalPython(runtime, handlerPath, handlerName, event, context) {\n    const input = JSON.stringify({\n      event: event || {},\n      context,\n    });\n\n    if (process.env.VIRTUAL_ENV) {\n      const runtimeDir = os.platform() === 'win32' ? 'Scripts' : 'bin';\n      process.env.PATH = [\n        path.join(process.env.VIRTUAL_ENV, runtimeDir),\n        path.delimiter,\n        process.env.PATH,\n      ].join('');\n    }",
+      "metadata": {
+        "strategy": "enhanced",
+        "total_chunks": 9,
+        "chunk_index": 2,
+        "language": "javascript",
+        "file_path": "lib/plugins/aws/invokeLocal/index.js",
+        "commit_count": 5
+      },
+      "similarity_score": 1.1414952278137207
+    },
+    {
+      "content": "# File: lib/plugins/aws/invokeLocal/fixture/handlerWithError.js (javascript)\n\n## Code Content:\n```javascript\n'use strict';\n\nmodule.exports.withError = (event, context, callback) => {\n  callback(new Error('failed'));\n};\n\nmodule.exports.withMessage = (event, context, callback) => {\n  callback('failed');\n};\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: ca5b9e11\n- Author: Maciej Winnicki (maciej.winnicki@serverless.com)\n- Date: 2016-12-02 17:13:17\n- Message: fix returning error from local invocation\n- Changes:\n```diff\n@@ -0,0 +1,9 @@\n+'use strict';\n+\n+module.exports.withError = (event, context, callback) => {\n+  callback(new Error('failed'));\n+};\n+\n+module.exports.withMessage = (event, context, callback) => {\n+  callback('failed');\n+};...\n```",
+      "metadata": {
+        "strategy": "enhanced",
+        "file_path": "lib/plugins/aws/invokeLocal/fixture/handlerWithError.js",
+        "commit_count": 1,
+        "language": "javascript",
+        "chunk_index": 0,
+        "total_chunks": 1
+      },
+      "similarity_score": 1.1421349048614502
+    },
+    {
+      "content": "Congrats you have deployed and ran your Hello World function!\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: e5033aeb\n- Author: Daniel Olson (emaildano@gmail.com)\n- Date: 2018-02-03 00:17:40\n- Message: updated a few grammatical errors\n- Changes:\n```diff\n@@ -60,4 +60,4 @@ In your terminal window you should see the response from AWS Lambda.\n }\n ```\n \n-Congrats you have just deployed and run your Hello World function!\n+Congrats you have deployed and ran your Hello World function!...\n```\n\n### Commit 2\n- ID: b147126c\n- Author: Daniel Olson (emaildano@gmail.com)\n- Date: 2018-02-02 10:17:01\n- Message: updated Python hello-world\n- Changes:\n```diff\n@@ -13,18 +13,45 @@ layout: Doc\n \n Make sure `serverless` is installed. [See installation guide](../../../guide/installation.md).\n \n+Once installed the Serverless CLI can be called with `serverless` or the shorthand `sls` command.\n+\n+```\n+$ sls\n+\n+Commands\n+* You can run commands with \"serverless\" or the shortcut \"sls\"\n+* Pass \"--verbose\" to this command to get in-depth plugin info\n+* Pass \"--no-color\" to disable CLI colors\n+* Pass \"--help\" after any <command> for contextual help\n+```\n+\n ## 1. C...\n```\n\n### Commit 3\n- ID: 912a40ac\n- Author: Alasdair Nicol (alasdair@thenicols.net)\n- Date: 2017-01-12 06:45:22\n- Message: Update Python hello wold example to be consistent with Node.js\n- Changes:\n```diff\n@@ -1,7 +1,7 @@\n <!--\n title: Hello World Python Example\n menuText: Hello World Python Example\n-description: Create a simple Python powered Lambda function\n+description: Create a Python Hello World Lambda function\n layout: Doc\n -->\n \n@@ -13,13 +13,14 @@ layout: Doc\n \n Make sure `serverless` is installed. [See installation guide](../../../guide/installation.md).\n \n-## 1. Deploy\n+## 1. Create a service\n+`serverless create --template aws-python --path myService` or `sls create --template aws-python...\n```",
+      "metadata": {
+        "language": "markdown",
+        "total_chunks": 3,
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "chunk_index": 1,
+        "file_path": "docs/providers/aws/examples/hello-world/python/README.md"
+      },
+      "similarity_score": 1.1443595886230469
+    },
+    {
+      "content": "### Commit 4\n- ID: d385196c\n- Author: kennyk65 (kkrueger@gopivotal.com)\n- Date: 2016-11-18 03:00:51\n- Message: Update README.md\n\nInclusion of service creation, changing folders, corrected function name, corrected results from function, and grammar.\n- Changes:\n```diff\n@@ -13,13 +13,14 @@ layout: Doc\n \n Make sure `serverless` is installed. [See installation guide](../../../guide/installation.md).\n \n-## 1. Deploy\n+## 1. Create a service\n+`serverless create --template aws-nodejs --path myService` or `sls create --template aws-nodejs --path myService`, where 'myService' is a new folder to be created with template service files.  Change directories into this new folder.\n \n+## 2. Deploy\n `serverless deploy` or `sls deploy`. `sls` is shorthand for the Serverless CLI...\n```\n\n### Commit 5\n- ID: f7b2f813\n- Author: Maciej Winnicki (maciej.winnicki@serverless.com)\n- Date: 2016-10-27 17:44:34\n- Message: fix hello world examples\n- Changes:\n```diff\n@@ -1,7 +1,7 @@\n <!--\n-title: Hello World AWS Lambda Node Example\n-menuText: Hello World Node Example\n-description: Create a nodeJS Lambda function on amazon web services\n+title: Hello World Node.js Example\n+menuText: Hello World Node.js Example\n+description: Create a Node.js Hello World Lambda function\n layout: Doc\n -->\n \n@@ -9,21 +9,21 @@ layout: Doc\n ### [Read this on the main serverless docs site](https://www.serverless.com/framework/docs/providers/aws/examples/hello-world/node/)\n <!-- DOCS-...\n```",
+      "metadata": {
+        "file_path": "docs/providers/aws/examples/hello-world/node/README.md",
+        "chunk_index": 2,
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "total_chunks": 3,
+        "language": "markdown"
+      },
+      "similarity_score": 1.1506092548370361
+    }
+  ],
+  "compressed": [
+    {
+      "content": "# File: lib/plugins/aws/invokeLocal/fixture/handlerWithError.js (javascript)\n\n## Recent Changes:\n- ca5b9e11 by Maciej Winnicki (maciej.winnicki@serverless.com): fix returning error from local invocation...",
+      "metadata": {
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "file_path": "lib/plugins/aws/invokeLocal/fixture/handlerWithError.js",
+        "commit_count": 1,
+        "language": "javascript",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.9336819052696228
+    },
+    {
+      "content": "# File: lib/plugins/aws/invokeLocal/fixture/handlerWithLoadingError.js (javascript)\n\n## Recent Changes:\n- cf1260a3 by GuruRAM (tiav87@gmail.com): #4852 fix by rethrowing a module loading exception in aws invoke local...",
+      "metadata": {
+        "strategy": "compressed",
+        "file_path": "lib/plugins/aws/invokeLocal/fixture/handlerWithLoadingError.js",
+        "commit_count": 1,
+        "language": "javascript",
+        "chunk_index": 0,
+        "total_chunks": 1
+      },
+      "similarity_score": 0.9664192199707031
+    },
+    {
+      "content": "# File: tests/integration/aws/s3/single-event-single-function-single-bucket/service/serverless.yml (yaml)\n\n## Key Code Elements:\nprovider:\nfunctions:\n  hello:\n    events:\n\n## Recent Changes:\n- de8adc71 by Philipp Muens (raute1337@gmx.de): Update to latest Node.js runtime...\n- 689f1718 by Eslam A. Hefnawy (eahefnawy@gmail.com): removed cfLogs from integration tests...\n- a5239b66 by Philipp Muens (raute1337@gmx.de): Migrate S3 integration tests...",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "yaml",
+        "total_chunks": 1,
+        "file_path": "tests/integration/aws/s3/single-event-single-function-single-bucket/service/serverless.yml",
+        "strategy": "compressed",
+        "commit_count": 3
+      },
+      "similarity_score": 1.0354865789413452
+    },
+    {
+      "content": "# File: tests/integration/aws/s3/multiple-events-single-function-single-bucket/service/serverless.yml (yaml)\n\n## Key Code Elements:\nprovider:\nfunctions:\n  hello:\n    events:\n      - s3:\n\n## Recent Changes:\n- de8adc71 by Philipp Muens (raute1337@gmx.de): Update to latest Node.js runtime...\n- 689f1718 by Eslam A. Hefnawy (eahefnawy@gmail.com): removed cfLogs from integration tests...\n- a5239b66 by Philipp Muens (raute1337@gmx.de): Migrate S3 integration tests...",
+      "metadata": {
+        "strategy": "compressed",
+        "language": "yaml",
+        "commit_count": 3,
+        "total_chunks": 1,
+        "file_path": "tests/integration/aws/s3/multiple-events-single-function-single-bucket/service/serverless.yml",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.0412639379501343
+    },
+    {
+      "content": "# File: lib/plugins/aws/invokeLocal/fixture/asyncHandlerWithError.js (javascript)\n\n## Recent Changes:\n- 48a24950 by Lewis Chung (lewis@shopwith.co): Add more test cases...\n- 202fcbd8 by Lewis Chung (lewis@shopwith.co): Fix lint on Node 8...\n- b000bbab by Lewis Chung (lewis@shopwith.co): Support AWS Lambda Node 8.10 Async Await Lambda Functions...",
+      "metadata": {
+        "commit_count": 3,
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "language": "javascript",
+        "file_path": "lib/plugins/aws/invokeLocal/fixture/asyncHandlerWithError.js",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.041977882385254
+    },
+    {
+      "content": "# File: tests/integration/general/local-plugins/service/serverless.yml (yaml)\n\n## Key Code Elements:\nservice: aws-nodejs # NOTE: update this with your service name\nprovider:\nfunctions:\n  hello:\nplugins:\n\n## Recent Changes:\n- de8adc71 by Philipp Muens (raute1337@gmx.de): Update to latest Node.js runtime...\n- 689f1718 by Eslam A. Hefnawy (eahefnawy@gmail.com): removed cfLogs from integration tests...\n- 10eec851 by Eslam A. Hefnawy (eahefnawy@gmail.com): added local-plugins integration test...",
+      "metadata": {
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "commit_count": 3,
+        "file_path": "tests/integration/general/local-plugins/service/serverless.yml",
+        "language": "yaml",
+        "total_chunks": 1
+      },
+      "similarity_score": 1.054125428199768
+    },
+    {
+      "content": "# File: tests/integration/aws/general/environment-variables/service/serverless.yml (yaml)\n\n## Key Code Elements:\nservice: aws-nodejs # NOTE: update this with your service name\nprovider:\n  environment:\nfunctions:\n  hello:\n    environment:\n\n## Recent Changes:\n- de8adc71 by Philipp Muens (raute1337@gmx.de): Update to latest Node.js runtime...\n- 689f1718 by Eslam A. Hefnawy (eahefnawy@gmail.com): removed cfLogs from integration tests...\n- 01f5f943 by Philipp Muens (raute1337@gmx.de): Add tests for overwriting environment variables...",
+      "metadata": {
+        "file_path": "tests/integration/aws/general/environment-variables/service/serverless.yml",
+        "language": "yaml",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "commit_count": 4
+      },
+      "similarity_score": 1.0586001873016357
+    },
+    {
+      "content": "# File: tests/integration/aws/general/package/service/serverless.yml (yaml)\n\n## Key Code Elements:\nservice: aws-nodejs # NOTE: update this with your service name\nprovider:\nfunctions:\n  hello:\n\n## Recent Changes:\n- de8adc71 by Philipp Muens (raute1337@gmx.de): Update to latest Node.js runtime...\n- 689f1718 by Eslam A. Hefnawy (eahefnawy@gmail.com): removed cfLogs from integration tests...\n- 79874bd8 by Nik Graf (nik@nikgraf.com): rename directory...",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "tests/integration/aws/general/package/service/serverless.yml",
+        "total_chunks": 1,
+        "language": "yaml",
+        "commit_count": 3,
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.0829145908355713
+    },
+    {
+      "content": "# File: docs/providers/aws/examples/hello-world/python/serverless.yml (yaml)\n\n## Key Code Elements:\nprovider:\nfunctions:\n  helloWorld:\n\n## Recent Changes:\n- f7b2f813 by Maciej Winnicki (maciej.winnicki@serverless.com): fix hello world examples...\n- 06af417f by ac360 (austen@serverless.com): refactor documentation...",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "yaml",
+        "file_path": "docs/providers/aws/examples/hello-world/python/serverless.yml",
+        "strategy": "compressed",
+        "commit_count": 2,
+        "total_chunks": 1
+      },
+      "similarity_score": 1.0856068134307861
+    },
+    {
+      "content": "# File: tests/integration/aws/s3/multiple-events-multiple-functions-single-bucket/service/serverless.yml (yaml)\n\n## Key Code Elements:\nprovider:\nfunctions:\n  create:\n    events:\n  remove:\n    events:\n      - s3:\n\n## Recent Changes:\n- de8adc71 by Philipp Muens (raute1337@gmx.de): Update to latest Node.js runtime...\n- 689f1718 by Eslam A. Hefnawy (eahefnawy@gmail.com): removed cfLogs from integration tests...\n- a5239b66 by Philipp Muens (raute1337@gmx.de): Migrate S3 integration tests...",
+      "metadata": {
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "file_path": "tests/integration/aws/s3/multiple-events-multiple-functions-single-bucket/service/serverless.yml",
+        "commit_count": 3,
+        "chunk_index": 0,
+        "language": "yaml"
+      },
+      "similarity_score": 1.0944219827651978
+    },
+    {
+      "content": "# File: tests/integration/aws/api-gateway/integration-lambda-proxy/simple-api/service/serverless.yml (yaml)\n\n## Key Code Elements:\nservice: aws-nodejs # NOTE: update this with your service name\nprovider:\nfunctions:\n  hello:\n    events:\n      - http:\n      - http:\n      - http:\n      - http:\n      - http:\n      - http:\n\n## Recent Changes:\n- de8adc71 by Philipp Muens (raute1337@gmx.de): Update to latest Node.js runtime...\n- 689f1718 by Eslam A. Hefnawy (eahefnawy@gmail.com): removed cfLogs from integration tests...\n- 20d95466 by Philipp Muens (raute1337@gmx.de): Add integration tests for slashes in API Gateway paths...",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "commit_count": 5,
+        "total_chunks": 1,
+        "language": "yaml",
+        "file_path": "tests/integration/aws/api-gateway/integration-lambda-proxy/simple-api/service/serverless.yml"
+      },
+      "similarity_score": 1.0971537828445435
+    },
+    {
+      "content": "# File: tests/integration/aws/api-gateway/integration-lambda/simple-api/service/serverless.yml (yaml)\n\n## Key Code Elements:\nservice: aws-nodejs # NOTE: update this with your service name\nprovider:\nfunctions:\n  hello:\n    events:\n      - http:\n      - http:\n      - http:\n      - http:\n      - http:\n      - http:\n      - http:\n      - http:\n      - http:\n      - http:\n\n## Recent Changes:\n- de8adc71 by Philipp Muens (raute1337@gmx.de): Update to latest Node.js runtime...\n- 689f1718 by Eslam A. Hefnawy (eahefnawy@gmail.com): removed cfLogs from integration tests...\n- 20d95466 by Philipp Muens (raute1337@gmx.de): Add integration tests for slashes in API Gateway paths...",
+      "metadata": {
+        "total_chunks": 1,
+        "commit_count": 5,
+        "language": "yaml",
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "file_path": "tests/integration/aws/api-gateway/integration-lambda/simple-api/service/serverless.yml"
+      },
+      "similarity_score": 1.0986058712005615
+    },
+    {
+      "content": "# File: lib/plugins/create/templates/aws-nodejs-ecma-script/serverless.yml (yaml)\n\n## Key Code Elements:\nservice:\nplugins:\nprovider:\nfunctions:\n  first:\n  second:\n    events:\n      - http:\n\n## Recent Changes:\n- 4a3d7602 by Andrew Oh (andrewoh531@gmail.com): Upgrade serverless-webpack plugin from version 2.2.0 to 3.1.1 for aws-nodejs-ecma-script template...\n- 509096b4 by Simon Males (sime@sime.net.au): Remove LAMBDA integration from ECMA sample...\n- aa7f8529 by Philipp Muens (raute1337@gmx.de): Update serverless.yml file...",
+      "metadata": {
+        "language": "yaml",
+        "file_path": "lib/plugins/create/templates/aws-nodejs-ecma-script/serverless.yml",
+        "commit_count": 4,
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "total_chunks": 1
+      },
+      "similarity_score": 1.1026785373687744
+    },
+    {
+      "content": "# File: tests/integration/aws/s3/multiple-events-multiple-functions-multiple-buckets/service/serverless.yml (yaml)\n\n## Key Code Elements:\nprovider:\nfunctions:\n  hello:\n    events:\n      - s3:\n  world:\n    events:\n      - s3:\n\n## Recent Changes:\n- de8adc71 by Philipp Muens (raute1337@gmx.de): Update to latest Node.js runtime...\n- 689f1718 by Eslam A. Hefnawy (eahefnawy@gmail.com): removed cfLogs from integration tests...\n- a5239b66 by Philipp Muens (raute1337@gmx.de): Migrate S3 integration tests...",
+      "metadata": {
+        "total_chunks": 1,
+        "file_path": "tests/integration/aws/s3/multiple-events-multiple-functions-multiple-buckets/service/serverless.yml",
+        "chunk_index": 0,
+        "commit_count": 3,
+        "strategy": "compressed",
+        "language": "yaml"
+      },
+      "similarity_score": 1.1084163188934326
+    },
+    {
+      "content": "# File: docs/providers/aws/guide/workflow.md (markdown)\n\n## Key Code Elements:\n##### Create A Service:\n\n## Recent Changes:\n- e44b38a1 by Jaime Iniesta (jaimeiniesta@gmail.com): update workflow.md\n\nIt looks like \"Intro\" was a placeholder for the intro? Not needed anymore....\n- 7c474064 by James Andersen (jamesandersen@users.noreply.github.com): Fix serverless invoke command example...\n- a2e36d04 by Rasmus Faddersbøll (rasmus.faddersboell@gmail.com): Remove invalid argument in workflow doc...",
+      "metadata": {
+        "file_path": "docs/providers/aws/guide/workflow.md",
+        "language": "markdown",
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "commit_count": 5,
+        "chunk_index": 0
+      },
+      "similarity_score": 1.1157994270324707
+    },
+    {
+      "content": "# File: tests/integration/aws/api-gateway/integration-lambda-proxy/custom-authorizers/service/serverless.yml (yaml)\n\n## Key Code Elements:\nservice: aws-nodejs # NOTE: update this with your service name\nprovider:\nfunctions:\n  hello:\n    events:\n      - http:\n  auth:\n\n## Recent Changes:\n- de8adc71 by Philipp Muens (raute1337@gmx.de): Update to latest Node.js runtime...\n- 689f1718 by Eslam A. Hefnawy (eahefnawy@gmail.com): removed cfLogs from integration tests...\n- ef88d345 by Philipp Muens (raute1337@gmx.de): Update integration tests to auto remove log groups...",
+      "metadata": {
+        "commit_count": 4,
+        "total_chunks": 1,
+        "language": "yaml",
+        "file_path": "tests/integration/aws/api-gateway/integration-lambda-proxy/custom-authorizers/service/serverless.yml",
+        "strategy": "compressed",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.1162489652633667
+    },
+    {
+      "content": "# File: lib/plugins/aws/invokeLocal/invoke.py (python)\n\n## Key Code Elements:\nimport subprocess\nimport argparse\nimport json\nimport logging\nimport sys\nfrom time import strftime, time\nfrom importlib import import_module\nclass FakeLambdaContext(object):\n    def __init__(self, name='Fake', version='LATEST', timeout=6, **kwargs):\n        for key, value in kwargs.items():\n    def get_remaining_time_in_millis(self):\n    @property\n    def function_name(self):\n    @property\n    def function_version(self):\n\n## Recent Changes:\n- e98100de by Travis Webb (me@traviswebb.com): Merge branch '5354-fix' of github.com:cloudreach/serverless into 5354-fix...\n- 56ebcc4c by Travis Webb (me@traviswebb.com): Merge branch 'master' of github.com:cloudreach/serverless into 5354-fix...\n- 0cc2425e by Travis Webb (me@traviswebb.com): remove extraneous log statement...",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "commit_count": 5,
+        "total_chunks": 1,
+        "file_path": "lib/plugins/aws/invokeLocal/invoke.py",
+        "language": "python"
+      },
+      "similarity_score": 1.1193715333938599
+    },
+    {
+      "content": "# File: tests/integration/aws/api-gateway/integration-lambda-proxy/api-keys/service/serverless.yml (yaml)\n\n## Key Code Elements:\nservice: aws-nodejs # NOTE: update this with your service name\nprovider:\n  apiKeys:\nfunctions:\n  hello:\n    events:\n      - http:\n\n## Recent Changes:\n- de8adc71 by Philipp Muens (raute1337@gmx.de): Update to latest Node.js runtime...\n- 689f1718 by Eslam A. Hefnawy (eahefnawy@gmail.com): removed cfLogs from integration tests...\n- ef88d345 by Philipp Muens (raute1337@gmx.de): Update integration tests to auto remove log groups...",
+      "metadata": {
+        "commit_count": 4,
+        "file_path": "tests/integration/aws/api-gateway/integration-lambda-proxy/api-keys/service/serverless.yml",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "language": "yaml",
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.1211203336715698
+    },
+    {
+      "content": "# File: tests/integration/aws/general/nested-handlers/service/serverless.yml (yaml)\n\n## Key Code Elements:\nservice: aws-nodejs # NOTE: update this with your service name\nprovider:\nfunctions:\n  hello:\n\n## Recent Changes:\n- de8adc71 by Philipp Muens (raute1337@gmx.de): Update to latest Node.js runtime...\n- 689f1718 by Eslam A. Hefnawy (eahefnawy@gmail.com): removed cfLogs from integration tests...\n- ef88d345 by Philipp Muens (raute1337@gmx.de): Update integration tests to auto remove log groups...",
+      "metadata": {
+        "language": "yaml",
+        "commit_count": 4,
+        "total_chunks": 1,
+        "file_path": "tests/integration/aws/general/nested-handlers/service/serverless.yml",
+        "chunk_index": 0,
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.1212021112442017
+    },
+    {
+      "content": "# File: docs/providers/aws/examples/hello-world/python/handler.py (python)\n\n## Key Code Elements:\ndef helloWorldHandler(event, context):\n\n## Recent Changes:\n- f7b2f813 by Maciej Winnicki (maciej.winnicki@serverless.com): fix hello world examples...\n- 06af417f by ac360 (austen@serverless.com): refactor documentation...",
+      "metadata": {
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "commit_count": 2,
+        "file_path": "docs/providers/aws/examples/hello-world/python/handler.py",
+        "language": "python",
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.1278752088546753
+    }
+  ]
+}

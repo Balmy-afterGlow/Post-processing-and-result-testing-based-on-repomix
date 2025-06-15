@@ -1,0 +1,708 @@
+{
+  "basic": [
+    {
+      "content": "LOGGER.info(\"Building issue1235.apk...\");\n        ApkOptions apkOptions = new ApkOptions();\n        apkOptions.debugMode = true;\n\n        File testApk = new File(sTmpDir, \"issue1235.apk\");\n        new Androlib(apkOptions).build(sTestOrigDir, testApk);\n\n        LOGGER.info(\"Decoding issue1235.apk...\");\n        ApkDecoder apkDecoder = new ApkDecoder(testApk);\n        apkDecoder.setOutDir(sTestNewDir);\n        apkDecoder.decode();\n    }\n\n    @AfterClass\n    public static void afterClass() throws BrutException {\n        OS.rmdir(sTmpDir);\n    }\n\n    @Test\n    public void buildAndDecodeTest() throws BrutException {\n        assertTrue(sTestNewDir.isDirectory());\n    }\n\n    @Test\n    public void DebugIsTruePriorToBeingFalseTest() throws BrutException, IOException {\n        String apk = \"issue1235-new\";\n\n        String expected = TestUtils.replaceNewlines(\"<?xml version=\\\"1.0\\\" encoding=\\\"utf-8\\\" standalone=\\\"no\\\"?>\\n\" +\n                \"<manifest xmlns:android=\\\"http://schemas.android.com/apk/res/android\\\" package=\\\"com.ibotpeaches.issue1235\\\" platformBuildVersionCode=\\\"23\\\" platformBuildVersionName=\\\"6.0-2438415\\\">\\n\" +\n                \"    <application android:debuggable=\\\"true\\\"/>\" +\n                \"</manifest>\");\n\n        byte[] encoded = Files.readAllBytes(Paths.get(sTmpDir + File.separator + apk + File.separator + \"AndroidManifest.xml\"));\n        String obtained = TestUtils.replaceNewlines(new String(encoded));\n        assertEquals(expected, obtained);\n    }\n\n    private static ExtFile sTmpDir;\n    private static ExtFile sTestOrigDir;\n    private static ExtFile sTestNewDir;\n\n    private final static Logger LOGGER = Logger.getLogger(BuildAndDecodeJarTest.class.getName());\n}\n```",
+      "metadata": {
+        "chunk_index": 1,
+        "total_chunks": 2,
+        "file_path": "brut.apktool/apktool-lib/src/test/java/brut/androlib/DebugTagRetainedTest.java",
+        "language": "java",
+        "strategy": "basic"
+      },
+      "similarity_score": 0.691597580909729
+    },
+    {
+      "content": "public static ARSCData decode(InputStream arscStream, boolean findFlagsOffsets, boolean keepBroken,\n                                  ResTable resTable)\n            throws AndrolibException {\n        try {\n            ARSCDecoder decoder = new ARSCDecoder(arscStream, resTable, findFlagsOffsets, keepBroken);\n            ResPackage[] pkgs = decoder.readTableHeader();\n            return new ARSCData(pkgs, decoder.mFlagsOffsets == null\n                    ? null\n                    : decoder.mFlagsOffsets.toArray(new FlagsOffset[0]), resTable);\n        } catch (IOException ex) {\n            throw new AndrolibException(\"Could not decode arsc file\", ex);\n        }\n    }\n\n    private ARSCDecoder(InputStream arscStream, ResTable resTable, boolean storeFlagsOffsets, boolean keepBroken) {\n        arscStream = mCountIn = new CountingInputStream(arscStream);\n        if (storeFlagsOffsets) {\n            mFlagsOffsets = new ArrayList<FlagsOffset>();\n        } else {\n            mFlagsOffsets = null;\n        }\n        // We need to explicitly cast to DataInput as otherwise the constructor is ambiguous.\n        // We choose DataInput instead of InputStream as ExtDataInput wraps an InputStream in\n        // a DataInputStream which is big-endian and ignores the little-endian behavior.\n        mIn = new ExtDataInput((DataInput) new LittleEndianDataInputStream(arscStream));\n        mResTable = resTable;\n        mKeepBroken = keepBroken;\n    }\n\n    private ResPackage[] readTableHeader() throws IOException, AndrolibException {\n        nextChunkCheckType(Header.TYPE_TABLE);\n        int packageCount = mIn.readInt();\n\n        mTableStrings = StringBlock.read(mIn);\n        ResPackage[] packages = new ResPackage[packageCount];\n\n        nextChunk();\n        for (int i = 0; i < packageCount; i++) {\n            packages[i] = readTablePackage();\n        }\n        return packages;\n    }",
+      "metadata": {
+        "chunk_index": 1,
+        "language": "java",
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/decoder/ARSCDecoder.java",
+        "total_chunks": 13,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.7145533561706543
+    },
+    {
+      "content": "LOGGER.info(\"Building issue1481.jar...\");\n        File testJar = new File(sTmpDir, \"issue1481.jar\");\n        new Androlib().build(sTestOrigDir, testJar);\n\n        LOGGER.info(\"Decoding issue1481.jar...\");\n        ApkDecoder apkDecoder = new ApkDecoder(testJar);\n        apkDecoder.setOutDir(sTestNewDir);\n        apkDecoder.decode();\n    }\n\n    @AfterClass\n    public static void afterClass() throws BrutException {\n        OS.rmdir(sTmpDir);\n    }",
+      "metadata": {
+        "file_path": "brut.apktool/apktool-lib/src/test/java/brut/androlib/DefaultBaksmaliVariableTest.java",
+        "strategy": "basic",
+        "chunk_index": 1,
+        "total_chunks": 5,
+        "language": "java"
+      },
+      "similarity_score": 0.718433678150177
+    },
+    {
+      "content": "@Test\n    public void isProviderStringReplacementWorking() throws BrutException, IOException {\n        String apk = \"issue636.apk\";\n\n        // decode issue636.apk\n        ApkDecoder apkDecoder = new ApkDecoder(new File(sTmpDir + File.separator + apk));\n        apkDecoder.setOutDir(new File(sTmpDir + File.separator + apk + \".out\"));\n        apkDecoder.decode();\n\n        // build issue636\n        ExtFile testApk = new ExtFile(sTmpDir, apk + \".out\");\n        new Androlib().build(testApk, null);\n        String newApk = apk + \".out\" + File.separator + \"dist\" + File.separator + apk;\n        assertTrue(fileExists(newApk));\n\n        // decode issues636 again\n        apkDecoder = new ApkDecoder(new File(sTmpDir + File.separator + newApk));\n        apkDecoder.setOutDir(new File(sTmpDir + File.separator + apk + \".out.two\"));\n        apkDecoder.decode();",
+      "metadata": {
+        "strategy": "basic",
+        "total_chunks": 3,
+        "chunk_index": 1,
+        "file_path": "brut.apktool/apktool-lib/src/test/java/brut/androlib/ProviderAttributeTest.java",
+        "language": "java"
+      },
+      "similarity_score": 0.7217590808868408
+    },
+    {
+      "content": "@Test\n    public void referenceBecomesLiteralTest() throws BrutException, IOException {\n        String apk = \"issue1234.apk\";\n\n        // decode issue1234.apk\n        ApkDecoder apkDecoder = new ApkDecoder(new File(sTmpDir + File.separator + apk));\n        ExtFile decodedApk = new ExtFile(sTmpDir + File.separator + apk + \".out\");\n        apkDecoder.setOutDir(new File(sTmpDir + File.separator + apk + \".out\"));\n        apkDecoder.decode();\n\n        MetaInfo metaInfo = new Androlib().readMetaFile(decodedApk);\n        assertEquals(\"v1.0.0\", metaInfo.versionInfo.versionName);\n    }\n\n    private static ExtFile sTmpDir;\n}\n```",
+      "metadata": {
+        "strategy": "basic",
+        "file_path": "brut.apktool/apktool-lib/src/test/java/brut/androlib/ReferenceVersionCodeTest.java",
+        "total_chunks": 2,
+        "language": "java",
+        "chunk_index": 1
+      },
+      "similarity_score": 0.7267322540283203
+    },
+    {
+      "content": "// decode issue767.apk\n        ApkDecoder apkDecoder = new ApkDecoder(new File(sTmpDir + File.separator + apk));\n        sTestOrigDir = new ExtFile(sTmpDir + File.separator + apk + \".out\");\n\n        apkDecoder.setOutDir(new File(sTmpDir + File.separator + apk + \".out\"));\n        apkDecoder.decode();\n\n        // build issue767\n        ExtFile testApk = new ExtFile(sTmpDir, apk + \".out\");\n        new Androlib().build(testApk, null);\n        String newApk = apk + \".out\" + File.separator + \"dist\" + File.separator + apk;\n\n        // decode issue767 again\n        apkDecoder = new ApkDecoder(new File(sTmpDir + File.separator + newApk));\n        sTestNewDir = new ExtFile(sTmpDir + File.separator + apk + \".out.two\");\n\n        apkDecoder.setOutDir(new File(sTmpDir + File.separator + apk + \".out.two\"));\n        apkDecoder.decode();\n\n        compareXmlFiles(\"AndroidManifest.xml\");\n    }\n\n    private void compareXmlFiles(String path) throws BrutException {\n        compareXmlFiles(path, null);\n    }\n\n    private void compareXmlFiles(String path, ElementQualifier qualifier) throws BrutException {\n        DetailedDiff diff;\n        try {\n            Reader control = new FileReader(new File(sTestOrigDir, path));\n            Reader test = new FileReader(new File(sTestNewDir, path));\n\n            diff = new DetailedDiff(new Diff(control, test));\n        } catch (SAXException | IOException ex) {\n            throw new BrutException(ex);\n        }\n\n        if (qualifier != null) {\n            diff.overrideElementQualifier(qualifier);\n        }\n\n        assertTrue(path + \": \" + diff.getAllDifferences().toString(), diff.similar());\n    }\n\n    private static ExtFile sTmpDir;\n    private static ExtFile sTestOrigDir;\n    private static ExtFile sTestNewDir;\n}\n```",
+      "metadata": {
+        "file_path": "brut.apktool/apktool-lib/src/test/java/brut/androlib/LargeIntsInManifestTest.java",
+        "language": "java",
+        "strategy": "basic",
+        "total_chunks": 2,
+        "chunk_index": 1
+      },
+      "similarity_score": 0.7291083931922913
+    },
+    {
+      "content": "LOGGER.info(\"Building testjar.jar...\");\n        File testJar = new File(sTmpDir, \"testjar.jar\");\n        new Androlib().build(sTestOrigDir, testJar);\n\n        LOGGER.info(\"Decoding testjar.jar...\");\n        ApkDecoder apkDecoder = new ApkDecoder(testJar);\n        apkDecoder.setOutDir(sTestNewDir);\n        apkDecoder.decode();\n    }\n\n    @AfterClass\n    public static void afterClass() throws BrutException {\n        OS.rmdir(sTmpDir);\n    }\n\n    @Test\n    public void buildAndDecodeTest() throws BrutException {\n        assertTrue(sTestNewDir.isDirectory());\n    }\n\n    private static ExtFile sTmpDir;\n    private static ExtFile sTestOrigDir;\n    private static ExtFile sTestNewDir;\n\n    private final static Logger LOGGER = Logger.getLogger(BuildAndDecodeJarTest.class.getName());\n}\n```",
+      "metadata": {
+        "chunk_index": 1,
+        "language": "java",
+        "file_path": "brut.apktool/apktool-lib/src/test/java/brut/androlib/BuildAndDecodeJarTest.java",
+        "total_chunks": 2,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.7571884393692017
+    },
+    {
+      "content": "@Test\n    public void missingVersionParsesCorrectlyTest() throws BrutException, IOException {\n        String apk = \"issue1264.apk\";\n\n        // decode issue1264.apk\n        ApkDecoder apkDecoder = new ApkDecoder(new File(sTmpDir + File.separator + apk));\n        ExtFile decodedApk = new ExtFile(sTmpDir + File.separator + apk + \".out\");\n        apkDecoder.setOutDir(new File(sTmpDir + File.separator + apk + \".out\"));\n        apkDecoder.decode();\n\n        MetaInfo metaInfo = new Androlib().readMetaFile(decodedApk);\n        assertEquals(null, metaInfo.versionInfo.versionName);\n    }\n\n    private static ExtFile sTmpDir;\n}\n```",
+      "metadata": {
+        "language": "java",
+        "chunk_index": 1,
+        "strategy": "basic",
+        "file_path": "brut.apktool/apktool-lib/src/test/java/brut/androlib/MissingVersionManifestTest.java",
+        "total_chunks": 2
+      },
+      "similarity_score": 0.7574102282524109
+    },
+    {
+      "content": "serial.endTag(null, \"resources\");\n            serial.endDocument();\n            serial.flush();\n            outStream.close();\n        } catch (IOException | DirectoryException ex) {\n            throw new AndrolibException(\"Could not generate public.xml file\", ex);\n        }\n    }\n\n    private ResPackage[] getResPackagesFromApk(ExtFile apkFile,ResTable resTable, boolean keepBroken)\n            throws AndrolibException {\n        try {\n            Directory dir = apkFile.getDirectory();\n            BufferedInputStream bfi = new BufferedInputStream(dir.getFileInput(\"resources.arsc\"));\n            try {\n                return ARSCDecoder.decode(bfi, false, keepBroken, resTable).getPackages();\n            } finally {\n                try {\n                    bfi.close();\n                } catch (IOException ignored) {}\n            }\n        } catch (DirectoryException ex) {\n            throw new AndrolibException(\"Could not load resources.arsc from file: \" + apkFile, ex);\n        }\n    }\n\n    public File getFrameworkApk(int id, String frameTag)\n            throws AndrolibException {\n        File dir = getFrameworkDir();\n        File apk;\n\n        if (frameTag != null) {\n            apk = new File(dir, String.valueOf(id) + '-' + frameTag + \".apk\");\n            if (apk.exists()) {\n                return apk;\n            }\n        }\n\n        apk = new File(dir, String.valueOf(id) + \".apk\");\n        if (apk.exists()) {\n            return apk;\n        }\n\n        if (id == 1) {\n            try (InputStream in = AndrolibResources.class.getResourceAsStream(\"/brut/androlib/android-framework.jar\");\n                 OutputStream out = new FileOutputStream(apk)) {\n                IOUtils.copy(in, out);\n                return apk;\n            } catch (IOException ex) {\n                throw new AndrolibException(ex);\n            }\n        }\n\n        throw new CantFindFrameworkResException(id);\n    }",
+      "metadata": {
+        "chunk_index": 11,
+        "language": "java",
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/AndrolibResources.java",
+        "total_chunks": 18,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.7616474032402039
+    },
+    {
+      "content": "// Fake ResPackage\n        attrDecoder.setCurrentPackage(new ResPackage(resTable, 0, null));\n\n        Directory inApk, out;\n        try {\n            inApk = apkFile.getDirectory();\n            out = new FileDirectory(outDir);\n\n            LOGGER.info(\"Decoding AndroidManifest.xml with only framework resources...\");\n            fileDecoder.decodeManifest(inApk, \"AndroidManifest.xml\", out, \"AndroidManifest.xml\");\n\n        } catch (DirectoryException ex) {\n            throw new AndrolibException(ex);\n        }\n    }\n\n    public void adjustPackageManifest(ResTable resTable, String filePath)\n            throws AndrolibException {\n\n        // compare resources.arsc package name to the one present in AndroidManifest\n        ResPackage resPackage = resTable.getCurrentResPackage();\n        String packageOriginal = resPackage.getName();\n        mPackageRenamed = resTable.getPackageRenamed();\n\n        resTable.setPackageId(resPackage.getId());\n        resTable.setPackageOriginal(packageOriginal);\n\n        // 1) Check if packageOriginal === mPackageRenamed\n        // 2) Check if packageOriginal is ignored via IGNORED_PACKAGES\n        // 2a) If its ignored, make sure the mPackageRenamed isn't explicitly allowed\n        if (packageOriginal.equalsIgnoreCase(mPackageRenamed) ||\n                (Arrays.asList(IGNORED_PACKAGES).contains(packageOriginal) &&\n                ! Arrays.asList(ALLOWED_PACKAGES).contains(mPackageRenamed))) {\n            LOGGER.info(\"Regular manifest package...\");\n        } else {\n            LOGGER.info(\"Renamed manifest package found! Replacing \" + mPackageRenamed + \" with \" + packageOriginal);\n            ResXmlPatcher.renameManifestPackage(new File(filePath), packageOriginal);\n        }\n    }\n\n    public void decodeManifestWithResources(ResTable resTable, ExtFile apkFile, File outDir)\n            throws AndrolibException {",
+      "metadata": {
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/AndrolibResources.java",
+        "strategy": "basic",
+        "total_chunks": 18,
+        "language": "java",
+        "chunk_index": 3
+      },
+      "similarity_score": 0.7756228446960449
+    },
+    {
+      "content": "public void publicizeResources(File arscFile) throws AndrolibException {\n        byte[] data = new byte[(int) arscFile.length()];\n\n        try(InputStream in = new FileInputStream(arscFile);\n            OutputStream out = new FileOutputStream(arscFile)) {\n            in.read(data);\n            publicizeResources(data);\n            out.write(data);\n        } catch (IOException ex){\n            throw new AndrolibException(ex);\n        }\n    }\n\n    public void publicizeResources(byte[] arsc) throws AndrolibException {\n        publicizeResources(arsc, ARSCDecoder.decode(new ByteArrayInputStream(arsc), true, true).getFlagsOffsets());\n    }\n\n    public void publicizeResources(byte[] arsc, FlagsOffset[] flagsOffsets)\n            throws AndrolibException {\n        for (FlagsOffset flags : flagsOffsets) {\n            int offset = flags.offset + 3;\n            int end = offset + 4 * flags.count;\n            while (offset < end) {\n                arsc[offset] |= (byte) 0x40;\n                offset += 4;\n            }\n        }\n    }\n\n    public File getFrameworkDir() throws AndrolibException {\n        if (mFrameworkDirectory != null) {\n            return mFrameworkDirectory;\n        }\n\n        String path;\n\n        // if a framework path was specified on the command line, use it\n        if (apkOptions.frameworkFolderLocation != null) {\n            path = apkOptions.frameworkFolderLocation;\n        } else {\n            File parentPath = new File(System.getProperty(\"user.home\"));\n            if (! parentPath.canWrite()) {\n                LOGGER.severe(String.format(\"WARNING: Could not write to $HOME (%s), using %s instead...\",\n                        parentPath.getAbsolutePath(), System.getProperty(\"java.io.tmpdir\")));\n                LOGGER.severe(\"Please be aware this is a volatile directory and frameworks could go missing, \" +\n                        \"please utilize --frame-path if the default storage directory is unavailable\");",
+      "metadata": {
+        "strategy": "basic",
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/AndrolibResources.java",
+        "chunk_index": 14,
+        "language": "java",
+        "total_chunks": 18
+      },
+      "similarity_score": 0.7863020300865173
+    },
+    {
+      "content": "public void setDecodeResources(short mode) throws AndrolibException {\n        if (mode != DECODE_RESOURCES_NONE && mode != DECODE_RESOURCES_FULL) {\n            throw new AndrolibException(\"Invalid decode resources mode\");\n        }\n        mDecodeResources = mode;\n    }\n\n    public void setAnalysisMode(boolean mode, boolean pass) throws AndrolibException{\n        mAnalysisMode = mode;\n\n        // only set mResTable, once it exists\n        if (pass) {\n            if (mResTable == null) {\n                mResTable = getResTable();\n            }\n            mResTable.setAnalysisMode(mode);\n        }\n    }\n\n    public void setTargetSdkVersion() throws AndrolibException, IOException {\n        if (mResTable == null) {\n            mResTable = mAndrolib.getResTable(mApkFile);\n        }\n\n        Map<String, String> sdkInfo = mResTable.getSdkInfo();\n        if (sdkInfo.get(\"targetSdkVersion\") != null) {\n            mApi = Integer.parseInt(sdkInfo.get(\"targetSdkVersion\"));\n        }\n    }\n\n    public void setBaksmaliDebugMode(boolean bakdeb) {\n        mBakDeb = bakdeb;\n    }\n\n    public void setForceDelete(boolean forceDelete) {\n        mForceDelete = forceDelete;\n    }\n\n    public void setFrameworkTag(String tag) throws AndrolibException {\n        mAndrolib.apkOptions.frameworkTag = tag;\n    }\n\n    public void setKeepBrokenResources(boolean keepBrokenResources) {\n        mKeepBrokenResources = keepBrokenResources;\n    }\n\n    public void setFrameworkDir(String dir) {\n        mAndrolib.apkOptions.frameworkFolderLocation = dir;\n    }",
+      "metadata": {
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/ApkDecoder.java",
+        "total_chunks": 9,
+        "language": "java",
+        "chunk_index": 4,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.7914628982543945
+    },
+    {
+      "content": "ARSCData arsc = ARSCDecoder.decode(new ByteArrayInputStream(data), true, true);\n            publicizeResources(data, arsc.getFlagsOffsets());\n\n            File outFile = new File(getFrameworkDir(), String.valueOf(arsc\n                    .getOnePackage().getId())\n                    + (tag == null ? \"\" : '-' + tag)\n                    + \".apk\");\n\n            out = new ZipOutputStream(new FileOutputStream(outFile));\n            out.setMethod(ZipOutputStream.STORED);\n            CRC32 crc = new CRC32();\n            crc.update(data);\n            entry = new ZipEntry(\"resources.arsc\");\n            entry.setSize(data.length);\n            entry.setCrc(crc.getValue());\n            out.putNextEntry(entry);\n            out.write(data);\n            out.closeEntry();\n            \n            //Write fake AndroidManifest.xml file to support original aapt\n            entry = zip.getEntry(\"AndroidManifest.xml\");\n            if (entry != null) {\n                in = zip.getInputStream(entry);\n                byte[] manifest = IOUtils.toByteArray(in);\n                CRC32 manifestCrc = new CRC32();\n                manifestCrc.update(manifest);\n                entry.setSize(manifest.length);\n                entry.setCompressedSize(-1);\n                entry.setCrc(manifestCrc.getValue());\n                out.putNextEntry(entry);\n                out.write(manifest);\n                out.closeEntry();\n            }\n\n            zip.close();\n            LOGGER.info(\"Framework installed to: \" + outFile);\n        } catch (IOException ex) {\n            throw new AndrolibException(ex);\n        } finally {\n            IOUtils.closeQuietly(in);\n            IOUtils.closeQuietly(out);\n        }\n    }\n\n    public void publicizeResources(File arscFile) throws AndrolibException {\n        byte[] data = new byte[(int) arscFile.length()];",
+      "metadata": {
+        "total_chunks": 18,
+        "language": "java",
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/AndrolibResources.java",
+        "chunk_index": 13,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.8078425526618958
+    },
+    {
+      "content": "# File: brut.apktool/apktool-lib/src/main/java/brut/androlib/res/decoder/ResStreamDecoderContainer.java (java)\n\n## Code Content:\n```java\n/**\n *  Copyright (C) 2017 Ryszard Wiśniewski <brut.alll@gmail.com>\n *  Copyright (C) 2017 Connor Tumbleson <connor.tumbleson@gmail.com>\n *\n *  Licensed under the Apache License, Version 2.0 (the \"License\");\n *  you may not use this file except in compliance with the License.\n *  You may obtain a copy of the License at\n *\n *       http://www.apache.org/licenses/LICENSE-2.0\n *\n *  Unless required by applicable law or agreed to in writing, software\n *  distributed under the License is distributed on an \"AS IS\" BASIS,\n *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n *  See the License for the specific language governing permissions and\n *  limitations under the License.\n */\npackage brut.androlib.res.decoder;\n\nimport brut.androlib.AndrolibException;\nimport java.io.InputStream;\nimport java.io.OutputStream;\nimport java.util.HashMap;\nimport java.util.Map;\n\n/**\n * @author Ryszard Wiśniewski <brut.alll@gmail.com>\n */\npublic class ResStreamDecoderContainer {\n    private final Map<String, ResStreamDecoder> mDecoders = new HashMap<String, ResStreamDecoder>();\n\n    public void decode(InputStream in, OutputStream out, String decoderName)\n            throws AndrolibException {\n        getDecoder(decoderName).decode(in, out);\n    }\n\n    public ResStreamDecoder getDecoder(String name) throws AndrolibException {\n        ResStreamDecoder decoder = mDecoders.get(name);\n        if (decoder == null) {\n            throw new AndrolibException(\"Undefined decoder: \" + name);\n        }\n        return decoder;\n    }\n\n    public void setDecoder(String name, ResStreamDecoder decoder) {\n        mDecoders.put(name, decoder);\n    }\n}\n```",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "java",
+        "strategy": "basic",
+        "total_chunks": 1,
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/decoder/ResStreamDecoderContainer.java"
+      },
+      "similarity_score": 0.8097864389419556
+    },
+    {
+      "content": "public void decodeResourcesFull(ExtFile apkFile, File outDir, ResTable resTable)\n            throws AndrolibException {\n        mAndRes.decode(resTable, apkFile, outDir);\n    }\n\n    public void decodeManifestWithResources(ExtFile apkFile, File outDir, ResTable resTable)\n            throws AndrolibException {\n        mAndRes.decodeManifestWithResources(resTable, apkFile, outDir);\n    }\n\n    public void decodeRawFiles(ExtFile apkFile, File outDir)\n            throws AndrolibException {\n        LOGGER.info(\"Copying assets and libs...\");\n        try {\n            Directory in = apkFile.getDirectory();\n            if (in.containsDir(\"assets\")) {\n                in.copyToDir(outDir, \"assets\");\n            }\n            if (in.containsDir(\"lib\")) {\n                in.copyToDir(outDir, \"lib\");\n            }\n            if (in.containsDir(\"libs\")) {\n                in.copyToDir(outDir, \"libs\");\n            }\n            if (in.containsDir(\"kotlin\")) {\n                in.copyToDir(outDir, \"kotlin\");\n            }\n        } catch (DirectoryException ex) {\n            throw new AndrolibException(ex);\n        }\n    }\n\n    public void recordUncompressedFiles(ExtFile apkFile, Collection<String> uncompressedFilesOrExts) throws AndrolibException {\n        try {\n            Directory unk = apkFile.getDirectory();\n            Set<String> files = unk.getFiles(true);\n            String ext;\n\n            for (String file : files) {\n                if (isAPKFileNames(file) && !NO_COMPRESS_PATTERN.matcher(file).find()) {\n                    if (unk.getCompressionLevel(file) == 0) {\n\n                        if (StringUtils.countMatches(file, \".\") > 1) {\n                            ext = file;\n                        } else {\n                            ext = FilenameUtils.getExtension(file);\n                            if (ext.isEmpty()) {\n                                ext = file;\n                            }\n                        }",
+      "metadata": {
+        "total_chunks": 18,
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/Androlib.java",
+        "strategy": "basic",
+        "language": "java",
+        "chunk_index": 3
+      },
+      "similarity_score": 0.8098279237747192
+    },
+    {
+      "content": "# File: brut.apktool/apktool-lib/src/main/java/brut/androlib/res/decoder/Res9patchStreamDecoder.java (java)\n\n## Code Content:\n```java\n/**\n *  Copyright (C) 2017 Ryszard Wiśniewski <brut.alll@gmail.com>\n *  Copyright (C) 2017 Connor Tumbleson <connor.tumbleson@gmail.com>\n *\n *  Licensed under the Apache License, Version 2.0 (the \"License\");\n *  you may not use this file except in compliance with the License.\n *  You may obtain a copy of the License at\n *\n *       http://www.apache.org/licenses/LICENSE-2.0\n *\n *  Unless required by applicable law or agreed to in writing, software\n *  distributed under the License is distributed on an \"AS IS\" BASIS,\n *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n *  See the License for the specific language governing permissions and\n *  limitations under the License.\n */\npackage brut.androlib.res.decoder;\n\nimport brut.androlib.AndrolibException;\nimport brut.androlib.err.CantFind9PatchChunk;\nimport brut.util.ExtDataInput;\nimport java.awt.image.BufferedImage;\nimport java.awt.image.Raster;\nimport java.awt.image.WritableRaster;\nimport java.io.*;\nimport javax.imageio.ImageIO;\nimport javax.imageio.ImageTypeSpecifier;\n\nimport org.apache.commons.io.IOUtils;\n\n/**\n * @author Ryszard Wiśniewski <brut.alll@gmail.com>\n */\npublic class Res9patchStreamDecoder implements ResStreamDecoder {\n    @Override\n    public void decode(InputStream in, OutputStream out)\n            throws AndrolibException {\n        try {\n            byte[] data = IOUtils.toByteArray(in);\n\n            BufferedImage im = ImageIO.read(new ByteArrayInputStream(data));\n            int w = im.getWidth(), h = im.getHeight();",
+      "metadata": {
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/decoder/Res9patchStreamDecoder.java",
+        "total_chunks": 5,
+        "language": "java",
+        "strategy": "basic",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.8110338449478149
+    },
+    {
+      "content": "LOGGER.info(\"Building testapp.apk...\");\n        File testApk = new File(sTmpDir, \"testapp.apk\");\n        new Androlib().build(sTestOrigDir, testApk);\n\n        LOGGER.info(\"Decoding testapp.apk...\");\n        ApkDecoder apkDecoder = new ApkDecoder(testApk);\n        apkDecoder.setOutDir(sTestNewDir);\n        apkDecoder.decode();\n    }\n\n    @AfterClass\n    public static void afterClass() throws BrutException {\n        OS.rmdir(sTmpDir);\n    }\n\n    @Test\n    public void buildAndDecodeTest() throws BrutException {\n        assertTrue(sTestNewDir.isDirectory());\n    }\n\n    @Test\n    public void manifestTaggingNotSupressed() throws BrutException {\n        compareXmlFiles(\"AndroidManifest.xml\");\n    }\n\n    @Test\n    public void valuesAnimsTest() throws BrutException {\n        compareValuesFiles(\"values-mcc001/anims.xml\");\n    }\n\n    @Test\n    public void valuesArraysTest() throws BrutException {\n        compareValuesFiles(\"values-mcc001/arrays.xml\");\n    }\n\n    @Test\n    public void valuesArraysCastingTest() throws BrutException {\n        compareValuesFiles(\"values-mcc002/arrays.xml\");\n        compareValuesFiles(\"values-mcc003/arrays.xml\");\n    }\n\n    @Test\n    public void valuesAttrsTest() throws BrutException {\n        compareValuesFiles(\"values/attrs.xml\");\n    }\n\n    @Test\n    public void valuesBoolsTest() throws BrutException {\n        compareValuesFiles(\"values-mcc001/bools.xml\");\n    }\n\n    @Test\n    public void valuesColorsTest() throws BrutException {\n        compareValuesFiles(\"values-mcc001/colors.xml\");\n    }\n\n    @Test\n    public void bug702Test() throws BrutException {\n        compareValuesFiles(\"values-mcc001-mnc00/strings.xml\");\n    }\n\n    @Test\n    public void valuesDimensTest() throws BrutException {\n        compareValuesFiles(\"values-mcc001/dimens.xml\");\n    }\n\n    @Test\n    public void valuesDrawablesTest() throws BrutException {\n        compareValuesFiles(\"values-mcc001/drawables.xml\");\n    }",
+      "metadata": {
+        "file_path": "brut.apktool/apktool-lib/src/test/java/brut/androlib/BuildAndDecodeTest.java",
+        "chunk_index": 1,
+        "language": "java",
+        "strategy": "basic",
+        "total_chunks": 11
+      },
+      "similarity_score": 0.8134661316871643
+    },
+    {
+      "content": "public ApkDecoder(Androlib androlib) {\n        mAndrolib = androlib;\n    }\n\n    public ApkDecoder(File apkFile) {\n        this(apkFile, new Androlib());\n    }\n\n    public ApkDecoder(File apkFile, Androlib androlib) {\n        mAndrolib = androlib;\n        setApkFile(apkFile);\n    }\n\n    public void setApkFile(File apkFile) {\n        if (mApkFile != null) {\n            try {\n                mApkFile.close();\n            } catch (IOException ignored) {}\n        }\n\n        mApkFile = new ExtFile(apkFile);\n        mResTable = null;\n    }\n\n    public void setOutDir(File outDir) throws AndrolibException {\n        mOutDir = outDir;\n    }\n\n    public void setApi(int api) {\n        mApi = api;\n    }\n\n    public void decode() throws AndrolibException, IOException, DirectoryException {\n        try {\n            File outDir = getOutDir();\n            AndrolibResources.sKeepBroken = mKeepBrokenResources;\n\n            if (!mForceDelete && outDir.exists()) {\n                throw new OutDirExistsException();\n            }\n\n            if (!mApkFile.isFile() || !mApkFile.canRead()) {\n                throw new InFileNotFoundException();\n            }\n\n            try {\n                OS.rmdir(outDir);\n            } catch (BrutException ex) {\n                throw new AndrolibException(ex);\n            }\n            outDir.mkdirs();\n\n            LOGGER.info(\"Using Apktool \" + Androlib.getVersion() + \" on \" + mApkFile.getName());\n\n            if (hasResources()) {\n                switch (mDecodeResources) {\n                    case DECODE_RESOURCES_NONE:\n                        mAndrolib.decodeResourcesRaw(mApkFile, outDir);\n                        break;\n                    case DECODE_RESOURCES_FULL:\n                        setTargetSdkVersion();\n                        setAnalysisMode(mAnalysisMode, true);",
+      "metadata": {
+        "total_chunks": 9,
+        "language": "java",
+        "strategy": "basic",
+        "chunk_index": 1,
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/ApkDecoder.java"
+      },
+      "similarity_score": 0.8183848261833191
+    },
+    {
+      "content": "public ApkOptions apkOptions;\n\n    // TODO: dirty static hack. I have to refactor decoding mechanisms.\n    public static boolean sKeepBroken = false;\n\n    private final static Logger LOGGER = Logger.getLogger(AndrolibResources.class.getName());\n\n    private File mFrameworkDirectory = null;\n\n    private ExtFile mFramework = null;\n\n    private String mMinSdkVersion = null;\n    private String mMaxSdkVersion = null;\n    private String mTargetSdkVersion = null;\n    private String mVersionCode = null;\n    private String mVersionName = null;\n    private String mPackageRenamed = null;\n    private String mPackageId = null;\n\n    private boolean mSharedLibrary = false;\n\n    private final static String[] IGNORED_PACKAGES = new String[] {\n            \"android\", \"com.htc\", \"miui\", \"com.lge\", \"com.lge.internal\", \"yi\", \"com.miui.core\", \"flyme\",\n            \"air.com.adobe.appentry\" };\n\n    private final static String[] ALLOWED_PACKAGES = new String[] {\n            \"com.miui\" };\n}\n```",
+      "metadata": {
+        "language": "java",
+        "total_chunks": 18,
+        "strategy": "basic",
+        "chunk_index": 17,
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/AndrolibResources.java"
+      },
+      "similarity_score": 0.8272475004196167
+    },
+    {
+      "content": "@Test\n    public void multipleExtensionUnknownFileTest() throws BrutException, IOException {\n        String apk = \"issue1244.apk\";\n\n        // decode issue1244.apk\n        ApkDecoder apkDecoder = new ApkDecoder(new File(sTmpDir + File.separator + apk));\n        ExtFile decodedApk = new ExtFile(sTmpDir + File.separator + apk + \".out\");\n        apkDecoder.setOutDir(new File(sTmpDir + File.separator + apk + \".out\"));\n        apkDecoder.decode();\n\n        MetaInfo metaInfo = new Androlib().readMetaFile(decodedApk);\n        for (String string : metaInfo.doNotCompress) {\n            if (StringUtils.countMatches(string, \".\") > 1) {\n                assertTrue(string.equalsIgnoreCase(\"assets/bin/Data/sharedassets1.assets.split0\"));\n            }\n        }\n    }\n\n    private static ExtFile sTmpDir;\n}\n```",
+      "metadata": {
+        "file_path": "brut.apktool/apktool-lib/src/test/java/brut/androlib/DoubleExtensionUnknownFileTest.java",
+        "total_chunks": 2,
+        "strategy": "basic",
+        "chunk_index": 1,
+        "language": "java"
+      },
+      "similarity_score": 0.8343371152877808
+    }
+  ],
+  "enhanced": [
+    {
+      "content": "LOGGER.info(\"Building issue1235.apk...\");\n        ApkOptions apkOptions = new ApkOptions();\n        apkOptions.debugMode = true;\n\n        File testApk = new File(sTmpDir, \"issue1235.apk\");\n        new Androlib(apkOptions).build(sTestOrigDir, testApk);\n\n        LOGGER.info(\"Decoding issue1235.apk...\");\n        ApkDecoder apkDecoder = new ApkDecoder(testApk);\n        apkDecoder.setOutDir(sTestNewDir);\n        apkDecoder.decode();\n    }\n\n    @AfterClass\n    public static void afterClass() throws BrutException {\n        OS.rmdir(sTmpDir);\n    }\n\n    @Test\n    public void buildAndDecodeTest() throws BrutException {\n        assertTrue(sTestNewDir.isDirectory());\n    }\n\n    @Test\n    public void DebugIsTruePriorToBeingFalseTest() throws BrutException, IOException {\n        String apk = \"issue1235-new\";\n\n        String expected = TestUtils.replaceNewlines(\"<?xml version=\\\"1.0\\\" encoding=\\\"utf-8\\\" standalone=\\\"no\\\"?>\\n\" +\n                \"<manifest xmlns:android=\\\"http://schemas.android.com/apk/res/android\\\" package=\\\"com.ibotpeaches.issue1235\\\" platformBuildVersionCode=\\\"23\\\" platformBuildVersionName=\\\"6.0-2438415\\\">\\n\" +\n                \"    <application android:debuggable=\\\"true\\\"/>\" +\n                \"</manifest>\");\n\n        byte[] encoded = Files.readAllBytes(Paths.get(sTmpDir + File.separator + apk + File.separator + \"AndroidManifest.xml\"));\n        String obtained = TestUtils.replaceNewlines(new String(encoded));\n        assertEquals(expected, obtained);\n    }\n\n    private static ExtFile sTmpDir;\n    private static ExtFile sTestOrigDir;\n    private static ExtFile sTestNewDir;\n\n    private final static Logger LOGGER = Logger.getLogger(BuildAndDecodeJarTest.class.getName());\n}\n```\n\n## Git Commit History",
+      "metadata": {
+        "language": "java",
+        "commit_count": 4,
+        "chunk_index": 1,
+        "strategy": "enhanced",
+        "total_chunks": 4,
+        "file_path": "brut.apktool/apktool-lib/src/test/java/brut/androlib/DebugTagRetainedTest.java"
+      },
+      "similarity_score": 0.691597580909729
+    },
+    {
+      "content": "public static ARSCData decode(InputStream arscStream, boolean findFlagsOffsets, boolean keepBroken,\n                                  ResTable resTable)\n            throws AndrolibException {\n        try {\n            ARSCDecoder decoder = new ARSCDecoder(arscStream, resTable, findFlagsOffsets, keepBroken);\n            ResPackage[] pkgs = decoder.readTableHeader();\n            return new ARSCData(pkgs, decoder.mFlagsOffsets == null\n                    ? null\n                    : decoder.mFlagsOffsets.toArray(new FlagsOffset[0]), resTable);\n        } catch (IOException ex) {\n            throw new AndrolibException(\"Could not decode arsc file\", ex);\n        }\n    }\n\n    private ARSCDecoder(InputStream arscStream, ResTable resTable, boolean storeFlagsOffsets, boolean keepBroken) {\n        arscStream = mCountIn = new CountingInputStream(arscStream);\n        if (storeFlagsOffsets) {\n            mFlagsOffsets = new ArrayList<FlagsOffset>();\n        } else {\n            mFlagsOffsets = null;\n        }\n        // We need to explicitly cast to DataInput as otherwise the constructor is ambiguous.\n        // We choose DataInput instead of InputStream as ExtDataInput wraps an InputStream in\n        // a DataInputStream which is big-endian and ignores the little-endian behavior.\n        mIn = new ExtDataInput((DataInput) new LittleEndianDataInputStream(arscStream));\n        mResTable = resTable;\n        mKeepBroken = keepBroken;\n    }\n\n    private ResPackage[] readTableHeader() throws IOException, AndrolibException {\n        nextChunkCheckType(Header.TYPE_TABLE);\n        int packageCount = mIn.readInt();\n\n        mTableStrings = StringBlock.read(mIn);\n        ResPackage[] packages = new ResPackage[packageCount];\n\n        nextChunk();\n        for (int i = 0; i < packageCount; i++) {\n            packages[i] = readTablePackage();\n        }\n        return packages;\n    }",
+      "metadata": {
+        "total_chunks": 16,
+        "strategy": "enhanced",
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/decoder/ARSCDecoder.java",
+        "chunk_index": 1,
+        "commit_count": 5,
+        "language": "java"
+      },
+      "similarity_score": 0.7145533561706543
+    },
+    {
+      "content": "LOGGER.info(\"Building issue1481.jar...\");\n        File testJar = new File(sTmpDir, \"issue1481.jar\");\n        new Androlib().build(sTestOrigDir, testJar);\n\n        LOGGER.info(\"Decoding issue1481.jar...\");\n        ApkDecoder apkDecoder = new ApkDecoder(testJar);\n        apkDecoder.setOutDir(sTestNewDir);\n        apkDecoder.decode();\n    }\n\n    @AfterClass\n    public static void afterClass() throws BrutException {\n        OS.rmdir(sTmpDir);\n    }",
+      "metadata": {
+        "total_chunks": 6,
+        "chunk_index": 1,
+        "language": "java",
+        "strategy": "enhanced",
+        "commit_count": 3,
+        "file_path": "brut.apktool/apktool-lib/src/test/java/brut/androlib/DefaultBaksmaliVariableTest.java"
+      },
+      "similarity_score": 0.718433678150177
+    },
+    {
+      "content": "@Test\n    public void isProviderStringReplacementWorking() throws BrutException, IOException {\n        String apk = \"issue636.apk\";\n\n        // decode issue636.apk\n        ApkDecoder apkDecoder = new ApkDecoder(new File(sTmpDir + File.separator + apk));\n        apkDecoder.setOutDir(new File(sTmpDir + File.separator + apk + \".out\"));\n        apkDecoder.decode();\n\n        // build issue636\n        ExtFile testApk = new ExtFile(sTmpDir, apk + \".out\");\n        new Androlib().build(testApk, null);\n        String newApk = apk + \".out\" + File.separator + \"dist\" + File.separator + apk;\n        assertTrue(fileExists(newApk));\n\n        // decode issues636 again\n        apkDecoder = new ApkDecoder(new File(sTmpDir + File.separator + newApk));\n        apkDecoder.setOutDir(new File(sTmpDir + File.separator + apk + \".out.two\"));\n        apkDecoder.decode();",
+      "metadata": {
+        "language": "java",
+        "file_path": "brut.apktool/apktool-lib/src/test/java/brut/androlib/ProviderAttributeTest.java",
+        "strategy": "enhanced",
+        "total_chunks": 5,
+        "chunk_index": 1,
+        "commit_count": 5
+      },
+      "similarity_score": 0.7217590808868408
+    },
+    {
+      "content": "// decode issue767.apk\n        ApkDecoder apkDecoder = new ApkDecoder(new File(sTmpDir + File.separator + apk));\n        sTestOrigDir = new ExtFile(sTmpDir + File.separator + apk + \".out\");\n\n        apkDecoder.setOutDir(new File(sTmpDir + File.separator + apk + \".out\"));\n        apkDecoder.decode();\n\n        // build issue767\n        ExtFile testApk = new ExtFile(sTmpDir, apk + \".out\");\n        new Androlib().build(testApk, null);\n        String newApk = apk + \".out\" + File.separator + \"dist\" + File.separator + apk;\n\n        // decode issue767 again\n        apkDecoder = new ApkDecoder(new File(sTmpDir + File.separator + newApk));\n        sTestNewDir = new ExtFile(sTmpDir + File.separator + apk + \".out.two\");\n\n        apkDecoder.setOutDir(new File(sTmpDir + File.separator + apk + \".out.two\"));\n        apkDecoder.decode();\n\n        compareXmlFiles(\"AndroidManifest.xml\");\n    }\n\n    private void compareXmlFiles(String path) throws BrutException {\n        compareXmlFiles(path, null);\n    }\n\n    private void compareXmlFiles(String path, ElementQualifier qualifier) throws BrutException {\n        DetailedDiff diff;\n        try {\n            Reader control = new FileReader(new File(sTestOrigDir, path));\n            Reader test = new FileReader(new File(sTestNewDir, path));\n\n            diff = new DetailedDiff(new Diff(control, test));\n        } catch (SAXException | IOException ex) {\n            throw new BrutException(ex);\n        }\n\n        if (qualifier != null) {\n            diff.overrideElementQualifier(qualifier);\n        }\n\n        assertTrue(path + \": \" + diff.getAllDifferences().toString(), diff.similar());\n    }\n\n    private static ExtFile sTmpDir;\n    private static ExtFile sTestOrigDir;\n    private static ExtFile sTestNewDir;\n}\n```\n\n## Git Commit History",
+      "metadata": {
+        "total_chunks": 5,
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "chunk_index": 1,
+        "language": "java",
+        "file_path": "brut.apktool/apktool-lib/src/test/java/brut/androlib/LargeIntsInManifestTest.java"
+      },
+      "similarity_score": 0.7291083931922913
+    },
+    {
+      "content": "LOGGER.info(\"Building testjar.jar...\");\n        File testJar = new File(sTmpDir, \"testjar.jar\");\n        new Androlib().build(sTestOrigDir, testJar);\n\n        LOGGER.info(\"Decoding testjar.jar...\");\n        ApkDecoder apkDecoder = new ApkDecoder(testJar);\n        apkDecoder.setOutDir(sTestNewDir);\n        apkDecoder.decode();\n    }\n\n    @AfterClass\n    public static void afterClass() throws BrutException {\n        OS.rmdir(sTmpDir);\n    }\n\n    @Test\n    public void buildAndDecodeTest() throws BrutException {\n        assertTrue(sTestNewDir.isDirectory());\n    }\n\n    private static ExtFile sTmpDir;\n    private static ExtFile sTestOrigDir;\n    private static ExtFile sTestNewDir;\n\n    private final static Logger LOGGER = Logger.getLogger(BuildAndDecodeJarTest.class.getName());\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 1597c124\n- Author: Connor Tumbleson (connor@sourcetoad.com)\n- Date: 2017-07-06 00:05:52\n- Message: changed all license files\n- Changes:\n```diff\n@@ -1,5 +1,6 @@\n /**\n- *  Copyright 2014 Ryszard Wiśniewski <brut.alll@gmail.com>\n+ *  Copyright (C) 2017 Ryszard Wiśniewski <brut.alll@gmail.com>\n+ *  Copyright (C) 2017 Connor Tumbleson <connor.tumbleson@gmail.com>\n  *\n  *  Licensed under the Apache License, Version 2.0 (the \"License\");\n  *  you may not use this file except in compliance with the License....\n```",
+      "metadata": {
+        "total_chunks": 4,
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "chunk_index": 1,
+        "file_path": "brut.apktool/apktool-lib/src/test/java/brut/androlib/BuildAndDecodeJarTest.java",
+        "language": "java"
+      },
+      "similarity_score": 0.7571884393692017
+    },
+    {
+      "content": "serial.endTag(null, \"resources\");\n            serial.endDocument();\n            serial.flush();\n            outStream.close();\n        } catch (IOException | DirectoryException ex) {\n            throw new AndrolibException(\"Could not generate public.xml file\", ex);\n        }\n    }\n\n    private ResPackage[] getResPackagesFromApk(ExtFile apkFile,ResTable resTable, boolean keepBroken)\n            throws AndrolibException {\n        try {\n            Directory dir = apkFile.getDirectory();\n            BufferedInputStream bfi = new BufferedInputStream(dir.getFileInput(\"resources.arsc\"));\n            try {\n                return ARSCDecoder.decode(bfi, false, keepBroken, resTable).getPackages();\n            } finally {\n                try {\n                    bfi.close();\n                } catch (IOException ignored) {}\n            }\n        } catch (DirectoryException ex) {\n            throw new AndrolibException(\"Could not load resources.arsc from file: \" + apkFile, ex);\n        }\n    }\n\n    public File getFrameworkApk(int id, String frameTag)\n            throws AndrolibException {\n        File dir = getFrameworkDir();\n        File apk;\n\n        if (frameTag != null) {\n            apk = new File(dir, String.valueOf(id) + '-' + frameTag + \".apk\");\n            if (apk.exists()) {\n                return apk;\n            }\n        }\n\n        apk = new File(dir, String.valueOf(id) + \".apk\");\n        if (apk.exists()) {\n            return apk;\n        }\n\n        if (id == 1) {\n            try (InputStream in = AndrolibResources.class.getResourceAsStream(\"/brut/androlib/android-framework.jar\");\n                 OutputStream out = new FileOutputStream(apk)) {\n                IOUtils.copy(in, out);\n                return apk;\n            } catch (IOException ex) {\n                throw new AndrolibException(ex);\n            }\n        }\n\n        throw new CantFindFrameworkResException(id);\n    }",
+      "metadata": {
+        "strategy": "enhanced",
+        "total_chunks": 20,
+        "chunk_index": 11,
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/AndrolibResources.java",
+        "language": "java",
+        "commit_count": 5
+      },
+      "similarity_score": 0.7616474032402039
+    },
+    {
+      "content": "// Fake ResPackage\n        attrDecoder.setCurrentPackage(new ResPackage(resTable, 0, null));\n\n        Directory inApk, out;\n        try {\n            inApk = apkFile.getDirectory();\n            out = new FileDirectory(outDir);\n\n            LOGGER.info(\"Decoding AndroidManifest.xml with only framework resources...\");\n            fileDecoder.decodeManifest(inApk, \"AndroidManifest.xml\", out, \"AndroidManifest.xml\");\n\n        } catch (DirectoryException ex) {\n            throw new AndrolibException(ex);\n        }\n    }\n\n    public void adjustPackageManifest(ResTable resTable, String filePath)\n            throws AndrolibException {\n\n        // compare resources.arsc package name to the one present in AndroidManifest\n        ResPackage resPackage = resTable.getCurrentResPackage();\n        String packageOriginal = resPackage.getName();\n        mPackageRenamed = resTable.getPackageRenamed();\n\n        resTable.setPackageId(resPackage.getId());\n        resTable.setPackageOriginal(packageOriginal);\n\n        // 1) Check if packageOriginal === mPackageRenamed\n        // 2) Check if packageOriginal is ignored via IGNORED_PACKAGES\n        // 2a) If its ignored, make sure the mPackageRenamed isn't explicitly allowed\n        if (packageOriginal.equalsIgnoreCase(mPackageRenamed) ||\n                (Arrays.asList(IGNORED_PACKAGES).contains(packageOriginal) &&\n                ! Arrays.asList(ALLOWED_PACKAGES).contains(mPackageRenamed))) {\n            LOGGER.info(\"Regular manifest package...\");\n        } else {\n            LOGGER.info(\"Renamed manifest package found! Replacing \" + mPackageRenamed + \" with \" + packageOriginal);\n            ResXmlPatcher.renameManifestPackage(new File(filePath), packageOriginal);\n        }\n    }\n\n    public void decodeManifestWithResources(ResTable resTable, ExtFile apkFile, File outDir)\n            throws AndrolibException {",
+      "metadata": {
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/AndrolibResources.java",
+        "chunk_index": 3,
+        "total_chunks": 20,
+        "language": "java"
+      },
+      "similarity_score": 0.7756228446960449
+    },
+    {
+      "content": "### Commit 3\n- ID: 28883538\n- Author: Bing Qiao (bqiaodev@gmail.com)\n- Date: 2017-06-29 19:36:05\n- Message: Class.class.getResourceAsStream tries to load resource from root directory. This fails when apktool is built into a fat jar like Spring boot executable so that the classloader tries to load the resource from the root directory of the Spring boot jar instead of that of the bundled appktool jar.\n- Changes:\n```diff\n@@ -31,16 +31,20 @@ abstract public class Jar {\n     private final static Set<String> mLoaded = new HashSet<String>();\n     private final static Map<String, File> mExtracted =\n         new HashMap<String, File>();\n-\n-    public static File getResourceAsFile(String name) throws BrutException {\n+\t\t\n+\tpublic static File getResourceAsFile(String name, Class clazz) throws BrutException {\n         File file = mExtracted.get(name);\n         if (file == null) {\n-            file = extractToTmp(name);\n+ ...\n```\n\n### Commit 4\n- ID: 9031c223\n- Author: Connor Tumbleson (connor.tumbleson@gmail.com)\n- Date: 2014-10-24 07:14:48\n- Message: [skip] update all copyrights to 2014\n- Changes:\n```diff\n@@ -1,5 +1,5 @@\n /**\n- *  Copyright 2010 Ryszard Wiśniewski <brut.alll@gmail.com>\n+ *  Copyright 2014 Ryszard Wiśniewski <brut.alll@gmail.com>\n  *\n  *  Licensed under the Apache License, Version 2.0 (the \"License\");\n  *  you may not use this file except in compliance with the License....\n```",
+      "metadata": {
+        "chunk_index": 3,
+        "language": "java",
+        "file_path": "brut.j.util/src/main/java/brut/util/Jar.java",
+        "commit_count": 5,
+        "total_chunks": 5,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.7809226512908936
+    },
+    {
+      "content": "public void publicizeResources(File arscFile) throws AndrolibException {\n        byte[] data = new byte[(int) arscFile.length()];\n\n        try(InputStream in = new FileInputStream(arscFile);\n            OutputStream out = new FileOutputStream(arscFile)) {\n            in.read(data);\n            publicizeResources(data);\n            out.write(data);\n        } catch (IOException ex){\n            throw new AndrolibException(ex);\n        }\n    }\n\n    public void publicizeResources(byte[] arsc) throws AndrolibException {\n        publicizeResources(arsc, ARSCDecoder.decode(new ByteArrayInputStream(arsc), true, true).getFlagsOffsets());\n    }\n\n    public void publicizeResources(byte[] arsc, FlagsOffset[] flagsOffsets)\n            throws AndrolibException {\n        for (FlagsOffset flags : flagsOffsets) {\n            int offset = flags.offset + 3;\n            int end = offset + 4 * flags.count;\n            while (offset < end) {\n                arsc[offset] |= (byte) 0x40;\n                offset += 4;\n            }\n        }\n    }\n\n    public File getFrameworkDir() throws AndrolibException {\n        if (mFrameworkDirectory != null) {\n            return mFrameworkDirectory;\n        }\n\n        String path;\n\n        // if a framework path was specified on the command line, use it\n        if (apkOptions.frameworkFolderLocation != null) {\n            path = apkOptions.frameworkFolderLocation;\n        } else {\n            File parentPath = new File(System.getProperty(\"user.home\"));\n            if (! parentPath.canWrite()) {\n                LOGGER.severe(String.format(\"WARNING: Could not write to $HOME (%s), using %s instead...\",\n                        parentPath.getAbsolutePath(), System.getProperty(\"java.io.tmpdir\")));\n                LOGGER.severe(\"Please be aware this is a volatile directory and frameworks could go missing, \" +\n                        \"please utilize --frame-path if the default storage directory is unavailable\");",
+      "metadata": {
+        "commit_count": 5,
+        "language": "java",
+        "strategy": "enhanced",
+        "total_chunks": 20,
+        "chunk_index": 14,
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/AndrolibResources.java"
+      },
+      "similarity_score": 0.7863020300865173
+    },
+    {
+      "content": "public void setDecodeResources(short mode) throws AndrolibException {\n        if (mode != DECODE_RESOURCES_NONE && mode != DECODE_RESOURCES_FULL) {\n            throw new AndrolibException(\"Invalid decode resources mode\");\n        }\n        mDecodeResources = mode;\n    }\n\n    public void setAnalysisMode(boolean mode, boolean pass) throws AndrolibException{\n        mAnalysisMode = mode;\n\n        // only set mResTable, once it exists\n        if (pass) {\n            if (mResTable == null) {\n                mResTable = getResTable();\n            }\n            mResTable.setAnalysisMode(mode);\n        }\n    }\n\n    public void setTargetSdkVersion() throws AndrolibException, IOException {\n        if (mResTable == null) {\n            mResTable = mAndrolib.getResTable(mApkFile);\n        }\n\n        Map<String, String> sdkInfo = mResTable.getSdkInfo();\n        if (sdkInfo.get(\"targetSdkVersion\") != null) {\n            mApi = Integer.parseInt(sdkInfo.get(\"targetSdkVersion\"));\n        }\n    }\n\n    public void setBaksmaliDebugMode(boolean bakdeb) {\n        mBakDeb = bakdeb;\n    }\n\n    public void setForceDelete(boolean forceDelete) {\n        mForceDelete = forceDelete;\n    }\n\n    public void setFrameworkTag(String tag) throws AndrolibException {\n        mAndrolib.apkOptions.frameworkTag = tag;\n    }\n\n    public void setKeepBrokenResources(boolean keepBrokenResources) {\n        mKeepBrokenResources = keepBrokenResources;\n    }\n\n    public void setFrameworkDir(String dir) {\n        mAndrolib.apkOptions.frameworkFolderLocation = dir;\n    }",
+      "metadata": {
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/ApkDecoder.java",
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "total_chunks": 11,
+        "language": "java",
+        "chunk_index": 4
+      },
+      "similarity_score": 0.7914628982543945
+    },
+    {
+      "content": "ARSCData arsc = ARSCDecoder.decode(new ByteArrayInputStream(data), true, true);\n            publicizeResources(data, arsc.getFlagsOffsets());\n\n            File outFile = new File(getFrameworkDir(), String.valueOf(arsc\n                    .getOnePackage().getId())\n                    + (tag == null ? \"\" : '-' + tag)\n                    + \".apk\");\n\n            out = new ZipOutputStream(new FileOutputStream(outFile));\n            out.setMethod(ZipOutputStream.STORED);\n            CRC32 crc = new CRC32();\n            crc.update(data);\n            entry = new ZipEntry(\"resources.arsc\");\n            entry.setSize(data.length);\n            entry.setCrc(crc.getValue());\n            out.putNextEntry(entry);\n            out.write(data);\n            out.closeEntry();\n            \n            //Write fake AndroidManifest.xml file to support original aapt\n            entry = zip.getEntry(\"AndroidManifest.xml\");\n            if (entry != null) {\n                in = zip.getInputStream(entry);\n                byte[] manifest = IOUtils.toByteArray(in);\n                CRC32 manifestCrc = new CRC32();\n                manifestCrc.update(manifest);\n                entry.setSize(manifest.length);\n                entry.setCompressedSize(-1);\n                entry.setCrc(manifestCrc.getValue());\n                out.putNextEntry(entry);\n                out.write(manifest);\n                out.closeEntry();\n            }\n\n            zip.close();\n            LOGGER.info(\"Framework installed to: \" + outFile);\n        } catch (IOException ex) {\n            throw new AndrolibException(ex);\n        } finally {\n            IOUtils.closeQuietly(in);\n            IOUtils.closeQuietly(out);\n        }\n    }\n\n    public void publicizeResources(File arscFile) throws AndrolibException {\n        byte[] data = new byte[(int) arscFile.length()];",
+      "metadata": {
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "chunk_index": 13,
+        "language": "java",
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/AndrolibResources.java",
+        "total_chunks": 20
+      },
+      "similarity_score": 0.8078425526618958
+    },
+    {
+      "content": "# File: brut.apktool/apktool-lib/src/main/java/brut/androlib/res/decoder/ResStreamDecoderContainer.java (java)\n\n## Code Content:\n```java\n/**\n *  Copyright (C) 2017 Ryszard Wiśniewski <brut.alll@gmail.com>\n *  Copyright (C) 2017 Connor Tumbleson <connor.tumbleson@gmail.com>\n *\n *  Licensed under the Apache License, Version 2.0 (the \"License\");\n *  you may not use this file except in compliance with the License.\n *  You may obtain a copy of the License at\n *\n *       http://www.apache.org/licenses/LICENSE-2.0\n *\n *  Unless required by applicable law or agreed to in writing, software\n *  distributed under the License is distributed on an \"AS IS\" BASIS,\n *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n *  See the License for the specific language governing permissions and\n *  limitations under the License.\n */\npackage brut.androlib.res.decoder;\n\nimport brut.androlib.AndrolibException;\nimport java.io.InputStream;\nimport java.io.OutputStream;\nimport java.util.HashMap;\nimport java.util.Map;\n\n/**\n * @author Ryszard Wiśniewski <brut.alll@gmail.com>\n */\npublic class ResStreamDecoderContainer {\n    private final Map<String, ResStreamDecoder> mDecoders = new HashMap<String, ResStreamDecoder>();\n\n    public void decode(InputStream in, OutputStream out, String decoderName)\n            throws AndrolibException {\n        getDecoder(decoderName).decode(in, out);\n    }\n\n    public ResStreamDecoder getDecoder(String name) throws AndrolibException {\n        ResStreamDecoder decoder = mDecoders.get(name);\n        if (decoder == null) {\n            throw new AndrolibException(\"Undefined decoder: \" + name);\n        }\n        return decoder;\n    }\n\n    public void setDecoder(String name, ResStreamDecoder decoder) {\n        mDecoders.put(name, decoder);\n    }\n}\n```\n\n## Git Commit History",
+      "metadata": {
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/decoder/ResStreamDecoderContainer.java",
+        "language": "java",
+        "total_chunks": 3,
+        "chunk_index": 0
+      },
+      "similarity_score": 0.8097864389419556
+    },
+    {
+      "content": "public void decodeResourcesFull(ExtFile apkFile, File outDir, ResTable resTable)\n            throws AndrolibException {\n        mAndRes.decode(resTable, apkFile, outDir);\n    }\n\n    public void decodeManifestWithResources(ExtFile apkFile, File outDir, ResTable resTable)\n            throws AndrolibException {\n        mAndRes.decodeManifestWithResources(resTable, apkFile, outDir);\n    }\n\n    public void decodeRawFiles(ExtFile apkFile, File outDir)\n            throws AndrolibException {\n        LOGGER.info(\"Copying assets and libs...\");\n        try {\n            Directory in = apkFile.getDirectory();\n            if (in.containsDir(\"assets\")) {\n                in.copyToDir(outDir, \"assets\");\n            }\n            if (in.containsDir(\"lib\")) {\n                in.copyToDir(outDir, \"lib\");\n            }\n            if (in.containsDir(\"libs\")) {\n                in.copyToDir(outDir, \"libs\");\n            }\n            if (in.containsDir(\"kotlin\")) {\n                in.copyToDir(outDir, \"kotlin\");\n            }\n        } catch (DirectoryException ex) {\n            throw new AndrolibException(ex);\n        }\n    }\n\n    public void recordUncompressedFiles(ExtFile apkFile, Collection<String> uncompressedFilesOrExts) throws AndrolibException {\n        try {\n            Directory unk = apkFile.getDirectory();\n            Set<String> files = unk.getFiles(true);\n            String ext;\n\n            for (String file : files) {\n                if (isAPKFileNames(file) && !NO_COMPRESS_PATTERN.matcher(file).find()) {\n                    if (unk.getCompressionLevel(file) == 0) {\n\n                        if (StringUtils.countMatches(file, \".\") > 1) {\n                            ext = file;\n                        } else {\n                            ext = FilenameUtils.getExtension(file);\n                            if (ext.isEmpty()) {\n                                ext = file;\n                            }\n                        }",
+      "metadata": {
+        "chunk_index": 3,
+        "total_chunks": 20,
+        "commit_count": 5,
+        "language": "java",
+        "strategy": "enhanced",
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/Androlib.java"
+      },
+      "similarity_score": 0.8098279237747192
+    },
+    {
+      "content": "# File: brut.apktool/apktool-lib/src/main/java/brut/androlib/res/decoder/Res9patchStreamDecoder.java (java)\n\n## Code Content:\n```java\n/**\n *  Copyright (C) 2017 Ryszard Wiśniewski <brut.alll@gmail.com>\n *  Copyright (C) 2017 Connor Tumbleson <connor.tumbleson@gmail.com>\n *\n *  Licensed under the Apache License, Version 2.0 (the \"License\");\n *  you may not use this file except in compliance with the License.\n *  You may obtain a copy of the License at\n *\n *       http://www.apache.org/licenses/LICENSE-2.0\n *\n *  Unless required by applicable law or agreed to in writing, software\n *  distributed under the License is distributed on an \"AS IS\" BASIS,\n *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n *  See the License for the specific language governing permissions and\n *  limitations under the License.\n */\npackage brut.androlib.res.decoder;\n\nimport brut.androlib.AndrolibException;\nimport brut.androlib.err.CantFind9PatchChunk;\nimport brut.util.ExtDataInput;\nimport java.awt.image.BufferedImage;\nimport java.awt.image.Raster;\nimport java.awt.image.WritableRaster;\nimport java.io.*;\nimport javax.imageio.ImageIO;\nimport javax.imageio.ImageTypeSpecifier;\n\nimport org.apache.commons.io.IOUtils;\n\n/**\n * @author Ryszard Wiśniewski <brut.alll@gmail.com>\n */\npublic class Res9patchStreamDecoder implements ResStreamDecoder {\n    @Override\n    public void decode(InputStream in, OutputStream out)\n            throws AndrolibException {\n        try {\n            byte[] data = IOUtils.toByteArray(in);\n\n            BufferedImage im = ImageIO.read(new ByteArrayInputStream(data));\n            int w = im.getWidth(), h = im.getHeight();",
+      "metadata": {
+        "total_chunks": 8,
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/decoder/Res9patchStreamDecoder.java",
+        "strategy": "enhanced",
+        "language": "java",
+        "chunk_index": 0,
+        "commit_count": 5
+      },
+      "similarity_score": 0.8110338449478149
+    },
+    {
+      "content": "LOGGER.info(\"Building testapp.apk...\");\n        File testApk = new File(sTmpDir, \"testapp.apk\");\n        new Androlib().build(sTestOrigDir, testApk);\n\n        LOGGER.info(\"Decoding testapp.apk...\");\n        ApkDecoder apkDecoder = new ApkDecoder(testApk);\n        apkDecoder.setOutDir(sTestNewDir);\n        apkDecoder.decode();\n    }\n\n    @AfterClass\n    public static void afterClass() throws BrutException {\n        OS.rmdir(sTmpDir);\n    }\n\n    @Test\n    public void buildAndDecodeTest() throws BrutException {\n        assertTrue(sTestNewDir.isDirectory());\n    }\n\n    @Test\n    public void manifestTaggingNotSupressed() throws BrutException {\n        compareXmlFiles(\"AndroidManifest.xml\");\n    }\n\n    @Test\n    public void valuesAnimsTest() throws BrutException {\n        compareValuesFiles(\"values-mcc001/anims.xml\");\n    }\n\n    @Test\n    public void valuesArraysTest() throws BrutException {\n        compareValuesFiles(\"values-mcc001/arrays.xml\");\n    }\n\n    @Test\n    public void valuesArraysCastingTest() throws BrutException {\n        compareValuesFiles(\"values-mcc002/arrays.xml\");\n        compareValuesFiles(\"values-mcc003/arrays.xml\");\n    }\n\n    @Test\n    public void valuesAttrsTest() throws BrutException {\n        compareValuesFiles(\"values/attrs.xml\");\n    }\n\n    @Test\n    public void valuesBoolsTest() throws BrutException {\n        compareValuesFiles(\"values-mcc001/bools.xml\");\n    }\n\n    @Test\n    public void valuesColorsTest() throws BrutException {\n        compareValuesFiles(\"values-mcc001/colors.xml\");\n    }\n\n    @Test\n    public void bug702Test() throws BrutException {\n        compareValuesFiles(\"values-mcc001-mnc00/strings.xml\");\n    }\n\n    @Test\n    public void valuesDimensTest() throws BrutException {\n        compareValuesFiles(\"values-mcc001/dimens.xml\");\n    }\n\n    @Test\n    public void valuesDrawablesTest() throws BrutException {\n        compareValuesFiles(\"values-mcc001/drawables.xml\");\n    }",
+      "metadata": {
+        "chunk_index": 1,
+        "language": "java",
+        "total_chunks": 13,
+        "file_path": "brut.apktool/apktool-lib/src/test/java/brut/androlib/BuildAndDecodeTest.java",
+        "commit_count": 5,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.8134661316871643
+    },
+    {
+      "content": "public ApkDecoder(Androlib androlib) {\n        mAndrolib = androlib;\n    }\n\n    public ApkDecoder(File apkFile) {\n        this(apkFile, new Androlib());\n    }\n\n    public ApkDecoder(File apkFile, Androlib androlib) {\n        mAndrolib = androlib;\n        setApkFile(apkFile);\n    }\n\n    public void setApkFile(File apkFile) {\n        if (mApkFile != null) {\n            try {\n                mApkFile.close();\n            } catch (IOException ignored) {}\n        }\n\n        mApkFile = new ExtFile(apkFile);\n        mResTable = null;\n    }\n\n    public void setOutDir(File outDir) throws AndrolibException {\n        mOutDir = outDir;\n    }\n\n    public void setApi(int api) {\n        mApi = api;\n    }\n\n    public void decode() throws AndrolibException, IOException, DirectoryException {\n        try {\n            File outDir = getOutDir();\n            AndrolibResources.sKeepBroken = mKeepBrokenResources;\n\n            if (!mForceDelete && outDir.exists()) {\n                throw new OutDirExistsException();\n            }\n\n            if (!mApkFile.isFile() || !mApkFile.canRead()) {\n                throw new InFileNotFoundException();\n            }\n\n            try {\n                OS.rmdir(outDir);\n            } catch (BrutException ex) {\n                throw new AndrolibException(ex);\n            }\n            outDir.mkdirs();\n\n            LOGGER.info(\"Using Apktool \" + Androlib.getVersion() + \" on \" + mApkFile.getName());\n\n            if (hasResources()) {\n                switch (mDecodeResources) {\n                    case DECODE_RESOURCES_NONE:\n                        mAndrolib.decodeResourcesRaw(mApkFile, outDir);\n                        break;\n                    case DECODE_RESOURCES_FULL:\n                        setTargetSdkVersion();\n                        setAnalysisMode(mAnalysisMode, true);",
+      "metadata": {
+        "commit_count": 5,
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/ApkDecoder.java",
+        "total_chunks": 11,
+        "chunk_index": 1,
+        "strategy": "enhanced",
+        "language": "java"
+      },
+      "similarity_score": 0.8183848261833191
+    },
+    {
+      "content": "public ApkOptions apkOptions;\n\n    // TODO: dirty static hack. I have to refactor decoding mechanisms.\n    public static boolean sKeepBroken = false;\n\n    private final static Logger LOGGER = Logger.getLogger(AndrolibResources.class.getName());\n\n    private File mFrameworkDirectory = null;\n\n    private ExtFile mFramework = null;\n\n    private String mMinSdkVersion = null;\n    private String mMaxSdkVersion = null;\n    private String mTargetSdkVersion = null;\n    private String mVersionCode = null;\n    private String mVersionName = null;\n    private String mPackageRenamed = null;\n    private String mPackageId = null;\n\n    private boolean mSharedLibrary = false;\n\n    private final static String[] IGNORED_PACKAGES = new String[] {\n            \"android\", \"com.htc\", \"miui\", \"com.lge\", \"com.lge.internal\", \"yi\", \"com.miui.core\", \"flyme\",\n            \"air.com.adobe.appentry\" };\n\n    private final static String[] ALLOWED_PACKAGES = new String[] {\n            \"com.miui\" };\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 1597c124\n- Author: Connor Tumbleson (connor@sourcetoad.com)\n- Date: 2017-07-06 00:05:52\n- Message: changed all license files\n- Changes:\n```diff\n@@ -1,5 +1,6 @@\n /**\n- *  Copyright 2014 Ryszard Wiśniewski <brut.alll@gmail.com>\n+ *  Copyright (C) 2017 Ryszard Wiśniewski <brut.alll@gmail.com>\n+ *  Copyright (C) 2017 Connor Tumbleson <connor.tumbleson@gmail.com>\n  *\n  *  Licensed under the Apache License, Version 2.0 (the \"License\");\n  *  you may not use this file except in compliance with the License.\n@@ -13,7 +14,6 @@\n  *  See the License for the specific language governing permissions and\n  *  limitations under the License.\n  */\n-\n packa...\n```",
+      "metadata": {
+        "commit_count": 5,
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/AndrolibResources.java",
+        "language": "java",
+        "strategy": "enhanced",
+        "total_chunks": 20,
+        "chunk_index": 17
+      },
+      "similarity_score": 0.8272475004196167
+    },
+    {
+      "content": "@Test\n    public void multipleExtensionUnknownFileTest() throws BrutException, IOException {\n        String apk = \"issue1244.apk\";\n\n        // decode issue1244.apk\n        ApkDecoder apkDecoder = new ApkDecoder(new File(sTmpDir + File.separator + apk));\n        ExtFile decodedApk = new ExtFile(sTmpDir + File.separator + apk + \".out\");\n        apkDecoder.setOutDir(new File(sTmpDir + File.separator + apk + \".out\"));\n        apkDecoder.decode();\n\n        MetaInfo metaInfo = new Androlib().readMetaFile(decodedApk);\n        for (String string : metaInfo.doNotCompress) {\n            if (StringUtils.countMatches(string, \".\") > 1) {\n                assertTrue(string.equalsIgnoreCase(\"assets/bin/Data/sharedassets1.assets.split0\"));\n            }\n        }\n    }\n\n    private static ExtFile sTmpDir;\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 1597c124\n- Author: Connor Tumbleson (connor@sourcetoad.com)\n- Date: 2017-07-06 00:05:52\n- Message: changed all license files\n- Changes:\n```diff\n@@ -1,6 +1,6 @@\n /**\n- *  Copyright 2014 Ryszard Wiśniewski <brut.alll@gmail.com>\n- *  Copyright 2016 Connor Tumbleson <connor.tumbleson@gmail.com>\n+ *  Copyright (C) 2017 Ryszard Wiśniewski <brut.alll@gmail.com>\n+ *  Copyright (C) 2017 Connor Tumbleson <connor.tumbleson@gmail.com>\n  *\n  *  Licensed under the Apache License, Version 2.0 (the \"License\");\n  *  you may not use this file except in compliance with the License....\n```",
+      "metadata": {
+        "strategy": "enhanced",
+        "total_chunks": 3,
+        "file_path": "brut.apktool/apktool-lib/src/test/java/brut/androlib/DoubleExtensionUnknownFileTest.java",
+        "commit_count": 4,
+        "language": "java",
+        "chunk_index": 1
+      },
+      "similarity_score": 0.8343371152877808
+    },
+    {
+      "content": "# File: brut.apktool/apktool-lib/src/main/java/brut/androlib/res/decoder/ResStreamDecoder.java (java)\n\n## Code Content:\n```java\n/**\n *  Copyright (C) 2017 Ryszard Wiśniewski <brut.alll@gmail.com>\n *  Copyright (C) 2017 Connor Tumbleson <connor.tumbleson@gmail.com>\n *\n *  Licensed under the Apache License, Version 2.0 (the \"License\");\n *  you may not use this file except in compliance with the License.\n *  You may obtain a copy of the License at\n *\n *       http://www.apache.org/licenses/LICENSE-2.0\n *\n *  Unless required by applicable law or agreed to in writing, software\n *  distributed under the License is distributed on an \"AS IS\" BASIS,\n *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n *  See the License for the specific language governing permissions and\n *  limitations under the License.\n */\npackage brut.androlib.res.decoder;\n\nimport brut.androlib.AndrolibException;\nimport java.io.InputStream;\nimport java.io.OutputStream;\n\n/**\n * @author Ryszard Wiśniewski <brut.alll@gmail.com>\n */\npublic interface ResStreamDecoder {\n    public void decode(InputStream in, OutputStream out)\n            throws AndrolibException;\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 1597c124\n- Author: Connor Tumbleson (connor@sourcetoad.com)\n- Date: 2017-07-06 00:05:52\n- Message: changed all license files\n- Changes:\n```diff\n@@ -1,5 +1,6 @@\n /**\n- *  Copyright 2014 Ryszard Wiśniewski <brut.alll@gmail.com>\n+ *  Copyright (C) 2017 Ryszard Wiśniewski <brut.alll@gmail.com>\n+ *  Copyright (C) 2017 Connor Tumbleson <connor.tumbleson@gmail.com>\n  *\n  *  Licensed under the Apache License, Version 2.0 (the \"License\");\n  *  you may not use this file except in compliance with the License.\n@@ -13,7 +14,6 @@\n  *  See the License for the specific language governing permissions and\n  *  limitations under the License.\n  */\n-\n packa...\n```",
+      "metadata": {
+        "strategy": "enhanced",
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/decoder/ResStreamDecoder.java",
+        "total_chunks": 3,
+        "language": "java",
+        "chunk_index": 0,
+        "commit_count": 5
+      },
+      "similarity_score": 0.8346176147460938
+    }
+  ],
+  "compressed": [
+    {
+      "content": "# File: brut.apktool/apktool-lib/src/main/java/brut/androlib/res/AndrolibResources.java (java)\n\n## Key Code Elements:\nimport brut.androlib.AndrolibException;\nimport brut.androlib.ApkOptions;\nimport brut.androlib.err.CantFindFrameworkResException;\nimport brut.androlib.meta.PackageInfo;\nimport brut.androlib.meta.VersionInfo;\nimport brut.androlib.res.data.*;\nimport brut.androlib.res.decoder.*;\nimport brut.androlib.res.decoder.ARSCDecoder.ARSCData;\nimport brut.androlib.res.decoder.ARSCDecoder.FlagsOffset;\nimport brut.directory.ExtFile;\nimport brut.androlib.res.util.ExtMXSerializer;\nimport brut.androlib.res.util.ExtXmlSerializer;\nimport brut.androlib.res.xml.ResValuesXmlSerializable;\nimport brut.androlib.res.xml.ResXmlPatcher;\nimport brut.common.BrutException;\n\n## Recent Changes:\n- 1597c124 by Connor Tumbleson (connor@sourcetoad.com): changed all license files...\n- 28883538 by Bing Qiao (bqiaodev@gmail.com): Class.class.getResourceAsStream tries to load resource from root directory. This fails when apktool ...\n- e4db1fa8 by Connor Tumbleson (connor@sourcetoad.com): Prevent closing objects that may not exist....",
+      "metadata": {
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "language": "java",
+        "chunk_index": 0,
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/AndrolibResources.java",
+        "commit_count": 5
+      },
+      "similarity_score": 0.5572391748428345
+    },
+    {
+      "content": "# File: brut.apktool/apktool-lib/src/main/java/brut/androlib/ApkDecoder.java (java)\n\n## Key Code Elements:\nimport brut.androlib.err.InFileNotFoundException;\nimport brut.androlib.err.OutDirExistsException;\nimport brut.androlib.err.UndefinedResObject;\nimport brut.androlib.meta.MetaInfo;\nimport brut.androlib.meta.PackageInfo;\nimport brut.androlib.meta.UsesFramework;\nimport brut.androlib.meta.VersionInfo;\nimport brut.androlib.res.AndrolibResources;\nimport brut.androlib.res.data.ResPackage;\nimport brut.androlib.res.data.ResTable;\nimport brut.directory.ExtFile;\nimport brut.androlib.res.xml.ResXmlPatcher;\nimport brut.common.BrutException;\nimport brut.directory.DirectoryException;\nimport brut.util.OS;\n\n## Recent Changes:\n- 1597c124 by Connor Tumbleson (connor@sourcetoad.com): changed all license files...\n- e2f77aac by Connor Tumbleson (me@connortumbleson.com): Pass exception back to user\n\n - check object is not null before closing\n - refs #1160...\n- e4db1fa8 by Connor Tumbleson (connor@sourcetoad.com): Prevent closing objects that may not exist....",
+      "metadata": {
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/ApkDecoder.java",
+        "strategy": "compressed",
+        "language": "java",
+        "commit_count": 5
+      },
+      "similarity_score": 0.6282519102096558
+    },
+    {
+      "content": "# File: brut.apktool/apktool-lib/src/main/java/brut/androlib/res/decoder/ResFileDecoder.java (java)\n\n## Key Code Elements:\nimport brut.androlib.AndrolibException;\nimport brut.androlib.err.CantFind9PatchChunk;\nimport brut.androlib.res.data.ResResource;\nimport brut.androlib.res.data.value.ResBoolValue;\nimport brut.androlib.res.data.value.ResFileValue;\nimport brut.directory.DirUtil;\nimport brut.directory.Directory;\nimport brut.directory.DirectoryException;\nimport java.io.*;\nimport java.util.logging.Level;\nimport java.util.logging.Logger;\n\n## Recent Changes:\n- 1597c124 by Connor Tumbleson (connor@sourcetoad.com): changed all license files...\n- d932c70c by Connor Tumbleson (me@connortumbleson.com): Forces extensions to lowercase to prevent collisions\n\n - references #1258...\n- b29df52b by Connor Tumbleson (connor.tumbleson@gmail.com): Cleanup unclosed streams plus formatting\n\n - run FindBugs to find problems...",
+      "metadata": {
+        "commit_count": 5,
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "language": "java",
+        "strategy": "compressed",
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/decoder/ResFileDecoder.java"
+      },
+      "similarity_score": 0.660251796245575
+    },
+    {
+      "content": "# File: brut.apktool/apktool-lib/src/main/java/brut/androlib/res/data/value/ResScalarValue.java (java)\n\n## Key Code Elements:\nimport brut.androlib.AndrolibException;\nimport brut.androlib.res.data.ResResource;\nimport brut.androlib.res.xml.ResValuesXmlSerializable;\nimport brut.androlib.res.xml.ResXmlEncodable;\nimport brut.androlib.res.xml.ResXmlEncoders;\nimport java.io.IOException;\nimport org.xmlpull.v1.XmlSerializer;\n    @Override\n    @Override\n    @Override\n\n## Recent Changes:\n- 1597c124 by Connor Tumbleson (connor@sourcetoad.com): changed all license files...\n- 4249dde7 by Matt Mastracci (matthew@mastracci.com): Propagate the raw int values to callers...\n- 9031c223 by Connor Tumbleson (connor.tumbleson@gmail.com): [skip] update all copyrights to 2014...",
+      "metadata": {
+        "commit_count": 5,
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/data/value/ResScalarValue.java",
+        "language": "java",
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.743697464466095
+    },
+    {
+      "content": "# File: brut.apktool/apktool-lib/src/main/java/brut/androlib/res/data/ResTable.java (java)\n\n## Key Code Elements:\nimport brut.androlib.AndrolibException;\nimport brut.androlib.err.UndefinedResObject;\nimport brut.androlib.meta.VersionInfo;\nimport brut.androlib.res.AndrolibResources;\nimport brut.androlib.res.data.value.ResValue;\nimport java.util.*;\n\n## Recent Changes:\n- 1597c124 by Connor Tumbleson (connor@sourcetoad.com): changed all license files...\n- 639ac84e by Connor Tumbleson (connor.tumbleson@gmail.com): Dont fallback to HighestResSpec Package if only 1 main package\n\n - fixes #1220...\n- 123912d2 by Rover12421 (rover12421@163.com): Apktool.yml file (MetaInfo) using object serialization\n\nnon-printable character more intuitive, does...",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "language": "java",
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/data/ResTable.java",
+        "commit_count": 5,
+        "total_chunks": 1
+      },
+      "similarity_score": 0.7575114369392395
+    },
+    {
+      "content": "# File: brut.apktool/apktool-lib/src/main/java/brut/androlib/Androlib.java (java)\n\n## Key Code Elements:\nimport brut.androlib.meta.MetaInfo;\nimport brut.androlib.meta.UsesFramework;\nimport brut.androlib.res.AndrolibResources;\nimport brut.androlib.res.data.ResConfigFlags;\nimport brut.androlib.res.data.ResPackage;\nimport brut.androlib.res.data.ResTable;\nimport brut.androlib.res.data.ResUnknownFiles;\nimport brut.directory.ExtFile;\nimport brut.androlib.res.xml.ResXmlPatcher;\nimport brut.androlib.src.SmaliBuilder;\nimport brut.androlib.src.SmaliDecoder;\nimport brut.common.BrutException;\nimport brut.directory.*;\nimport brut.util.BrutIO;\nimport brut.util.OS;\n\n## Recent Changes:\n- 02c8b62b by Connor Tumbleson (connor@sourcetoad.com): Prevent malicious directory/file work with unknown files...\n- 1597c124 by Connor Tumbleson (connor@sourcetoad.com): changed all license files...\n- 93d61cc0 by Connor Tumbleson (connor@sourcetoad.com): kotlin folder should not be treated as unknown - #1520...",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "commit_count": 5,
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/Androlib.java",
+        "language": "java",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.7620438933372498
+    },
+    {
+      "content": "# File: brut.j.util/src/main/java/brut/util/Jar.java (java)\n\n## Key Code Elements:\nimport brut.common.BrutException;\nimport java.io.*;\nimport java.util.HashMap;\nimport java.util.HashSet;\nimport java.util.Map;\nimport java.util.Set;\nimport org.apache.commons.io.IOUtils;\n\n## Recent Changes:\n- 1597c124 by Connor Tumbleson (connor@sourcetoad.com): changed all license files...\n- f8fe98d9 by Connor Tumbleson (connor@sourcetoad.com): code style...\n- 28883538 by Bing Qiao (bqiaodev@gmail.com): Class.class.getResourceAsStream tries to load resource from root directory. This fails when apktool ...",
+      "metadata": {
+        "file_path": "brut.j.util/src/main/java/brut/util/Jar.java",
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "language": "java",
+        "chunk_index": 0,
+        "commit_count": 5
+      },
+      "similarity_score": 0.7649603486061096
+    },
+    {
+      "content": "# File: brut.apktool/apktool-lib/src/main/java/brut/androlib/res/data/ResID.java (java)\n\n## Key Code Elements:\n    @Override\n    @Override\n    @Override\n\n## Recent Changes:\n- 1597c124 by Connor Tumbleson (connor@sourcetoad.com): changed all license files...\n- 0a74de4a by Connor Tumbleson (connor.tumbleson@gmail.com): Shared Library Rebuilding Support\n\n - handles references with shared resources\n - adds support for -...\n- 9031c223 by Connor Tumbleson (connor.tumbleson@gmail.com): [skip] update all copyrights to 2014...",
+      "metadata": {
+        "commit_count": 5,
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/data/ResID.java",
+        "chunk_index": 0,
+        "language": "java",
+        "strategy": "compressed",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.7703440189361572
+    },
+    {
+      "content": "# File: brut.apktool/apktool-lib/src/main/java/brut/androlib/res/data/value/ResReferenceValue.java (java)\n\n## Key Code Elements:\nimport brut.androlib.AndrolibException;\nimport brut.androlib.err.UndefinedResObject;\nimport brut.androlib.res.data.ResPackage;\nimport brut.androlib.res.data.ResResSpec;\n    @Override\n\n## Recent Changes:\n- 1597c124 by Connor Tumbleson (connor@sourcetoad.com): changed all license files...\n- 00abedfa by Connor Tumbleson (me@connortumbleson.com): Check for null parent references to prevent crash\n\n - fixes #745...\n- c91ef382 by Connor Tumbleson (connor.tumbleson@gmail.com): [skip] code style updates...",
+      "metadata": {
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/data/value/ResReferenceValue.java",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "commit_count": 5,
+        "language": "java"
+      },
+      "similarity_score": 0.7726390957832336
+    },
+    {
+      "content": "# File: brut.apktool/apktool-cli/src/main/java/brut/apktool/Main.java (java)\n\n## Key Code Elements:\nimport brut.androlib.*;\nimport brut.androlib.err.CantFindFrameworkResException;\nimport brut.androlib.err.InFileNotFoundException;\nimport brut.androlib.err.OutDirExistsException;\nimport brut.common.BrutException;\nimport java.io.File;\nimport java.io.IOException;\nimport java.util.logging.*;\nimport brut.directory.DirectoryException;\nimport org.apache.commons.cli.CommandLineParser;\nimport org.apache.commons.cli.CommandLine;\nimport org.apache.commons.cli.HelpFormatter;\nimport org.apache.commons.cli.Option;\nimport org.apache.commons.cli.OptionBuilder;\nimport org.apache.commons.cli.Options;\n\n## Recent Changes:\n- d0d84bf5 by Connor Tumbleson (connor@sourcetoad.com): slight formatting cleanup...\n- 1597c124 by Connor Tumbleson (connor@sourcetoad.com): changed all license files...\n- e7e87477 by Connor Tumbleson (connor@sourcetoad.com): Exit application only after version command...",
+      "metadata": {
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "commit_count": 5,
+        "chunk_index": 0,
+        "language": "java",
+        "file_path": "brut.apktool/apktool-cli/src/main/java/brut/apktool/Main.java"
+      },
+      "similarity_score": 0.7739405632019043
+    },
+    {
+      "content": "# File: brut.apktool/apktool-lib/src/main/java/brut/androlib/res/data/ResUnknownFiles.java (java)\n\n## Key Code Elements:\nimport java.util.LinkedHashMap;\nimport java.util.Map;\n\n## Recent Changes:\n- 1597c124 by Connor Tumbleson (connor@sourcetoad.com): changed all license files...\n- 123912d2 by Rover12421 (rover12421@163.com): Apktool.yml file (MetaInfo) using object serialization\n\nnon-printable character more intuitive, does...\n- 8232ee0e by Ira Hanson (hanson.ira@gmail.com): Consistently encode unknown filenames to prevent cast error...",
+      "metadata": {
+        "commit_count": 5,
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/data/ResUnknownFiles.java",
+        "strategy": "compressed",
+        "language": "java",
+        "total_chunks": 1,
+        "chunk_index": 0
+      },
+      "similarity_score": 0.7761505246162415
+    },
+    {
+      "content": "# File: brut.apktool/apktool-lib/src/main/java/brut/androlib/res/data/value/ResEmptyValue.java (java)\n\n## Key Code Elements:\nimport brut.androlib.AndrolibException;\n    @Override\n\n## Recent Changes:\n- 1597c124 by Connor Tumbleson (connor@sourcetoad.com): changed all license files...\n- a684bae4 by Connor Tumbleson (me@connortumbleson.com): Fixes improper decoding of @empty value\n\n - fixes #1270\n - references #1116...\n- 606e47bf by Pierre-Hugues Husson (husson@archos.com): Add @empty type...",
+      "metadata": {
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "language": "java",
+        "commit_count": 3,
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/data/value/ResEmptyValue.java",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.77642822265625
+    },
+    {
+      "content": "# File: brut.apktool/apktool-lib/src/main/java/brut/androlib/res/ResSmaliUpdater.java (java)\n\n## Key Code Elements:\nimport brut.androlib.AndrolibException;\nimport brut.androlib.err.UndefinedResObject;\nimport brut.androlib.res.data.ResResSpec;\nimport brut.androlib.res.data.ResTable;\nimport brut.directory.Directory;\nimport brut.directory.DirectoryException;\nimport brut.directory.FileDirectory;\nimport java.io.File;\nimport java.io.IOException;\nimport java.io.PrintWriter;\nimport java.util.Iterator;\nimport java.util.logging.Logger;\nimport java.util.regex.Matcher;\nimport java.util.regex.Pattern;\nimport org.apache.commons.io.IOUtils;\n\n## Recent Changes:\n- 1597c124 by Connor Tumbleson (connor@sourcetoad.com): changed all license files...\n- 9031c223 by Connor Tumbleson (connor.tumbleson@gmail.com): [skip] update all copyrights to 2014...\n- 086139a0 by Connor Tumbleson (connor.tumbleson@gmail.com): code cleanup of 2014...",
+      "metadata": {
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/ResSmaliUpdater.java",
+        "total_chunks": 1,
+        "commit_count": 5,
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "language": "java"
+      },
+      "similarity_score": 0.7788941860198975
+    },
+    {
+      "content": "# File: brut.apktool/apktool-lib/src/main/java/brut/androlib/res/data/value/ResValue.java (java)\n\n## Recent Changes:\n- 1597c124 by Connor Tumbleson (connor@sourcetoad.com): changed all license files...\n- 9031c223 by Connor Tumbleson (connor.tumbleson@gmail.com): [skip] update all copyrights to 2014...\n- 4db49ab3 by Connor Tumbleson (connor.tumbleson@gmail.com): Adding brut.apktool :/...",
+      "metadata": {
+        "chunk_index": 0,
+        "commit_count": 3,
+        "total_chunks": 1,
+        "language": "java",
+        "strategy": "compressed",
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/data/value/ResValue.java"
+      },
+      "similarity_score": 0.7832664251327515
+    },
+    {
+      "content": "# File: brut.apktool/apktool-lib/src/main/java/brut/androlib/res/data/ResPackage.java (java)\n\n## Key Code Elements:\nimport brut.androlib.AndrolibException;\nimport brut.androlib.err.UndefinedResObject;\nimport brut.androlib.res.data.value.ResFileValue;\nimport brut.androlib.res.data.value.ResValueFactory;\nimport brut.androlib.res.xml.ResValuesXmlSerializable;\nimport brut.util.Duo;\nimport java.util.*;\nimport java.util.logging.Logger;\n    @Override\n    @Override\n    @Override\n\n## Recent Changes:\n- 1597c124 by Connor Tumbleson (connor@sourcetoad.com): changed all license files...\n- b2d50bec by Connor Tumbleson (connor.tumbleson@gmail.com): [skip] code style cleanup...\n- eabb7d81 by Connor Tumbleson (connor.tumbleson@gmail.com): Correctly read sparse ResourceTables.\n\nPrior to this change, APKs usually went Package -> TypeSpec -...",
+      "metadata": {
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/data/ResPackage.java",
+        "total_chunks": 1,
+        "language": "java",
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "commit_count": 5
+      },
+      "similarity_score": 0.7864187955856323
+    },
+    {
+      "content": "# File: brut.apktool/apktool-lib/src/main/java/brut/androlib/res/decoder/ResAttrDecoder.java (java)\n\n## Key Code Elements:\nimport brut.androlib.AndrolibException;\nimport brut.androlib.err.UndefinedResObject;\nimport brut.androlib.res.data.ResPackage;\nimport brut.androlib.res.data.ResResSpec;\nimport brut.androlib.res.data.value.ResAttr;\nimport brut.androlib.res.data.value.ResScalarValue;\n\n## Recent Changes:\n- 1597c124 by Connor Tumbleson (connor@sourcetoad.com): changed all license files...\n- 3dea579f by Connor Tumbleson (connor.tumbleson@gmail.com): Prevent casting Strings/Styles to Attrs\n\n - refs #957, #1060...\n- 9cb3df85 by Connor Tumbleson (connor.tumbleson@gmail.com): Catch attr lookup on internal attributes\n\nInternal attributes will fail the AttrDecoder. Catch the e...",
+      "metadata": {
+        "commit_count": 5,
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/decoder/ResAttrDecoder.java",
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "language": "java"
+      },
+      "similarity_score": 0.7887606024742126
+    },
+    {
+      "content": "# File: brut.apktool/apktool-lib/src/main/java/brut/androlib/ApktoolProperties.java (java)\n\n## Key Code Elements:\nimport java.io.IOException;\nimport java.io.InputStream;\nimport java.util.Properties;\nimport java.util.logging.Logger;\n\n## Recent Changes:\n- 1597c124 by Connor Tumbleson (connor@sourcetoad.com): changed all license files...\n- 74f76ae7 by Connor Tumbleson (me@connortumbleson.com): Upgrade to smali 2.2...\n- b29df52b by Connor Tumbleson (connor.tumbleson@gmail.com): Cleanup unclosed streams plus formatting\n\n - run FindBugs to find problems...",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/ApktoolProperties.java",
+        "language": "java",
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "commit_count": 5
+      },
+      "similarity_score": 0.8179620504379272
+    },
+    {
+      "content": "# File: brut.apktool/apktool-lib/src/test/java/brut/androlib/BuildAndDecodeTest.java (java)\n\n## Key Code Elements:\nimport brut.androlib.meta.MetaInfo;\nimport brut.directory.ExtFile;\nimport brut.common.BrutException;\nimport brut.directory.FileDirectory;\nimport brut.util.OS;\nimport java.awt.image.BufferedImage;\nimport java.io.*;\nimport java.util.Map;\nimport java.util.Set;\nimport java.util.logging.Logger;\nimport brut.util.OSDetection;\nimport org.custommonkey.xmlunit.*;\nimport org.junit.*;\nimport static org.junit.Assert.*;\nimport static org.junit.Assume.*;\n\n## Recent Changes:\n- 1597c124 by Connor Tumbleson (connor@sourcetoad.com): changed all license files...\n- dab59a2a by Connor Tumbleson (me@connortumbleson.com): Adding a few random AOSP 9 patch images to more test suite more robust....\n- b6751f89 by Connor Tumbleson (connor@sourcetoad.com): add test for #1511...",
+      "metadata": {
+        "chunk_index": 0,
+        "commit_count": 5,
+        "file_path": "brut.apktool/apktool-lib/src/test/java/brut/androlib/BuildAndDecodeTest.java",
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "language": "java"
+      },
+      "similarity_score": 0.8286243081092834
+    },
+    {
+      "content": "# File: brut.apktool/apktool-lib/src/main/java/brut/androlib/res/data/value/ResIdValue.java (java)\n\n## Key Code Elements:\nimport brut.androlib.AndrolibException;\nimport brut.androlib.res.data.ResResource;\nimport brut.androlib.res.xml.ResValuesXmlSerializable;\nimport java.io.IOException;\nimport org.xmlpull.v1.XmlSerializer;\n    @Override\n\n## Recent Changes:\n- 1597c124 by Connor Tumbleson (connor@sourcetoad.com): changed all license files...\n- 9031c223 by Connor Tumbleson (connor.tumbleson@gmail.com): [skip] update all copyrights to 2014...\n- 086139a0 by Connor Tumbleson (connor.tumbleson@gmail.com): code cleanup of 2014...",
+      "metadata": {
+        "commit_count": 5,
+        "chunk_index": 0,
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/data/value/ResIdValue.java",
+        "language": "java",
+        "total_chunks": 1,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.8351896405220032
+    },
+    {
+      "content": "# File: brut.apktool/apktool-lib/src/main/java/brut/androlib/res/decoder/ARSCDecoder.java (java)\n\n## Key Code Elements:\nimport android.util.TypedValue;\nimport brut.androlib.AndrolibException;\nimport brut.androlib.res.data.*;\nimport brut.androlib.res.data.value.*;\nimport brut.util.Duo;\nimport brut.androlib.res.data.ResTable;\nimport brut.util.ExtDataInput;\nimport com.google.common.io.LittleEndianDataInputStream;\nimport java.io.*;\nimport java.math.BigInteger;\nimport java.util.*;\nimport java.util.logging.Logger;\nimport org.apache.commons.io.input.CountingInputStream;\n\n## Recent Changes:\n- eda95b3d by Connor Tumbleson (connor@sourcetoad.com): Don't read more data than entryChunk has\n\n - fixes #1534...\n- 1597c124 by Connor Tumbleson (connor@sourcetoad.com): changed all license files...\n- 81b22df1 by Connor Tumbleson (iBotPeaches@users.noreply.github.com): Merge pull request #1324 from jamestut/arscfix2\n\nSkip additional payload data of TYPE chunk...",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "java",
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "commit_count": 5,
+        "file_path": "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/decoder/ARSCDecoder.java"
+      },
+      "similarity_score": 0.8384153246879578
+    }
+  ]
+}

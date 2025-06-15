@@ -1,0 +1,7 @@
+{
+  "reason": "The error occurs because the 'subprocess.run' method is not available in Python 2.7, which is being used. This method was introduced in Python 3.5.",
+  "location": [
+    "lib/plugins/aws/invokeLocal/invoke.py"
+  ],
+  "fix": "Replace 'subprocess.run' with 'subprocess.Popen' or 'subprocess.call' which are available in Python 2.7. For example: tty = subprocess.Popen('tty', stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()"
+}

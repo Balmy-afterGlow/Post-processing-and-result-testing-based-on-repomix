@@ -1,0 +1,8 @@
+{
+  "reason": "The issue occurs during the shutdown sequence of `MultiWorkerDispatcher` where a worker may attempt to resume a continuation on an already terminated worker. This happens because the channel's close operation is linearizable and workers may still be helping with the close process after the workers have been terminated.",
+  "location": [
+    "kotlinx-coroutines-core/native/src/MultithreadedDispatchers.kt",
+    "MultiWorkerDispatcher"
+  ],
+  "fix": "Modify the `close` function in `MultiWorkerDispatcher` to ensure all workers have finished processing before terminating them. Add a synchronization mechanism to wait for all helping workers to complete before calling `requestTermination`."
+}

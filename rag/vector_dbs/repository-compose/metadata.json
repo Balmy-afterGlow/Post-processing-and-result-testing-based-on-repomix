@@ -2,11 +2,11 @@
   "repo_name": "compose",
   "source_file": "../repomix_md/repository-compose/repomix-output-compose-with-git.md",
   "file_size_mb": 2.052541732788086,
-  "build_time": "2025-06-15T09:58:50.565848",
+  "build_time": "2025-06-15T10:59:41.414272",
   "processing_time": {
-    "parse_time_seconds": 0.289188,
-    "index_time_seconds": 65.668102,
-    "total_time_seconds": 65.95729
+    "parse_time_seconds": 0.30153,
+    "index_time_seconds": 78.946859,
+    "total_time_seconds": 79.248389
   },
   "code_blocks_count": 295,
   "original_documents_count": {

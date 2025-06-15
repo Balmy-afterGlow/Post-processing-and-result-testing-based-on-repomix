@@ -1,8 +1,22 @@
 {
+  "keras": true,
+  "libgdx": true,
   "gson": true,
   "spring-cloud-alibaba": true,
   "leakcanary": true,
+  "kotlinx.coroutines": true,
+  "python": true,
   "apktool": true,
+  "colossalai": true,
+  "compose-samples": true,
+  "shardingsphere": true,
+  "dbeaver": true,
   "compose": true,
-  "okhttp": true
+  "mitmproxy": true,
+  "ktor": true,
+  "nowinandroid": true,
+  "moshi": true,
+  "rich": true,
+  "okhttp": true,
+  "serverless": true
 }

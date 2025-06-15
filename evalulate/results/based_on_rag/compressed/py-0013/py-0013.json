@@ -1,0 +1,7 @@
+{
+  "reason": "The issue occurs because rich tries to get the current working directory (cwd) unconditionally during import, which fails if the cwd does not exist.",
+  "location": [
+    "rich/__init__.py"
+  ],
+  "fix": "Modify the import statement in rich/__init__.py to handle the case when the current working directory does not exist by using a try-except block around os.getcwd(). For example:\n\n```python\nimport os\nfrom typing import IO, TYPE_CHECKING, Any, Callable, Optional, Union\nfrom ._extension import load_ipython_extension  # noqa: F401\n\ntry:\n    _IMPORT_CWD = os.path.abspath(os.getcwd())\nexcept FileNotFoundError:\n    _IMPORT_CWD = None\n\nif TYPE_CHECKING:\n    from .console import Console\n```"
+}

@@ -1,0 +1,7 @@
+{
+  "reason": "The SSH connection defaults to OS login when the server login is not saved in settings, because the UI does not prompt for the username when it's left blank during configuration.",
+  "location": [
+    "plugins/org.jkiss.dbeaver.net.ssh.ui/src/org/jkiss/dbeaver/ui/net/ssh/SSHTunnelConfiguratorUI.java"
+  ],
+  "fix": "Modify the loadSettings method to ensure the username is always prompted if it's empty. Add a check in the saveSettings method to validate the username before saving the configuration."
+}

@@ -1,0 +1,7 @@
+{
+  "reason": "The crash occurs due to an invalid resource ID being accessed in RootViewWatcher. The error suggests that the resource with ID 0x7f050008 (likely a boolean resource) is not valid or not found.",
+  "location": [
+    "leakcanary-android/src/main/java/com/squareup/leakcanary/RootViewWatcher.kt"
+  ],
+  "fix": "Ensure that the boolean resource being accessed in RootViewWatcher.kt (line 49) exists in the project's resources. If the resource is not needed, remove the reference to it. If it is needed, add the appropriate boolean resource to the project's res/values/leak_canary_themes.xml or another relevant resource file."
+}

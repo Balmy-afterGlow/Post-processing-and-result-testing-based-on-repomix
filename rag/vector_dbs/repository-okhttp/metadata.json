@@ -2,11 +2,11 @@
   "repo_name": "okhttp",
   "source_file": "../repomix_md/repository-okhttp/repomix-output-okhttp-with-git.md",
   "file_size_mb": 4.325705528259277,
-  "build_time": "2025-06-15T10:00:40.676724",
+  "build_time": "2025-06-15T11:01:16.851045",
   "processing_time": {
-    "parse_time_seconds": 0.791757,
-    "index_time_seconds": 109.05591,
-    "total_time_seconds": 109.847667
+    "parse_time_seconds": 0.52077,
+    "index_time_seconds": 94.763433,
+    "total_time_seconds": 95.284203
   },
   "code_blocks_count": 247,
   "original_documents_count": {

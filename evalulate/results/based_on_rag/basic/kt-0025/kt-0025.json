@@ -1,0 +1,7 @@
+{
+  "reason": "The issue highlights that the current documentation for `Flow.timeout` suggests using a generic `catch {}` operator which catches all exceptions, not just `TimeoutCancellationException`. This can lead to unintended handling of other exceptions.",
+  "location": [
+    "docs/topics/flow.md"
+  ],
+  "fix": "Update the documentation example to specifically catch `TimeoutCancellationException` and rethrow other exceptions, as shown in the issue description. The corrected example should use:\n```kotlin\n.catch { exception ->\n    if (exception is TimeoutCancellationException) {\n        emit(-1) // Item to emit on timeout\n    } else {\n        throw exception\n    }\n}\n```"
+}

@@ -1,0 +1,7 @@
+{
+  "reason": "The crash occurs due to an attempt to access a resource (Resource ID #0x7f050008) that is not valid or not found in the application's resources. This happens in the RootViewWatcher when trying to get a boolean value from resources.",
+  "location": [
+    "leakcanary-android/src/main/java/com/squareup/leakcanary/RootViewWatcher.kt"
+  ],
+  "fix": "Ensure that the resource being accessed (0x7f050008) is properly defined in the application's resources or handle the case where the resource might not be available by providing a default value or checking for its existence before accessing it."
+}

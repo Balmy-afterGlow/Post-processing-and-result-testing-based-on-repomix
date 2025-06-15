@@ -1,0 +1,7 @@
+{
+  "reason": "The issue is caused by using floating-point division (/) instead of integer division (//) in the calculation of the sum of multiples, leading to incorrect results.",
+  "location": [
+    "Project Euler/Problem 01/sol4.py"
+  ],
+  "fix": "Replace the division operator (/) with integer division (//) in the calculation of the sum of multiples. Specifically, change 'number / divisor' to 'number // divisor' in the condition check."
+}

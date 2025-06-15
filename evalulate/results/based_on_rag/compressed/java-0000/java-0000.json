@@ -1,0 +1,7 @@
+{
+  "reason": "OkHttp's CacheStrategy.java explicitly excludes caching for HTTP 302-308 responses, contrary to RFC 2616 which allows caching for these responses if Cache-Control or Expires headers are present.",
+  "location": [
+    "okhttp/src/main/java/com/squareup/okhttp/internal/http/CacheStrategy.java"
+  ],
+  "fix": "Modify the isCacheable method in CacheStrategy.java to include HTTP 302-308 responses when Cache-Control or Expires headers are present. The fix would involve updating the method to check for these headers before returning false for these status codes."
+}

@@ -32,7 +32,7 @@ class OptimizedVectorDatabaseBuilder:
         min_content_length: int = 100,  # 最小内容长度
         batch_size: int = 100,  # 批处理大小
         skip_large_files: bool = False,  # 跳过大文件
-        max_file_size_mb: float = 50.0,  # 最大文件大小(MB)
+        max_file_size_mb: float = 5.0,  # 最大文件大小(MB)
     ):
         """
         初始化优化构建器
@@ -297,8 +297,9 @@ class OptimizedVectorDatabaseBuilder:
         try:
             # 检查输出目录是否已存在
             if os.path.exists(output_dir):
-                self.logger.info(f"清理已存在的向量数据库: {repo_name}")
-                shutil.rmtree(output_dir)
+                # self.logger.info(f"清理已存在的向量数据库: {repo_name}")
+                # shutil.rmtree(output_dir)
+                return False
 
             # 创建输出目录
             os.makedirs(output_dir, exist_ok=True)
@@ -570,7 +571,7 @@ def main():
         max_documents_per_version=2000,  # 从18k降到2k
         min_content_length=100,
         batch_size=100,
-        skip_large_files=True,
+        skip_large_files=False,
         max_file_size_mb=5.0,
     )
 

@@ -1,0 +1,708 @@
+{
+  "basic": [
+    {
+      "content": "/**\n * Shows a list of possible answers with image and text and a radio button.\n * @param options a list of all possible answers with their icon and text value\n * @param answer the chosen answer (identified by text resource value), can be null if no answer is\n * chosen\n * @param onAnswerSelected callback that is called when a possible answer is clicked\n * @param modifier Modifier to be applied to the [SingleChoiceQuestion]\n */\n@Composable\nfun SingleChoiceQuestion(\n    options: List<AnswerOption>,\n    answer: Answer.SingleChoice?,\n    onAnswerSelected: (Int) -> Unit,\n    modifier: Modifier = Modifier\n) {\n    Column(modifier.selectableGroup()) {\n        options.forEach { option ->\n            Answer(\n                text = stringResource(option.textRes),\n                painter = option.iconRes?.let { painterResource(it) },\n                selected = option.textRes == answer?.answer,\n                onOptionSelected = { onAnswerSelected(option.textRes) },\n                isSingleChoice = true,\n                modifier = Modifier.padding(vertical = 8.dp)\n            )\n        }\n    }\n}\n\n@Composable\nfun MultipleChoiceQuestion(\n    possibleAnswer: PossibleAnswer.MultipleChoice,\n    answer: Answer.MultipleChoice?,\n    onAnswerSelected: (Int, Boolean) -> Unit,\n    modifier: Modifier = Modifier\n) {\n    Column(modifier) {\n        possibleAnswer.options.forEach { option ->\n            val selected = answer?.answersStringRes?.contains(option.textRes) ?: false\n            Answer(\n                text = stringResource(option.textRes),\n                painter = option.iconRes?.let { painterResource(it) },\n                selected = selected,\n                onOptionSelected = { onAnswerSelected(option.textRes, !selected) },\n                isSingleChoice = false,\n                modifier = Modifier.padding(vertical = 8.dp)\n            )\n        }\n    }\n}",
+      "metadata": {
+        "language": "kotlin",
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/question/ChoiceQuestion.kt",
+        "strategy": "basic",
+        "total_chunks": 6,
+        "chunk_index": 2
+      },
+      "similarity_score": 1.180657148361206
+    },
+    {
+      "content": "@OptIn(ExperimentalPermissionsApi::class)\n@Composable\nprivate fun PermissionsRationale(\n    question: Question,\n    multiplePermissionsState: MultiplePermissionsState,\n    onDoNotAskForPermissions: () -> Unit,\n    modifier: Modifier = Modifier\n) {\n    Column(modifier) {\n        Spacer(modifier = Modifier.height(32.dp))\n        QuestionTitle(question.questionText)\n        Spacer(modifier = Modifier.height(32.dp))\n        val rationaleId =\n            question.permissionsRationaleText ?: R.string.permissions_rationale\n        Text(stringResource(id = rationaleId))\n        Spacer(modifier = Modifier.height(16.dp))\n        OutlinedButton(\n            onClick = {\n                multiplePermissionsState.launchMultiplePermissionRequest()\n            }\n        ) {\n            Text(stringResource(R.string.request_permissions))\n        }\n        Spacer(modifier = Modifier.height(8.dp))\n        OutlinedButton(onClick = onDoNotAskForPermissions) {\n            Text(stringResource(R.string.do_not_ask_permissions))\n        }\n    }\n}",
+      "metadata": {
+        "chunk_index": 3,
+        "strategy": "basic",
+        "language": "kotlin",
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/SurveyQuestions.kt",
+        "total_chunks": 7
+      },
+      "similarity_score": 1.216895341873169
+    },
+    {
+      "content": "## Code Content:\n```yaml\nname: Feature request\ndescription: File a feature request\ntitle: \"[FR]: \"\nlabels: [\"enhancement\", \"triage me\"]\nbody:\n  - type: markdown\n    attributes:\n      value: |\n        Thanks for taking the time to fill out this bug report!\n  - type: checkboxes\n    attributes:\n      label: Is there an existing issue for this?\n      description: Please search to see if an issue already exists for this feature request.\n      options:\n      - label: I have searched the existing issues\n        required: true\n  - type: checkboxes\n    attributes:\n      label: Is this a feature request for one of the samples?\n      description: Please confirm that this is a feature request related to this samples repo. If this is a request related to Compose, file a feature request on the Compose [issue tracker](https://issuetracker.google.com/issues/new?component=612128) instead.\n      options:\n      - label: Yes, this is a specific request related to this samples repo.\n        required: true\n  - type: dropdown\n    id: sample-app\n    attributes:\n      label: Sample app\n      description: Which sample app does this request apply to?\n      options:\n        - Crane\n        - JetNews\n        - Jetcaster\n        - Jetchat\n        - Jetsnack\n        - Jetsurvey\n        - Owl\n        - Reply\n        - Other (bug not related to sample app)\n    validations:\n      required: true\n  - type: textarea\n    id: describe-problem\n    attributes:\n      label: Describe the problem\n      description: Is your feature request related to a problem? Please describe.\n      placeholder: I'm always frustrated when...\n    validations:\n      required: true\n  - type: textarea\n    id: solution\n    attributes:\n      label: Describe the solution\n      description: Please describe the solution you'd like. A clear and concise description of what you want to happen.\n    validations:\n      required: true\n  - type: textarea\n    id: context\n    attributes:\n      label: Additional context",
+      "metadata": {
+        "file_path": ".github/ISSUE_TEMPLATE/feature_request.yml",
+        "language": "yaml",
+        "strategy": "basic",
+        "chunk_index": 1,
+        "total_chunks": 3
+      },
+      "similarity_score": 1.2490781545639038
+    },
+    {
+      "content": "description: Also tell us, what did you expect to happen?\n      placeholder: Tell us what you see!\n      value: \"A bug happened!\"\n    validations:\n      required: true\n  - type: textarea\n    id: logs\n    attributes:\n      label: Relevant logcat output\n      description: Please copy and paste any relevant logcat output. This will be automatically formatted into code, so no need for backticks.\n      render: shell\n  - type: checkboxes\n    id: terms\n    attributes:\n      label: Code of Conduct\n      description: By submitting this issue, you agree to follow our [Code of Conduct](CODE_OF_CONDUCT.md)\n      options:\n        - label: I agree to follow this project's Code of Conduct\n          required: true\n```",
+      "metadata": {
+        "total_chunks": 3,
+        "language": "yaml",
+        "chunk_index": 2,
+        "file_path": ".github/ISSUE_TEMPLATE/bug_report.yml",
+        "strategy": "basic"
+      },
+      "similarity_score": 1.2567706108093262
+    },
+    {
+      "content": "@OptIn(ExperimentalPermissionsApi::class)\n@Composable\nfun Question(\n    question: Question,\n    answer: Answer<*>?,\n    shouldAskPermissions: Boolean,\n    onAnswer: (Answer<*>) -> Unit,\n    onAction: (Int, SurveyActionType) -> Unit,\n    onDoNotAskForPermissions: () -> Unit,\n    modifier: Modifier = Modifier\n) {\n    if (question.permissionsRequired.isEmpty()) {\n        QuestionContent(question, answer, onAnswer, onAction, modifier)\n    } else {\n        val multiplePermissionsState = rememberMultiplePermissionsState(\n            question.permissionsRequired\n        )\n\n        if (multiplePermissionsState.allPermissionsGranted) {\n            QuestionContent(question, answer, onAnswer, onAction, modifier)\n        } else {\n            PermissionsRationale(\n                question,\n                multiplePermissionsState,\n                onDoNotAskForPermissions,\n                modifier.padding(horizontal = 20.dp)\n            )\n        }\n\n        // If we cannot ask for permissions, inform the caller that can move to the next question\n        if (!shouldAskPermissions) {\n            LaunchedEffect(true) {\n                onAnswer(Answer.PermissionsDenied)\n            }\n        }\n    }\n}",
+      "metadata": {
+        "chunk_index": 2,
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/SurveyQuestions.kt",
+        "language": "kotlin",
+        "strategy": "basic",
+        "total_chunks": 7
+      },
+      "similarity_score": 1.285910725593567
+    },
+    {
+      "content": "layoutParams = ViewGroup.LayoutParams(\n                ViewGroup.LayoutParams.MATCH_PARENT,\n                ViewGroup.LayoutParams.MATCH_PARENT\n            )\n            setContent {\n                JetsurveyTheme {\n                    val state = viewModel.uiState.observeAsState().value ?: return@JetsurveyTheme\n                    AnimatedContent(\n                        targetState = state,\n                        transitionSpec = {\n                            fadeIn() + slideIntoContainer(\n                                towards = AnimatedContentScope\n                                    .SlideDirection.Up,\n                                animationSpec = tween(ANIMATION_SLIDE_IN_DURATION)\n                            ) with\n                                fadeOut(animationSpec = tween(ANIMATION_FADE_OUT_DURATION))\n                        }\n                    ) { targetState ->\n                        // It's important to use targetState and not state, as its critical to ensure\n                        // a successful lookup of all the incoming and outgoing content during\n                        // content transform.\n                        when (targetState) {\n                            is SurveyState.Questions -> SurveyQuestionsScreen(\n                                questions = targetState,\n                                shouldAskPermissions = viewModel.askForPermissions,\n                                onAction = { id, action -> handleSurveyAction(id, action) },\n                                onDoNotAskForPermissions = { viewModel.doNotAskForPermissions() },\n                                onDonePressed = { viewModel.computeResult(targetState) },\n                                onBackPressed = {\n                                    activity?.onBackPressedDispatcher?.onBackPressed()\n                                }\n                            )\n                            is SurveyState.Result -> SurveyResultScreen(",
+      "metadata": {
+        "chunk_index": 2,
+        "strategy": "basic",
+        "language": "kotlin",
+        "total_chunks": 5,
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/SurveyFragment.kt"
+      },
+      "similarity_score": 1.2910329103469849
+    },
+    {
+      "content": "## Code Content:\n```yaml\nname: Bug Report\ndescription: File a bug report\ntitle: \"[Bug]: \"\nlabels: [\"bug\", \"triage me\"]\nbody:\n  - type: markdown\n    attributes:\n      value: |\n        Thanks for taking the time to fill out this bug report!\n  - type: checkboxes\n    attributes:\n      label: Is there an existing issue for this?\n      description: Please search to see if an issue already exists for the bug you encountered.\n      options:\n      - label: I have searched the existing issues\n        required: true\n  - type: checkboxes\n    attributes:\n      label: Is there a StackOverflow question about this issue?\n      description: Please search [StackOverflow](https://stackoverflow.com/questions/tagged/android-jetpack-compose) if an issue with an answer already exists for the bug you encountered.\n      options:\n      - label: I have searched StackOverflow\n        required: true\n  - type: checkboxes\n    attributes:\n      label: Is this an issue related to one of the samples?\n      description: Please confirm that this is an issue related to this sample repo. If this is a bug related to Compose, file an issue on the Compose [issue tracker](https://issuetracker.google.com/issues/new?component=612128) instead.\n      options:\n      - label: Yes, this is a specific issue related to this samples repo.\n        required: true\n  - type: dropdown\n    id: sample-app\n    attributes:\n      label: Sample app\n      description: What sample app did you encounter a bug on?\n      options:\n        - Crane\n        - JetNews\n        - Jetcaster\n        - Jetchat\n        - Jetsnack\n        - Jetsurvey\n        - Owl\n        - Reply\n        - Other (bug not related to sample app)\n    validations:\n      required: true\n  - type: textarea\n    id: what-happened\n    attributes:\n      label: What happened?\n      description: Also tell us, what did you expect to happen?\n      placeholder: Tell us what you see!\n      value: \"A bug happened!\"\n    validations:\n      required: true\n  - type: textarea",
+      "metadata": {
+        "total_chunks": 3,
+        "language": "yaml",
+        "file_path": ".github/ISSUE_TEMPLATE/bug_report.yml",
+        "strategy": "basic",
+        "chunk_index": 1
+      },
+      "similarity_score": 1.2916010618209839
+    },
+    {
+      "content": "@Composable\nfun ChannelNameBar(\n    channelName: String,\n    channelMembers: Int,\n    modifier: Modifier = Modifier,\n    scrollBehavior: TopAppBarScrollBehavior? = null,\n    onNavIconPressed: () -> Unit = { }\n) {\n    var functionalityNotAvailablePopupShown by remember { mutableStateOf(false) }\n    if (functionalityNotAvailablePopupShown) {\n        FunctionalityNotAvailablePopup { functionalityNotAvailablePopupShown = false }\n    }\n    JetchatAppBar(\n        modifier = modifier,\n        scrollBehavior = scrollBehavior,\n        onNavIconPressed = onNavIconPressed,\n        title = {\n            Column(horizontalAlignment = Alignment.CenterHorizontally) {\n                // Channel name\n                Text(\n                    text = channelName,\n                    style = MaterialTheme.typography.titleMedium\n                )\n                // Number of members\n                Text(\n                    text = stringResource(R.string.members, channelMembers),\n                    style = MaterialTheme.typography.bodySmall,\n                    color = MaterialTheme.colorScheme.onSurfaceVariant\n                )\n            }\n        },\n        actions = {\n            // Search icon\n            Icon(\n                imageVector = Icons.Outlined.Search,\n                tint = MaterialTheme.colorScheme.onSurfaceVariant,\n                modifier = Modifier\n                    .clickable(onClick = { functionalityNotAvailablePopupShown = true })\n                    .padding(horizontal = 12.dp, vertical = 16.dp)\n                    .height(24.dp),\n                contentDescription = stringResource(id = R.string.search)\n            )\n            // Info icon\n            Icon(\n                imageVector = Icons.Outlined.Info,\n                tint = MaterialTheme.colorScheme.onSurfaceVariant,\n                modifier = Modifier\n                    .clickable(onClick = { functionalityNotAvailablePopupShown = true })",
+      "metadata": {
+        "file_path": "Jetchat/app/src/main/java/com/example/compose/jetchat/conversation/Conversation.kt",
+        "language": "kotlin",
+        "total_chunks": 13,
+        "chunk_index": 5,
+        "strategy": "basic"
+      },
+      "similarity_score": 1.2947053909301758
+    },
+    {
+      "content": "@Composable\n\nfun JetsnackButton(\n    onClick: () -> Unit,\n    modifier: Modifier = Modifier,\n    enabled: Boolean = true,\n    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },\n    shape: Shape = ButtonShape,\n    border: BorderStroke? = null,\n    backgroundGradient: List<Color> = JetsnackTheme.colors.interactivePrimary,\n    disabledBackgroundGradient: List<Color> = JetsnackTheme.colors.interactiveSecondary,\n    contentColor: Color = JetsnackTheme.colors.textInteractive,\n    disabledContentColor: Color = JetsnackTheme.colors.textHelp,\n    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,\n    content: @Composable RowScope.() -> Unit\n) {\n    JetsnackSurface(\n        shape = shape,\n        color = Color.Transparent,\n        contentColor = if (enabled) contentColor else disabledContentColor,\n        border = border,\n        modifier = modifier\n            .clip(shape)\n            .background(\n                Brush.horizontalGradient(\n                    colors = if (enabled) backgroundGradient else disabledBackgroundGradient\n                )\n            )\n            .clickable(\n                onClick = onClick,\n                enabled = enabled,\n                role = Role.Button,\n                interactionSource = interactionSource,\n                indication = null\n            )\n    ) {\n        ProvideTextStyle(\n            value = MaterialTheme.typography.button\n        ) {\n            Row(\n                Modifier\n                    .defaultMinSize(\n                        minWidth = ButtonDefaults.MinWidth,\n                        minHeight = ButtonDefaults.MinHeight\n                    )\n                    .indication(interactionSource, rememberRipple())\n                    .padding(contentPadding),\n                horizontalArrangement = Arrangement.Center,\n                verticalAlignment = Alignment.CenterVertically,\n                content = content\n            )\n        }\n    }\n}",
+      "metadata": {
+        "chunk_index": 2,
+        "strategy": "basic",
+        "file_path": "Jetsnack/app/src/main/java/com/example/jetsnack/ui/components/Button.kt",
+        "language": "kotlin",
+        "total_chunks": 4
+      },
+      "similarity_score": 1.3106392621994019
+    },
+    {
+      "content": "@OptIn(ExperimentalMaterialApi::class)\n@Composable\nprivate fun DayContainer(\n    modifier: Modifier = Modifier,\n    selected: Boolean = false,\n    onClick: () -> Unit = { },\n    onClickEnabled: Boolean = true,\n    backgroundColor: Color = Color.Transparent,\n    onClickLabel: String? = null,\n    content: @Composable () -> Unit\n) {\n    val stateDescriptionLabel = stringResource(\n        if (selected) R.string.state_descr_selected else R.string.state_descr_not_selected\n    )\n    Box(\n        modifier = modifier\n            .size(width = CELL_SIZE, height = CELL_SIZE)\n            .pointerInput(Any()) {\n                detectTapGestures {\n                    onClick()\n                }\n            }\n            .then(\n                if (onClickEnabled) {\n                    modifier.semantics {\n                        stateDescription = stateDescriptionLabel\n                        onClick(label = onClickLabel, action = null)\n                    }\n                } else {\n                    modifier.clearAndSetSemantics { }\n                }\n            )\n            .background(backgroundColor)\n    ) {\n        content()\n    }\n}\n\n@Composable\ninternal fun Day(\n    day: LocalDate,\n    calendarState: CalendarUiState,\n    onDayClicked: (LocalDate) -> Unit,\n    month: YearMonth,\n    modifier: Modifier = Modifier\n) {\n    val selected = calendarState.isDateInSelectedPeriod(day)\n    DayContainer(\n        modifier = modifier.semantics {\n            text = AnnotatedString(\n                \"${month.month.name.lowercase().capitalize(Locale.current)} \" +\n                    \"${day.dayOfMonth} ${month.year}\"\n            )\n            dayStatusProperty = selected\n        },\n        selected = selected,\n        onClick = { onDayClicked(day) },\n        onClickLabel = stringResource(id = R.string.click_label_select)\n    ) {",
+      "metadata": {
+        "total_chunks": 4,
+        "chunk_index": 2,
+        "strategy": "basic",
+        "language": "kotlin",
+        "file_path": "Crane/app/src/main/java/androidx/compose/samples/crane/calendar/Day.kt"
+      },
+      "similarity_score": 1.3128316402435303
+    },
+    {
+      "content": "package com.example.compose.jetsurvey.survey.question\n\nimport android.content.res.Configuration\nimport androidx.compose.foundation.BorderStroke\nimport androidx.compose.foundation.Image\nimport androidx.compose.foundation.clickable\nimport androidx.compose.foundation.layout.Box\nimport androidx.compose.foundation.layout.Column\nimport androidx.compose.foundation.layout.Row\nimport androidx.compose.foundation.layout.Spacer\nimport androidx.compose.foundation.layout.fillMaxWidth\nimport androidx.compose.foundation.layout.padding\nimport androidx.compose.foundation.layout.size\nimport androidx.compose.foundation.layout.width\nimport androidx.compose.foundation.selection.selectable\nimport androidx.compose.foundation.selection.selectableGroup\nimport androidx.compose.material3.Checkbox\nimport androidx.compose.material3.MaterialTheme\nimport androidx.compose.material3.RadioButton\nimport androidx.compose.material3.Surface\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.getValue\nimport androidx.compose.runtime.mutableStateOf\nimport androidx.compose.runtime.remember\nimport androidx.compose.runtime.setValue\nimport androidx.compose.ui.Alignment\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.draw.clip\nimport androidx.compose.ui.graphics.painter.Painter\nimport androidx.compose.ui.res.painterResource\nimport androidx.compose.ui.res.stringResource\nimport androidx.compose.ui.tooling.preview.Preview\nimport androidx.compose.ui.tooling.preview.PreviewParameter\nimport androidx.compose.ui.tooling.preview.PreviewParameterProvider\nimport androidx.compose.ui.unit.dp\nimport com.example.compose.jetsurvey.R\nimport com.example.compose.jetsurvey.survey.Answer\nimport com.example.compose.jetsurvey.survey.AnswerOption\nimport com.example.compose.jetsurvey.survey.PossibleAnswer\nimport com.example.compose.jetsurvey.theme.JetsurveyTheme",
+      "metadata": {
+        "strategy": "basic",
+        "chunk_index": 1,
+        "total_chunks": 6,
+        "language": "kotlin",
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/question/ChoiceQuestion.kt"
+      },
+      "similarity_score": 1.3243309259414673
+    },
+    {
+      "content": "See how to:\n\n* Use `TextField`s\n* Implement `TextField` validation across one `TextField` (e.g. email validation) and across multiple `TextFields` (e.g. password confirmation)\n* Use a `Snackbar`\n* Use different types of `Button`s: `TextButton`, `OutlinedButton` and `Button`\n\n[5]: app/src/main/java/com/example/compose/jetsurvey/signinsignup\n\n### Complete a survey\n\nPackage [`com.example.compose.jetsurvey.survey`][6]\n\nThis screen allows the user to fill out a survey, showing how to handle complex state. UI state is kept and restored on recompositions triggered by different reasons like a configuration change or a new question being displayed on the screen.\n\nSee how to:\n\n* Use `RadioButton`s - for single item selection\n* Use `Checkbox`es - for multi-item selection\n* Use `Slider` - for picking a value from a range\n* Use `Scaffold` - for screens with top bar, bottom bar and body\n* Display a `DialogFragment` when requested from compose\n\n[6]: app/src/main/java/com/example/compose/jetsurvey/survey\n\n### Data\n\nThe data in the sample is static, held in the `*Repository` classes.\n\n## Setup\nThe main [README](https://github.com/android/compose-samples/) has instructions on how to\nsetup this sample, and many others.\n\n## License\n\n```\nCopyright 2020 The Android Open Source Project\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    https://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n```\n```",
+      "metadata": {
+        "strategy": "basic",
+        "language": "markdown",
+        "total_chunks": 2,
+        "chunk_index": 1,
+        "file_path": "Jetsurvey/README.md"
+      },
+      "similarity_score": 1.325424075126648
+    },
+    {
+      "content": "/**\n * Checks that the features in the Conversation screen work as expected.\n */\nclass ConversationTest {\n\n    @get:Rule\n    val composeTestRule = createAndroidComposeRule<ComponentActivity>()\n\n    private val themeIsDark = MutableStateFlow(false)\n\n    @OptIn(ExperimentalLifecycleComposeApi::class)\n    @Before\n    fun setUp() {\n        // Launch the conversation screen\n        composeTestRule.setContent {\n            val onBackPressedDispatcher = composeTestRule.activity.onBackPressedDispatcher\n            CompositionLocalProvider(\n                LocalBackPressedDispatcher provides onBackPressedDispatcher,\n            ) {\n                JetchatTheme(isDarkTheme = themeIsDark.collectAsStateWithLifecycle(false).value) {\n                    ConversationContent(\n                        uiState = conversationTestUiState,\n                        navigateToProfile = { },\n                        onNavIconPressed = { }\n                    )\n                }\n            }\n        }\n    }\n\n    @Test\n    fun app_launches() {\n        // Check that the conversation screen is visible on launch\n        composeTestRule.onNodeWithTag(ConversationTestTag).assertIsDisplayed()\n    }\n\n    @Test\n    fun userScrollsUp_jumpToBottomAppears() {\n        // Check list is snapped to bottom and swipe up\n        findJumpToBottom().assertDoesNotExist()\n        composeTestRule.onNodeWithTag(ConversationTestTag).performTouchInput {\n            this.swipe(\n                start = this.center,\n                end = Offset(this.center.x, this.center.y + 500),\n                durationMillis = 200\n            )\n        }\n        // Check that the jump to bottom button is shown\n        findJumpToBottom().assertIsDisplayed()\n    }",
+      "metadata": {
+        "file_path": "Jetchat/app/src/androidTest/java/com/example/compose/jetchat/ConversationTest.kt",
+        "chunk_index": 1,
+        "language": "kotlin",
+        "strategy": "basic",
+        "total_chunks": 4
+      },
+      "similarity_score": 1.340191125869751
+    },
+    {
+      "content": "@Preview(name = \"Light\", uiMode = Configuration.UI_MODE_NIGHT_NO)\n@Preview(name = \"Dark\", uiMode = Configuration.UI_MODE_NIGHT_YES)\n@Composable\nprivate fun SingleChoiceQuestionPreview() {\n    var selectedAnswer: Answer.SingleChoice? by remember {\n        mutableStateOf(Answer.SingleChoice(R.string.bugchaos))\n    }\n\n    JetsurveyTheme {\n        SingleChoiceQuestion(\n            options = listOf(\n                AnswerOption(R.string.star_trek),\n                AnswerOption(R.string.social_network),\n                AnswerOption(R.string.back_to_future),\n                AnswerOption(R.string.outbreak)\n            ),\n            answer = selectedAnswer,\n            onAnswerSelected = { textRes -> selectedAnswer = Answer.SingleChoice(textRes) }\n        )\n    }\n}\n```",
+      "metadata": {
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/question/ChoiceQuestion.kt",
+        "language": "kotlin",
+        "total_chunks": 6,
+        "chunk_index": 5,
+        "strategy": "basic"
+      },
+      "similarity_score": 1.3449480533599854
+    },
+    {
+      "content": "@Preview(name = \"Light\", uiMode = Configuration.UI_MODE_NIGHT_NO)\n@Preview(name = \"Dark\", uiMode = Configuration.UI_MODE_NIGHT_YES)\n@Composable\nprivate fun AnswerPreview(\n    @PreviewParameter(PreviewDataProvider::class, limit = 4) previewData: PreviewData\n) {\n    JetsurveyTheme {\n        Answer(\n            text = \"Preview\",\n            painter = painterResource(id = R.drawable.frag),\n            selected = previewData.selected,\n            isSingleChoice = previewData.isSingleChoice,\n            onOptionSelected = { }\n        )\n    }\n}\n\nprivate data class PreviewData(\n    val selected: Boolean,\n    val isSingleChoice: Boolean\n)\n\nprivate class PreviewDataProvider : PreviewParameterProvider<PreviewData> {\n    override val values = sequenceOf(\n        PreviewData(selected = false, isSingleChoice = true),\n        PreviewData(selected = true, isSingleChoice = true),\n        PreviewData(selected = false, isSingleChoice = false),\n        PreviewData(selected = true, isSingleChoice = false),\n    )\n}\n\n@Preview(name = \"Light\", uiMode = Configuration.UI_MODE_NIGHT_NO)\n@Preview(name = \"Dark\", uiMode = Configuration.UI_MODE_NIGHT_YES)\n@Composable\nprivate fun SingleChoiceIconQuestionPreview() {\n    var selectedAnswer: Answer.SingleChoice? by remember {\n        mutableStateOf(Answer.SingleChoice(R.string.bugchaos))\n    }\n\n    JetsurveyTheme {\n        SingleChoiceQuestion(\n            options = listOf(\n                AnswerOption(R.string.spark, R.drawable.spark),\n                AnswerOption(R.string.lenz, R.drawable.lenz),\n                AnswerOption(R.string.bugchaos, R.drawable.bug_of_chaos),\n                AnswerOption(R.string.frag, R.drawable.frag)\n            ),\n            answer = selectedAnswer,\n            onAnswerSelected = { textRes -> selectedAnswer = Answer.SingleChoice(textRes) }\n        )\n    }\n}",
+      "metadata": {
+        "language": "kotlin",
+        "chunk_index": 4,
+        "strategy": "basic",
+        "total_chunks": 6,
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/question/ChoiceQuestion.kt"
+      },
+      "similarity_score": 1.3570899963378906
+    },
+    {
+      "content": "#### [Course Details Screen](app/src/main/java/com/example/owl/ui/course/CourseDetails.kt)\nDisplays details of a selected course, featuring:\n\n* A [FloatingActionButton](https://material.io/components/buttons-floating-action-button) that can be clicked or dragged to transform into a [`LessonsSheet`](app/src/main/java/com/example/owl/ui/course/CourseDetails.kt#L309).\n* A selection of [`RelatedCourses`](app/src/main/java/com/example/owl/ui/course/CourseDetails.kt#L262) using a nested `BlueTheme`.\n\n#### [Theming](app/src/main/java/com/example/owl/ui/theme)\nOwl follows Material Design, customizing [colors](app/src/main/java/com/example/owl/ui/theme/Color.kt), [typography](app/src/main/java/com/example/owl/ui/theme/Type.kt) and [shapes](app/src/main/java/com/example/owl/ui/theme/Shape.kt). These come together in Owl's multiple [themes](app/src/main/java/com/example/owl/ui/theme/Theme.kt), one for each color scheme. Additionaly, Owl supports [image](app/src/main/java/com/example/owl/ui/theme/Images.kt) and [elevation](app/src/main/java/com/example/owl/ui/theme/Elevation.kt) theming, providing alternate images/elevations in light/dark themes.\n\n#### [Common UI](app/src/main/java/com/example/owl/ui/common)\nCompose makes it simple to create a library of components and use them throughout the app. See:\n* [`CourseListItem`](app/src/main/java/com/example/owl/ui/common/CourseListItem.kt) is used on both the [My Courses](app/src/main/java/com/example/owl/ui/courses/MyCourses.kt) screen and in the related section of the [Course Details](app/src/main/java/com/example/owl/ui/course/CourseDetails.kt) screen.\n* [`OutlinedAvatar`](app/src/main/java/com/example/owl/ui/common/OutlinedAvatar.kt) is used on both the [Featured Courses](app/src/main/java/com/example/owl/ui/courses/FeaturedCourses.kt) screen and the [Course Details](app/src/main/java/com/example/owl/ui/course/CourseDetails.kt) screen.",
+      "metadata": {
+        "strategy": "basic",
+        "total_chunks": 4,
+        "file_path": "Owl/README.md",
+        "chunk_index": 1,
+        "language": "markdown"
+      },
+      "similarity_score": 1.3610082864761353
+    },
+    {
+      "content": "private val jetpackSurvey = Survey(\n    title = R.string.which_jetpack_library,\n    questions = jetpackQuestions\n)\n\nobject JetpackSurveyRepository : SurveyRepository {\n\n    override fun getSurvey() = jetpackSurvey\n\n    @Suppress(\"UNUSED_PARAMETER\")\n    override fun getSurveyResult(answers: List<Answer<*>>): SurveyResult {\n        return SurveyResult(\n            library = \"Compose\",\n            result = R.string.survey_result,\n            description = R.string.survey_result_description\n        )\n    }\n}\n\ninterface SurveyRepository {\n    fun getSurvey(): Survey\n\n    fun getSurveyResult(answers: List<Answer<*>>): SurveyResult\n}\n```",
+      "metadata": {
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/SurveyRepository.kt",
+        "strategy": "basic",
+        "chunk_index": 3,
+        "total_chunks": 4,
+        "language": "kotlin"
+      },
+      "similarity_score": 1.3633151054382324
+    },
+    {
+      "content": "@OptIn(ExperimentalLifecycleComposeApi::class)\n@Composable\nfun Discover(\n    navigateToPlayer: (String) -> Unit,\n    modifier: Modifier = Modifier\n) {\n    val viewModel: DiscoverViewModel = viewModel()\n    val viewState by viewModel.state.collectAsStateWithLifecycle()\n\n    val selectedCategory = viewState.selectedCategory\n\n    if (viewState.categories.isNotEmpty() && selectedCategory != null) {\n        Column(modifier) {\n            Spacer(Modifier.height(8.dp))\n\n            PodcastCategoryTabs(\n                categories = viewState.categories,\n                selectedCategory = selectedCategory,\n                onCategorySelected = viewModel::onCategorySelected,\n                modifier = Modifier.fillMaxWidth()\n            )\n\n            Spacer(Modifier.height(8.dp))\n\n            Crossfade(\n                targetState = selectedCategory,\n                modifier = Modifier\n                    .fillMaxWidth()\n                    .weight(1f)\n            ) { category ->\n                /**\n                 * TODO, need to think about how this will scroll within the outer VerticalScroller\n                 */\n                PodcastCategory(\n                    categoryId = category.id,\n                    navigateToPlayer = navigateToPlayer,\n                    modifier = Modifier.fillMaxSize()\n                )\n            }\n        }\n    }\n    // TODO: empty state\n}\n\nprivate val emptyTabIndicator: @Composable (List<TabPosition>) -> Unit = {}",
+      "metadata": {
+        "strategy": "basic",
+        "file_path": "Jetcaster/app/src/main/java/com/example/jetcaster/ui/home/discover/Discover.kt",
+        "chunk_index": 1,
+        "total_chunks": 3,
+        "language": "kotlin"
+      },
+      "similarity_score": 1.3677728176116943
+    },
+    {
+      "content": "private val replyLightColorScheme = lightColorScheme(\n    primary = replyLightPrimary,\n    onPrimary = replyLightOnPrimary,\n    primaryContainer = replyLightPrimaryContainer,\n    onPrimaryContainer = replyLightOnPrimaryContainer,\n    inversePrimary = replyLightPrimaryInverse,\n    secondary = replyLightSecondary,\n    onSecondary = replyLightOnSecondary,\n    secondaryContainer = replyLightSecondaryContainer,\n    onSecondaryContainer = replyLightOnSecondaryContainer,\n    tertiary = replyLightTertiary,\n    onTertiary = replyLightOnTertiary,\n    tertiaryContainer = replyLightTertiaryContainer,\n    onTertiaryContainer = replyLightOnTertiaryContainer,\n    error = replyLightError,\n    onError = replyLightOnError,\n    errorContainer = replyLightErrorContainer,\n    onErrorContainer = replyLightOnErrorContainer,\n    background = replyLightBackground,\n    onBackground = replyLightOnBackground,\n    surface = replyLightSurface,\n    onSurface = replyLightOnSurface,\n    inverseSurface = replyLightInverseSurface,\n    inverseOnSurface = replyLightInverseOnSurface,\n    surfaceVariant = replyLightSurfaceVariant,\n    onSurfaceVariant = replyLightOnSurfaceVariant,\n    outline = replyLightOutline\n)",
+      "metadata": {
+        "chunk_index": 2,
+        "file_path": "Reply/app/src/main/java/com/example/reply/ui/theme/Theme.kt",
+        "language": "kotlin",
+        "strategy": "basic",
+        "total_chunks": 4
+      },
+      "similarity_score": 1.3680521249771118
+    },
+    {
+      "content": "@Composable\nfun JetchatIcon(\n    contentDescription: String?,\n    modifier: Modifier = Modifier\n) {\n    val semantics = if (contentDescription != null) {\n        Modifier.semantics {\n            this.contentDescription = contentDescription\n            this.role = Role.Image\n        }\n    } else {\n        Modifier\n    }\n    Box(modifier = modifier.then(semantics)) {\n        Icon(\n            painter = painterResource(id = R.drawable.ic_jetchat_back),\n            contentDescription = null,\n            tint = MaterialTheme.colorScheme.primaryContainer\n        )\n        Icon(\n            painter = painterResource(id = R.drawable.ic_jetchat_front),\n            contentDescription = null,\n            tint = MaterialTheme.colorScheme.primary\n        )\n    }\n}\n```",
+      "metadata": {
+        "chunk_index": 1,
+        "language": "kotlin",
+        "total_chunks": 2,
+        "file_path": "Jetchat/app/src/main/java/com/example/compose/jetchat/components/JetchatIcon.kt",
+        "strategy": "basic"
+      },
+      "similarity_score": 1.3721017837524414
+    }
+  ],
+  "enhanced": [
+    {
+      "content": "### Commit 5\n- ID: 9cc507f8\n- Author: Manuel Vivo (mvivo@google.com)\n- Date: 2021-06-15 19:39:48\n- Message: [Jetsurvey] Add permissions\n- Changes:\n```diff\n@@ -59,6 +59,8 @@ import com.example.compose.jetsurvey.util.supportWideScreen\n @Composable\n fun SurveyQuestionsScreen(\n     questions: SurveyState.Questions,\n+    shouldAskPermissions: Boolean,\n+    onDoNotAskForPermissions: () -> Unit,\n     onAction: (Int, SurveyActionType) -> Unit,\n     onDonePressed: () -> Unit,\n     onBackPressed: () -> Unit\n@@ -80,11 +82,13 @@ fun SurveyQuestionsScreen(\n                 Question(\n                     question = questionState.question,\n                     a...\n```",
+      "metadata": {
+        "total_chunks": 12,
+        "chunk_index": 11,
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/SurveyScreen.kt",
+        "language": "kotlin"
+      },
+      "similarity_score": 1.101159930229187
+    },
+    {
+      "content": "/**\n * Shows a list of possible answers with image and text and a radio button.\n * @param options a list of all possible answers with their icon and text value\n * @param answer the chosen answer (identified by text resource value), can be null if no answer is\n * chosen\n * @param onAnswerSelected callback that is called when a possible answer is clicked\n * @param modifier Modifier to be applied to the [SingleChoiceQuestion]\n */\n@Composable\nfun SingleChoiceQuestion(\n    options: List<AnswerOption>,\n    answer: Answer.SingleChoice?,\n    onAnswerSelected: (Int) -> Unit,\n    modifier: Modifier = Modifier\n) {\n    Column(modifier.selectableGroup()) {\n        options.forEach { option ->\n            Answer(\n                text = stringResource(option.textRes),\n                painter = option.iconRes?.let { painterResource(it) },\n                selected = option.textRes == answer?.answer,\n                onOptionSelected = { onAnswerSelected(option.textRes) },\n                isSingleChoice = true,\n                modifier = Modifier.padding(vertical = 8.dp)\n            )\n        }\n    }\n}\n\n@Composable\nfun MultipleChoiceQuestion(\n    possibleAnswer: PossibleAnswer.MultipleChoice,\n    answer: Answer.MultipleChoice?,\n    onAnswerSelected: (Int, Boolean) -> Unit,\n    modifier: Modifier = Modifier\n) {\n    Column(modifier) {\n        possibleAnswer.options.forEach { option ->\n            val selected = answer?.answersStringRes?.contains(option.textRes) ?: false\n            Answer(\n                text = stringResource(option.textRes),\n                painter = option.iconRes?.let { painterResource(it) },\n                selected = selected,\n                onOptionSelected = { onAnswerSelected(option.textRes, !selected) },\n                isSingleChoice = false,\n                modifier = Modifier.padding(vertical = 8.dp)\n            )\n        }\n    }\n}",
+      "metadata": {
+        "strategy": "enhanced",
+        "commit_count": 1,
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/question/ChoiceQuestion.kt",
+        "total_chunks": 6,
+        "chunk_index": 2,
+        "language": "kotlin"
+      },
+      "similarity_score": 1.180657148361206
+    },
+    {
+      "content": "@OptIn(ExperimentalPermissionsApi::class)\n@Composable\nprivate fun PermissionsRationale(\n    question: Question,\n    multiplePermissionsState: MultiplePermissionsState,\n    onDoNotAskForPermissions: () -> Unit,\n    modifier: Modifier = Modifier\n) {\n    Column(modifier) {\n        Spacer(modifier = Modifier.height(32.dp))\n        QuestionTitle(question.questionText)\n        Spacer(modifier = Modifier.height(32.dp))\n        val rationaleId =\n            question.permissionsRationaleText ?: R.string.permissions_rationale\n        Text(stringResource(id = rationaleId))\n        Spacer(modifier = Modifier.height(16.dp))\n        OutlinedButton(\n            onClick = {\n                multiplePermissionsState.launchMultiplePermissionRequest()\n            }\n        ) {\n            Text(stringResource(R.string.request_permissions))\n        }\n        Spacer(modifier = Modifier.height(8.dp))\n        OutlinedButton(onClick = onDoNotAskForPermissions) {\n            Text(stringResource(R.string.do_not_ask_permissions))\n        }\n    }\n}",
+      "metadata": {
+        "language": "kotlin",
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/SurveyQuestions.kt",
+        "strategy": "enhanced",
+        "chunk_index": 3,
+        "commit_count": 5,
+        "total_chunks": 10
+      },
+      "similarity_score": 1.216895341873169
+    },
+    {
+      "content": "private val jetpackSurvey = Survey(\n    title = R.string.which_jetpack_library,\n    questions = jetpackQuestions\n)\n\nobject JetpackSurveyRepository : SurveyRepository {\n\n    override fun getSurvey() = jetpackSurvey\n\n    @Suppress(\"UNUSED_PARAMETER\")\n    override fun getSurveyResult(answers: List<Answer<*>>): SurveyResult {\n        return SurveyResult(\n            library = \"Compose\",\n            result = R.string.survey_result,\n            description = R.string.survey_result_description\n        )\n    }\n}\n\ninterface SurveyRepository {\n    fun getSurvey(): Survey\n\n    fun getSurveyResult(answers: List<Answer<*>>): SurveyResult\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 90ea29e0\n- Author: Jolanda Verhoef (JolandaVerhoef@users.noreply.github.com)\n- Date: 2022-11-17 23:31:02\n- Message: [Jetsurvey] Combine with and without icon into one dynamic composable\n\nChange-Id: I7a91ddbd776870cc14067d72a3376fffbff33e65\n- Changes:\n```diff\n@@ -19,8 +19,6 @@ package com.example.compose.jetsurvey.survey\n import android.os.Build\n import com.example.compose.jetsurvey.R\n import com.example.compose.jetsurvey.survey.PossibleAnswer.Action\n-import com.example.compose.jetsurvey.survey.PossibleAnswer.MultipleChoice\n-import com.example.compose.jetsurvey.survey.PossibleAnswer.SingleChoice\n import com.example.compose.jetsurvey.survey.SurveyActionType.PICK_DATE\n import com.example.compose.jetsurvey.survey.SurveyActionType.TAKE_PHOTO\n \n@@ -29,14 ...\n```\n\n### Commit 2\n- ID: aabb4495\n- Author: Jolanda Verhoef (JolandaVerhoef@users.noreply.github.com)\n- Date: 2022-11-17 22:16:45\n- Message: [Jetsurvey] Replace generic List<Int> and List<Pair<Int,Int>> with specific data classes",
+      "metadata": {
+        "chunk_index": 3,
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/SurveyRepository.kt",
+        "total_chunks": 6,
+        "commit_count": 5,
+        "language": "kotlin",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.2510533332824707
+    },
+    {
+      "content": "### Commit 5\n- ID: 083e970b\n- Author: Ian G. Clifton (IanGClifton@users.noreply.github.com)\n- Date: 2022-10-27 04:48:22\n- Message: [Jetsurvey] Removed unnecessary color overrides\n\nCheckboxes and radio buttons use the theme's primary color as the\nselected color by default, so setting the color is unnecessary.\n- Changes:\n```diff\n@@ -43,13 +43,11 @@ import androidx.compose.material.icons.filled.SwapHoriz\n import androidx.compose.material3.Button\n import androidx.compose.material3.ButtonDefaults\n import androidx.compose.material3.Checkbox\n-import androidx.compose.material3.CheckboxDefaults\n import androidx.compose.material3.Icon\n import androidx.compose.material3.LocalContentColor\n import androidx.compose.material3.MaterialTheme\n import androidx.compose.material3.OutlinedButton\n import androidx.compose.material3.RadioButt...\n```",
+      "metadata": {
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "language": "kotlin",
+        "chunk_index": 9,
+        "total_chunks": 10,
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/SurveyQuestions.kt"
+      },
+      "similarity_score": 1.2666478157043457
+    },
+    {
+      "content": "* [All] Update to Compose 1.2.0-alpha05\n\n* Update Jetsurvey with the new permissions APIs\n\n* [Crane] Fix UI test issues\n\n* [Crane] Fix spotless issue\n\n* [All] Update Accompanist version\n\n* Replace accompanist insets with compose foundation insets\n\n* Update samples with compose foundation insets\n\n* Update samples with compose foundation insets\n\n* Fix spotless formatting issues\n\nCo-authored-by: Manuel Vivo <mvivo@google.com>\nCo-authored-by: Simona Stojanovic <anomis@google.com>\n- Changes:\n```diff\n@@ -63,8 +63,7 @@ fun SurveyQuestionsScreen(\n     onDoNotAskForPermissions: () -> Unit,\n     onAction: (Int, SurveyActionType) -> Unit,\n     onDonePressed: () -> Unit,\n-    onBackPressed: () -> Unit,\n-    openSettings: () -> Unit\n+    onBackPressed: () -> Unit\n ) {\n     val questionState = remember(questions.currentQuestionIndex) {\n         questions.questionsState[questions.currentQuestionIndex]\n@@ -91,7 +90,6 @@ fun SurveyQuestionsScreen(\n                         questionState.enableNext = tru...\n```\n\n### Commit 4\n- ID: cb6d71ff\n- Author: Manuel Vivo (mvivo@google.com)\n- Date: 2021-06-16 01:00:05\n- Message: [Jetsurvey] Comments on the UI design\n- Changes:\n```diff\n@@ -63,7 +63,8 @@ fun SurveyQuestionsScreen(\n     onDoNotAskForPermissions: () -> Unit,\n     onAction: (Int, SurveyActionType) -> Unit,\n     onDonePressed: () -> Unit,\n-    onBackPressed: () -> Unit\n+    onBackPressed: () -> Unit,\n+    openSettings: () -> Unit\n ) {\n     val questionState = remember(questions.currentQuestionIndex) {\n         questions.questionsState[questions.currentQuestionIndex]\n@@ -84,10 +85,13 @@ fun SurveyQuestionsScreen(\n                     answer = questionState.answer,\n ...\n```",
+      "metadata": {
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/SurveyScreen.kt",
+        "total_chunks": 12,
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "language": "kotlin",
+        "chunk_index": 10
+      },
+      "similarity_score": 1.2677677869796753
+    },
+    {
+      "content": "### Commit 2\n- ID: 4c55fb3d\n- Author: Angeles (angeles.bilbao6@gmail.com)\n- Date: 2021-04-15 22:20:35\n- Message: [Jetsurvey] UI polish bugs\n\nFixed first reported issues for Jetsurvey application\n- Changes:\n```diff\n@@ -58,7 +58,7 @@ val Colors.snackbarAction: Color\n \n val Colors.progressIndicatorBackground: Color\n     @Composable\n-    get() = if (isLight) Color.Black.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.24f)\n+    get() = if (isLight) Color.Black.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.24f)\n \n @Composable\n fun JetsurveyTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable() () -> Unit) {...\n```\n\n### Commit 3\n- ID: 67229f1a\n- Author: Florina Muntenescu (florinam@google.com)\n- Date: 2020-12-16 17:31:34\n- Message: [Jetsurvey] Updating to 7033025 snapshot\n- Changes:\n```diff\n@@ -52,12 +52,12 @@ val DarkThemeColors = darkColors(\n     onError = Color.Black\n )\n \n-@Composable\n val Colors.snackbarAction: Color\n+    @Composable\n     get() = if (isLight) Purple300 else Purple700\n \n-@Composable\n val Colors.progressIndicatorBackground: Color\n+    @Composable\n     get() = if (isLight) Color.Black.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.24f)\n \n @Composable...\n```\n\n### Commit 4\n- ID: 8cec9845\n- Author: Florina Muntenescu (florinam@google.com)\n- Date: 2020-11-02 21:56:25\n- Message: [Jetsurvey] Setting correct border and background colors\n- Changes:\n```diff\n@@ -60,10 +60,6 @@ val Colors.snackbarAction: Color\n val Colors.progressIndicatorBackground: Color\n     get() = if (isLight) Color.Black.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.24f)\n \n-@Composable\n-val Colors.questionBackground: Color\n-    get() = if (isLight) Gray100 else Gray900\n-\n @Composable\n fun JetsurveyTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable() () -> Unit) {\n     val colors = if (darkTheme) {...\n```",
+      "metadata": {
+        "chunk_index": 4,
+        "total_chunks": 7,
+        "commit_count": 5,
+        "language": "kotlin",
+        "strategy": "enhanced",
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/theme/Theme.kt"
+      },
+      "similarity_score": 1.2749218940734863
+    },
+    {
+      "content": "@OptIn(ExperimentalPermissionsApi::class)\n@Composable\nfun Question(\n    question: Question,\n    answer: Answer<*>?,\n    shouldAskPermissions: Boolean,\n    onAnswer: (Answer<*>) -> Unit,\n    onAction: (Int, SurveyActionType) -> Unit,\n    onDoNotAskForPermissions: () -> Unit,\n    modifier: Modifier = Modifier\n) {\n    if (question.permissionsRequired.isEmpty()) {\n        QuestionContent(question, answer, onAnswer, onAction, modifier)\n    } else {\n        val multiplePermissionsState = rememberMultiplePermissionsState(\n            question.permissionsRequired\n        )\n\n        if (multiplePermissionsState.allPermissionsGranted) {\n            QuestionContent(question, answer, onAnswer, onAction, modifier)\n        } else {\n            PermissionsRationale(\n                question,\n                multiplePermissionsState,\n                onDoNotAskForPermissions,\n                modifier.padding(horizontal = 20.dp)\n            )\n        }\n\n        // If we cannot ask for permissions, inform the caller that can move to the next question\n        if (!shouldAskPermissions) {\n            LaunchedEffect(true) {\n                onAnswer(Answer.PermissionsDenied)\n            }\n        }\n    }\n}",
+      "metadata": {
+        "strategy": "enhanced",
+        "total_chunks": 10,
+        "chunk_index": 2,
+        "language": "kotlin",
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/SurveyQuestions.kt",
+        "commit_count": 5
+      },
+      "similarity_score": 1.285910725593567
+    },
+    {
+      "content": "layoutParams = ViewGroup.LayoutParams(\n                ViewGroup.LayoutParams.MATCH_PARENT,\n                ViewGroup.LayoutParams.MATCH_PARENT\n            )\n            setContent {\n                JetsurveyTheme {\n                    val state = viewModel.uiState.observeAsState().value ?: return@JetsurveyTheme\n                    AnimatedContent(\n                        targetState = state,\n                        transitionSpec = {\n                            fadeIn() + slideIntoContainer(\n                                towards = AnimatedContentScope\n                                    .SlideDirection.Up,\n                                animationSpec = tween(ANIMATION_SLIDE_IN_DURATION)\n                            ) with\n                                fadeOut(animationSpec = tween(ANIMATION_FADE_OUT_DURATION))\n                        }\n                    ) { targetState ->\n                        // It's important to use targetState and not state, as its critical to ensure\n                        // a successful lookup of all the incoming and outgoing content during\n                        // content transform.\n                        when (targetState) {\n                            is SurveyState.Questions -> SurveyQuestionsScreen(\n                                questions = targetState,\n                                shouldAskPermissions = viewModel.askForPermissions,\n                                onAction = { id, action -> handleSurveyAction(id, action) },\n                                onDoNotAskForPermissions = { viewModel.doNotAskForPermissions() },\n                                onDonePressed = { viewModel.computeResult(targetState) },\n                                onBackPressed = {\n                                    activity?.onBackPressedDispatcher?.onBackPressed()\n                                }\n                            )\n                            is SurveyState.Result -> SurveyResultScreen(",
+      "metadata": {
+        "chunk_index": 2,
+        "language": "kotlin",
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/SurveyFragment.kt",
+        "total_chunks": 8
+      },
+      "similarity_score": 1.2910329103469849
+    },
+    {
+      "content": "@Composable\nfun ChannelNameBar(\n    channelName: String,\n    channelMembers: Int,\n    modifier: Modifier = Modifier,\n    scrollBehavior: TopAppBarScrollBehavior? = null,\n    onNavIconPressed: () -> Unit = { }\n) {\n    var functionalityNotAvailablePopupShown by remember { mutableStateOf(false) }\n    if (functionalityNotAvailablePopupShown) {\n        FunctionalityNotAvailablePopup { functionalityNotAvailablePopupShown = false }\n    }\n    JetchatAppBar(\n        modifier = modifier,\n        scrollBehavior = scrollBehavior,\n        onNavIconPressed = onNavIconPressed,\n        title = {\n            Column(horizontalAlignment = Alignment.CenterHorizontally) {\n                // Channel name\n                Text(\n                    text = channelName,\n                    style = MaterialTheme.typography.titleMedium\n                )\n                // Number of members\n                Text(\n                    text = stringResource(R.string.members, channelMembers),\n                    style = MaterialTheme.typography.bodySmall,\n                    color = MaterialTheme.colorScheme.onSurfaceVariant\n                )\n            }\n        },\n        actions = {\n            // Search icon\n            Icon(\n                imageVector = Icons.Outlined.Search,\n                tint = MaterialTheme.colorScheme.onSurfaceVariant,\n                modifier = Modifier\n                    .clickable(onClick = { functionalityNotAvailablePopupShown = true })\n                    .padding(horizontal = 12.dp, vertical = 16.dp)\n                    .height(24.dp),\n                contentDescription = stringResource(id = R.string.search)\n            )\n            // Info icon\n            Icon(\n                imageVector = Icons.Outlined.Info,\n                tint = MaterialTheme.colorScheme.onSurfaceVariant,\n                modifier = Modifier\n                    .clickable(onClick = { functionalityNotAvailablePopupShown = true })",
+      "metadata": {
+        "language": "kotlin",
+        "total_chunks": 15,
+        "file_path": "Jetchat/app/src/main/java/com/example/compose/jetchat/conversation/Conversation.kt",
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "chunk_index": 5
+      },
+      "similarity_score": 1.2947053909301758
+    },
+    {
+      "content": "@Preview(name = \"Light\", uiMode = Configuration.UI_MODE_NIGHT_NO)\n@Preview(name = \"Dark\", uiMode = Configuration.UI_MODE_NIGHT_YES)\n@Composable\nprivate fun SingleChoiceQuestionPreview() {\n    var selectedAnswer: Answer.SingleChoice? by remember {\n        mutableStateOf(Answer.SingleChoice(R.string.bugchaos))\n    }\n\n    JetsurveyTheme {\n        SingleChoiceQuestion(\n            options = listOf(\n                AnswerOption(R.string.star_trek),\n                AnswerOption(R.string.social_network),\n                AnswerOption(R.string.back_to_future),\n                AnswerOption(R.string.outbreak)\n            ),\n            answer = selectedAnswer,\n            onAnswerSelected = { textRes -> selectedAnswer = Answer.SingleChoice(textRes) }\n        )\n    }\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: f0d253c1\n- Author: Jolanda Verhoef (JolandaVerhoef@users.noreply.github.com)\n- Date: 2022-11-17 23:59:36\n- Message: [Jetsurvey] Combine single and multiple choice question\n\nChange-Id: I89abd9b59678aabd56722572d4c2915a86c4888a\n- Changes:\n```diff\n@@ -0,0 +1,244 @@\n+/*\n+ * Copyright 2022 The Android Open Source Project\n+ *\n+ * Licensed under the Apache License, Version 2.0 (the \"License\");\n+ * you may not use this file except in compliance with the License.\n+ * You may obtain a copy of the License at\n+ *\n+ *     https://www.apache.org/licenses/LICENSE-2.0\n+ *\n+ * Unless required by applicable law or agreed to in writing, software\n+ * distributed under the License is distributed on an \"AS IS\" BASIS,\n+ * WITHOUT WARRANTIES OR CONDITIONS OF ...\n```",
+      "metadata": {
+        "total_chunks": 6,
+        "chunk_index": 5,
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/question/ChoiceQuestion.kt",
+        "commit_count": 1,
+        "language": "kotlin",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.3098835945129395
+    },
+    {
+      "content": "@Composable\n\nfun JetsnackButton(\n    onClick: () -> Unit,\n    modifier: Modifier = Modifier,\n    enabled: Boolean = true,\n    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },\n    shape: Shape = ButtonShape,\n    border: BorderStroke? = null,\n    backgroundGradient: List<Color> = JetsnackTheme.colors.interactivePrimary,\n    disabledBackgroundGradient: List<Color> = JetsnackTheme.colors.interactiveSecondary,\n    contentColor: Color = JetsnackTheme.colors.textInteractive,\n    disabledContentColor: Color = JetsnackTheme.colors.textHelp,\n    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,\n    content: @Composable RowScope.() -> Unit\n) {\n    JetsnackSurface(\n        shape = shape,\n        color = Color.Transparent,\n        contentColor = if (enabled) contentColor else disabledContentColor,\n        border = border,\n        modifier = modifier\n            .clip(shape)\n            .background(\n                Brush.horizontalGradient(\n                    colors = if (enabled) backgroundGradient else disabledBackgroundGradient\n                )\n            )\n            .clickable(\n                onClick = onClick,\n                enabled = enabled,\n                role = Role.Button,\n                interactionSource = interactionSource,\n                indication = null\n            )\n    ) {\n        ProvideTextStyle(\n            value = MaterialTheme.typography.button\n        ) {\n            Row(\n                Modifier\n                    .defaultMinSize(\n                        minWidth = ButtonDefaults.MinWidth,\n                        minHeight = ButtonDefaults.MinHeight\n                    )\n                    .indication(interactionSource, rememberRipple())\n                    .padding(contentPadding),\n                horizontalArrangement = Arrangement.Center,\n                verticalAlignment = Alignment.CenterVertically,\n                content = content\n            )\n        }\n    }\n}",
+      "metadata": {
+        "total_chunks": 5,
+        "chunk_index": 2,
+        "language": "kotlin",
+        "commit_count": 5,
+        "file_path": "Jetsnack/app/src/main/java/com/example/jetsnack/ui/components/Button.kt",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.3106392621994019
+    },
+    {
+      "content": "@OptIn(ExperimentalMaterialApi::class)\n@Composable\nprivate fun DayContainer(\n    modifier: Modifier = Modifier,\n    selected: Boolean = false,\n    onClick: () -> Unit = { },\n    onClickEnabled: Boolean = true,\n    backgroundColor: Color = Color.Transparent,\n    onClickLabel: String? = null,\n    content: @Composable () -> Unit\n) {\n    val stateDescriptionLabel = stringResource(\n        if (selected) R.string.state_descr_selected else R.string.state_descr_not_selected\n    )\n    Box(\n        modifier = modifier\n            .size(width = CELL_SIZE, height = CELL_SIZE)\n            .pointerInput(Any()) {\n                detectTapGestures {\n                    onClick()\n                }\n            }\n            .then(\n                if (onClickEnabled) {\n                    modifier.semantics {\n                        stateDescription = stateDescriptionLabel\n                        onClick(label = onClickLabel, action = null)\n                    }\n                } else {\n                    modifier.clearAndSetSemantics { }\n                }\n            )\n            .background(backgroundColor)\n    ) {\n        content()\n    }\n}\n\n@Composable\ninternal fun Day(\n    day: LocalDate,\n    calendarState: CalendarUiState,\n    onDayClicked: (LocalDate) -> Unit,\n    month: YearMonth,\n    modifier: Modifier = Modifier\n) {\n    val selected = calendarState.isDateInSelectedPeriod(day)\n    DayContainer(\n        modifier = modifier.semantics {\n            text = AnnotatedString(\n                \"${month.month.name.lowercase().capitalize(Locale.current)} \" +\n                    \"${day.dayOfMonth} ${month.year}\"\n            )\n            dayStatusProperty = selected\n        },\n        selected = selected,\n        onClick = { onDayClicked(day) },\n        onClickLabel = stringResource(id = R.string.click_label_select)\n    ) {",
+      "metadata": {
+        "language": "kotlin",
+        "commit_count": 2,
+        "chunk_index": 2,
+        "total_chunks": 5,
+        "file_path": "Crane/app/src/main/java/androidx/compose/samples/crane/calendar/Day.kt",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.3128316402435303
+    },
+    {
+      "content": "### Commit 2\n- ID: 6554b786\n- Author: Jose Alcérreca (JoseAlcerreca@users.noreply.github.com)\n- Date: 2021-03-22 23:47:06\n- Message: Revert \"[Owl] Nested navigation\"\n- Changes:\n```diff\n@@ -30,7 +30,7 @@ class MainActivity : ComponentActivity() {\n         WindowCompat.setDecorFitsSystemWindows(window, false)\n \n         setContent {\n-            OwlApp { finish() }\n+            OwlApp(onBackPressedDispatcher)\n         }\n     }\n }...\n```\n\n### Commit 3\n- ID: d75a2faa\n- Author: Jose Alcérreca (jalc@google.com)\n- Date: 2021-03-12 21:30:05\n- Message: Fixes wrapper bug, WIP with potential state propagation bug\n- Changes:\n```diff\n@@ -30,7 +30,7 @@ class MainActivity : ComponentActivity() {\n         WindowCompat.setDecorFitsSystemWindows(window, false)\n \n         setContent {\n-            OwlApp(onBackPressedDispatcher, finishActivity = { finish() })\n+            OwlApp { finish() }\n         }\n     }\n }...\n```\n\n### Commit 4\n- ID: 17b362f0\n- Author: Jose Alcérreca (jalc@google.com)\n- Date: 2021-02-22 23:18:18\n- Message: Updates to beta snapshot\n- Changes:\n```diff\n@@ -30,7 +30,7 @@ class MainActivity : ComponentActivity() {\n         WindowCompat.setDecorFitsSystemWindows(window, false)\n \n         setContent {\n-            OwlApp(onBackPressedDispatcher)\n+            OwlApp(onBackPressedDispatcher, finishActivity = { finish() })\n         }\n     }\n }...\n```\n\n### Commit 5\n- ID: 840d92bf\n- Author: Nick Butcher (nickbutcher@google.com)\n- Date: 2021-02-05 21:56:57\n- Message: [Owl] Update to snapshot 7123292.\n\nChange-Id: Icbc31d7b3f3b19e0b77f1b2514aa76e99ea4b531\n- Changes:\n```diff\n@@ -18,7 +18,7 @@ package com.example.owl.ui\n \n import android.os.Bundle\n import androidx.activity.ComponentActivity\n-import androidx.compose.ui.platform.setContent\n+import androidx.activity.compose.setContent\n import androidx.core.view.WindowCompat\n \n class MainActivity : ComponentActivity() {...\n```",
+      "metadata": {
+        "total_chunks": 2,
+        "chunk_index": 1,
+        "language": "kotlin",
+        "commit_count": 5,
+        "file_path": "Owl/app/src/main/java/com/example/owl/ui/MainActivity.kt",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.3201611042022705
+    },
+    {
+      "content": "package com.example.compose.jetsurvey.survey.question\n\nimport android.content.res.Configuration\nimport androidx.compose.foundation.BorderStroke\nimport androidx.compose.foundation.Image\nimport androidx.compose.foundation.clickable\nimport androidx.compose.foundation.layout.Box\nimport androidx.compose.foundation.layout.Column\nimport androidx.compose.foundation.layout.Row\nimport androidx.compose.foundation.layout.Spacer\nimport androidx.compose.foundation.layout.fillMaxWidth\nimport androidx.compose.foundation.layout.padding\nimport androidx.compose.foundation.layout.size\nimport androidx.compose.foundation.layout.width\nimport androidx.compose.foundation.selection.selectable\nimport androidx.compose.foundation.selection.selectableGroup\nimport androidx.compose.material3.Checkbox\nimport androidx.compose.material3.MaterialTheme\nimport androidx.compose.material3.RadioButton\nimport androidx.compose.material3.Surface\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.getValue\nimport androidx.compose.runtime.mutableStateOf\nimport androidx.compose.runtime.remember\nimport androidx.compose.runtime.setValue\nimport androidx.compose.ui.Alignment\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.draw.clip\nimport androidx.compose.ui.graphics.painter.Painter\nimport androidx.compose.ui.res.painterResource\nimport androidx.compose.ui.res.stringResource\nimport androidx.compose.ui.tooling.preview.Preview\nimport androidx.compose.ui.tooling.preview.PreviewParameter\nimport androidx.compose.ui.tooling.preview.PreviewParameterProvider\nimport androidx.compose.ui.unit.dp\nimport com.example.compose.jetsurvey.R\nimport com.example.compose.jetsurvey.survey.Answer\nimport com.example.compose.jetsurvey.survey.AnswerOption\nimport com.example.compose.jetsurvey.survey.PossibleAnswer\nimport com.example.compose.jetsurvey.theme.JetsurveyTheme",
+      "metadata": {
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/question/ChoiceQuestion.kt",
+        "total_chunks": 6,
+        "language": "kotlin",
+        "strategy": "enhanced",
+        "commit_count": 1,
+        "chunk_index": 1
+      },
+      "similarity_score": 1.3243309259414673
+    },
+    {
+      "content": "See how to:\n\n* Use `TextField`s\n* Implement `TextField` validation across one `TextField` (e.g. email validation) and across multiple `TextFields` (e.g. password confirmation)\n* Use a `Snackbar`\n* Use different types of `Button`s: `TextButton`, `OutlinedButton` and `Button`\n\n[5]: app/src/main/java/com/example/compose/jetsurvey/signinsignup\n\n### Complete a survey\n\nPackage [`com.example.compose.jetsurvey.survey`][6]\n\nThis screen allows the user to fill out a survey, showing how to handle complex state. UI state is kept and restored on recompositions triggered by different reasons like a configuration change or a new question being displayed on the screen.\n\nSee how to:\n\n* Use `RadioButton`s - for single item selection\n* Use `Checkbox`es - for multi-item selection\n* Use `Slider` - for picking a value from a range\n* Use `Scaffold` - for screens with top bar, bottom bar and body\n* Display a `DialogFragment` when requested from compose\n\n[6]: app/src/main/java/com/example/compose/jetsurvey/survey\n\n### Data\n\nThe data in the sample is static, held in the `*Repository` classes.\n\n## Setup\nThe main [README](https://github.com/android/compose-samples/) has instructions on how to\nsetup this sample, and many others.\n\n## License\n\n```\nCopyright 2020 The Android Open Source Project\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    https://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n```\n```\n\n## Git Commit History",
+      "metadata": {
+        "file_path": "Jetsurvey/README.md",
+        "total_chunks": 4,
+        "chunk_index": 1,
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "language": "markdown"
+      },
+      "similarity_score": 1.325424075126648
+    },
+    {
+      "content": "<style name=\"Theme.Jetchat.PopupOverlay\" parent=\"ThemeOverlay.MaterialComponents.Light\" />\n\n</resources>\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 1f107716\n- Author: Nick Rout (nickrout@google.com)\n- Date: 2021-10-25 22:13:50\n- Message: [Jetchat] Update to Material 3\n- Changes:\n```diff\n@@ -18,7 +18,7 @@\n \n     <!-- Allows us to override platform level specific attributes in their\n          respective values-vXX folder. -->\n-    <style name=\"Platform.Theme.Jetchat\" parent=\"Theme.MaterialComponents.DayNight.DarkActionBar\">\n+    <style name=\"Platform.Theme.Jetchat\" parent=\"Theme.Material3.DayNight\">\n         <item name=\"android:statusBarColor\">@color/black30</item>\n     </style>...\n```\n\n### Commit 2\n- ID: 64b4d980\n- Author: Chris Banes (chrisbanes@users.noreply.github.com)\n- Date: 2020-12-03 21:33:40\n- Message: [Jetchat] Update to be edge-to-edge and add animated IME support (#306)\n\n* Add Accompanist-Insets dependency\n\n* Set system bars to transparent and draw behind them\n\n* Update Scaffold content to be edge-to-edge\n\n* Update Conversation to go edge-to-edge\n\n* Update Profile to go edge-to-edge\n\n* Enable animated insets support\n\n* Fix tests\n\n* Add more comments to Insets modifier usage\n\n* Update README\n\n* One more comment\n- Changes:\n```diff\n@@ -16,11 +16,18 @@\n \n <resources>\n \n-    <style name=\"Theme.Jetchat\" parent=\"Theme.MaterialComponents.DayNight.DarkActionBar\" >\n+    <!-- Allows us to override platform level specific attributes in their\n+         respective values-vXX folder. -->\n+    <style name=\"Platform.Theme.Jetchat\" parent=\"Theme.MaterialComponents.DayNight.DarkActionBar\">\n+        <item name=\"android:statusBarColor\">@color/black30</item>\n+    </style>\n+\n+    <!-- The actual theme we use. This varies for light theme (here...\n```\n\n### Commit 3\n- ID: 38fa711e\n- Author: Jose Alcerreca (jalc@google.com)\n- Date: 2020-07-31 20:02:29\n- Message: [Jetchat] Updates to snapshot 6721902 and UX review",
+      "metadata": {
+        "commit_count": 4,
+        "strategy": "enhanced",
+        "file_path": "Jetchat/app/src/main/res/values/themes.xml",
+        "chunk_index": 1,
+        "total_chunks": 3,
+        "language": "xml"
+      },
+      "similarity_score": 1.327355980873108
+    },
+    {
+      "content": "private val ButtonShape = RoundedCornerShape(percent = 50)\n\n@Preview(\"default\", \"round\")\n@Preview(\"dark theme\", \"round\", uiMode = UI_MODE_NIGHT_YES)\n@Preview(\"large font\", \"round\", fontScale = 2f)\n@Composable\nprivate fun ButtonPreview() {\n    JetsnackTheme {\n        JetsnackButton(onClick = {}) {\n            Text(text = \"Demo\")\n        }\n    }\n}\n\n@Preview(\"default\", \"rectangle\")\n@Preview(\"dark theme\", \"rectangle\", uiMode = UI_MODE_NIGHT_YES)\n@Preview(\"large font\", \"rectangle\", fontScale = 2f)\n@Composable\nprivate fun RectangleButtonPreview() {\n    JetsnackTheme {\n        JetsnackButton(\n            onClick = {}, shape = RectangleShape\n        ) {\n            Text(text = \"Demo\")\n        }\n    }\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: d3432e14\n- Author: Manuel Vivo (manuelvicnt@gmail.com)\n- Date: 2021-09-30 22:18:43\n- Message: [All] Update to Compose 1.0.3 (#671)\n- Changes:\n```diff\n@@ -122,7 +122,9 @@ private fun ButtonPreview() {\n @Composable\n private fun RectangleButtonPreview() {\n     JetsnackTheme {\n-        JetsnackButton(onClick = {}, shape = RectangleShape) {\n+        JetsnackButton(\n+            onClick = {}, shape = RectangleShape\n+        ) {\n             Text(text = \"Demo\")\n         }\n     }...\n```\n\n### Commit 2\n- ID: 0e403835\n- Author: Jolanda Verhoef (JolandaVerhoef@users.noreply.github.com)\n- Date: 2021-06-03 14:44:47\n- Message: [Jetsnack] Remove low API level previews\n- Changes:\n```diff\n@@ -106,7 +106,6 @@ private val ButtonShape = RoundedCornerShape(percent = 50)\n \n @Preview(\"default\", \"round\")\n @Preview(\"dark theme\", \"round\", uiMode = UI_MODE_NIGHT_YES)\n-@Preview(\"api 21\", \"round\", apiLevel = 21)\n @Preview(\"large font\", \"round\", fontScale = 2f)\n @Composable\n private fun ButtonPreview() {\n@@ -119,7 +118,6 @@ private fun ButtonPreview() {\n \n @Preview(\"default\", \"rectangle\")\n @Preview(\"dark theme\", \"rectangle\", uiMode = UI_MODE_NIGHT_YES)\n-@Preview(\"api 21\", \"rectangle\", apiLeve...\n```",
+      "metadata": {
+        "total_chunks": 5,
+        "commit_count": 5,
+        "chunk_index": 3,
+        "file_path": "Jetsnack/app/src/main/java/com/example/jetsnack/ui/components/Button.kt",
+        "strategy": "enhanced",
+        "language": "kotlin"
+      },
+      "similarity_score": 1.3314123153686523
+    },
+    {
+      "content": "### Commit 5\n- ID: 9cc507f8\n- Author: Manuel Vivo (mvivo@google.com)\n- Date: 2021-06-15 19:39:48\n- Message: [Jetsurvey] Add permissions\n- Changes:\n```diff\n@@ -17,6 +17,9 @@\n package com.example.compose.jetsurvey.survey\n \n import android.net.Uri\n+import androidx.compose.runtime.getValue\n+import androidx.compose.runtime.mutableStateOf\n+import androidx.compose.runtime.setValue\n import androidx.lifecycle.LiveData\n import androidx.lifecycle.MutableLiveData\n import androidx.lifecycle.ViewModel\n@@ -36,6 +39,9 @@ class SurveyViewModel(\n     val uiState: LiveData<SurveyState>\n         get() = _uiState\n \n+    var askForPermissions by mutableStateOf(true)\n+ ...\n```",
+      "metadata": {
+        "chunk_index": 5,
+        "total_chunks": 6,
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/SurveyViewModel.kt",
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "language": "kotlin"
+      },
+      "similarity_score": 1.3324419260025024
+    },
+    {
+      "content": "Change-Id: I7a91ddbd776870cc14067d72a3376fffbff33e65\n- Changes:\n```diff\n@@ -38,9 +38,7 @@ import androidx.compose.ui.tooling.preview.Preview\n import androidx.compose.ui.unit.dp\n import com.example.compose.jetsurvey.R\n import com.example.compose.jetsurvey.survey.question.ActionQuestion\n-import com.example.compose.jetsurvey.survey.question.MultipleChoiceIconQuestion\n import com.example.compose.jetsurvey.survey.question.MultipleChoiceQuestion\n-import com.example.compose.jetsurvey.survey.question.SingleChoiceIconQuestion\n import com.example.compose.jetsurvey.survey.ques...\n```\n\n### Commit 2\n- ID: aabb4495\n- Author: Jolanda Verhoef (JolandaVerhoef@users.noreply.github.com)\n- Date: 2022-11-17 22:16:45\n- Message: [Jetsurvey] Replace generic List<Int> and List<Pair<Int,Int>> with specific data classes\n\nChange-Id: I9f215343bcb60003eca8ef07f14413cba86469a6\n- Changes:\n```diff\n@@ -232,11 +232,11 @@ fun QuestionPreview() {\n         id = 2,\n         questionText = R.string.pick_superhero,\n         answer = PossibleAnswer.SingleChoice(\n-            optionsStringRes = listOf(\n-                R.string.spark,\n-                R.string.lenz,\n-                R.string.bugchaos,\n-                R.string.frag\n+            options = listOf(\n+                TextOption(R.string.spark),\n+                TextOption(R.string.lenz),\n+                TextOption(R.string.bugchaos),\n+...\n```\n\n### Commit 3\n- ID: 3252d9b1\n- Author: Jolanda Verhoef (JolandaVerhoef@users.noreply.github.com)\n- Date: 2022-11-17 20:43:47\n- Message: [Jetsurvey] fix package names and add previews",
+      "metadata": {
+        "strategy": "enhanced",
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/SurveyQuestions.kt",
+        "language": "kotlin",
+        "chunk_index": 7,
+        "commit_count": 5,
+        "total_chunks": 10
+      },
+      "similarity_score": 1.332951545715332
+    }
+  ],
+  "compressed": [
+    {
+      "content": "# File: Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/util/Event.kt (kotlin)\n\n## Key Code Elements:\n    var hasBeenHandled = false\n\n## Recent Changes:\n- 335bcd36 by Chris Banes (chrisbanes@google.com): Rename JetSurvey to Jetsurvey\n\nChange-Id: I54b78082d0128ac969ca6f9c1a3b327dbe54c7eb...",
+      "metadata": {
+        "strategy": "compressed",
+        "language": "kotlin",
+        "commit_count": 1,
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/util/Event.kt",
+        "chunk_index": 0,
+        "total_chunks": 1
+      },
+      "similarity_score": 1.2494525909423828
+    },
+    {
+      "content": "# File: Jetsurvey/app/src/main/res/layout/content_main.xml (xml)\n\n## Recent Changes:\n- 5e1364d0 by Florina Muntenescu (florinam@google.com): [Jetsurvey] Using ComposeView.setContent and addressing some of the lint issues.\n\nFixes #149...\n- 335bcd36 by Chris Banes (chrisbanes@google.com): Rename JetSurvey to Jetsurvey\n\nChange-Id: I54b78082d0128ac969ca6f9c1a3b327dbe54c7eb...",
+      "metadata": {
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "file_path": "Jetsurvey/app/src/main/res/layout/content_main.xml",
+        "language": "xml",
+        "commit_count": 2,
+        "chunk_index": 0
+      },
+      "similarity_score": 1.268873691558838
+    },
+    {
+      "content": "# File: Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/question/ActionQuestion.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.Modifier\nimport com.example.compose.jetsurvey.survey.Answer\nimport com.example.compose.jetsurvey.survey.PossibleAnswer\nimport com.example.compose.jetsurvey.survey.SurveyActionType\n@Composable\n        SurveyActionType.SELECT_CONTACT -> TODO()\n\n## Recent Changes:\n- 3252d9b1 by Jolanda Verhoef (JolandaVerhoef@users.noreply.github.com): [Jetsurvey] fix package names and add previews\n\nChange-Id: If623378d7e335e10dbbd1e5738bb9cf15f6f0566...\n- d9317bd5 by Jolanda Verhoef (JolandaVerhoef@users.noreply.github.com): [Jetsurvey] extract questions into their own kotlin files for readibility\n\nChange-Id: I185f8bf6a0e84...",
+      "metadata": {
+        "language": "kotlin",
+        "strategy": "compressed",
+        "commit_count": 2,
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/question/ActionQuestion.kt"
+      },
+      "similarity_score": 1.2737340927124023
+    },
+    {
+      "content": "# File: Jetcaster/app/src/main/java/com/example/jetcaster/data/CategoryStore.kt (kotlin)\n\n## Key Code Elements:\nimport com.example.jetcaster.data.room.CategoriesDao\nimport com.example.jetcaster.data.room.EpisodesDao\nimport com.example.jetcaster.data.room.PodcastCategoryEntryDao\nimport com.example.jetcaster.data.room.PodcastsDao\nimport kotlinx.coroutines.flow.Flow\nclass CategoryStore(\n\n## Recent Changes:\n- 37eb74c2 by Chris Banes (chrisbanes@google.com): Revert \"[Jetcaster] Remove for alpha launch\"\n\nChange-Id: Ifa8d4e5e04ab8e0b67b32921ef7ce86970148dc0...\n- a7ce71dd by Chris Banes (chrisbanes@google.com): [Jetcaster] Remove for alpha launch\n\nChange-Id: Ib713aba7e1ac297cdcfeb045b81c2ff1e6e757e9...\n- f327db45 by Chris Banes (chrisbanes@google.com): [Jetcaster] Enable users to follow/unfollow podcasts\n\n- Added a new table: PodcastFollowedEntry\n\nCha...",
+      "metadata": {
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "commit_count": 5,
+        "file_path": "Jetcaster/app/src/main/java/com/example/jetcaster/data/CategoryStore.kt",
+        "chunk_index": 0,
+        "language": "kotlin"
+      },
+      "similarity_score": 1.2883220911026
+    },
+    {
+      "content": "# File: Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/signinsignup/PasswordState.kt (kotlin)\n\n## Key Code Elements:\nclass PasswordState :\nclass ConfirmPasswordState(private val passwordState: PasswordState) : TextFieldState() {\n@Suppress(\"UNUSED_PARAMETER\")\n\n## Recent Changes:\n- 4d21fa40 by Chris Banes (chrisbanes@users.noreply.github.com): [All] Update to Compose 1.0.0-alpha06 (#261)\n\n* [Jetsnack] Cart implementation\n* [Jetsnack] Reuse Qu...\n- 5e1364d0 by Florina Muntenescu (florinam@google.com): [Jetsurvey] Using ComposeView.setContent and addressing some of the lint issues.\n\nFixes #149...\n- 335bcd36 by Chris Banes (chrisbanes@google.com): Rename JetSurvey to Jetsurvey\n\nChange-Id: I54b78082d0128ac969ca6f9c1a3b327dbe54c7eb...",
+      "metadata": {
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "commit_count": 3,
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/signinsignup/PasswordState.kt",
+        "language": "kotlin",
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.3033785820007324
+    },
+    {
+      "content": "# File: JetNews/app/src/main/java/com/example/jetnews/utils/MapExtensions.kt (kotlin)\n\n## Recent Changes:\n- 9f6c86c0 by Klejvi Kapaj (klejvisiper@gmail.com): changed mutex with update method of mutable state flow...\n- f3929085 by Jose Alcerreca (jalc@google.com): Merges with 'github/develop' and applies spotless\n\nChange-Id: I734022b261df56d546749c2c87051c97096a6...\n- f8dc797d by Sean McQuillan (seanmcq@google.com): Scope viewModel on ArticleScreen to ensure we don't re-use a ViewModel with the previous postId.\n\nTh...",
+      "metadata": {
+        "language": "kotlin",
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "file_path": "JetNews/app/src/main/java/com/example/jetnews/utils/MapExtensions.kt",
+        "chunk_index": 0,
+        "commit_count": 3
+      },
+      "similarity_score": 1.3094924688339233
+    },
+    {
+      "content": "# File: Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/question/ChoiceQuestion.kt (kotlin)\n\n## Key Code Elements:\nimport android.content.res.Configuration\nimport androidx.compose.foundation.BorderStroke\nimport androidx.compose.foundation.Image\nimport androidx.compose.foundation.clickable\nimport androidx.compose.foundation.layout.Box\nimport androidx.compose.foundation.layout.Column\nimport androidx.compose.foundation.layout.Row\nimport androidx.compose.foundation.layout.Spacer\nimport androidx.compose.foundation.layout.fillMaxWidth\nimport androidx.compose.foundation.layout.padding\nimport androidx.compose.foundation.layout.size\nimport androidx.compose.foundation.layout.width\nimport androidx.compose.foundation.selection.selectable\nimport androidx.compose.foundation.selection.selectableGroup\nimport androidx.compose.material3.Checkbox\n\n## Recent Changes:\n- f0d253c1 by Jolanda Verhoef (JolandaVerhoef@users.noreply.github.com): [Jetsurvey] Combine single and multiple choice question\n\nChange-Id: I89abd9b59678aabd56722572d4c2915...",
+      "metadata": {
+        "language": "kotlin",
+        "commit_count": 1,
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/question/ChoiceQuestion.kt",
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "chunk_index": 0
+      },
+      "similarity_score": 1.3177213668823242
+    },
+    {
+      "content": "# File: Jetchat/app/src/main/java/com/example/compose/jetchat/conversation/ConversationFragment.kt (kotlin)\n\n## Key Code Elements:\nimport android.os.Bundle\nimport android.view.LayoutInflater\nimport android.view.View\nimport android.view.ViewGroup\nimport android.view.ViewGroup.LayoutParams\nimport android.view.ViewGroup.LayoutParams.MATCH_PARENT\nimport androidx.compose.foundation.layout.WindowInsets\nimport androidx.compose.foundation.layout.WindowInsetsSides\nimport androidx.compose.foundation.layout.navigationBars\nimport androidx.compose.foundation.layout.only\nimport androidx.compose.foundation.layout.windowInsetsPadding\nimport androidx.compose.runtime.CompositionLocalProvider\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.platform.ComposeView\nimport androidx.core.os.bundleOf\n\n## Recent Changes:\n- ee198110 by Jolanda Verhoef (JolandaVerhoef@users.noreply.github.com): [All] Update to Compose 1.2.0-alpha05 (#752)\n\n* [All] Update to Compose 1.2.0-alpha05\n\n* Update Jets...\n- 5e7aaff0 by Jolanda Verhoef (jolandaverhoef@google.com): [All] Update to Snapshot 7217131...\n- 43d673a9 by Jose Alcérreca (jalc@google.com): [Jetchat] Update to snapshot 7141639...",
+      "metadata": {
+        "file_path": "Jetchat/app/src/main/java/com/example/compose/jetchat/conversation/ConversationFragment.kt",
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "commit_count": 5,
+        "language": "kotlin"
+      },
+      "similarity_score": 1.3221473693847656
+    },
+    {
+      "content": "# File: Jetcaster/app/src/main/res/values/themes.xml (xml)\n\n## Recent Changes:\n- 9fdfd832 by Chris Banes (chrisbanes@users.noreply.github.com): [Jetcaster] Remove AppCompat + MDC (#199)\n\nThey're unneccessary since we're a Compose-only app...\n- 37eb74c2 by Chris Banes (chrisbanes@google.com): Revert \"[Jetcaster] Remove for alpha launch\"\n\nChange-Id: Ifa8d4e5e04ab8e0b67b32921ef7ce86970148dc0...\n- a7ce71dd by Chris Banes (chrisbanes@google.com): [Jetcaster] Remove for alpha launch\n\nChange-Id: Ib713aba7e1ac297cdcfeb045b81c2ff1e6e757e9...",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "commit_count": 4,
+        "total_chunks": 1,
+        "file_path": "Jetcaster/app/src/main/res/values/themes.xml",
+        "language": "xml"
+      },
+      "similarity_score": 1.3243701457977295
+    },
+    {
+      "content": "# File: Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/Survey.kt (kotlin)\n\n## Key Code Elements:\nimport android.net.Uri\nimport androidx.annotation.DrawableRes\nimport androidx.annotation.StringRes\n    @StringRes val result: Int,\n    @StringRes val description: Int\n    @StringRes val title: Int,\n    @StringRes val questionText: Int,\n    @StringRes val description: Int? = null,\n    @StringRes val permissionsRationaleText: Int? = null\n        @StringRes val label: Int,\n        @StringRes val startText: Int,\n        @StringRes val endText: Int,\n        @StringRes val neutralText: Int,\n    data class MultipleChoice(val answersStringRes: Set<Int>) :\n    @StringRes answer: Int,\n\n## Recent Changes:\n- 90ea29e0 by Jolanda Verhoef (JolandaVerhoef@users.noreply.github.com): [Jetsurvey] Combine with and without icon into one dynamic composable\n\nChange-Id: I7a91ddbd776870cc1...\n- aabb4495 by Jolanda Verhoef (JolandaVerhoef@users.noreply.github.com): [Jetsurvey] Replace generic List<Int> and List<Pair<Int,Int>> with specific data classes\n\nChange-Id:...\n- fd319be7 by Ian G. Clifton (1033551+IanGClifton@users.noreply.github.com): [Jetsurvey] Updated date handling to use UTC only (#810)\n\nThis fixes #745. The answers to date quest...",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "language": "kotlin",
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/Survey.kt",
+        "commit_count": 5
+      },
+      "similarity_score": 1.32816481590271
+    },
+    {
+      "content": "# File: Jetsurvey/app/proguard-rules.pro (text)\n\n## Key Code Elements:\n# class:\n\n## Recent Changes:\n- 779cf9e1 by Christoffer Quist Adamsen (christofferqa@google.com): Enable R8 for all sample apps...\n- 335bcd36 by Chris Banes (chrisbanes@google.com): Rename JetSurvey to Jetsurvey\n\nChange-Id: I54b78082d0128ac969ca6f9c1a3b327dbe54c7eb...",
+      "metadata": {
+        "language": "text",
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "commit_count": 2,
+        "file_path": "Jetsurvey/app/proguard-rules.pro",
+        "total_chunks": 1
+      },
+      "similarity_score": 1.332397222518921
+    },
+    {
+      "content": "# File: JetNews/app/src/main/java/com/example/jetnews/ui/interests/SelectTopicButton.kt (kotlin)\n\n## Key Code Elements:\nimport android.content.res.Configuration.UI_MODE_NIGHT_YES\nimport androidx.compose.foundation.BorderStroke\nimport androidx.compose.foundation.Image\nimport androidx.compose.foundation.layout.padding\nimport androidx.compose.foundation.layout.size\nimport androidx.compose.foundation.shape.CircleShape\nimport androidx.compose.material.icons.Icons\nimport androidx.compose.material.icons.filled.Add\nimport androidx.compose.material.icons.filled.Done\nimport androidx.compose.material3.MaterialTheme\nimport androidx.compose.material3.Surface\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.graphics.ColorFilter\nimport androidx.compose.ui.tooling.preview.Preview\n\n## Recent Changes:\n- 10498f17 by Ben Trengrove (bentrengrove@users.noreply.github.com): Fix formatting not running on samples (#981)\n\nFormatting is now done using the `scripts/format.sh` s...\n- e9859ac4 by Jolanda Verhoef (JolandaVerhoef@users.noreply.github.com): [Jetnews] Update to Material3 (#964)...\n- 521bd774 by Jolanda Verhoef (jolandaverhoef@google.com): [Jetnews] Improve @Previews...",
+      "metadata": {
+        "language": "kotlin",
+        "commit_count": 5,
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "file_path": "JetNews/app/src/main/java/com/example/jetnews/ui/interests/SelectTopicButton.kt",
+        "total_chunks": 1
+      },
+      "similarity_score": 1.3346976041793823
+    },
+    {
+      "content": "# File: Jetcaster/app/src/main/java/com/example/jetcaster/data/room/PodcastCategoryEntryDao.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.room.Dao\nimport androidx.room.Delete\nimport androidx.room.Insert\nimport androidx.room.OnConflictStrategy\nimport androidx.room.Update\nimport com.example.jetcaster.data.PodcastCategoryEntry\n@Dao\n     * TODO: remove this once we move to a more recent Kotlin compiler\n    @Insert(onConflict = OnConflictStrategy.REPLACE)\n    @Insert(onConflict = OnConflictStrategy.REPLACE)\n    @Insert(onConflict = OnConflictStrategy.REPLACE)\n    @Update(onConflict = OnConflictStrategy.REPLACE)\n    @Delete\n\n## Recent Changes:\n- 37eb74c2 by Chris Banes (chrisbanes@google.com): Revert \"[Jetcaster] Remove for alpha launch\"\n\nChange-Id: Ifa8d4e5e04ab8e0b67b32921ef7ce86970148dc0...\n- a7ce71dd by Chris Banes (chrisbanes@google.com): [Jetcaster] Remove for alpha launch\n\nChange-Id: Ib713aba7e1ac297cdcfeb045b81c2ff1e6e757e9...\n- 69db4b3c by Chris Banes (chrisbanes@google.com): [Jetcaster] Introduce Room database\n\nAllows podcast, episode and categories to be stored allowing da...",
+      "metadata": {
+        "commit_count": 3,
+        "file_path": "Jetcaster/app/src/main/java/com/example/jetcaster/data/room/PodcastCategoryEntryDao.kt",
+        "strategy": "compressed",
+        "language": "kotlin",
+        "total_chunks": 1,
+        "chunk_index": 0
+      },
+      "similarity_score": 1.3468377590179443
+    },
+    {
+      "content": "# File: Jetcaster/app/proguard-rules.pro (text)\n\n## Key Code Elements:\n# class:\n\n## Recent Changes:\n- 779cf9e1 by Christoffer Quist Adamsen (christofferqa@google.com): Enable R8 for all sample apps...\n- 37eb74c2 by Chris Banes (chrisbanes@google.com): Revert \"[Jetcaster] Remove for alpha launch\"\n\nChange-Id: Ifa8d4e5e04ab8e0b67b32921ef7ce86970148dc0...\n- a7ce71dd by Chris Banes (chrisbanes@google.com): [Jetcaster] Remove for alpha launch\n\nChange-Id: Ib713aba7e1ac297cdcfeb045b81c2ff1e6e757e9...",
+      "metadata": {
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "file_path": "Jetcaster/app/proguard-rules.pro",
+        "language": "text",
+        "strategy": "compressed",
+        "commit_count": 4
+      },
+      "similarity_score": 1.3484760522842407
+    },
+    {
+      "content": "# File: Jetsurvey/app/src/main/res/layout/activity_main.xml (xml)\n\n## Recent Changes:\n- 5fcb2894 by Chris (chrisbanes@google.com): [Jetsurvey] Tidy up themes and resources\n\nAlso tweaked the README\n\nChange-Id: I76f3dd4fc84416c340899...\n- 335bcd36 by Chris Banes (chrisbanes@google.com): Rename JetSurvey to Jetsurvey\n\nChange-Id: I54b78082d0128ac969ca6f9c1a3b327dbe54c7eb...",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "Jetsurvey/app/src/main/res/layout/activity_main.xml",
+        "commit_count": 2,
+        "language": "xml",
+        "total_chunks": 1,
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.3487459421157837
+    },
+    {
+      "content": "# File: Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/question/DateQuestion.kt (kotlin)\n\n## Key Code Elements:\nimport android.content.res.Configuration\nimport androidx.compose.foundation.BorderStroke\nimport androidx.compose.foundation.layout.fillMaxWidth\nimport androidx.compose.foundation.layout.height\nimport androidx.compose.foundation.layout.padding\nimport androidx.compose.material.icons.Icons\nimport androidx.compose.material.icons.filled.ArrowDropDown\nimport androidx.compose.material3.Button\nimport androidx.compose.material3.ButtonDefaults\nimport androidx.compose.material3.Icon\nimport androidx.compose.material3.MaterialTheme\nimport androidx.compose.material3.Surface\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.Modifier\n\n## Recent Changes:\n- 3252d9b1 by Jolanda Verhoef (JolandaVerhoef@users.noreply.github.com): [Jetsurvey] fix package names and add previews\n\nChange-Id: If623378d7e335e10dbbd1e5738bb9cf15f6f0566...\n- d9317bd5 by Jolanda Verhoef (JolandaVerhoef@users.noreply.github.com): [Jetsurvey] extract questions into their own kotlin files for readibility\n\nChange-Id: I185f8bf6a0e84...",
+      "metadata": {
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/question/DateQuestion.kt",
+        "language": "kotlin",
+        "commit_count": 2,
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "total_chunks": 1
+      },
+      "similarity_score": 1.3516902923583984
+    },
+    {
+      "content": "# File: Jetsurvey/app/src/main/res/values/strings.xml (xml)\n\n## Recent Changes:\n- 36029ca3 by Ian G. Clifton (1033551+IanGClifton@users.noreply.github.com): [Jetsurvey] Converted to use Material 3 (#954)\n\nThis updates Jetsurvey from Material 2 to Material 3...\n- 8ec516c2 by Manuel Vivo (mvivo@google.com): [Jetsurvey] Limit selfie question to some APIs...\n- cb6d71ff by Manuel Vivo (mvivo@google.com): [Jetsurvey] Comments on the UI design...",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "xml",
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "commit_count": 5,
+        "file_path": "Jetsurvey/app/src/main/res/values/strings.xml"
+      },
+      "similarity_score": 1.3534715175628662
+    },
+    {
+      "content": "# File: Jetcaster/app/src/main/java/com/example/jetcaster/data/PodcastStore.kt (kotlin)\n\n## Key Code Elements:\nimport com.example.jetcaster.data.room.PodcastFollowedEntryDao\nimport com.example.jetcaster.data.room.PodcastsDao\nimport com.example.jetcaster.data.room.TransactionRunner\nimport kotlinx.coroutines.flow.Flow\nclass PodcastStore(\n\n## Recent Changes:\n- 3d0b3bc2 by Yacine Rezgui (rezgui.y@gmail.com): [Jetcaster] Upgrade to alpha09 snapshot\n\nUpgrade to Gradle 6.8\nRemove unused imports\nApply Compose A...\n- 37eb74c2 by Chris Banes (chrisbanes@google.com): Revert \"[Jetcaster] Remove for alpha launch\"\n\nChange-Id: Ifa8d4e5e04ab8e0b67b32921ef7ce86970148dc0...\n- a7ce71dd by Chris Banes (chrisbanes@google.com): [Jetcaster] Remove for alpha launch\n\nChange-Id: Ib713aba7e1ac297cdcfeb045b81c2ff1e6e757e9...",
+      "metadata": {
+        "file_path": "Jetcaster/app/src/main/java/com/example/jetcaster/data/PodcastStore.kt",
+        "strategy": "compressed",
+        "language": "kotlin",
+        "chunk_index": 0,
+        "commit_count": 5,
+        "total_chunks": 1
+      },
+      "similarity_score": 1.3538857698440552
+    },
+    {
+      "content": "# File: Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/signinsignup/UserRepository.kt (kotlin)\n\n## Key Code Elements:\nimport androidx.compose.runtime.Immutable\n    @Immutable\n    @Suppress(\"UNUSED_PARAMETER\")\n    @Suppress(\"UNUSED_PARAMETER\")\n\n## Recent Changes:\n- 4d21fa40 by Chris Banes (chrisbanes@users.noreply.github.com): [All] Update to Compose 1.0.0-alpha06 (#261)\n\n* [Jetsnack] Cart implementation\n* [Jetsnack] Reuse Qu...\n- 335bcd36 by Chris Banes (chrisbanes@google.com): Rename JetSurvey to Jetsurvey\n\nChange-Id: I54b78082d0128ac969ca6f9c1a3b327dbe54c7eb...",
+      "metadata": {
+        "file_path": "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/signinsignup/UserRepository.kt",
+        "strategy": "compressed",
+        "commit_count": 2,
+        "language": "kotlin",
+        "chunk_index": 0,
+        "total_chunks": 1
+      },
+      "similarity_score": 1.3596699237823486
+    },
+    {
+      "content": "# File: Jetsnack/app/src/main/java/com/example/jetsnack/ui/utils/SystemUi.kt (kotlin)\n\n## Recent Changes:\n- 81fbe43c by Chris Banes (chrisbanes@users.noreply.github.com): [Jetsnack] Move to Accompanist SystemUiController (#540)\n\nRemoved the version in Jetsnack in favour ...\n- 1a2c6448 by Yacine Rezgui (yrezgui@google.com): [Jetsnack] Update to 7184376 snapshot...\n- 59583203 by Nick Butcher (nickbutcher@google.com): [Jetsnack] Update to snapshot 7141639.\n\nChange-Id: I2da127fb7d0e41dfd1de9b8c80524f92ea74a821...",
+      "metadata": {
+        "commit_count": 5,
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "file_path": "Jetsnack/app/src/main/java/com/example/jetsnack/ui/utils/SystemUi.kt",
+        "strategy": "compressed",
+        "language": "kotlin"
+      },
+      "similarity_score": 1.364302635192871
+    }
+  ]
+}

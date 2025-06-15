@@ -1,0 +1,7 @@
+{
+  "reason": "The error occurs because the code is using Python 2.7 which doesn't have the subprocess.run method (introduced in Python 3.5). The invoke.py script is trying to use subprocess.run() which is not available in Python 2.7.",
+  "location": [
+    "lib/plugins/aws/invokeLocal/invoke.py"
+  ],
+  "fix": "Replace subprocess.run() with subprocess.Popen() or subprocess.call() in invoke.py to maintain compatibility with Python 2.7. For example: change `tty = subprocess.run('tty', stdout=subprocess.PIPE, stderr=subprocess.PIPE)` to `tty = subprocess.Popen('tty', stdout=subprocess.PIPE, stderr=subprocess.PIPE)`."
+}

@@ -1,0 +1,708 @@
+{
+  "basic": [
+    {
+      "content": "internal class ExtendsPlatformClassWithProtectedField(var a: Int) : ByteArrayOutputStream(2) {\n    fun buf() = buf\n    fun count() = count\n  }\n\n  @Test fun platformTypeThrows() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    try {\n      moshi.adapter<Triple<*, *, *>>()\n      fail()\n    } catch (e: IllegalArgumentException) {\n      assertThat(e).hasMessage(\n          \"Platform class kotlin.Triple in kotlin.Triple<java.lang.Object, java.lang.Object, java.lang.Object> requires explicit JsonAdapter to be registered\")\n    }\n  }\n\n  @Test fun privateConstructorParameters() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<PrivateConstructorParameters>()\n\n    val encoded = PrivateConstructorParameters(3, 5)\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"a\":3,\"b\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":6}\"\"\")!!\n    assertThat(decoded.a()).isEqualTo(4)\n    assertThat(decoded.b()).isEqualTo(6)\n  }\n\n  class PrivateConstructorParameters(private var a: Int, private var b: Int) {\n    fun a() = a\n    fun b() = b\n  }\n\n  @Test fun privateConstructor() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<PrivateConstructor>()\n\n    val encoded = PrivateConstructor.newInstance(3, 5)\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"a\":3,\"b\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":6}\"\"\")!!\n    assertThat(decoded.a()).isEqualTo(4)\n    assertThat(decoded.b()).isEqualTo(6)\n  }\n\n  class PrivateConstructor private constructor(var a: Int, var b: Int) {\n    fun a() = a\n    fun b() = b\n    companion object {\n      fun newInstance(a: Int, b: Int) = PrivateConstructor(a, b)\n    }\n  }\n\n  @Test fun privateProperties() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<PrivateProperties>()",
+      "metadata": {
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt",
+        "strategy": "basic",
+        "language": "kotlin",
+        "chunk_index": 8,
+        "total_chunks": 21
+      },
+      "similarity_score": 0.6980397701263428
+    },
+    {
+      "content": "# File: kotlin/reflect/src/main/test/java/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt (kotlin)\n\n## Code Content:\n```kotlin\npackage com.squareup.moshi.kotlin.reflect\n\nimport com.squareup.moshi.JsonClass\nimport com.squareup.moshi.Moshi\nimport org.assertj.core.api.Assertions.assertThat\nimport org.junit.Test\n\nclass KotlinJsonAdapterTest {\n  @JsonClass(generateAdapter = true)\n  class Data\n\n  @ExperimentalStdlibApi\n  @Test\n  fun fallsBackToReflectiveAdapterWithoutCodegen() {\n    val moshi = Moshi.Builder()\n        .add(KotlinJsonAdapterFactory())\n        .build()\n    val adapter = moshi.adapter<Data>()\n    assertThat(adapter.toString()).isEqualTo(\n        \"KotlinJsonAdapter(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.Data).nullSafe()\"\n    )\n  }\n}\n```",
+      "metadata": {
+        "total_chunks": 1,
+        "language": "kotlin",
+        "chunk_index": 0,
+        "strategy": "basic",
+        "file_path": "kotlin/reflect/src/main/test/java/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt"
+      },
+      "similarity_score": 0.7071754336357117
+    },
+    {
+      "content": "val encoded = TransientProperty()\n    encoded.a = 3\n    encoded.setB(4)\n    encoded.c = 5\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"c\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":5,\"c\":6}\"\"\")!!\n    assertThat(decoded.a).isEqualTo(-1)\n    assertThat(decoded.getB()).isEqualTo(-1)\n    assertThat(decoded.c).isEqualTo(6)\n  }\n\n  class TransientProperty {\n    @Transient var a: Int = -1\n    @Transient private var b: Int = -1\n    var c: Int = -1\n\n    fun getB() = b\n\n    fun setB(b: Int) {\n      this.b = b\n    }\n  }\n\n  @Test fun constructorParametersAndPropertiesWithSameNamesMustHaveSameTypes() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    try {\n      moshi.adapter<ConstructorParameterWithSameNameAsPropertyButDifferentType>()\n      fail()\n    } catch (expected: IllegalArgumentException) {\n      assertThat(expected).hasMessage(\"'a' has a constructor parameter of type \" +\n          \"kotlin.Int but a property of type kotlin.String.\")\n    }\n  }\n\n  class ConstructorParameterWithSameNameAsPropertyButDifferentType(a: Int) {\n    var a = \"boo\"\n  }\n\n  @Test fun supertypeConstructorParameters() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<SubtypeConstructorParameters>()\n\n    val encoded = SubtypeConstructorParameters(3, 5)\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"a\":3,\"b\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":6}\"\"\")!!\n    assertThat(decoded.a).isEqualTo(4)\n    assertThat(decoded.b).isEqualTo(6)\n  }\n\n  open class SupertypeConstructorParameters(var a: Int)\n\n  class SubtypeConstructorParameters(a: Int, var b: Int) : SupertypeConstructorParameters(a)\n\n  @Test fun supertypeProperties() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<SubtypeProperties>()",
+      "metadata": {
+        "strategy": "basic",
+        "language": "kotlin",
+        "chunk_index": 6,
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt",
+        "total_chunks": 21
+      },
+      "similarity_score": 0.728140115737915
+    },
+    {
+      "content": "class DuplicateValueProperty {\n    var a: Int = -1\n    var b: Int = -2\n  }\n\n  @Test fun explicitNull() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<ExplicitNull>()\n\n    val encoded = ExplicitNull(null, 5)\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"b\":5}\"\"\")\n    assertThat(jsonAdapter.serializeNulls().toJson(encoded)).isEqualTo(\"\"\"{\"a\":null,\"b\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":null,\"b\":6}\"\"\")!!\n    assertThat(decoded.a).isEqualTo(null)\n    assertThat(decoded.b).isEqualTo(6)\n  }\n\n  class ExplicitNull(var a: Int?, var b: Int?)\n\n  @Test fun absentNull() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<AbsentNull>()\n\n    val encoded = AbsentNull(null, 5)\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"b\":5}\"\"\")\n    assertThat(jsonAdapter.serializeNulls().toJson(encoded)).isEqualTo(\"\"\"{\"a\":null,\"b\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"b\":6}\"\"\")!!\n    assertThat(decoded.a).isNull()\n    assertThat(decoded.b).isEqualTo(6)\n  }\n\n  class AbsentNull(var a: Int?, var b: Int?)\n\n  @Test fun repeatedValue() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<RepeatedValue>()\n\n    try {\n      jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":null,\"b\":6}\"\"\")\n      fail()\n    } catch(expected: JsonDataException) {\n      assertThat(expected).hasMessage(\"Multiple values for 'b' at $.b\")\n    }\n  }\n\n  class RepeatedValue(var a: Int, var b: Int?)\n\n  @Test fun constructorParameterWithQualifier() {\n    val moshi = Moshi.Builder()\n        .add(KotlinJsonAdapterFactory())\n        .add(UppercaseJsonAdapter())\n        .build()\n    val jsonAdapter = moshi.adapter<ConstructorParameterWithQualifier>()\n\n    val encoded = ConstructorParameterWithQualifier(\"Android\", \"Banana\")\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"a\":\"ANDROID\",\"b\":\"Banana\"}\"\"\")",
+      "metadata": {
+        "total_chunks": 21,
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt",
+        "strategy": "basic",
+        "chunk_index": 3,
+        "language": "kotlin"
+      },
+      "similarity_score": 0.7294384241104126
+    },
+    {
+      "content": "@Test fun getterAndSetterNoBackingField() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<GetterAndSetter>()\n\n    val encoded = GetterAndSetter(3, 5)\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"a\":3,\"b\":5,\"total\":8}\"\"\")\n\n    // Whether b is 6 or 7 is an implementation detail. Currently we call constructors then setters.\n    val decoded1 = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":6,\"total\":11}\"\"\")!!\n    assertThat(decoded1.a).isEqualTo(4)\n    assertThat(decoded1.b).isEqualTo(7)\n    assertThat(decoded1.total).isEqualTo(11)\n\n    // Whether b is 6 or 7 is an implementation detail. Currently we call constructors then setters.\n    val decoded2 = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"total\":11,\"b\":6}\"\"\")!!\n    assertThat(decoded2.a).isEqualTo(4)\n    assertThat(decoded2.b).isEqualTo(7)\n    assertThat(decoded2.total).isEqualTo(11)\n  }\n\n  class GetterAndSetter(var a: Int, var b: Int) {\n    var total : Int\n      get() = a + b\n      set(value) {\n        b = value - a\n      }\n  }\n\n  @Test fun nonPropertyConstructorParameter() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    try {\n      moshi.adapter<NonPropertyConstructorParameter>()\n      fail()\n    } catch(expected: IllegalArgumentException) {\n      assertThat(expected).hasMessage(\n          \"No property for required constructor parameter #0 a of fun <init>(\" +\n              \"kotlin.Int, kotlin.Int): ${NonPropertyConstructorParameter::class.qualifiedName}\")\n    }\n  }\n\n  class NonPropertyConstructorParameter(a: Int, val b: Int)\n\n  @Test fun kotlinEnumsAreNotCovered() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val adapter = moshi.adapter<UsingEnum>()\n\n    assertThat(adapter.fromJson(\"\"\"{\"e\": \"A\"}\"\"\")).isEqualTo(UsingEnum(KotlinEnum.A))\n  }\n\n  data class UsingEnum(val e: KotlinEnum)\n\n  enum class KotlinEnum {\n    A, B\n  }",
+      "metadata": {
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt",
+        "strategy": "basic",
+        "chunk_index": 10,
+        "total_chunks": 21,
+        "language": "kotlin"
+      },
+      "similarity_score": 0.7351192235946655
+    },
+    {
+      "content": "val encoded = PropertyWithJsonName()\n    encoded.a = 3\n    encoded.b = 5\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"key a\":3,\"b\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"key a\":4,\"b\":6}\"\"\")!!\n    assertThat(decoded.a).isEqualTo(4)\n    assertThat(decoded.b).isEqualTo(6)\n  }\n\n  class PropertyWithJsonName {\n    @Json(name = \"key a\") var a: Int = -1\n    var b: Int = -1\n  }\n\n  @Test fun transientConstructorParameter() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<TransientConstructorParameter>()\n\n    val encoded = TransientConstructorParameter(3, 5)\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"b\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":6}\"\"\")!!\n    assertThat(decoded.a).isEqualTo(-1)\n    assertThat(decoded.b).isEqualTo(6)\n  }\n\n  class TransientConstructorParameter(@Transient var a: Int = -1, var b: Int = -1)\n\n  @Test fun requiredTransientConstructorParameterFails() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    try {\n      moshi.adapter<RequiredTransientConstructorParameter>()\n      fail()\n    } catch (expected: IllegalArgumentException) {\n      assertThat(expected).hasMessage(\"No default value for transient constructor parameter #0 \" +\n          \"a of fun <init>(kotlin.Int): \" +\n          \"com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.RequiredTransientConstructorParameter\")\n    }\n  }\n\n  class RequiredTransientConstructorParameter(@Transient var a: Int)\n\n  @Test fun transientProperty() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<TransientProperty>()\n\n    val encoded = TransientProperty()\n    encoded.a = 3\n    encoded.setB(4)\n    encoded.c = 5\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"c\":5}\"\"\")",
+      "metadata": {
+        "total_chunks": 21,
+        "strategy": "basic",
+        "language": "kotlin",
+        "chunk_index": 5,
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt"
+      },
+      "similarity_score": 0.7400990724563599
+    },
+    {
+      "content": "@Test fun nonPropertyConstructorParameter() {\n    val result = compile(kotlin(\"source.kt\",\n        \"\"\"\n          import com.squareup.moshi.JsonClass\n          \n          import com.squareup.moshi.JsonClass\n          @JsonClass(generateAdapter = true)\n          class NonPropertyConstructorParameter(a: Int, val b: Int)\n          \"\"\"\n    ))\n    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)\n    assertThat(result.messages).contains(\n        \"error: No property for required constructor parameter a\")\n  }\n\n  @Test fun badGeneratedAnnotation() {\n    val result = prepareCompilation(kotlin(\"source.kt\",\n        \"\"\"\n          import com.squareup.moshi.JsonClass\n          \n          @JsonClass(generateAdapter = true)\n          data class Foo(val a: Int)\n          \"\"\"\n    )).apply {\n      kaptArgs[JsonClassCodegenProcessor.OPTION_GENERATED] = \"javax.annotation.GeneratedBlerg\"\n    }.compile()\n    assertThat(result.messages).contains(\n        \"Invalid option value for ${JsonClassCodegenProcessor.OPTION_GENERATED}\")\n  }\n\n  @Test fun multipleErrors() {\n    val result = compile(kotlin(\"source.kt\",\n        \"\"\"\n          import com.squareup.moshi.JsonClass\n\n          @JsonClass(generateAdapter = true)\n          class Class1(private var a: Int, private var b: Int)\n\n          @JsonClass(generateAdapter = true)\n          class Class2(private var c: Int)\n          \"\"\"\n    ))\n    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)\n    assertThat(result.messages).contains(\"property a is not visible\")\n    assertThat(result.messages).contains(\"property c is not visible\")\n  }\n\n  @Test fun extendPlatformType() {\n    val result = compile(kotlin(\"source.kt\",\n        \"\"\"\n          import com.squareup.moshi.JsonClass\n          import java.util.Date",
+      "metadata": {
+        "chunk_index": 5,
+        "strategy": "basic",
+        "language": "kotlin",
+        "total_chunks": 8,
+        "file_path": "kotlin/codegen/src/test/java/com/squareup/moshi/kotlin/codegen/JsonClassCodegenProcessorTest.kt"
+      },
+      "similarity_score": 0.7411178350448608
+    },
+    {
+      "content": "# File: kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/DefaultConstructorTest.kt (kotlin)\n\n## Code Content:\n```kotlin\npackage com.squareup.moshi.kotlin\n\nimport com.squareup.moshi.JsonClass\nimport com.squareup.moshi.Moshi\nimport org.junit.Test\n\nclass DefaultConstructorTest {\n\n  @Test fun minimal() {\n    val expected = TestClass(\"requiredClass\")\n    val json = \"\"\"{\"required\":\"requiredClass\"}\"\"\"\n    val instance = Moshi.Builder().build().adapter<TestClass>(TestClass::class.java)\n        .fromJson(json)!!\n    check(instance == expected) {\n      \"No match:\\nActual  : $instance\\nExpected: $expected\"\n    }\n  }\n\n  @Test fun allSet() {\n    val expected = TestClass(\"requiredClass\", \"customOptional\", 4, \"setDynamic\", 5, 6)\n    val json = \"\"\"{\"required\":\"requiredClass\",\"optional\":\"customOptional\",\"optional2\":4,\"dynamicSelfReferenceOptional\":\"setDynamic\",\"dynamicOptional\":5,\"dynamicInlineOptional\":6}\"\"\"\n    val instance = Moshi.Builder().build().adapter<TestClass>(TestClass::class.java)\n        .fromJson(json)!!\n    check(instance == expected) {\n      \"No match:\\nActual  : $instance\\nExpected: $expected\"\n    }\n  }\n\n  @Test fun customDynamic() {\n    val expected = TestClass(\"requiredClass\", \"customOptional\")\n    val json = \"\"\"{\"required\":\"requiredClass\",\"optional\":\"customOptional\"}\"\"\"\n    val instance = Moshi.Builder().build().adapter<TestClass>(TestClass::class.java)\n        .fromJson(json)!!\n    check(instance == expected) {\n      \"No match:\\nActual  : $instance\\nExpected: $expected\"\n    }\n  }\n}\n\n@JsonClass(generateAdapter = true)\ndata class TestClass(\n    val required: String,\n    val optional: String = \"optional\",\n    val optional2: Int = 2,\n    val dynamicSelfReferenceOptional: String = required,\n    val dynamicOptional: Int = createInt(),\n    val dynamicInlineOptional: Int = createInlineInt()\n)",
+      "metadata": {
+        "strategy": "basic",
+        "total_chunks": 2,
+        "chunk_index": 0,
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/DefaultConstructorTest.kt",
+        "language": "kotlin"
+      },
+      "similarity_score": 0.74606853723526
+    },
+    {
+      "content": "# File: kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/DualKotlinTest.kt (kotlin)\n\n## Code Content:\n```kotlin\npackage com.squareup.moshi.kotlin\n\nimport com.squareup.moshi.FromJson\nimport com.squareup.moshi.Json\nimport com.squareup.moshi.JsonAdapter\nimport com.squareup.moshi.JsonAdapter.Factory\nimport com.squareup.moshi.JsonClass\nimport com.squareup.moshi.JsonDataException\nimport com.squareup.moshi.Moshi\nimport com.squareup.moshi.ToJson\nimport com.squareup.moshi.Types\nimport com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory\nimport com.squareup.moshi.kotlin.reflect.adapter\nimport org.assertj.core.api.Assertions.assertThat\nimport org.intellij.lang.annotations.Language\nimport org.junit.Assert.fail\nimport org.junit.Test\nimport org.junit.runner.RunWith\nimport org.junit.runners.Parameterized\nimport org.junit.runners.Parameterized.Parameters\nimport java.lang.reflect.Type\nimport kotlin.annotation.AnnotationRetention.RUNTIME\n\n/**\n * Parameterized tests that test serialization with both [KotlinJsonAdapterFactory] and code gen.\n */\n@RunWith(Parameterized::class)\nclass DualKotlinTest(useReflection: Boolean) {\n\n  companion object {\n    @Parameters(name = \"reflective={0}\")\n    @JvmStatic\n    fun parameters(): List<Array<*>> {\n      return listOf(\n          arrayOf(true),\n          arrayOf(false)\n      )\n    }\n  }",
+      "metadata": {
+        "language": "kotlin",
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/DualKotlinTest.kt",
+        "total_chunks": 6,
+        "strategy": "basic",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.7548760771751404
+    },
+    {
+      "content": "@Test fun privateProperties() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<PrivateProperties>()\n\n    val encoded = PrivateProperties()\n    encoded.a(3)\n    encoded.b(5)\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"a\":3,\"b\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":6}\"\"\")!!\n    assertThat(decoded.a()).isEqualTo(4)\n    assertThat(decoded.b()).isEqualTo(6)\n  }\n\n  class PrivateProperties {\n    private var a: Int = -1\n    private var b: Int = -1\n\n    fun a() = a\n\n    fun a(a: Int) {\n      this.a = a\n    }\n\n    fun b() = b\n\n    fun b(b: Int) {\n      this.b = b\n    }\n  }\n\n  @Test fun unsettablePropertyIgnored() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<UnsettableProperty>()\n\n    val encoded = UnsettableProperty()\n    encoded.b = 5\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"b\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":6}\"\"\")!!\n    assertThat(decoded.a).isEqualTo(-1)\n    assertThat(decoded.b).isEqualTo(6)\n  }\n\n  class UnsettableProperty {\n    val a: Int = -1\n    var b: Int = -1\n  }\n\n  @Test fun getterOnlyNoBackingField() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<GetterOnly>()\n\n    val encoded = GetterOnly(3, 5)\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"a\":3,\"b\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":6}\"\"\")!!\n    assertThat(decoded.a).isEqualTo(4)\n    assertThat(decoded.b).isEqualTo(6)\n    assertThat(decoded.total).isEqualTo(10)\n  }\n\n  class GetterOnly(var a: Int, var b: Int) {\n    val total : Int\n      get() = a + b\n  }\n\n  @Test fun getterAndSetterNoBackingField() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<GetterAndSetter>()",
+      "metadata": {
+        "strategy": "basic",
+        "total_chunks": 21,
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt",
+        "language": "kotlin",
+        "chunk_index": 9
+      },
+      "similarity_score": 0.7617284655570984
+    },
+    {
+      "content": "assertThat(adapter.fromJson(\"\"\"{\"e\": \"A\"}\"\"\")).isEqualTo(UsingEnum(KotlinEnum.A))\n  }\n\n  data class UsingEnum(val e: KotlinEnum)\n\n  enum class KotlinEnum {\n    A, B\n  }\n\n  @Test fun interfacesNotSupported() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    try {\n      moshi.adapter<Interface>()\n      fail()\n    } catch (e: IllegalArgumentException) {\n      assertThat(e).hasMessage(\"No JsonAdapter for interface \" +\n          \"com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\\$Interface (with no annotations)\")\n    }\n  }\n\n  interface Interface\n\n  @Test fun abstractClassesNotSupported() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    try {\n      moshi.adapter<AbstractClass>()\n      fail()\n    } catch (e: IllegalArgumentException) {\n      assertThat(e).hasMessage(\"Cannot serialize abstract class \" +\n          \"com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\\$AbstractClass\")\n    }\n  }\n\n  abstract class AbstractClass(val a: Int)\n\n  @Test fun innerClassesNotSupported() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    try {\n      moshi.adapter<InnerClass>()\n      fail()\n    } catch (e: IllegalArgumentException) {\n      assertThat(e).hasMessage(\"Cannot serialize inner class \" +\n          \"com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\\$InnerClass\")\n    }\n  }\n\n  inner class InnerClass(val a: Int)\n\n  @Test fun localClassesNotSupported() {\n    class LocalClass(val a: Int)\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    try {\n      moshi.adapter<LocalClass>()\n      fail()\n    } catch (e: IllegalArgumentException) {\n      assertThat(e).hasMessage(\"Cannot serialize local class or object expression \" +\n          \"com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\\$localClassesNotSupported\\$LocalClass\")\n    }\n  }",
+      "metadata": {
+        "strategy": "basic",
+        "language": "kotlin",
+        "chunk_index": 11,
+        "total_chunks": 21,
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt"
+      },
+      "similarity_score": 0.7654753923416138
+    },
+    {
+      "content": "val test = InternalPropertyWithoutBackingField()\n    assertThat(adapter.toJson(test)).isEqualTo(\"\"\"{\"bar\":5}\"\"\")\n\n    assertThat(adapter.fromJson(\"\"\"{\"bar\":6}\"\"\")!!.bar).isEqualTo(6)\n  }\n\n  @JsonClass(generateAdapter = true)\n  class InternalPropertyWithoutBackingField {\n\n    @Transient\n    private var foo: Int = 5\n\n    internal var bar\n      get() = foo\n      set(f) {\n        foo = f\n      }\n  }\n\n  @JsonClass(generateAdapter = true)\n  data class ClassWithFieldJson(\n      @field:Json(name = \"_links\") val links: String\n  ) {\n    @field:Json(name = \"_ids\") var ids: String? = null\n  }\n\n  // Regression test to ensure annotations with field site targets still use the right name\n  @Test fun classWithFieldJsonTargets() {\n    val moshi = Moshi.Builder().build()\n    val adapter = moshi.adapter<ClassWithFieldJson>()\n    //language=JSON\n    val instance = adapter.fromJson(\"\"\"{\"_links\": \"link\", \"_ids\": \"id\" }\"\"\")!!\n    assertThat(instance).isEqualTo(ClassWithFieldJson(\"link\").apply { ids = \"id\" })\n  }\n}\n\n// Has to be outside to avoid Types seeing an owning class\n@JsonClass(generateAdapter = true)\ndata class NullableTypeParams<T>(\n    val nullableList: List<String?>,\n    val nullableSet: Set<String?>,\n    val nullableMap: Map<String, String?>,\n    val nullableT: T?,\n    val nonNullT: T\n)",
+      "metadata": {
+        "strategy": "basic",
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/codegen/GeneratedAdaptersTest.kt",
+        "chunk_index": 20,
+        "total_chunks": 22,
+        "language": "kotlin"
+      },
+      "similarity_score": 0.7697315216064453
+    },
+    {
+      "content": "@Test fun privateConstructor() {\n    val result = compile(kotlin(\"source.kt\",\n        \"\"\"\n          import com.squareup.moshi.JsonClass\n          \n          @JsonClass(generateAdapter = true)\n          class PrivateConstructor private constructor(var a: Int, var b: Int) {\n            fun a() = a\n            fun b() = b\n            companion object {\n              fun newInstance(a: Int, b: Int) = PrivateConstructor(a, b)\n            }\n          }\n          \"\"\"\n    ))\n    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)\n    assertThat(result.messages).contains(\"constructor is not internal or public\")\n  }\n\n  @Test fun privateConstructorParameter() {\n    val result = compile(kotlin(\"source.kt\",\n        \"\"\"\n          import com.squareup.moshi.JsonClass\n\n          @JsonClass(generateAdapter = true)\n          class PrivateConstructorParameter(private var a: Int)\n          \"\"\"\n    ))\n    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)\n    assertThat(result.messages).contains(\"property a is not visible\")\n  }\n\n  @Test fun privateProperties() {\n    val result = compile(kotlin(\"source.kt\",\n        \"\"\"\n          import com.squareup.moshi.JsonClass\n\n          @JsonClass(generateAdapter = true)\n          class PrivateProperties {\n            private var a: Int = -1\n            private var b: Int = -1\n          }\n          \"\"\"\n    ))\n    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)\n    assertThat(result.messages).contains(\"property a is not visible\")\n  }\n\n  @Test fun interfacesNotSupported() {\n    val result = compile(kotlin(\"source.kt\",\n        \"\"\"\n          import com.squareup.moshi.JsonClass",
+      "metadata": {
+        "file_path": "kotlin/codegen/src/test/java/com/squareup/moshi/kotlin/codegen/JsonClassCodegenProcessorTest.kt",
+        "chunk_index": 1,
+        "total_chunks": 8,
+        "strategy": "basic",
+        "language": "kotlin"
+      },
+      "similarity_score": 0.779464602470398
+    },
+    {
+      "content": "@Test fun kotlinClassesWithoutAdapterAreRefused() {\n    val moshi = Moshi.Builder().build()\n    try {\n      moshi.adapter<PlainKotlinClass>()\n      fail(\"Should not pass here\")\n    } catch (e: IllegalArgumentException) {\n      assertThat(e).hasMessageContaining(\"Reflective serialization of Kotlin classes\")\n    }\n  }\n\n  class PlainKotlinClass\n\n  @Test fun mapOfStringToStandardReflectionWildcards() {\n    mapWildcardsParameterizedTest(\n        MapOfStringToStandardReflection::class.java,\n        \"\"\"{\"map\":{\"key\":\"value\"}}\"\"\",\n        MapOfStringToStandardReflection(mapOf(\"key\" to \"value\")))\n  }\n\n  @JvmSuppressWildcards(suppress = false)\n  data class MapOfStringToStandardReflection(val map: Map<String, String> = mapOf())\n\n  @Test fun mapOfStringToStandardCodegenWildcards() {\n    mapWildcardsParameterizedTest(\n        MapOfStringToStandardCodegen::class.java,\n        \"\"\"{\"map\":{\"key\":\"value\"}}\"\"\",\n        MapOfStringToStandardCodegen(mapOf(\"key\" to \"value\")))\n  }\n\n  @JsonClass(generateAdapter = true)\n  @JvmSuppressWildcards(suppress = false)\n  data class MapOfStringToStandardCodegen(val map: Map<String, String> = mapOf())\n\n  @Test fun mapOfStringToEnumReflectionWildcards() {\n    mapWildcardsParameterizedTest(\n        MapOfStringToEnumReflection::class.java,\n        \"\"\"{\"map\":{\"key\":\"A\"}}\"\"\",\n        MapOfStringToEnumReflection(mapOf(\"key\" to KotlinEnum.A)))\n  }\n\n  @JvmSuppressWildcards(suppress = false)\n  data class MapOfStringToEnumReflection(val map: Map<String, KotlinEnum> = mapOf())\n\n  @Test fun mapOfStringToEnumCodegenWildcards() {\n    mapWildcardsParameterizedTest(\n        MapOfStringToEnumCodegen::class.java,\n        \"\"\"{\"map\":{\"key\":\"A\"}}\"\"\",\n        MapOfStringToEnumCodegen(mapOf(\"key\" to KotlinEnum.A)))\n  }\n\n  @JsonClass(generateAdapter = true)\n  @JvmSuppressWildcards(suppress = false)\n  data class MapOfStringToEnumCodegen(val map: Map<String, KotlinEnum> = mapOf())",
+      "metadata": {
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt",
+        "chunk_index": 17,
+        "strategy": "basic",
+        "language": "kotlin",
+        "total_chunks": 21
+      },
+      "similarity_score": 0.7823659777641296
+    },
+    {
+      "content": "val encoded = PropertyWithJsonName()\n    encoded.a = 3\n    encoded.b = 5\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"key a\":3,\"b\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"key a\":4,\"b\":6}\"\"\")!!\n    assertThat(decoded.a).isEqualTo(4)\n    assertThat(decoded.b).isEqualTo(6)\n  }\n\n  @JsonClass(generateAdapter = true)\n  class PropertyWithJsonName {\n    @Json(name = \"key a\") var a: Int = -1\n    var b: Int = -1\n  }\n\n  @Test fun transientConstructorParameter() {\n    val moshi = Moshi.Builder().build()\n    val jsonAdapter = moshi.adapter<TransientConstructorParameter>()\n\n    val encoded = TransientConstructorParameter(\n        3, 5)\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"b\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":6}\"\"\")!!\n    assertThat(decoded.a).isEqualTo(-1)\n    assertThat(decoded.b).isEqualTo(6)\n  }\n\n  @JsonClass(generateAdapter = true)\n  class TransientConstructorParameter(@Transient var a: Int = -1, var b: Int = -1)\n\n  @Test fun transientProperty() {\n    val moshi = Moshi.Builder().build()\n    val jsonAdapter = moshi.adapter<TransientProperty>()\n\n    val encoded = TransientProperty()\n    encoded.a = 3\n    encoded.setB(4)\n    encoded.c = 5\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"c\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":5,\"c\":6}\"\"\")!!\n    assertThat(decoded.a).isEqualTo(-1)\n    assertThat(decoded.getB()).isEqualTo(-1)\n    assertThat(decoded.c).isEqualTo(6)\n  }\n\n  @JsonClass(generateAdapter = true)\n  class TransientProperty {\n    @Transient var a: Int = -1\n    @Transient private var b: Int = -1\n    var c: Int = -1\n\n    fun getB() = b\n\n    fun setB(b: Int) {\n      this.b = b\n    }\n  }\n\n  @Test fun transientDelegateProperty() {\n    val jsonAdapter = moshi.adapter<TransientDelegateProperty>()\n\n    val encoded = TransientDelegateProperty()\n    encoded.a = 3\n    encoded.setB(4)\n    encoded.c = 5\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"c\":5}\"\"\")",
+      "metadata": {
+        "total_chunks": 22,
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/codegen/GeneratedAdaptersTest.kt",
+        "language": "kotlin",
+        "chunk_index": 9,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.7867624759674072
+    },
+    {
+      "content": "# File: kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/codegen/LooksLikeAClass/ClassInPackageThatLooksLikeAClass.kt (kotlin)\n\n## Code Content:\n```kotlin\npackage com.squareup.moshi.kotlin.codegen.LooksLikeAClass\n\nimport com.squareup.moshi.JsonClass\n\n/**\n * https://github.com/square/moshi/issues/783\n */\n@JsonClass(generateAdapter = true)\ndata class ClassInPackageThatLooksLikeAClass(val foo: String)\n```",
+      "metadata": {
+        "strategy": "basic",
+        "language": "kotlin",
+        "total_chunks": 1,
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/codegen/LooksLikeAClass/ClassInPackageThatLooksLikeAClass.kt",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.7953818440437317
+    },
+    {
+      "content": "@Test fun supertypeProperties() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<SubtypeProperties>()\n\n    val encoded = SubtypeProperties()\n    encoded.a = 3\n    encoded.b = 5\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"b\":5,\"a\":3}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":6}\"\"\")!!\n    assertThat(decoded.a).isEqualTo(4)\n    assertThat(decoded.b).isEqualTo(6)\n  }\n\n  open class SupertypeProperties {\n    var a: Int = -1\n  }\n\n  class SubtypeProperties : SupertypeProperties() {\n    var b: Int = -1\n  }\n\n  @Test fun extendsPlatformClassWithPrivateField() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<ExtendsPlatformClassWithPrivateField>()\n\n    val encoded = ExtendsPlatformClassWithPrivateField(3)\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"a\":3}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"id\":\"B\"}\"\"\")!!\n    assertThat(decoded.a).isEqualTo(4)\n    assertThat(decoded.id).isEqualTo(\"C\")\n  }\n\n  internal class ExtendsPlatformClassWithPrivateField(var a: Int) : SimpleTimeZone(0, \"C\")\n\n  @Test fun extendsPlatformClassWithProtectedField() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<ExtendsPlatformClassWithProtectedField>()\n\n    val encoded = ExtendsPlatformClassWithProtectedField(3)\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"a\":3,\"buf\":[0,0],\"count\":0}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"buf\":[0,0],\"size\":0}\"\"\")!!\n    assertThat(decoded.a).isEqualTo(4)\n    assertThat(decoded.buf()).isEqualTo(ByteArray(2, { 0 }))\n    assertThat(decoded.count()).isEqualTo(0)\n  }\n\n  internal class ExtendsPlatformClassWithProtectedField(var a: Int) : ByteArrayOutputStream(2) {\n    fun buf() = buf\n    fun count() = count\n  }",
+      "metadata": {
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt",
+        "language": "kotlin",
+        "chunk_index": 7,
+        "total_chunks": 21,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.8063128590583801
+    },
+    {
+      "content": "@Test fun getterAndSetterNoBackingField() {\n    val moshi = Moshi.Builder().build()\n    val jsonAdapter = moshi.adapter<GetterAndSetter>()\n\n    val encoded = GetterAndSetter(3, 5)\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"a\":3,\"b\":5,\"total\":8}\"\"\")\n\n    // Whether b is 6 or 7 is an implementation detail. Currently we call constructors then setters.\n    val decoded1 = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":6,\"total\":11}\"\"\")!!\n    assertThat(decoded1.a).isEqualTo(4)\n    assertThat(decoded1.b).isEqualTo(7)\n    assertThat(decoded1.total).isEqualTo(11)\n\n    // Whether b is 6 or 7 is an implementation detail. Currently we call constructors then setters.\n    val decoded2 = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"total\":11,\"b\":6}\"\"\")!!\n    assertThat(decoded2.a).isEqualTo(4)\n    assertThat(decoded2.b).isEqualTo(7)\n    assertThat(decoded2.total).isEqualTo(11)\n  }\n\n  @JsonClass(generateAdapter = true)\n  class GetterAndSetter(var a: Int, var b: Int) {\n    var total : Int\n      get() = a + b\n      set(value) {\n        b = value - a\n      }\n  }\n\n  @Test fun supertypeConstructorParameters() {\n    val moshi = Moshi.Builder().build()\n    val jsonAdapter = moshi.adapter<SubtypeConstructorParameters>()\n\n    val encoded = SubtypeConstructorParameters(\n        3, 5)\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"a\":3,\"b\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":6}\"\"\")!!\n    assertThat(decoded.a).isEqualTo(4)\n    assertThat(decoded.b).isEqualTo(6)\n  }\n\n  open class SupertypeConstructorParameters(var a: Int)\n\n  @JsonClass(generateAdapter = true)\n  class SubtypeConstructorParameters(a: Int, var b: Int) : SupertypeConstructorParameters(a)\n\n  @Test fun supertypeProperties() {\n    val moshi = Moshi.Builder().build()\n    val jsonAdapter = moshi.adapter<SubtypeProperties>()\n\n    val encoded = SubtypeProperties()\n    encoded.a = 3\n    encoded.b = 5\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"b\":5,\"a\":3}\"\"\")",
+      "metadata": {
+        "strategy": "basic",
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/codegen/GeneratedAdaptersTest.kt",
+        "language": "kotlin",
+        "chunk_index": 13,
+        "total_chunks": 22
+      },
+      "similarity_score": 0.8080065846443176
+    },
+    {
+      "content": "val instance = adapter.fromJson(json)!!\n    assertThat(instance.foo).isEqualTo(\"foo\")\n    assertThat(instance.nullableString).isNull()\n\n    try {\n      adapter.fromJson(invalidJson)\n      fail(\"The invalid json should have failed!\")\n    } catch (e: JsonDataException) {\n      assertThat(e).hasMessageContaining(\"foo\")\n    }\n  }\n\n  @JsonClass(generateAdapter = true)\n  data class NullabeTypes(\n      val foo: String,\n      val nullableString: String?\n  )\n\n  @Test\n  fun collections() {\n    val adapter = moshi.adapter<SpecialCollections>()\n\n    val specialCollections = SpecialCollections(\n        mutableListOf(),\n        mutableSetOf(),\n        mutableMapOf(),\n        emptyList(),\n        emptySet(),\n        emptyMap()\n    )\n\n    val json = adapter.toJson(specialCollections)\n    val newCollections = adapter.fromJson(json)\n    assertThat(newCollections).isEqualTo(specialCollections)\n  }\n\n  @JsonClass(generateAdapter = true)\n  data class SpecialCollections(\n      val mutableList: MutableList<String>,\n      val mutableSet: MutableSet<String>,\n      val mutableMap: MutableMap<String, String>,\n      val immutableList: List<String>,\n      val immutableSet: Set<String>,\n      val immutableMap: Map<String, String>\n  )\n\n  @Test\n  fun mutableProperties() {\n    val adapter = moshi.adapter<MutableProperties>()\n\n    val mutableProperties = MutableProperties(\n        \"immutableProperty\",\n        \"mutableProperty\",\n        mutableListOf(\"immutableMutableList\"),\n        mutableListOf(\"immutableImmutableList\"),\n        mutableListOf(\"mutableMutableList\"),\n        mutableListOf(\"mutableImmutableList\"),\n        \"immutableProperty\",\n        \"mutableProperty\",\n        mutableListOf(\"immutableMutableList\"),\n        mutableListOf(\"immutableImmutableList\"),\n        mutableListOf(\"mutableMutableList\"),\n        mutableListOf(\"mutableImmutableList\")\n    )",
+      "metadata": {
+        "total_chunks": 22,
+        "strategy": "basic",
+        "chunk_index": 3,
+        "language": "kotlin",
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/codegen/GeneratedAdaptersTest.kt"
+      },
+      "similarity_score": 0.8135842680931091
+    },
+    {
+      "content": "@JsonClass(generateAdapter = true)\n  data class NullableTypeParams<T>(\n    val nullableList: List<String?>,\n    val nullableSet: Set<String?>,\n    val nullableMap: Map<String, String?>,\n    val nullableT: T?,\n    val nonNullT: T\n  )\n\n  @Test fun doNotGenerateAdapter() {\n    try {\n      Class.forName(\"${GeneratedAdaptersTest::class.java.name}_DoNotGenerateAdapterJsonAdapter\")\n      fail(\"found a generated adapter for a type that shouldn't have one\")\n    } catch (expected: ClassNotFoundException) {\n    }\n  }\n\n  @JsonClass(generateAdapter = false)\n  data class DoNotGenerateAdapter(val foo: String)\n\n  @Test fun constructorParameters() {\n    val moshi = Moshi.Builder().build()\n    val jsonAdapter = moshi.adapter<ConstructorParameters>()\n\n    val encoded = ConstructorParameters(3,\n        5)\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"a\":3,\"b\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":6}\"\"\")!!\n    assertThat(decoded.a).isEqualTo(4)\n    assertThat(decoded.b).isEqualTo(6)\n  }\n\n  @JsonClass(generateAdapter = true)\n  class ConstructorParameters(var a: Int, var b: Int)\n\n  @Test fun properties() {\n    val moshi = Moshi.Builder().build()\n    val jsonAdapter = moshi.adapter<Properties>()\n\n    val encoded = Properties()\n    encoded.a = 3\n    encoded.b = 5\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"a\":3,\"b\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":3,\"b\":5}\"\"\")!!\n    assertThat(decoded.a).isEqualTo(3)\n    assertThat(decoded.b).isEqualTo(5)\n  }\n\n  @JsonClass(generateAdapter = true)\n  class Properties {\n    var a: Int = -1\n    var b: Int = -1\n  }\n\n  @Test fun constructorParametersAndProperties() {\n    val moshi = Moshi.Builder().build()\n    val jsonAdapter = moshi.adapter<ConstructorParametersAndProperties>()\n\n    val encoded = ConstructorParametersAndProperties(\n        3)\n    encoded.b = 5\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"a\":3,\"b\":5}\"\"\")",
+      "metadata": {
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/codegen/GeneratedAdaptersTest.kt",
+        "strategy": "basic",
+        "total_chunks": 22,
+        "language": "kotlin",
+        "chunk_index": 5
+      },
+      "similarity_score": 0.8145641088485718
+    }
+  ],
+  "enhanced": [
+    {
+      "content": "* added test for transient delegate in kotlin code gen (#922)\n\n* cleanup spaces\n\nCo-Authored-By: Zac Sweers <pandanomic@gmail.com>\n- Changes:\n```diff\n@@ -35,6 +35,7 @@ import org.junit.Assert.fail\n import org.junit.Ignore\n import org.junit.Test\n import java.util.Locale\n+import kotlin.properties.Delegates\n import kotlin.reflect.full.memberProperties\n \n @ExperimentalStdlibApi\n@@ -563,6 +564,38 @@ class GeneratedAdaptersTest {\n     }\n   }\n \n+  @Test fun transientDelegateProperty() {\n+    val jsonAdapter = moshi.adapter<TransientDelegateProperty>()\n+\n+    val encoded = TransientDelegateProperty()\n+    encoded.a = 3\n+    encoded.setB(4)\n+    encod...\n```\n\n### Commit 4\n- ID: 7804d743\n- Author: Zac Sweers (zac.sweers@gmail.com)\n- Date: 2019-10-01 11:04:21\n- Message: Report json name if different from property name in kotlin (#917)\n\n* Report json name in code gen if different from property name\n\nResolves #800\n\n* Unify required property name error message\n\n* Report json name in kotlinjsonadapter, match code gen\n\n* Upper case JSON\n\nCo-Authored-By: Jake Wharton <jakew@google.com>\n\n* Upper case JSON\n\nCo-Authored-By: Jake Wharton <jakew@google.com>\n\n* Don't keep constants\n\n* Inline json name - property name comparison to util methods\n\n* Remove unnecessary constructor keyword\n\n* Consolidate non-null/missing property tests to parameterized suite\n\n* Add custom json name tests for nonNull property checks\n\n* Rename test to make maven happy",
+      "metadata": {
+        "language": "kotlin",
+        "chunk_index": 23,
+        "commit_count": 5,
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/codegen/GeneratedAdaptersTest.kt",
+        "total_chunks": 25,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.687146782875061
+    },
+    {
+      "content": "### Commit 5\n- ID: 13a40edf\n- Author: Eric Cochran (Eric@NightlyNexus.com)\n- Date: 2019-02-16 03:18:50\n- Message: Correct error for duplicate JSON key for Kotlin. (#789)\n\nBefore, the KotlinJsonAdapter threw \"java.lang.IndexOutOfBoundsException: Index: 0, Size: 0\" on a duplicate key when the key matched a property that was not a constructor parameter.\n- Changes:\n```diff\n@@ -205,9 +205,9 @@ class KotlinJsonAdapterTest {\n     var a: String = \"\"\n   }\n \n-  @Test fun duplicatedValue() {\n+  @Test fun duplicatedValueParameter() {\n     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n-    val jsonAdapter = moshi.adapter(DuplicateValue::class.java)\n+    val jsonAdapter = moshi.adapter(DuplicateValueParameter::class.java)\n \n     try {\n       jsonAdapter.fromJson(\"\"\"{\"a\":4,\"a\":4}\"\"\")\n@@ -217,7 +217,24 @@ class KotlinJsonAdapterTest {\n     }\n   }\n \n-  cl...\n```",
+      "metadata": {
+        "commit_count": 5,
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt",
+        "language": "kotlin",
+        "strategy": "enhanced",
+        "total_chunks": 24,
+        "chunk_index": 23
+      },
+      "similarity_score": 0.6972492337226868
+    },
+    {
+      "content": "internal class ExtendsPlatformClassWithProtectedField(var a: Int) : ByteArrayOutputStream(2) {\n    fun buf() = buf\n    fun count() = count\n  }\n\n  @Test fun platformTypeThrows() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    try {\n      moshi.adapter<Triple<*, *, *>>()\n      fail()\n    } catch (e: IllegalArgumentException) {\n      assertThat(e).hasMessage(\n          \"Platform class kotlin.Triple in kotlin.Triple<java.lang.Object, java.lang.Object, java.lang.Object> requires explicit JsonAdapter to be registered\")\n    }\n  }\n\n  @Test fun privateConstructorParameters() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<PrivateConstructorParameters>()\n\n    val encoded = PrivateConstructorParameters(3, 5)\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"a\":3,\"b\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":6}\"\"\")!!\n    assertThat(decoded.a()).isEqualTo(4)\n    assertThat(decoded.b()).isEqualTo(6)\n  }\n\n  class PrivateConstructorParameters(private var a: Int, private var b: Int) {\n    fun a() = a\n    fun b() = b\n  }\n\n  @Test fun privateConstructor() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<PrivateConstructor>()\n\n    val encoded = PrivateConstructor.newInstance(3, 5)\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"a\":3,\"b\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":6}\"\"\")!!\n    assertThat(decoded.a()).isEqualTo(4)\n    assertThat(decoded.b()).isEqualTo(6)\n  }\n\n  class PrivateConstructor private constructor(var a: Int, var b: Int) {\n    fun a() = a\n    fun b() = b\n    companion object {\n      fun newInstance(a: Int, b: Int) = PrivateConstructor(a, b)\n    }\n  }\n\n  @Test fun privateProperties() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<PrivateProperties>()",
+      "metadata": {
+        "chunk_index": 8,
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt",
+        "total_chunks": 24,
+        "language": "kotlin"
+      },
+      "similarity_score": 0.6980397701263428
+    },
+    {
+      "content": "# File: kotlin/reflect/src/main/test/java/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt (kotlin)\n\n## Code Content:\n```kotlin\npackage com.squareup.moshi.kotlin.reflect\n\nimport com.squareup.moshi.JsonClass\nimport com.squareup.moshi.Moshi\nimport org.assertj.core.api.Assertions.assertThat\nimport org.junit.Test\n\nclass KotlinJsonAdapterTest {\n  @JsonClass(generateAdapter = true)\n  class Data\n\n  @ExperimentalStdlibApi\n  @Test\n  fun fallsBackToReflectiveAdapterWithoutCodegen() {\n    val moshi = Moshi.Builder()\n        .add(KotlinJsonAdapterFactory())\n        .build()\n    val adapter = moshi.adapter<Data>()\n    assertThat(adapter.toString()).isEqualTo(\n        \"KotlinJsonAdapter(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.Data).nullSafe()\"\n    )\n  }\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 9db91f2d\n- Author: Zac Sweers (zac.sweers@gmail.com)\n- Date: 2019-09-05 08:24:59\n- Message: Kotlin-reflect QoL APIs (#875)\n\n* Start MoshiKotlinExtensions\n\n* Add Moshi.Builder.add() with reified typeOf\n\n* Use non-shadowing name for addAdapter\n\n* Implement KType.toType()\n\n.javaType isn't implemented\n\n* Don't re-wrap wrapped adapters\n\n* Use new adapter functions in tests to smoke test\n\n* Don't enable uses experimental in kotlin-reflect, only the test\n\n* Use internal leniency API\n\n* Use toType in addAdapter too\n\n* Update error message in test\n- Changes:\n```diff\n@@ -9,11 +9,13 @@ class KotlinJsonAdapterTest {\n   @JsonClass(generateAdapter = true)\n   class Data\n \n-  @Test fun fallsBackToReflectiveAdapterWithoutCodegen() {\n+  @ExperimentalStdlibApi\n+  @Test\n+  fun fallsBackToReflectiveAdapterWithoutCodegen() {\n     val moshi = Moshi.Builder()\n         .add(KotlinJsonAdapterFactory())\n         .build()\n-    val adapter = moshi.adapter(Data::class.java)\n+    val adapter = moshi.adapter<Data>()\n     assertThat(adapter.toString()).isEqualTo(\n         \"KotlinJ...\n```",
+      "metadata": {
+        "commit_count": 2,
+        "file_path": "kotlin/reflect/src/main/test/java/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt",
+        "total_chunks": 2,
+        "strategy": "enhanced",
+        "chunk_index": 0,
+        "language": "kotlin"
+      },
+      "similarity_score": 0.7071754336357117
+    },
+    {
+      "content": "val encoded = TransientProperty()\n    encoded.a = 3\n    encoded.setB(4)\n    encoded.c = 5\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"c\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":5,\"c\":6}\"\"\")!!\n    assertThat(decoded.a).isEqualTo(-1)\n    assertThat(decoded.getB()).isEqualTo(-1)\n    assertThat(decoded.c).isEqualTo(6)\n  }\n\n  class TransientProperty {\n    @Transient var a: Int = -1\n    @Transient private var b: Int = -1\n    var c: Int = -1\n\n    fun getB() = b\n\n    fun setB(b: Int) {\n      this.b = b\n    }\n  }\n\n  @Test fun constructorParametersAndPropertiesWithSameNamesMustHaveSameTypes() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    try {\n      moshi.adapter<ConstructorParameterWithSameNameAsPropertyButDifferentType>()\n      fail()\n    } catch (expected: IllegalArgumentException) {\n      assertThat(expected).hasMessage(\"'a' has a constructor parameter of type \" +\n          \"kotlin.Int but a property of type kotlin.String.\")\n    }\n  }\n\n  class ConstructorParameterWithSameNameAsPropertyButDifferentType(a: Int) {\n    var a = \"boo\"\n  }\n\n  @Test fun supertypeConstructorParameters() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<SubtypeConstructorParameters>()\n\n    val encoded = SubtypeConstructorParameters(3, 5)\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"a\":3,\"b\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":6}\"\"\")!!\n    assertThat(decoded.a).isEqualTo(4)\n    assertThat(decoded.b).isEqualTo(6)\n  }\n\n  open class SupertypeConstructorParameters(var a: Int)\n\n  class SubtypeConstructorParameters(a: Int, var b: Int) : SupertypeConstructorParameters(a)\n\n  @Test fun supertypeProperties() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<SubtypeProperties>()",
+      "metadata": {
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "chunk_index": 6,
+        "total_chunks": 24,
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt",
+        "language": "kotlin"
+      },
+      "similarity_score": 0.728140115737915
+    },
+    {
+      "content": "class DuplicateValueProperty {\n    var a: Int = -1\n    var b: Int = -2\n  }\n\n  @Test fun explicitNull() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<ExplicitNull>()\n\n    val encoded = ExplicitNull(null, 5)\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"b\":5}\"\"\")\n    assertThat(jsonAdapter.serializeNulls().toJson(encoded)).isEqualTo(\"\"\"{\"a\":null,\"b\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":null,\"b\":6}\"\"\")!!\n    assertThat(decoded.a).isEqualTo(null)\n    assertThat(decoded.b).isEqualTo(6)\n  }\n\n  class ExplicitNull(var a: Int?, var b: Int?)\n\n  @Test fun absentNull() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<AbsentNull>()\n\n    val encoded = AbsentNull(null, 5)\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"b\":5}\"\"\")\n    assertThat(jsonAdapter.serializeNulls().toJson(encoded)).isEqualTo(\"\"\"{\"a\":null,\"b\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"b\":6}\"\"\")!!\n    assertThat(decoded.a).isNull()\n    assertThat(decoded.b).isEqualTo(6)\n  }\n\n  class AbsentNull(var a: Int?, var b: Int?)\n\n  @Test fun repeatedValue() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<RepeatedValue>()\n\n    try {\n      jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":null,\"b\":6}\"\"\")\n      fail()\n    } catch(expected: JsonDataException) {\n      assertThat(expected).hasMessage(\"Multiple values for 'b' at $.b\")\n    }\n  }\n\n  class RepeatedValue(var a: Int, var b: Int?)\n\n  @Test fun constructorParameterWithQualifier() {\n    val moshi = Moshi.Builder()\n        .add(KotlinJsonAdapterFactory())\n        .add(UppercaseJsonAdapter())\n        .build()\n    val jsonAdapter = moshi.adapter<ConstructorParameterWithQualifier>()\n\n    val encoded = ConstructorParameterWithQualifier(\"Android\", \"Banana\")\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"a\":\"ANDROID\",\"b\":\"Banana\"}\"\"\")",
+      "metadata": {
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt",
+        "total_chunks": 24,
+        "chunk_index": 3,
+        "commit_count": 5,
+        "language": "kotlin",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.7294384241104126
+    },
+    {
+      "content": "@Test fun getterAndSetterNoBackingField() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<GetterAndSetter>()\n\n    val encoded = GetterAndSetter(3, 5)\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"a\":3,\"b\":5,\"total\":8}\"\"\")\n\n    // Whether b is 6 or 7 is an implementation detail. Currently we call constructors then setters.\n    val decoded1 = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":6,\"total\":11}\"\"\")!!\n    assertThat(decoded1.a).isEqualTo(4)\n    assertThat(decoded1.b).isEqualTo(7)\n    assertThat(decoded1.total).isEqualTo(11)\n\n    // Whether b is 6 or 7 is an implementation detail. Currently we call constructors then setters.\n    val decoded2 = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"total\":11,\"b\":6}\"\"\")!!\n    assertThat(decoded2.a).isEqualTo(4)\n    assertThat(decoded2.b).isEqualTo(7)\n    assertThat(decoded2.total).isEqualTo(11)\n  }\n\n  class GetterAndSetter(var a: Int, var b: Int) {\n    var total : Int\n      get() = a + b\n      set(value) {\n        b = value - a\n      }\n  }\n\n  @Test fun nonPropertyConstructorParameter() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    try {\n      moshi.adapter<NonPropertyConstructorParameter>()\n      fail()\n    } catch(expected: IllegalArgumentException) {\n      assertThat(expected).hasMessage(\n          \"No property for required constructor parameter #0 a of fun <init>(\" +\n              \"kotlin.Int, kotlin.Int): ${NonPropertyConstructorParameter::class.qualifiedName}\")\n    }\n  }\n\n  class NonPropertyConstructorParameter(a: Int, val b: Int)\n\n  @Test fun kotlinEnumsAreNotCovered() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val adapter = moshi.adapter<UsingEnum>()\n\n    assertThat(adapter.fromJson(\"\"\"{\"e\": \"A\"}\"\"\")).isEqualTo(UsingEnum(KotlinEnum.A))\n  }\n\n  data class UsingEnum(val e: KotlinEnum)\n\n  enum class KotlinEnum {\n    A, B\n  }",
+      "metadata": {
+        "language": "kotlin",
+        "strategy": "enhanced",
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt",
+        "chunk_index": 10,
+        "total_chunks": 24,
+        "commit_count": 5
+      },
+      "similarity_score": 0.7351192235946655
+    },
+    {
+      "content": "val encoded = PropertyWithJsonName()\n    encoded.a = 3\n    encoded.b = 5\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"key a\":3,\"b\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"key a\":4,\"b\":6}\"\"\")!!\n    assertThat(decoded.a).isEqualTo(4)\n    assertThat(decoded.b).isEqualTo(6)\n  }\n\n  class PropertyWithJsonName {\n    @Json(name = \"key a\") var a: Int = -1\n    var b: Int = -1\n  }\n\n  @Test fun transientConstructorParameter() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<TransientConstructorParameter>()\n\n    val encoded = TransientConstructorParameter(3, 5)\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"b\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":6}\"\"\")!!\n    assertThat(decoded.a).isEqualTo(-1)\n    assertThat(decoded.b).isEqualTo(6)\n  }\n\n  class TransientConstructorParameter(@Transient var a: Int = -1, var b: Int = -1)\n\n  @Test fun requiredTransientConstructorParameterFails() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    try {\n      moshi.adapter<RequiredTransientConstructorParameter>()\n      fail()\n    } catch (expected: IllegalArgumentException) {\n      assertThat(expected).hasMessage(\"No default value for transient constructor parameter #0 \" +\n          \"a of fun <init>(kotlin.Int): \" +\n          \"com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.RequiredTransientConstructorParameter\")\n    }\n  }\n\n  class RequiredTransientConstructorParameter(@Transient var a: Int)\n\n  @Test fun transientProperty() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<TransientProperty>()\n\n    val encoded = TransientProperty()\n    encoded.a = 3\n    encoded.setB(4)\n    encoded.c = 5\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"c\":5}\"\"\")",
+      "metadata": {
+        "chunk_index": 5,
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt",
+        "strategy": "enhanced",
+        "language": "kotlin",
+        "commit_count": 5,
+        "total_chunks": 24
+      },
+      "similarity_score": 0.7400990724563599
+    },
+    {
+      "content": "@Test fun nonPropertyConstructorParameter() {\n    val result = compile(kotlin(\"source.kt\",\n        \"\"\"\n          import com.squareup.moshi.JsonClass\n          \n          import com.squareup.moshi.JsonClass\n          @JsonClass(generateAdapter = true)\n          class NonPropertyConstructorParameter(a: Int, val b: Int)\n          \"\"\"\n    ))\n    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)\n    assertThat(result.messages).contains(\n        \"error: No property for required constructor parameter a\")\n  }\n\n  @Test fun badGeneratedAnnotation() {\n    val result = prepareCompilation(kotlin(\"source.kt\",\n        \"\"\"\n          import com.squareup.moshi.JsonClass\n          \n          @JsonClass(generateAdapter = true)\n          data class Foo(val a: Int)\n          \"\"\"\n    )).apply {\n      kaptArgs[JsonClassCodegenProcessor.OPTION_GENERATED] = \"javax.annotation.GeneratedBlerg\"\n    }.compile()\n    assertThat(result.messages).contains(\n        \"Invalid option value for ${JsonClassCodegenProcessor.OPTION_GENERATED}\")\n  }\n\n  @Test fun multipleErrors() {\n    val result = compile(kotlin(\"source.kt\",\n        \"\"\"\n          import com.squareup.moshi.JsonClass\n\n          @JsonClass(generateAdapter = true)\n          class Class1(private var a: Int, private var b: Int)\n\n          @JsonClass(generateAdapter = true)\n          class Class2(private var c: Int)\n          \"\"\"\n    ))\n    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)\n    assertThat(result.messages).contains(\"property a is not visible\")\n    assertThat(result.messages).contains(\"property c is not visible\")\n  }\n\n  @Test fun extendPlatformType() {\n    val result = compile(kotlin(\"source.kt\",\n        \"\"\"\n          import com.squareup.moshi.JsonClass\n          import java.util.Date",
+      "metadata": {
+        "file_path": "kotlin/codegen/src/test/java/com/squareup/moshi/kotlin/codegen/JsonClassCodegenProcessorTest.kt",
+        "chunk_index": 5,
+        "commit_count": 5,
+        "total_chunks": 12,
+        "strategy": "enhanced",
+        "language": "kotlin"
+      },
+      "similarity_score": 0.7411178350448608
+    },
+    {
+      "content": "# File: kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/DefaultConstructorTest.kt (kotlin)\n\n## Code Content:\n```kotlin\npackage com.squareup.moshi.kotlin\n\nimport com.squareup.moshi.JsonClass\nimport com.squareup.moshi.Moshi\nimport org.junit.Test\n\nclass DefaultConstructorTest {\n\n  @Test fun minimal() {\n    val expected = TestClass(\"requiredClass\")\n    val json = \"\"\"{\"required\":\"requiredClass\"}\"\"\"\n    val instance = Moshi.Builder().build().adapter<TestClass>(TestClass::class.java)\n        .fromJson(json)!!\n    check(instance == expected) {\n      \"No match:\\nActual  : $instance\\nExpected: $expected\"\n    }\n  }\n\n  @Test fun allSet() {\n    val expected = TestClass(\"requiredClass\", \"customOptional\", 4, \"setDynamic\", 5, 6)\n    val json = \"\"\"{\"required\":\"requiredClass\",\"optional\":\"customOptional\",\"optional2\":4,\"dynamicSelfReferenceOptional\":\"setDynamic\",\"dynamicOptional\":5,\"dynamicInlineOptional\":6}\"\"\"\n    val instance = Moshi.Builder().build().adapter<TestClass>(TestClass::class.java)\n        .fromJson(json)!!\n    check(instance == expected) {\n      \"No match:\\nActual  : $instance\\nExpected: $expected\"\n    }\n  }\n\n  @Test fun customDynamic() {\n    val expected = TestClass(\"requiredClass\", \"customOptional\")\n    val json = \"\"\"{\"required\":\"requiredClass\",\"optional\":\"customOptional\"}\"\"\"\n    val instance = Moshi.Builder().build().adapter<TestClass>(TestClass::class.java)\n        .fromJson(json)!!\n    check(instance == expected) {\n      \"No match:\\nActual  : $instance\\nExpected: $expected\"\n    }\n  }\n}\n\n@JsonClass(generateAdapter = true)\ndata class TestClass(\n    val required: String,\n    val optional: String = \"optional\",\n    val optional2: Int = 2,\n    val dynamicSelfReferenceOptional: String = required,\n    val dynamicOptional: Int = createInt(),\n    val dynamicInlineOptional: Int = createInlineInt()\n)",
+      "metadata": {
+        "commit_count": 3,
+        "language": "kotlin",
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/DefaultConstructorTest.kt",
+        "chunk_index": 0,
+        "strategy": "enhanced",
+        "total_chunks": 4
+      },
+      "similarity_score": 0.74606853723526
+    },
+    {
+      "content": "# File: kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/DualKotlinTest.kt (kotlin)\n\n## Code Content:\n```kotlin\npackage com.squareup.moshi.kotlin\n\nimport com.squareup.moshi.FromJson\nimport com.squareup.moshi.Json\nimport com.squareup.moshi.JsonAdapter\nimport com.squareup.moshi.JsonAdapter.Factory\nimport com.squareup.moshi.JsonClass\nimport com.squareup.moshi.JsonDataException\nimport com.squareup.moshi.Moshi\nimport com.squareup.moshi.ToJson\nimport com.squareup.moshi.Types\nimport com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory\nimport com.squareup.moshi.kotlin.reflect.adapter\nimport org.assertj.core.api.Assertions.assertThat\nimport org.intellij.lang.annotations.Language\nimport org.junit.Assert.fail\nimport org.junit.Test\nimport org.junit.runner.RunWith\nimport org.junit.runners.Parameterized\nimport org.junit.runners.Parameterized.Parameters\nimport java.lang.reflect.Type\nimport kotlin.annotation.AnnotationRetention.RUNTIME\n\n/**\n * Parameterized tests that test serialization with both [KotlinJsonAdapterFactory] and code gen.\n */\n@RunWith(Parameterized::class)\nclass DualKotlinTest(useReflection: Boolean) {\n\n  companion object {\n    @Parameters(name = \"reflective={0}\")\n    @JvmStatic\n    fun parameters(): List<Array<*>> {\n      return listOf(\n          arrayOf(true),\n          arrayOf(false)\n      )\n    }\n  }",
+      "metadata": {
+        "commit_count": 3,
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/DualKotlinTest.kt",
+        "chunk_index": 0,
+        "language": "kotlin",
+        "total_chunks": 8,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.7548760771751404
+    },
+    {
+      "content": "@Test fun privateProperties() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<PrivateProperties>()\n\n    val encoded = PrivateProperties()\n    encoded.a(3)\n    encoded.b(5)\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"a\":3,\"b\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":6}\"\"\")!!\n    assertThat(decoded.a()).isEqualTo(4)\n    assertThat(decoded.b()).isEqualTo(6)\n  }\n\n  class PrivateProperties {\n    private var a: Int = -1\n    private var b: Int = -1\n\n    fun a() = a\n\n    fun a(a: Int) {\n      this.a = a\n    }\n\n    fun b() = b\n\n    fun b(b: Int) {\n      this.b = b\n    }\n  }\n\n  @Test fun unsettablePropertyIgnored() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<UnsettableProperty>()\n\n    val encoded = UnsettableProperty()\n    encoded.b = 5\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"b\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":6}\"\"\")!!\n    assertThat(decoded.a).isEqualTo(-1)\n    assertThat(decoded.b).isEqualTo(6)\n  }\n\n  class UnsettableProperty {\n    val a: Int = -1\n    var b: Int = -1\n  }\n\n  @Test fun getterOnlyNoBackingField() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<GetterOnly>()\n\n    val encoded = GetterOnly(3, 5)\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"a\":3,\"b\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":6}\"\"\")!!\n    assertThat(decoded.a).isEqualTo(4)\n    assertThat(decoded.b).isEqualTo(6)\n    assertThat(decoded.total).isEqualTo(10)\n  }\n\n  class GetterOnly(var a: Int, var b: Int) {\n    val total : Int\n      get() = a + b\n  }\n\n  @Test fun getterAndSetterNoBackingField() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    val jsonAdapter = moshi.adapter<GetterAndSetter>()",
+      "metadata": {
+        "chunk_index": 9,
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt",
+        "strategy": "enhanced",
+        "language": "kotlin",
+        "commit_count": 5,
+        "total_chunks": 24
+      },
+      "similarity_score": 0.7617284655570984
+    },
+    {
+      "content": "* Don't re-wrap wrapped adapters\n\n* Use new adapter functions in tests to smoke test\n\n* Don't enable uses experimental in kotlin-reflect, only the test\n\n* Use internal leniency API\n\n* Use toType in addAdapter too\n\n* Update error message in test\n- Changes:\n```diff\n@@ -40,7 +40,7 @@ import kotlin.annotation.AnnotationRetention.RUNTIME\n class KotlinJsonAdapterTest {\n   @Test fun constructorParameters() {\n     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n-    val jsonAdapter = moshi.adapter(ConstructorParameters::class.java)\n+    val jsonAdapter = moshi.adapter<ConstructorParameters>()\n \n     val encoded = ConstructorParameters(3, 5)\n     assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"a\":3,\"b\":5}\"\"\")\n@@ -54,7 +54,7 @@ class Kot...\n```\n\n### Commit 4\n- ID: 7e417840\n- Author: Sye van der Veen (svanderveen@squareup.com)\n- Date: 2019-04-30 23:12:04\n- Message: Support covariant Map values, which are used by Kotlin\n- Changes:\n```diff\n@@ -30,6 +30,8 @@ import org.assertj.core.api.Assertions.assertThat\n import org.junit.Assert.fail\n import org.junit.Test\n import java.io.ByteArrayOutputStream\n+import java.lang.reflect.ParameterizedType\n+import java.lang.reflect.WildcardType\n import java.util.Locale\n import java.util.SimpleTimeZone\n import kotlin.annotation.AnnotationRetention.RUNTIME\n@@ -982,4 +984,144 @@ class KotlinJsonAdapterTest {\n   }\n \n   class PlainKotlinClass\n+\n+  @Test fun mapOfStringToStandardReflectionWildcards() {\n+...\n```\n\n### Commit 5\n- ID: 13a40edf\n- Author: Eric Cochran (Eric@NightlyNexus.com)\n- Date: 2019-02-16 03:18:50\n- Message: Correct error for duplicate JSON key for Kotlin. (#789)",
+      "metadata": {
+        "commit_count": 5,
+        "chunk_index": 22,
+        "total_chunks": 24,
+        "strategy": "enhanced",
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt",
+        "language": "kotlin"
+      },
+      "similarity_score": 0.7630923986434937
+    },
+    {
+      "content": "assertThat(adapter.fromJson(\"\"\"{\"e\": \"A\"}\"\"\")).isEqualTo(UsingEnum(KotlinEnum.A))\n  }\n\n  data class UsingEnum(val e: KotlinEnum)\n\n  enum class KotlinEnum {\n    A, B\n  }\n\n  @Test fun interfacesNotSupported() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    try {\n      moshi.adapter<Interface>()\n      fail()\n    } catch (e: IllegalArgumentException) {\n      assertThat(e).hasMessage(\"No JsonAdapter for interface \" +\n          \"com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\\$Interface (with no annotations)\")\n    }\n  }\n\n  interface Interface\n\n  @Test fun abstractClassesNotSupported() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    try {\n      moshi.adapter<AbstractClass>()\n      fail()\n    } catch (e: IllegalArgumentException) {\n      assertThat(e).hasMessage(\"Cannot serialize abstract class \" +\n          \"com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\\$AbstractClass\")\n    }\n  }\n\n  abstract class AbstractClass(val a: Int)\n\n  @Test fun innerClassesNotSupported() {\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    try {\n      moshi.adapter<InnerClass>()\n      fail()\n    } catch (e: IllegalArgumentException) {\n      assertThat(e).hasMessage(\"Cannot serialize inner class \" +\n          \"com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\\$InnerClass\")\n    }\n  }\n\n  inner class InnerClass(val a: Int)\n\n  @Test fun localClassesNotSupported() {\n    class LocalClass(val a: Int)\n    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()\n    try {\n      moshi.adapter<LocalClass>()\n      fail()\n    } catch (e: IllegalArgumentException) {\n      assertThat(e).hasMessage(\"Cannot serialize local class or object expression \" +\n          \"com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\\$localClassesNotSupported\\$LocalClass\")\n    }\n  }",
+      "metadata": {
+        "commit_count": 5,
+        "chunk_index": 11,
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt",
+        "total_chunks": 24,
+        "strategy": "enhanced",
+        "language": "kotlin"
+      },
+      "similarity_score": 0.7654753923416138
+    },
+    {
+      "content": "val test = InternalPropertyWithoutBackingField()\n    assertThat(adapter.toJson(test)).isEqualTo(\"\"\"{\"bar\":5}\"\"\")\n\n    assertThat(adapter.fromJson(\"\"\"{\"bar\":6}\"\"\")!!.bar).isEqualTo(6)\n  }\n\n  @JsonClass(generateAdapter = true)\n  class InternalPropertyWithoutBackingField {\n\n    @Transient\n    private var foo: Int = 5\n\n    internal var bar\n      get() = foo\n      set(f) {\n        foo = f\n      }\n  }\n\n  @JsonClass(generateAdapter = true)\n  data class ClassWithFieldJson(\n      @field:Json(name = \"_links\") val links: String\n  ) {\n    @field:Json(name = \"_ids\") var ids: String? = null\n  }\n\n  // Regression test to ensure annotations with field site targets still use the right name\n  @Test fun classWithFieldJsonTargets() {\n    val moshi = Moshi.Builder().build()\n    val adapter = moshi.adapter<ClassWithFieldJson>()\n    //language=JSON\n    val instance = adapter.fromJson(\"\"\"{\"_links\": \"link\", \"_ids\": \"id\" }\"\"\")!!\n    assertThat(instance).isEqualTo(ClassWithFieldJson(\"link\").apply { ids = \"id\" })\n  }\n}\n\n// Has to be outside to avoid Types seeing an owning class\n@JsonClass(generateAdapter = true)\ndata class NullableTypeParams<T>(\n    val nullableList: List<String?>,\n    val nullableSet: Set<String?>,\n    val nullableMap: Map<String, String?>,\n    val nullableT: T?,\n    val nonNullT: T\n)",
+      "metadata": {
+        "language": "kotlin",
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/codegen/GeneratedAdaptersTest.kt",
+        "commit_count": 5,
+        "total_chunks": 25,
+        "strategy": "enhanced",
+        "chunk_index": 20
+      },
+      "similarity_score": 0.7697315216064453
+    },
+    {
+      "content": "* Use new adapter functions in tests to smoke test\n\n* Don't enable uses experimental in kotlin-reflect, only the test\n\n* Use internal leniency API\n\n* Use toType in addAdapter too\n\n* Update error message in test\n- Changes:\n```diff\n@@ -15,6 +15,7 @@\n  */\n package com.squareup.moshi;\n \n+import com.squareup.moshi.internal.NonNullJsonAdapter;\n import com.squareup.moshi.internal.NullSafeJsonAdapter;\n import java.io.IOException;\n import java.lang.annotation.Annotation;\n@@ -140,29 +141,7 @@ public abstract class JsonAdapter<T> {\n    * handled elsewhere. This should only be used to fail on explicit nulls.\n    */\n   @CheckReturnValue public final JsonAdapter<T> nonNull() {\n-    final JsonAdapter<T> delegate = this;\n-    return new...\n```\n\n### Commit 3\n- ID: 0943ef5a\n- Author: Zac Sweers (pandanomic@gmail.com)\n- Date: 2019-05-16 08:42:08\n- Message: Allow custom generators (#847)\n\n* Extract generatedJsonAdapterName to public API for other generators/consumers\n\n* Fix kapt location in tests\n\n* Add IDE-generated dependency-reduced-pom.xml to gitignore\n\nThis always bites me\n\n* Add generator property to JsonClass and skip in processor\n\n* Opportunistically fix formatting for generateAdapter doc\n\n* Extract NullSafeJsonAdapter for delegate testing\n\n* Add custom adapter tests\n\n* Allow no-moshi constructors for generated adapters\n\n* Fix rebase issue\n\n* Use something other than nullSafe() for lenient check\n\nThis no longer propagates lenient\n\n* Add missing copyrights\n\n* Add top-level class note\n\n* Add note about working against Moshi's generated signature\n\n* Add missing bit to \"requirements for\"\n\n* Note kotlin requirement relaxed in custom generators",
+      "metadata": {
+        "language": "java",
+        "total_chunks": 10,
+        "chunk_index": 7,
+        "file_path": "moshi/src/main/java/com/squareup/moshi/JsonAdapter.java",
+        "commit_count": 5,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.7769918441772461
+    },
+    {
+      "content": "@Test fun privateConstructor() {\n    val result = compile(kotlin(\"source.kt\",\n        \"\"\"\n          import com.squareup.moshi.JsonClass\n          \n          @JsonClass(generateAdapter = true)\n          class PrivateConstructor private constructor(var a: Int, var b: Int) {\n            fun a() = a\n            fun b() = b\n            companion object {\n              fun newInstance(a: Int, b: Int) = PrivateConstructor(a, b)\n            }\n          }\n          \"\"\"\n    ))\n    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)\n    assertThat(result.messages).contains(\"constructor is not internal or public\")\n  }\n\n  @Test fun privateConstructorParameter() {\n    val result = compile(kotlin(\"source.kt\",\n        \"\"\"\n          import com.squareup.moshi.JsonClass\n\n          @JsonClass(generateAdapter = true)\n          class PrivateConstructorParameter(private var a: Int)\n          \"\"\"\n    ))\n    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)\n    assertThat(result.messages).contains(\"property a is not visible\")\n  }\n\n  @Test fun privateProperties() {\n    val result = compile(kotlin(\"source.kt\",\n        \"\"\"\n          import com.squareup.moshi.JsonClass\n\n          @JsonClass(generateAdapter = true)\n          class PrivateProperties {\n            private var a: Int = -1\n            private var b: Int = -1\n          }\n          \"\"\"\n    ))\n    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)\n    assertThat(result.messages).contains(\"property a is not visible\")\n  }\n\n  @Test fun interfacesNotSupported() {\n    val result = compile(kotlin(\"source.kt\",\n        \"\"\"\n          import com.squareup.moshi.JsonClass",
+      "metadata": {
+        "strategy": "enhanced",
+        "language": "kotlin",
+        "file_path": "kotlin/codegen/src/test/java/com/squareup/moshi/kotlin/codegen/JsonClassCodegenProcessorTest.kt",
+        "commit_count": 5,
+        "chunk_index": 1,
+        "total_chunks": 12
+      },
+      "similarity_score": 0.779464602470398
+    },
+    {
+      "content": "### Commit 5\n- ID: 13a40edf\n- Author: Eric Cochran (Eric@NightlyNexus.com)\n- Date: 2019-02-16 03:18:50\n- Message: Correct error for duplicate JSON key for Kotlin. (#789)\n\nBefore, the KotlinJsonAdapter threw \"java.lang.IndexOutOfBoundsException: Index: 0, Size: 0\" on a duplicate key when the key matched a property that was not a constructor parameter.\n- Changes:\n```diff\n@@ -17,7 +17,6 @@ package com.squareup.moshi.kotlin.reflect\n \n import com.squareup.moshi.Json\n import com.squareup.moshi.JsonAdapter\n-import com.squareup.moshi.JsonClass\n import com.squareup.moshi.JsonDataException\n import com.squareup.moshi.JsonReader\n import com.squareup.moshi.JsonWriter\n@@ -77,7 +76,7 @@ internal class KotlinJsonAdapter<T>(\n \n       if (values[index] !== ABSENT_VALUE) {\n         throw JsonDataException(\n-            \"Multiple values for '${constructor.parameters[index].name}'...\n```",
+      "metadata": {
+        "file_path": "kotlin/reflect/src/main/java/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapter.kt",
+        "total_chunks": 9,
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "chunk_index": 8,
+        "language": "kotlin"
+      },
+      "similarity_score": 0.7796155214309692
+    },
+    {
+      "content": "@Test fun kotlinClassesWithoutAdapterAreRefused() {\n    val moshi = Moshi.Builder().build()\n    try {\n      moshi.adapter<PlainKotlinClass>()\n      fail(\"Should not pass here\")\n    } catch (e: IllegalArgumentException) {\n      assertThat(e).hasMessageContaining(\"Reflective serialization of Kotlin classes\")\n    }\n  }\n\n  class PlainKotlinClass\n\n  @Test fun mapOfStringToStandardReflectionWildcards() {\n    mapWildcardsParameterizedTest(\n        MapOfStringToStandardReflection::class.java,\n        \"\"\"{\"map\":{\"key\":\"value\"}}\"\"\",\n        MapOfStringToStandardReflection(mapOf(\"key\" to \"value\")))\n  }\n\n  @JvmSuppressWildcards(suppress = false)\n  data class MapOfStringToStandardReflection(val map: Map<String, String> = mapOf())\n\n  @Test fun mapOfStringToStandardCodegenWildcards() {\n    mapWildcardsParameterizedTest(\n        MapOfStringToStandardCodegen::class.java,\n        \"\"\"{\"map\":{\"key\":\"value\"}}\"\"\",\n        MapOfStringToStandardCodegen(mapOf(\"key\" to \"value\")))\n  }\n\n  @JsonClass(generateAdapter = true)\n  @JvmSuppressWildcards(suppress = false)\n  data class MapOfStringToStandardCodegen(val map: Map<String, String> = mapOf())\n\n  @Test fun mapOfStringToEnumReflectionWildcards() {\n    mapWildcardsParameterizedTest(\n        MapOfStringToEnumReflection::class.java,\n        \"\"\"{\"map\":{\"key\":\"A\"}}\"\"\",\n        MapOfStringToEnumReflection(mapOf(\"key\" to KotlinEnum.A)))\n  }\n\n  @JvmSuppressWildcards(suppress = false)\n  data class MapOfStringToEnumReflection(val map: Map<String, KotlinEnum> = mapOf())\n\n  @Test fun mapOfStringToEnumCodegenWildcards() {\n    mapWildcardsParameterizedTest(\n        MapOfStringToEnumCodegen::class.java,\n        \"\"\"{\"map\":{\"key\":\"A\"}}\"\"\",\n        MapOfStringToEnumCodegen(mapOf(\"key\" to KotlinEnum.A)))\n  }\n\n  @JsonClass(generateAdapter = true)\n  @JvmSuppressWildcards(suppress = false)\n  data class MapOfStringToEnumCodegen(val map: Map<String, KotlinEnum> = mapOf())",
+      "metadata": {
+        "chunk_index": 17,
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt",
+        "commit_count": 5,
+        "language": "kotlin",
+        "strategy": "enhanced",
+        "total_chunks": 24
+      },
+      "similarity_score": 0.7823659777641296
+    },
+    {
+      "content": "val encoded = PropertyWithJsonName()\n    encoded.a = 3\n    encoded.b = 5\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"key a\":3,\"b\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"key a\":4,\"b\":6}\"\"\")!!\n    assertThat(decoded.a).isEqualTo(4)\n    assertThat(decoded.b).isEqualTo(6)\n  }\n\n  @JsonClass(generateAdapter = true)\n  class PropertyWithJsonName {\n    @Json(name = \"key a\") var a: Int = -1\n    var b: Int = -1\n  }\n\n  @Test fun transientConstructorParameter() {\n    val moshi = Moshi.Builder().build()\n    val jsonAdapter = moshi.adapter<TransientConstructorParameter>()\n\n    val encoded = TransientConstructorParameter(\n        3, 5)\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"b\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":6}\"\"\")!!\n    assertThat(decoded.a).isEqualTo(-1)\n    assertThat(decoded.b).isEqualTo(6)\n  }\n\n  @JsonClass(generateAdapter = true)\n  class TransientConstructorParameter(@Transient var a: Int = -1, var b: Int = -1)\n\n  @Test fun transientProperty() {\n    val moshi = Moshi.Builder().build()\n    val jsonAdapter = moshi.adapter<TransientProperty>()\n\n    val encoded = TransientProperty()\n    encoded.a = 3\n    encoded.setB(4)\n    encoded.c = 5\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"c\":5}\"\"\")\n\n    val decoded = jsonAdapter.fromJson(\"\"\"{\"a\":4,\"b\":5,\"c\":6}\"\"\")!!\n    assertThat(decoded.a).isEqualTo(-1)\n    assertThat(decoded.getB()).isEqualTo(-1)\n    assertThat(decoded.c).isEqualTo(6)\n  }\n\n  @JsonClass(generateAdapter = true)\n  class TransientProperty {\n    @Transient var a: Int = -1\n    @Transient private var b: Int = -1\n    var c: Int = -1\n\n    fun getB() = b\n\n    fun setB(b: Int) {\n      this.b = b\n    }\n  }\n\n  @Test fun transientDelegateProperty() {\n    val jsonAdapter = moshi.adapter<TransientDelegateProperty>()\n\n    val encoded = TransientDelegateProperty()\n    encoded.a = 3\n    encoded.setB(4)\n    encoded.c = 5\n    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(\"\"\"{\"c\":5}\"\"\")",
+      "metadata": {
+        "language": "kotlin",
+        "total_chunks": 25,
+        "strategy": "enhanced",
+        "chunk_index": 9,
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/codegen/GeneratedAdaptersTest.kt",
+        "commit_count": 5
+      },
+      "similarity_score": 0.7867624759674072
+    }
+  ],
+  "compressed": [
+    {
+      "content": "# File: kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/DefaultConstructorTest.kt (kotlin)\n\n## Key Code Elements:\nimport com.squareup.moshi.JsonClass\nimport com.squareup.moshi.Moshi\nimport org.junit.Test\nclass DefaultConstructorTest {\n  @Test fun minimal() {\n  @Test fun allSet() {\n  @Test fun customDynamic() {\n@JsonClass(generateAdapter = true)\n@JsonClass(generateAdapter = true)\n@Suppress(\"NOTHING_TO_INLINE\")\n\n## Recent Changes:\n- 1e541fc6 by Zac Sweers (zac.sweers@gmail.com): Use raw type for kclass references in dynamic invocation code gen (#911)\n\n* Use raw type for kclass ...\n- a67b4d6a by Zac Sweers (zac.sweers@gmail.com): Inline mask generation and constructor invocation (#908)\n\n* Differentiate local naming from properti...\n- 329d0e14 by Zac Sweers (zac.sweers@gmail.com): Invoke defaults constructor in kotlin code gen (#896)\n\n* Add Util#invokeDefaultConstructor\n\n* Add de...",
+      "metadata": {
+        "commit_count": 3,
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/DefaultConstructorTest.kt",
+        "total_chunks": 1,
+        "language": "kotlin"
+      },
+      "similarity_score": 0.7323722839355469
+    },
+    {
+      "content": "# File: moshi/src/test/java/com/squareup/moshi/JsonValueWriterTest.java (java)\n\n## Key Code Elements:\nimport java.io.IOException;\nimport java.math.BigDecimal;\nimport java.math.BigInteger;\nimport java.util.AbstractMap.SimpleEntry;\nimport java.util.Arrays;\nimport java.util.List;\nimport java.util.Map;\nimport java.util.concurrent.atomic.AtomicInteger;\nimport java.util.concurrent.atomic.AtomicLong;\nimport okio.Buffer;\nimport org.junit.Test;\nimport static java.util.Collections.singletonList;\nimport static org.assertj.core.api.Assertions.assertThat;\nimport static org.junit.Assert.fail;\n  @SuppressWarnings(\"unchecked\")\n\n## Recent Changes:\n- 735f0c39 by Jesse Wilson (jwilson@squareup.com): Upgrade Kotlin, AssertJ, compile-testing, and kotlin-metadata dependencies...\n- a0cd8a4f by Eric Cochran (eric@nightlynexus.com): Allow writing out raw JSON....\n- e9d8538e by jwilson (jwilson@squareup.com): Rename toJsonObject() to toJsonValue(), fromJsonObject() to fromJsonValue().\n\nAlso rename the JsonRe...",
+      "metadata": {
+        "commit_count": 3,
+        "language": "java",
+        "total_chunks": 1,
+        "file_path": "moshi/src/test/java/com/squareup/moshi/JsonValueWriterTest.java",
+        "chunk_index": 0,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.7700781226158142
+    },
+    {
+      "content": "# File: kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/DualKotlinTest.kt (kotlin)\n\n## Key Code Elements:\nimport com.squareup.moshi.FromJson\nimport com.squareup.moshi.Json\nimport com.squareup.moshi.JsonAdapter\nimport com.squareup.moshi.JsonAdapter.Factory\nimport com.squareup.moshi.JsonClass\nimport com.squareup.moshi.JsonDataException\nimport com.squareup.moshi.Moshi\nimport com.squareup.moshi.ToJson\nimport com.squareup.moshi.Types\nimport com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory\nimport com.squareup.moshi.kotlin.reflect.adapter\nimport org.assertj.core.api.Assertions.assertThat\nimport org.intellij.lang.annotations.Language\nimport org.junit.Assert.fail\nimport org.junit.Test\n\n## Recent Changes:\n- 01b7ea4b by Zac Sweers (zac.sweers@gmail.com): Update to KotlinPoet 1.4.1/Kotlin 1.3.50 (#956)\n\n* KotlinPoet 1.4.1 & Kotlin 1.3.50\n\nKotlinPoet uses...\n- b4e67152 by Burkhard Mittelbach (wasabi37a@googlemail.com): Added codegen support for inline classes (#923)\n\n* Added codegen support for inline classes\n\n* moved...\n- 7804d743 by Zac Sweers (zac.sweers@gmail.com): Report json name if different from property name in kotlin (#917)\n\n* Report json name in code gen if...",
+      "metadata": {
+        "strategy": "compressed",
+        "commit_count": 3,
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/DualKotlinTest.kt",
+        "language": "kotlin",
+        "chunk_index": 0,
+        "total_chunks": 1
+      },
+      "similarity_score": 0.7800516486167908
+    },
+    {
+      "content": "# File: moshi/src/main/java/com/squareup/moshi/Json.java (java)\n\n## Key Code Elements:\nimport java.lang.annotation.Documented;\nimport java.lang.annotation.Retention;\nimport java.lang.annotation.Target;\nimport static java.lang.annotation.RetentionPolicy.RUNTIME;\n * elements:\n@Retention(RUNTIME)\n@Documented\n\n## Recent Changes:\n- 81bbe870 by Jesse Wilson (jesse@swank.ca): KotlinJsonAdapter (#281)\n\n* Add kotlin-module with support for Kotlin data classes\n\n* Naming and sty...\n- 8d575b3c by Ryan Harter (ryanjharter@gmail.com): Adds method scope to Json annotation for use with AutoValue....\n- 7890effc by jwilson (jwilson@squareup.com): New @Json annotation to customize a field's name....",
+      "metadata": {
+        "language": "java",
+        "total_chunks": 1,
+        "commit_count": 3,
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "file_path": "moshi/src/main/java/com/squareup/moshi/Json.java"
+      },
+      "similarity_score": 0.7830935120582581
+    },
+    {
+      "content": "# File: kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/codegen/GeneratedAdaptersTest.kt (kotlin)\n\n## Key Code Elements:\nimport com.squareup.moshi.FromJson\nimport com.squareup.moshi.Json\nimport com.squareup.moshi.JsonAdapter\nimport com.squareup.moshi.JsonClass\nimport com.squareup.moshi.JsonDataException\nimport com.squareup.moshi.JsonQualifier\nimport com.squareup.moshi.JsonReader\nimport com.squareup.moshi.JsonWriter\nimport com.squareup.moshi.Moshi\nimport com.squareup.moshi.ToJson\nimport com.squareup.moshi.Types\nimport com.squareup.moshi.internal.NullSafeJsonAdapter\nimport com.squareup.moshi.kotlin.reflect.adapter\nimport org.assertj.core.api.Assertions.assertThat\nimport org.intellij.lang.annotations.Language\n\n## Recent Changes:\n- dbed99d7 by Zac Sweers (zac.sweers@gmail.com): Fix `@field:Json` parameters annotations always taking precedence (#946)\n\n* Add regression test for ...\n- 666d87be by Burkhard Mittelbach (wasabi37a@googlemail.com): added test for internal property without backing field (#921) (#947)...\n- f51de08c by Burkhard Mittelbach (wasabi37a@googlemail.com): added test for transient delegate in kotlin code gen (#922) (#942)\n\n* added test for transient deleg...",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "kotlin",
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "commit_count": 5,
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/codegen/GeneratedAdaptersTest.kt"
+      },
+      "similarity_score": 0.7866791486740112
+    },
+    {
+      "content": "# File: kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt (kotlin)\n\n## Key Code Elements:\nimport com.squareup.moshi.FromJson\nimport com.squareup.moshi.Json\nimport com.squareup.moshi.JsonAdapter\nimport com.squareup.moshi.JsonClass\nimport com.squareup.moshi.JsonDataException\nimport com.squareup.moshi.JsonQualifier\nimport com.squareup.moshi.JsonReader\nimport com.squareup.moshi.JsonWriter\nimport com.squareup.moshi.Moshi\nimport com.squareup.moshi.ToJson\nimport com.squareup.moshi.Types\nimport org.assertj.core.api.Assertions.assertThat\nimport org.junit.Assert.fail\nimport org.junit.Test\nimport java.io.ByteArrayOutputStream\n\n## Recent Changes:\n- 7804d743 by Zac Sweers (zac.sweers@gmail.com): Report json name if different from property name in kotlin (#917)\n\n* Report json name in code gen if...\n- dd0e3807 by Zac Sweers (zac.sweers@gmail.com): Fail on sealed classes in KotlinJsonAdapterFactory and code gen (#914)\n\nResolves #906...\n- 9db91f2d by Zac Sweers (zac.sweers@gmail.com): Kotlin-reflect QoL APIs (#875)\n\n* Start MoshiKotlinExtensions\n\n* Add Moshi.Builder.add() with reifie...",
+      "metadata": {
+        "commit_count": 5,
+        "chunk_index": 0,
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt",
+        "total_chunks": 1,
+        "language": "kotlin",
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.7931538224220276
+    },
+    {
+      "content": "# File: kotlin/reflect/src/main/test/java/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt (kotlin)\n\n## Key Code Elements:\nimport com.squareup.moshi.JsonClass\nimport com.squareup.moshi.Moshi\nimport org.assertj.core.api.Assertions.assertThat\nimport org.junit.Test\nclass KotlinJsonAdapterTest {\n  @JsonClass(generateAdapter = true)\n  class Data\n  @ExperimentalStdlibApi\n  @Test\n\n## Recent Changes:\n- 9db91f2d by Zac Sweers (zac.sweers@gmail.com): Kotlin-reflect QoL APIs (#875)\n\n* Start MoshiKotlinExtensions\n\n* Add Moshi.Builder.add() with reifie...\n- 5c41565f by Eric Cochran (Eric@NightlyNexus.com): Fall back to reflection when generated adapter is not found. (#728)\n\n* Fall back to reflection when ...",
+      "metadata": {
+        "file_path": "kotlin/reflect/src/main/test/java/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapterTest.kt",
+        "commit_count": 2,
+        "language": "kotlin",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.7960727214813232
+    },
+    {
+      "content": "# File: kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/codegen/GeneratedAdaptersTest_CustomGeneratedClassJsonAdapter.kt (kotlin)\n\n## Key Code Elements:\nimport com.squareup.moshi.JsonAdapter\nimport com.squareup.moshi.JsonReader\nimport com.squareup.moshi.JsonWriter\nimport com.squareup.moshi.kotlin.codegen.GeneratedAdaptersTest.CustomGeneratedClass\nclass GeneratedAdaptersTest_CustomGeneratedClassJsonAdapter : JsonAdapter<CustomGeneratedClass>() {\n    TODO()\n    TODO()\n\n## Recent Changes:\n- 86736461 by Zac Sweers (zac.sweers@gmail.com): Fix misspelled codgen package in tests (#937)\n\n* Fix misspelled codgen package in tests\n\nThis has al...",
+      "metadata": {
+        "file_path": "kotlin/tests/src/test/kotlin/com/squareup/moshi/kotlin/codegen/GeneratedAdaptersTest_CustomGeneratedClassJsonAdapter.kt",
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "commit_count": 1,
+        "total_chunks": 1,
+        "language": "kotlin"
+      },
+      "similarity_score": 0.813274621963501
+    },
+    {
+      "content": "# File: kotlin/reflect/src/main/java/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapter.kt (kotlin)\n\n## Key Code Elements:\nimport com.squareup.moshi.Json\nimport com.squareup.moshi.JsonAdapter\nimport com.squareup.moshi.JsonDataException\nimport com.squareup.moshi.JsonReader\nimport com.squareup.moshi.JsonWriter\nimport com.squareup.moshi.Moshi\nimport com.squareup.moshi.Types\nimport com.squareup.moshi.internal.Util\nimport com.squareup.moshi.internal.Util.generatedAdapter\nimport com.squareup.moshi.internal.Util.resolve\nimport java.lang.reflect.Modifier\nimport java.lang.reflect.Type\nimport java.util.AbstractMap.SimpleEntry\nimport kotlin.collections.Map.Entry\nimport kotlin.reflect.KFunction\n\n## Recent Changes:\n- 7804d743 by Zac Sweers (zac.sweers@gmail.com): Report json name if different from property name in kotlin (#917)\n\n* Report json name in code gen if...\n- dd0e3807 by Zac Sweers (zac.sweers@gmail.com): Fail on sealed classes in KotlinJsonAdapterFactory and code gen (#914)\n\nResolves #906...\n- 5a4530b7 by Zac Sweers (zac.sweers@gmail.com): Fast followups from #899 (#901)\n\nFollowup fixes from the previous PR...",
+      "metadata": {
+        "file_path": "kotlin/reflect/src/main/java/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapter.kt",
+        "commit_count": 5,
+        "strategy": "compressed",
+        "language": "kotlin",
+        "chunk_index": 0,
+        "total_chunks": 1
+      },
+      "similarity_score": 0.819083571434021
+    },
+    {
+      "content": "# File: kotlin/codegen/src/main/java/com/squareup/moshi/kotlin/codegen/api/PropertyGenerator.kt (kotlin)\n\n## Key Code Elements:\nimport com.squareup.kotlinpoet.BOOLEAN\nimport com.squareup.kotlinpoet.NameAllocator\nimport com.squareup.kotlinpoet.PropertySpec\n   * IsPresent is required if the following conditions are met:\n\n## Recent Changes:\n- dbed99d7 by Zac Sweers (zac.sweers@gmail.com): Fix `@field:Json` parameters annotations always taking precedence (#946)\n\n* Add regression test for ...\n- a67b4d6a by Zac Sweers (zac.sweers@gmail.com): Inline mask generation and constructor invocation (#908)\n\n* Differentiate local naming from properti...\n- ea300997 by Zac Sweers (zac.sweers@gmail.com): Decouple code gen API from apt and kotlin-metadata (#816)\n\n* Decouple AdapterGenerator from kotlin-m...",
+      "metadata": {
+        "strategy": "compressed",
+        "language": "kotlin",
+        "commit_count": 3,
+        "total_chunks": 1,
+        "file_path": "kotlin/codegen/src/main/java/com/squareup/moshi/kotlin/codegen/api/PropertyGenerator.kt",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.8535581827163696
+    },
+    {
+      "content": "# File: moshi/src/main/java/com/squareup/moshi/ClassJsonAdapter.java (java)\n\n## Key Code Elements:\nimport com.squareup.moshi.internal.Util;\nimport java.io.IOException;\nimport java.lang.annotation.Annotation;\nimport java.lang.reflect.Field;\nimport java.lang.reflect.InvocationTargetException;\nimport java.lang.reflect.Modifier;\nimport java.lang.reflect.ParameterizedType;\nimport java.lang.reflect.Type;\nimport java.util.Map;\nimport java.util.Set;\nimport java.util.TreeMap;\nimport javax.annotation.Nullable;\nimport static com.squareup.moshi.internal.Util.resolve;\n * they are either public or protected. This includes the following packages and their subpackages:\n    @Override public @Nullable JsonAdapter<?> create(\n\n## Recent Changes:\n- 53b045eb by Jesse Wilson (jwilson@squareup.com): Look up kotlin.Metadata::class only once...\n- 319d7c8b by Zac Sweers (zac.sweers@gmail.com): Don't reflect on kotlinx and update doc\n\nThis adds kotlinx to the exclusion list, and also updates t...\n- 25fcbb26 by Zac Sweers (zac.sweers@gmail.com): Improve message and match in tests...",
+      "metadata": {
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "commit_count": 5,
+        "chunk_index": 0,
+        "language": "java",
+        "file_path": "moshi/src/main/java/com/squareup/moshi/ClassJsonAdapter.java"
+      },
+      "similarity_score": 0.8695515990257263
+    },
+    {
+      "content": "# File: moshi/src/main/java/com/squareup/moshi/JsonClass.java (java)\n\n## Key Code Elements:\nimport java.lang.annotation.Documented;\nimport java.lang.annotation.Retention;\nimport java.lang.reflect.Type;\nimport static java.lang.annotation.RetentionPolicy.RUNTIME;\n@Retention(RUNTIME)\n@Documented\n   * adapters:\n   * <p>Requirements for generated adapter class signatures:\n\n## Recent Changes:\n- 0943ef5a by Zac Sweers (pandanomic@gmail.com): Allow custom generators (#847)\n\n* Extract generatedJsonAdapterName to public API for other generator...\n- 9401a810 by Jesse Wilson (jwilson@squareup.com): Support generated adapters for Kotlin superclasses...\n- c4a2e765 by Eric Cochran (Eric@NightlyNexus.com): Remove data class limitation from JsonClass doc....",
+      "metadata": {
+        "strategy": "compressed",
+        "file_path": "moshi/src/main/java/com/squareup/moshi/JsonClass.java",
+        "language": "java",
+        "commit_count": 4,
+        "chunk_index": 0,
+        "total_chunks": 1
+      },
+      "similarity_score": 0.8707824945449829
+    },
+    {
+      "content": "# File: kotlin/codegen/src/main/java/com/squareup/moshi/kotlin/codegen/api/TargetParameter.kt (kotlin)\n\n## Key Code Elements:\nimport com.squareup.kotlinpoet.AnnotationSpec\n\n## Recent Changes:\n- dbed99d7 by Zac Sweers (zac.sweers@gmail.com): Fix `@field:Json` parameters annotations always taking precedence (#946)\n\n* Add regression test for ...\n- 54d07b6c by Zac Sweers (zac.sweers@gmail.com): Migrate to KotlinPoet-metadata (#903)\n\n* Add kotlinpoet version to properties\n\n* Swap in kotlinpoet-...\n- ea300997 by Zac Sweers (zac.sweers@gmail.com): Decouple code gen API from apt and kotlin-metadata (#816)\n\n* Decouple AdapterGenerator from kotlin-m...",
+      "metadata": {
+        "commit_count": 3,
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "file_path": "kotlin/codegen/src/main/java/com/squareup/moshi/kotlin/codegen/api/TargetParameter.kt",
+        "language": "kotlin",
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.8769732713699341
+    },
+    {
+      "content": "# File: adapters/src/test/java/com/squareup/moshi/adapters/PolymorphicJsonAdapterFactoryTest.java (java)\n\n## Key Code Elements:\nimport com.squareup.moshi.JsonAdapter;\nimport com.squareup.moshi.JsonDataException;\nimport com.squareup.moshi.JsonReader;\nimport com.squareup.moshi.Moshi;\nimport java.io.IOException;\nimport java.util.Collections;\nimport java.util.Map;\nimport okio.Buffer;\nimport org.junit.Test;\nimport static org.assertj.core.api.Assertions.assertThat;\nimport static org.junit.Assert.fail;\n@SuppressWarnings(\"CheckReturnValue\")\n  @Test public void fromJson() throws IOException {\n  @Test public void toJson() {\n  @Test public void unregisteredLabelValue() throws IOException {\n\n## Recent Changes:\n- 02cf66f1 by Jesse Wilson (jwilson@squareup.com): Specify precedence when a subtype has multiple labels...\n- 687acba7 by Nuno Gomes (man@thesepeasrock.com): removed limitation where subtypes should be unique (#856)\n\n* removed limitation where subtypes shoul...\n- 126c8ea9 by Eric Cochran (Eric@NightlyNexus.com): Support fail on unknown in PolymorphicJsonAdapterFactory. (#792)\n\nBefore, this would fail when skipp...",
+      "metadata": {
+        "commit_count": 5,
+        "file_path": "adapters/src/test/java/com/squareup/moshi/adapters/PolymorphicJsonAdapterFactoryTest.java",
+        "strategy": "compressed",
+        "language": "java",
+        "total_chunks": 1,
+        "chunk_index": 0
+      },
+      "similarity_score": 0.8786511421203613
+    },
+    {
+      "content": "# File: kotlin/codegen/src/test/java/com/squareup/moshi/kotlin/codegen/JsonClassCodegenProcessorTest.kt (kotlin)\n\n## Key Code Elements:\nimport com.tschuchort.compiletesting.KotlinCompilation\nimport com.tschuchort.compiletesting.SourceFile\nimport com.tschuchort.compiletesting.SourceFile.Companion.kotlin\nimport com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview\nimport org.assertj.core.api.Assertions.assertThat\nimport org.junit.Ignore\nimport org.junit.Rule\nimport org.junit.Test\nimport org.junit.rules.TemporaryFolder\n@UseExperimental(KotlinPoetMetadataPreview::class)\nclass JsonClassCodegenProcessorTest {\n  @Rule @JvmField var temporaryFolder: TemporaryFolder = TemporaryFolder()\n  @Test fun privateConstructor() {\n          import com.squareup.moshi.JsonClass\n          @JsonClass(generateAdapter = true)\n\n## Recent Changes:\n- 54d07b6c by Zac Sweers (zac.sweers@gmail.com): Migrate to KotlinPoet-metadata (#903)\n\n* Add kotlinpoet version to properties\n\n* Swap in kotlinpoet-...\n- 5f98e936 by Zac Sweers (zac.sweers@gmail.com): Switch to kotlin-compile-testing for JsonClassCodegenProcessorTe… (#928)\n\n* Add kotlin-compile-testi...\n- dd0e3807 by Zac Sweers (zac.sweers@gmail.com): Fail on sealed classes in KotlinJsonAdapterFactory and code gen (#914)\n\nResolves #906...",
+      "metadata": {
+        "language": "kotlin",
+        "strategy": "compressed",
+        "file_path": "kotlin/codegen/src/test/java/com/squareup/moshi/kotlin/codegen/JsonClassCodegenProcessorTest.kt",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "commit_count": 5
+      },
+      "similarity_score": 0.8893854022026062
+    },
+    {
+      "content": "# File: moshi/src/main/java/com/squareup/moshi/internal/NonNullJsonAdapter.java (java)\n\n## Key Code Elements:\nimport com.squareup.moshi.JsonAdapter;\nimport com.squareup.moshi.JsonDataException;\nimport com.squareup.moshi.JsonReader;\nimport com.squareup.moshi.JsonWriter;\nimport java.io.IOException;\nimport javax.annotation.Nullable;\n  @Nullable\n  @Override\n  @Override\n  @Override\n\n## Recent Changes:\n- 9db91f2d by Zac Sweers (zac.sweers@gmail.com): Kotlin-reflect QoL APIs (#875)\n\n* Start MoshiKotlinExtensions\n\n* Add Moshi.Builder.add() with reifie...",
+      "metadata": {
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "language": "java",
+        "strategy": "compressed",
+        "file_path": "moshi/src/main/java/com/squareup/moshi/internal/NonNullJsonAdapter.java",
+        "commit_count": 1
+      },
+      "similarity_score": 0.8962125182151794
+    },
+    {
+      "content": "# File: kotlin/codegen/src/main/java/com/squareup/moshi/kotlin/codegen/api/TargetProperty.kt (kotlin)\n\n## Key Code Elements:\nimport com.squareup.kotlinpoet.KModifier\nimport com.squareup.kotlinpoet.PropertySpec\nimport com.squareup.kotlinpoet.TypeName\n\n## Recent Changes:\n- dbed99d7 by Zac Sweers (zac.sweers@gmail.com): Fix `@field:Json` parameters annotations always taking precedence (#946)\n\n* Add regression test for ...\n- 54d07b6c by Zac Sweers (zac.sweers@gmail.com): Migrate to KotlinPoet-metadata (#903)\n\n* Add kotlinpoet version to properties\n\n* Swap in kotlinpoet-...\n- ea300997 by Zac Sweers (zac.sweers@gmail.com): Decouple code gen API from apt and kotlin-metadata (#816)\n\n* Decouple AdapterGenerator from kotlin-m...",
+      "metadata": {
+        "strategy": "compressed",
+        "commit_count": 3,
+        "language": "kotlin",
+        "file_path": "kotlin/codegen/src/main/java/com/squareup/moshi/kotlin/codegen/api/TargetProperty.kt",
+        "chunk_index": 0,
+        "total_chunks": 1
+      },
+      "similarity_score": 0.9029921293258667
+    },
+    {
+      "content": "# File: moshi/src/test/java/com/squareup/moshi/JsonAdapterTest.java (java)\n\n## Key Code Elements:\nimport java.io.IOException;\nimport java.util.Arrays;\nimport java.util.Collections;\nimport java.util.List;\nimport java.util.Locale;\nimport java.util.Map;\nimport javax.annotation.Nullable;\nimport org.junit.Test;\nimport org.junit.runner.RunWith;\nimport org.junit.runners.Parameterized;\nimport org.junit.runners.Parameterized.Parameter;\nimport org.junit.runners.Parameterized.Parameters;\nimport static org.assertj.core.api.Assertions.assertThat;\nimport static org.junit.Assert.fail;\nimport static org.junit.Assume.assumeTrue;\n\n## Recent Changes:\n- 71cf7458 by Zac Sweers (zac.sweers@gmail.com): Don't re-wrap nullsafe/nonnull adapters if they are already one (#909)\n\n* Don't re-wrap nullsafe/non...\n- 9db91f2d by Zac Sweers (zac.sweers@gmail.com): Kotlin-reflect QoL APIs (#875)\n\n* Start MoshiKotlinExtensions\n\n* Add Moshi.Builder.add() with reifie...\n- 0943ef5a by Zac Sweers (pandanomic@gmail.com): Allow custom generators (#847)\n\n* Extract generatedJsonAdapterName to public API for other generator...",
+      "metadata": {
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "file_path": "moshi/src/test/java/com/squareup/moshi/JsonAdapterTest.java",
+        "commit_count": 5,
+        "chunk_index": 0,
+        "language": "java"
+      },
+      "similarity_score": 0.905076265335083
+    },
+    {
+      "content": "# File: moshi/src/test/java/com/squareup/moshi/JsonValueReaderTest.java (java)\n\n## Key Code Elements:\nimport java.io.IOException;\nimport java.util.ArrayList;\nimport java.util.Arrays;\nimport java.util.Collections;\nimport java.util.LinkedHashMap;\nimport java.util.List;\nimport java.util.Map;\nimport org.junit.Test;\nimport static com.squareup.moshi.TestUtil.MAX_DEPTH;\nimport static com.squareup.moshi.TestUtil.repeat;\nimport static java.util.Collections.singletonList;\nimport static java.util.Collections.singletonMap;\nimport static org.assertj.core.api.Assertions.assertThat;\nimport static org.junit.Assert.fail;\n  @Test public void array() throws Exception {\n\n## Recent Changes:\n- 359244e9 by Jesse Wilson (jesse@swank.ca): Fix JsonValueReader to support up to 255 levels of nesting. (#417)\n\nFollow up to https://github.com/...\n- f922371f by Eric Cochran (Eric@NightlyNexus.com): Let JsonValueReader.nextString read numbers. (#390)\n\n* Let JsonValueReader.nextString read numbers.\n...\n- e9d8538e by jwilson (jwilson@squareup.com): Rename toJsonObject() to toJsonValue(), fromJsonObject() to fromJsonValue().\n\nAlso rename the JsonRe...",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "commit_count": 3,
+        "language": "java",
+        "file_path": "moshi/src/test/java/com/squareup/moshi/JsonValueReaderTest.java",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.9088573455810547
+    },
+    {
+      "content": "# File: moshi/src/test/java/com/squareup/moshi/PromoteNameToValueTest.java (java)\n\n## Key Code Elements:\nimport java.util.List;\nimport okio.Buffer;\nimport org.junit.Test;\nimport org.junit.runner.RunWith;\nimport org.junit.runners.Parameterized;\nimport org.junit.runners.Parameterized.Parameter;\nimport org.junit.runners.Parameterized.Parameters;\nimport static org.assertj.core.api.Assertions.assertThat;\nimport static org.junit.Assert.fail;\n@RunWith(Parameterized.class)\n  @Parameter public JsonCodecFactory factory;\n  @Parameters(name = \"{0}\")\n  @Test public void readerStringValue() throws Exception {\n  @Test public void readerIntegerValue() throws Exception {\n  @Test public void readerDoubleValue() throws Exception {\n\n## Recent Changes:\n- 3816dbda by Jake Wharton (jakew@google.com): Add JsonWriter.valueSink for streaming data\n\nUnlike `value(BufferedSource)`, this retains the push-b...\n- a0cd8a4f by Eric Cochran (eric@nightlynexus.com): Allow writing out raw JSON....\n- 44e6fbd0 by Eric Cochran (eric@nightlynexus.com): Add coherent error message for unencoded map keys....",
+      "metadata": {
+        "language": "java",
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "file_path": "moshi/src/test/java/com/squareup/moshi/PromoteNameToValueTest.java",
+        "chunk_index": 0,
+        "commit_count": 5
+      },
+      "similarity_score": 0.9246872663497925
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "reason": "Concurrent query execution leads to race conditions in connection management, causing ResultSet to be accessed after closure or while null.",
+  "location": [
+    "org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.connection.BackendConnection",
+    "org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.execute.response.ExecuteQueryResponse"
+  ],
+  "fix": "Implement proper synchronization in BackendConnection to manage connection states and ensure ResultSet is not accessed after closure. Add null checks in ExecuteQueryResponse before accessing ResultSet."
+}

@@ -1,0 +1,60 @@
+{
+  "repository": {
+    "name": "android/compose-samples",
+    "sha": "5ca49e1e9cad5617c836d28d735d683399f9c613",
+    "generation_date": "2025-06-15T10:58:33.565170"
+  },
+  "files": {
+    "standard": {
+      "file_name": "repomix-output-compose-samples.md",
+      "file_size_mb": 2.0,
+      "character_count": 2094927,
+      "line_count": 55879,
+      "word_count": 188592,
+      "token_counts": {
+        "gpt-4": 500494,
+        "estimated": 523731
+      },
+      "created_time": "2025-06-15T10:54:41.613047",
+      "modified_time": "2025-06-15T10:54:41.613047",
+      "generation_time": "2025-06-15T10:58:31.286138"
+    },
+    "compressed": {
+      "file_name": "repomix-output-compose-samples-compress.md",
+      "file_size_mb": 2.0,
+      "character_count": 2095117,
+      "line_count": 55881,
+      "word_count": 188622,
+      "token_counts": {
+        "gpt-4": 500533,
+        "estimated": 523779
+      },
+      "created_time": "2025-06-15T10:55:15.119803",
+      "modified_time": "2025-06-15T10:55:15.119803",
+      "generation_time": "2025-06-15T10:58:31.592256"
+    },
+    "git_enhanced": {
+      "file_name": "repomix-output-compose-samples-with-git.md",
+      "file_size_mb": 5.4,
+      "character_count": 5560560,
+      "line_count": 164234,
+      "word_count": 549570,
+      "token_counts": {
+        "gpt-4": 1467895,
+        "estimated": 1390140
+      },
+      "created_time": "2025-06-15T10:58:30.315977",
+      "modified_time": "2025-06-15T10:58:30.315977",
+      "generation_time": "2025-06-15T10:58:33.562321"
+    }
+  },
+  "summary": {
+    "total_files": 3,
+    "total_size_bytes": 0,
+    "total_tokens_gpt4": 2468922,
+    "compression_ratio": {
+      "size": 0,
+      "tokens": 1.0
+    }
+  }
+}

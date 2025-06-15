@@ -1,0 +1,8 @@
+{
+  "reason": "The issue occurs when 'spring.cloud.service-registry.auto-registration.enabled' is set to false, which prevents the creation of the 'nacosRegistration' bean due to the @ConditionalOnProperty condition in NacosDiscoveryAutoConfiguration. However, NacosDiscoveryClient still requires this bean, leading to a startup failure.",
+  "location": [
+    "org.springframework.cloud.alibaba.nacos.NacosDiscoveryAutoConfiguration",
+    "org.springframework.cloud.alibaba.nacos.NacosDiscoveryClientAutoConfiguration"
+  ],
+  "fix": "Modify NacosDiscoveryClientAutoConfiguration to also check for 'spring.cloud.service-registry.auto-registration.enabled' property before creating the DiscoveryClient bean. Alternatively, make the NacosRegistration bean creation independent of auto-registration setting if discovery is enabled."
+}

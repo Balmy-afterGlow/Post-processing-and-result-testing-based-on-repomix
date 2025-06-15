@@ -1,0 +1,7 @@
+{
+  "reason": "The issue occurs due to early hostname resolution in the Endpoint constructor, which doesn't handle temporary DNS failures or network outages properly. This leads to retry attempts being ineffective and endpoints getting stuck in a failed state when multiple connections share the same endpoint.",
+  "location": [
+    "ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/Endpoint.kt"
+  ],
+  "fix": "Modify the Endpoint class to delay hostname resolution until connection time and handle unresolved addresses by retrying the resolution. The fix should involve moving the InetSocketAddress creation to the connection attempt and properly handling UnresolvedAddressException by retrying the resolution."
+}

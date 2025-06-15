@@ -1,0 +1,7 @@
+{
+  "reason": "The issue is caused by the image being rendered with a negative height in the draw method, which flips it upside down in the preview window.",
+  "location": [
+    "demos/metagun/metagun-desktop/src/com/mojang/metagun/screen/Screen.java"
+  ],
+  "fix": "Change the draw method to use positive height for the TextureRegion: spriteBatch.draw(region, x, y, width, region.getRegionHeight());"
+}

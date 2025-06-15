@@ -1,0 +1,7 @@
+{
+  "reason": "The issue occurs because `docker-compose logs` fails when any service has a non-readable logging driver (like 'none'), even when no specific service is requested. The current implementation doesn't filter out services with unsupported logging drivers when no specific service is specified.",
+  "location": [
+    "compose/cli/main.py"
+  ],
+  "fix": "Modify the logs command implementation to filter out services with non-readable logging drivers when no specific service is requested, similar to how `docker-compose up` handles it. Only fail when explicitly requesting logs for a service with a non-readable driver."
+}

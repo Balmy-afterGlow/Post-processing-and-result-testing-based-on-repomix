@@ -1,0 +1,8 @@
+{
+  "reason": "The issue reports that RadioButton parent should have selectableGroup modifier for better TalkBack accessibility. Currently, the MultipleChoiceQuestion composable doesn't use selectableGroup modifier on its parent Column.",
+  "location": [
+    "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/question/ChoiceQuestion.kt",
+    "MultipleChoiceQuestion"
+  ],
+  "fix": "Add selectableGroup() modifier to the Column in MultipleChoiceQuestion composable:\n\n@Composable\nfun MultipleChoiceQuestion(\n    possibleAnswer: PossibleAnswer.MultipleChoice,\n    answer: Answer.MultipleChoice?,\n    onAnswerSelected: (Int, Boolean) -> Unit,\n    modifier: Modifier = Modifier\n) {\n    Column(modifier.selectableGroup()) {\n        possibleAnswer.options.forEach { option ->\n            val selected = answer?.answersStringRes?.contains(option.textRes) ?: false\n            Answer(\n                text = stringResource(option.textRes),\n                painter = option.iconRes?.let { painterResource(it) },\n                selected = selected,\n                onOptionSelected = { onAnswerSelected(option.textRes, !selected) },\n                isSingleChoice = false,\n                modifier = Modifier.padding(vertical = 8.dp)\n            )\n        }\n    }\n}"
+}

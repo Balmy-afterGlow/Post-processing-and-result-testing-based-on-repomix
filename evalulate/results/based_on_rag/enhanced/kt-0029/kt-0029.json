@@ -1,0 +1,7 @@
+{
+  "reason": "The issue occurs when multiple @Transient fields are present in a Kotlin data class, causing a duplicate option exception during JSON adapter creation. This happens because the KotlinJsonAdapterFactory is not properly handling multiple transient fields.",
+  "location": [
+    "kotlin/reflect/src/main/java/com/squareup/moshi/kotlin/reflect/KotlinJsonAdapter.kt"
+  ],
+  "fix": "The KotlinJsonAdapter should be modified to properly handle multiple @Transient fields by filtering them out during the options creation process. The fix would involve updating the KotlinJsonAdapterFactory.create() method to skip transient properties when building the options array."
+}

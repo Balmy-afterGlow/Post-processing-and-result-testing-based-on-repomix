@@ -1,0 +1,708 @@
+{
+  "basic": [
+    {
+      "content": "# File: demos/pax-britannica/pax-britannica/src/de/swagner/paxbritannica/help/ScreenshotSaver.java (java)\n\n## Code Content:\n```java\npackage de.swagner.paxbritannica.help;\n\nimport java.awt.Point;\nimport java.awt.color.ColorSpace;\nimport java.awt.image.BufferedImage;\nimport java.awt.image.ColorModel;\nimport java.awt.image.ComponentColorModel;\nimport java.awt.image.DataBuffer;\nimport java.awt.image.DataBufferByte;\nimport java.awt.image.PixelInterleavedSampleModel;\nimport java.awt.image.Raster;\nimport java.awt.image.WritableRaster;\nimport java.io.File;\nimport java.io.IOException;\n\nimport javax.imageio.ImageIO;\n\nimport com.badlogic.gdx.Application.ApplicationType;\nimport com.badlogic.gdx.Gdx;\nimport com.badlogic.gdx.utils.ScreenUtils;\n\npublic class ScreenshotSaver {\n\n\tpublic static void saveScreenshot(String baseName) throws IOException {\n\t\tif(Gdx.app.getType()==ApplicationType.Android){\n\t\t\treturn;\n\t\t}\n\n\t\tbyte[] screenshotPixels = ScreenUtils.getFrameBufferPixels(true);\n\t\tint width = Gdx.graphics.getWidth();\n\t\tint height = Gdx.graphics.getHeight();\n\n\t\tDataBufferByte dataBuffer = new DataBufferByte(screenshotPixels, screenshotPixels.length);\n\n\t\tint[] offsets = { 0, 1, 2 };\n\t\tPixelInterleavedSampleModel sampleModel = new PixelInterleavedSampleModel(DataBuffer.TYPE_BYTE, width, height, 4, 4 * width, offsets);\n\n\t\tColorModel cm = new ComponentColorModel(ColorSpace.getInstance(ColorSpace.CS_sRGB), new int[] { 8, 8, 8 }, false, false, ComponentColorModel.OPAQUE, DataBuffer.TYPE_BYTE);\n\n\t\tWritableRaster raster = Raster.createWritableRaster(sampleModel, dataBuffer, new Point(0, 0));\n\n\t\tBufferedImage img = new BufferedImage(cm, raster, false, null);\n\n\t\tImageIO.write(img, \"png\", File.createTempFile(baseName, \".png\"));\n\t}\n\n}\n```",
+      "metadata": {
+        "total_chunks": 1,
+        "strategy": "basic",
+        "chunk_index": 0,
+        "language": "java",
+        "file_path": "demos/pax-britannica/pax-britannica/src/de/swagner/paxbritannica/help/ScreenshotSaver.java"
+      },
+      "similarity_score": 1.360257625579834
+    },
+    {
+      "content": "import org.lwjgl.opengl.GL11;\n\nimport com.badlogic.gdx.ApplicationListener;\nimport com.badlogic.gdx.Gdx;\nimport com.badlogic.gdx.backends.lwjgl.LwjglCanvas;\nimport com.badlogic.gdx.graphics.Color;\nimport com.badlogic.gdx.graphics.Texture;\nimport com.badlogic.gdx.graphics.g2d.BitmapFont;\nimport com.badlogic.gdx.tools.hiero.unicodefont.GlyphPage;\nimport com.badlogic.gdx.tools.hiero.unicodefont.HieroSettings;\nimport com.badlogic.gdx.tools.hiero.unicodefont.UnicodeFont;\nimport com.badlogic.gdx.tools.hiero.unicodefont.effects.ColorEffect;\nimport com.badlogic.gdx.tools.hiero.unicodefont.effects.ConfigurableEffect;\nimport com.badlogic.gdx.tools.hiero.unicodefont.effects.ConfigurableEffect.Value;\nimport com.badlogic.gdx.tools.hiero.unicodefont.effects.DistanceFieldEffect;\nimport com.badlogic.gdx.tools.hiero.unicodefont.effects.EffectUtil;\nimport com.badlogic.gdx.tools.hiero.unicodefont.effects.GradientEffect;\nimport com.badlogic.gdx.tools.hiero.unicodefont.effects.OutlineEffect;\nimport com.badlogic.gdx.tools.hiero.unicodefont.effects.OutlineWobbleEffect;\nimport com.badlogic.gdx.tools.hiero.unicodefont.effects.OutlineZigzagEffect;\nimport com.badlogic.gdx.tools.hiero.unicodefont.effects.ShadowEffect;\n\nimport static org.lwjgl.opengl.GL11.*;\n\n/** A tool to visualize settings for {@link UnicodeFont} and to export BMFont files for use with {@link BitmapFont}.\n * @author Nathan Sweet */\npublic class Hiero extends JFrame {\n\tstatic final String NEHE = \"ABCDEFGHIJKLMNOPQRSTUVWXYZ\\n\" //\n\t\t+ \"abcdefghijklmnopqrstuvwxyz\\n1234567890\\n\" //\n\t\t+ \"\\\"!`?'.,;:()[]{}<>|/@\\\\^$-%+=#_&~*\\u007F\";\n\n\tvolatile UnicodeFont newUnicodeFont;\n\tUnicodeFont unicodeFont;\n\tColor renderingBackgroundColor = Color.BLACK;\n\tList effectPanels = new ArrayList();\n\tPreferences prefs;\n\tColorEffect colorEffect;",
+      "metadata": {
+        "chunk_index": 2,
+        "strategy": "basic",
+        "file_path": "extensions/gdx-tools/src/com/badlogic/gdx/tools/hiero/Hiero.java",
+        "total_chunks": 31,
+        "language": "java"
+      },
+      "similarity_score": 1.3910703659057617
+    },
+    {
+      "content": "package com.badlogic.gdx.maps.tiled;\n\nimport java.io.IOException;\nimport java.util.StringTokenizer;\n\nimport com.badlogic.gdx.assets.AssetDescriptor;\nimport com.badlogic.gdx.assets.AssetLoaderParameters;\nimport com.badlogic.gdx.assets.AssetManager;\nimport com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader;\nimport com.badlogic.gdx.assets.loaders.FileHandleResolver;\nimport com.badlogic.gdx.assets.loaders.TextureLoader;\nimport com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter;\nimport com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;\nimport com.badlogic.gdx.files.FileHandle;\nimport com.badlogic.gdx.graphics.Texture;\nimport com.badlogic.gdx.graphics.Texture.TextureFilter;\nimport com.badlogic.gdx.graphics.g2d.TextureRegion;\nimport com.badlogic.gdx.maps.ImageResolver;\nimport com.badlogic.gdx.maps.ImageResolver.AssetManagerImageResolver;\nimport com.badlogic.gdx.maps.ImageResolver.DirectImageResolver;\nimport com.badlogic.gdx.maps.MapLayer;\nimport com.badlogic.gdx.maps.MapObject;\nimport com.badlogic.gdx.maps.MapProperties;\nimport com.badlogic.gdx.maps.objects.EllipseMapObject;\nimport com.badlogic.gdx.maps.objects.PolygonMapObject;\nimport com.badlogic.gdx.maps.objects.PolylineMapObject;\nimport com.badlogic.gdx.maps.objects.RectangleMapObject;\nimport com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;\nimport com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile;\nimport com.badlogic.gdx.math.Polygon;\nimport com.badlogic.gdx.math.Polyline;\nimport com.badlogic.gdx.utils.Array;\nimport com.badlogic.gdx.utils.Base64Coder;\nimport com.badlogic.gdx.utils.GdxRuntimeException;\nimport com.badlogic.gdx.utils.ObjectMap;\nimport com.badlogic.gdx.utils.XmlReader;\nimport com.badlogic.gdx.utils.XmlReader.Element;\n\n/** @brief synchronous loader for TMX maps created with the Tiled tool */\npublic class TmxMapLoader extends AsynchronousAssetLoader<TiledMap, TmxMapLoader.Parameters> {",
+      "metadata": {
+        "chunk_index": 1,
+        "file_path": "backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/maps/tiled/TmxMapLoader.java",
+        "strategy": "basic",
+        "language": "java",
+        "total_chunks": 16
+      },
+      "similarity_score": 1.4373714923858643
+    },
+    {
+      "content": "# File: demos/pax-britannica/pax-britannica/src/de/swagner/paxbritannica/settings/Settings.java (java)\n\n## Code Content:\n```java\npackage de.swagner.paxbritannica.settings;\n\nimport com.badlogic.gdx.Game;\nimport com.badlogic.gdx.Gdx;\nimport com.badlogic.gdx.Input;\nimport com.badlogic.gdx.InputProcessor;\nimport com.badlogic.gdx.Preferences;\nimport com.badlogic.gdx.graphics.OrthographicCamera;\nimport com.badlogic.gdx.graphics.Texture.TextureFilter;\nimport com.badlogic.gdx.graphics.g2d.BitmapFont;\nimport com.badlogic.gdx.graphics.g2d.Sprite;\nimport com.badlogic.gdx.graphics.g2d.SpriteBatch;\nimport com.badlogic.gdx.math.Intersector;\nimport com.badlogic.gdx.math.Vector3;\nimport com.badlogic.gdx.math.collision.BoundingBox;\nimport com.badlogic.gdx.math.collision.Ray;\n\nimport de.swagner.paxbritannica.DefaultScreen;\nimport de.swagner.paxbritannica.GameInstance;\nimport de.swagner.paxbritannica.Resources;\nimport de.swagner.paxbritannica.background.BackgroundFXRenderer;\nimport de.swagner.paxbritannica.mainmenu.MainMenu;\n\npublic class Settings extends DefaultScreen implements InputProcessor {\n\t\n\tSprite back;\n\t\n\tBoundingBox collisionBack = new BoundingBox();\n\tBoundingBox collisionDiffEasy = new BoundingBox();\n\tBoundingBox collisionDiffMedium = new BoundingBox();\n\tBoundingBox collisionDiffHard = new BoundingBox();\n\t\n\tBoundingBox collisionFacHealthLow = new BoundingBox();\n\tBoundingBox collisionFacHealthMedium = new BoundingBox();\n\tBoundingBox collisionFacHealthHigh = new BoundingBox();\t\n\t\n\tBoundingBox collisionAntiAliasOff = new BoundingBox();\n\tBoundingBox collisionAntiAliasOn = new BoundingBox();\n\n\tSprite checkboxOn;\n\tSprite checkboxOff;\n\t\n\tBackgroundFXRenderer backgroundFX = new BackgroundFXRenderer();\n\tSprite blackFade;\n\n\tOrthographicCamera cam;\n\n\tBitmapFont font;\n\t\n\tSpriteBatch titleBatch;\n\tSpriteBatch fadeBatch;\n\t\n\tRay collisionRay;\n\n\tboolean finished = false;\n\t\n\tfloat time = 0;\n\tfloat fade = 1.0f;",
+      "metadata": {
+        "strategy": "basic",
+        "file_path": "demos/pax-britannica/pax-britannica/src/de/swagner/paxbritannica/settings/Settings.java",
+        "language": "java",
+        "chunk_index": 0,
+        "total_chunks": 11
+      },
+      "similarity_score": 1.448969841003418
+    },
+    {
+      "content": "package com.badlogic.gdx.graphics.g2d;\n\nimport java.io.BufferedReader;\nimport java.io.IOException;\nimport java.io.InputStreamReader;\nimport java.util.StringTokenizer;\n\nimport com.badlogic.gdx.Gdx;\nimport com.badlogic.gdx.files.FileHandle;\nimport com.badlogic.gdx.graphics.Color;\nimport com.badlogic.gdx.graphics.Texture;\nimport com.badlogic.gdx.graphics.Texture.TextureFilter;\nimport com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;\nimport com.badlogic.gdx.utils.Array;\nimport com.badlogic.gdx.utils.Disposable;\nimport com.badlogic.gdx.utils.FloatArray;\nimport com.badlogic.gdx.utils.GdxRuntimeException;\nimport com.badlogic.gdx.utils.StreamUtils;\n\n/** Renders bitmap fonts. The font consists of 2 files: an image file or {@link TextureRegion} containing the glyphs and a file in\n * the AngleCode BMFont text format that describes where each glyph is on the image. Currently only a single image of glyphs is\n * supported.<br>\n * <br>\n * Text is drawn using a {@link SpriteBatch}. Text can be cached in a {@link BitmapFontCache} for faster rendering of static text,\n * which saves needing to compute the location of each glyph each frame.<br>\n * <br>\n * * The texture for a BitmapFont loaded from a file is managed. {@link #dispose()} must be called to free the texture when no\n * longer needed. A BitmapFont loaded using a {@link TextureRegion} is managed if the region's texture is managed. Disposing the\n * BitmapFont disposes the region's texture, which may not be desirable if the texture is still being used elsewhere.<br>\n * <br>\n * The code was originally based on Matthias Mann's TWL BitmapFont class. Thanks for sharing, Matthias! :)\n * @author Nathan Sweet\n * @author Matthias Mann */\npublic class BitmapFont implements Disposable {\n\tstatic private final int LOG2_PAGE_SIZE = 9;\n\tstatic private final int PAGE_SIZE = 1 << LOG2_PAGE_SIZE;\n\tstatic private final int PAGES = 0x10000 / PAGE_SIZE;",
+      "metadata": {
+        "chunk_index": 1,
+        "strategy": "basic",
+        "language": "java",
+        "total_chunks": 25,
+        "file_path": "gdx/src/com/badlogic/gdx/graphics/g2d/BitmapFont.java"
+      },
+      "similarity_score": 1.4686782360076904
+    },
+    {
+      "content": "# File: extensions/gdx-image/jni/libjpeg/jdmainct.c (cpp)\n\n## Code Content:\n```cpp\n/*\n * jdmainct.c\n *\n * Copyright (C) 1994-1996, Thomas G. Lane.\n * This file is part of the Independent JPEG Group's software.\n * For conditions of distribution and use, see the accompanying README file.\n *\n * This file contains the main buffer controller for decompression.\n * The main buffer lies between the JPEG decompressor proper and the\n * post-processor; it holds downsampled data in the JPEG colorspace.\n *\n * Note that this code is bypassed in raw-data mode, since the application\n * supplies the equivalent of the main buffer in that case.\n */\n\n#define JPEG_INTERNALS\n#include \"jinclude.h\"\n#include \"jpeglib.h\"",
+      "metadata": {
+        "strategy": "basic",
+        "file_path": "extensions/gdx-image/jni/libjpeg/jdmainct.c",
+        "total_chunks": 13,
+        "chunk_index": 0,
+        "language": "cpp"
+      },
+      "similarity_score": 1.4960081577301025
+    },
+    {
+      "content": "jLabel5.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);\n        jLabel5.setText(\"Desktop project\");\n\n        jLabel6.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);\n        jLabel6.setText(\"Html project\");\n\n        statusCoreLabel.setText(\"---\");\n\n        statusAndroidLabel.setText(\"---\");\n\n        statusDesktopLabel.setText(\"---\");\n\n        statusHtmlLabel.setText(\"---\");\n\n        browseBtn.setIcon(new javax.swing.ImageIcon(getClass().getResource(\"/res/gfx/ic_folder.png\"))); // NOI18N",
+      "metadata": {
+        "language": "java",
+        "chunk_index": 7,
+        "file_path": "extensions/gdx-setup-ui/src/aurelienribon/gdxsetupui/ui/panels/ConfigUpdatePanel.java",
+        "total_chunks": 14,
+        "strategy": "basic"
+      },
+      "similarity_score": 1.505990743637085
+    },
+    {
+      "content": "# File: extensions/gdx-bullet/jni/swig-src/com/badlogic/gdx/physics/bullet/btHashedOverlappingPairCache.java (java)\n\n## Code Content:\n```java\n/* ----------------------------------------------------------------------------\n * This file was automatically generated by SWIG (http://www.swig.org).\n * Version 2.0.10\n *\n * Do not make changes to this file unless you know what you are doing--modify\n * the SWIG interface file instead.\n * ----------------------------------------------------------------------------- */\n\npackage com.badlogic.gdx.physics.bullet;\n\nimport com.badlogic.gdx.math.Vector3;\nimport com.badlogic.gdx.math.Quaternion;\nimport com.badlogic.gdx.math.Matrix3;\nimport com.badlogic.gdx.math.Matrix4;\n\npublic class btHashedOverlappingPairCache extends btOverlappingPairCache {\n\tprivate long swigCPtr;\n\t\n\tprotected btHashedOverlappingPairCache(final String className, long cPtr, boolean cMemoryOwn) {\n\t\tsuper(className, gdxBulletJNI.btHashedOverlappingPairCache_SWIGUpcast(cPtr), cMemoryOwn);\n\t\tswigCPtr = cPtr;\n\t}\n\t\n\tprotected btHashedOverlappingPairCache(long cPtr, boolean cMemoryOwn) {\n\t\tthis(\"btHashedOverlappingPairCache\", cPtr, cMemoryOwn);\n\t\tconstruct();\n\t}\n\t\n\t@Override\n\tprotected void reset(long cPtr, boolean cMemoryOwn) {\n\t\tif (!destroyed)\n\t\t\tdestroy();\n\t\tsuper.reset(gdxBulletJNI.btHashedOverlappingPairCache_SWIGUpcast(swigCPtr = cPtr), cMemoryOwn);\n\t}\n\t\n\tpublic static long getCPtr(btHashedOverlappingPairCache obj) {\n\t\treturn (obj == null) ? 0 : obj.swigCPtr;\n\t}\n\n\t@Override\n\tprotected void finalize() throws Throwable {\n\t\tif (!destroyed)\n\t\t\tdestroy();\n\t\tsuper.finalize();\n\t}\n\n  @Override protected synchronized void delete() {\n\t\tif (swigCPtr != 0) {\n\t\t\tif (swigCMemOwn) {\n\t\t\t\tswigCMemOwn = false;\n\t\t\t\tgdxBulletJNI.delete_btHashedOverlappingPairCache(swigCPtr);\n\t\t\t}\n\t\t\tswigCPtr = 0;\n\t\t}\n\t\tsuper.delete();\n\t}\n\n  public btHashedOverlappingPairCache() {\n    this(gdxBulletJNI.new_btHashedOverlappingPairCache(), true);\n  }",
+      "metadata": {
+        "file_path": "extensions/gdx-bullet/jni/swig-src/com/badlogic/gdx/physics/bullet/btHashedOverlappingPairCache.java",
+        "total_chunks": 2,
+        "strategy": "basic",
+        "language": "java",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.5061142444610596
+    },
+    {
+      "content": "libgdxBrowseBtn.setIcon(new javax.swing.ImageIcon(getClass().getResource(\"/res/gfx/ic_browse.png\"))); // NOI18N\n        libgdxBrowseBtn.setToolTipText(\"Browse to select the archive\");\n        libgdxBrowseBtn.setFocusable(false);\n        libgdxToolBar.add(libgdxBrowseBtn);\n\n        libgdxGetStableBtn.setIcon(new javax.swing.ImageIcon(getClass().getResource(\"/res/gfx/ic_download_stable.png\"))); // NOI18N\n        libgdxGetStableBtn.setToolTipText(\"Download latest stable version\");\n        libgdxGetStableBtn.setFocusable(false);\n        libgdxToolBar.add(libgdxGetStableBtn);\n\n        libgdxGetNightliesBtn.setIcon(new javax.swing.ImageIcon(getClass().getResource(\"/res/gfx/ic_download_nightlies.png\"))); // NOI18N\n        libgdxGetNightliesBtn.setToolTipText(\"Download latest nightlies version\");\n        libgdxGetNightliesBtn.setFocusable(false);\n        libgdxToolBar.add(libgdxGetNightliesBtn);",
+      "metadata": {
+        "strategy": "basic",
+        "chunk_index": 9,
+        "file_path": "extensions/gdx-setup-ui/src/aurelienribon/gdxsetupui/ui/panels/LibrarySelectionPanel.java",
+        "language": "java",
+        "total_chunks": 15
+      },
+      "similarity_score": 1.506182312965393
+    },
+    {
+      "content": "# File: extensions/gdx-bullet/jni/swig-src/com/badlogic/gdx/physics/bullet/btVertexBufferDescriptor.java (java)\n\n## Code Content:\n```java\n/* ----------------------------------------------------------------------------\n * This file was automatically generated by SWIG (http://www.swig.org).\n * Version 2.0.10\n *\n * Do not make changes to this file unless you know what you are doing--modify\n * the SWIG interface file instead.\n * ----------------------------------------------------------------------------- */\n\npackage com.badlogic.gdx.physics.bullet;\n\nimport com.badlogic.gdx.math.Vector3;\nimport com.badlogic.gdx.math.Quaternion;\nimport com.badlogic.gdx.math.Matrix3;\nimport com.badlogic.gdx.math.Matrix4;\n\npublic class btVertexBufferDescriptor extends BulletBase {\n\tprivate long swigCPtr;\n\t\n\tprotected btVertexBufferDescriptor(final String className, long cPtr, boolean cMemoryOwn) {\n\t\tsuper(className, cPtr, cMemoryOwn);\n\t\tswigCPtr = cPtr;\n\t}\n\t\n\tprotected btVertexBufferDescriptor(long cPtr, boolean cMemoryOwn) {\n\t\tthis(\"btVertexBufferDescriptor\", cPtr, cMemoryOwn);\n\t\tconstruct();\n\t}\n\t\n\t@Override\n\tprotected void reset(long cPtr, boolean cMemoryOwn) {\n\t\tif (!destroyed)\n\t\t\tdestroy();\n\t\tsuper.reset(swigCPtr = cPtr, cMemoryOwn);\n\t}\n\t\n\tpublic static long getCPtr(btVertexBufferDescriptor obj) {\n\t\treturn (obj == null) ? 0 : obj.swigCPtr;\n\t}\n\n\t@Override\n\tprotected void finalize() throws Throwable {\n\t\tif (!destroyed)\n\t\t\tdestroy();\n\t\tsuper.finalize();\n\t}\n\n  @Override protected synchronized void delete() {\n\t\tif (swigCPtr != 0) {\n\t\t\tif (swigCMemOwn) {\n\t\t\t\tswigCMemOwn = false;\n\t\t\t\tgdxBulletJNI.delete_btVertexBufferDescriptor(swigCPtr);\n\t\t\t}\n\t\t\tswigCPtr = 0;\n\t\t}\n\t\tsuper.delete();\n\t}\n\n  public boolean hasVertexPositions() {\n    return gdxBulletJNI.btVertexBufferDescriptor_hasVertexPositions(swigCPtr, this);\n  }\n\n  public boolean hasNormals() {\n    return gdxBulletJNI.btVertexBufferDescriptor_hasNormals(swigCPtr, this);\n  }",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "basic",
+        "total_chunks": 2,
+        "language": "java",
+        "file_path": "extensions/gdx-bullet/jni/swig-src/com/badlogic/gdx/physics/bullet/btVertexBufferDescriptor.java"
+      },
+      "similarity_score": 1.5093967914581299
+    },
+    {
+      "content": "# File: extensions/gdx-bullet/jni/swig-src/com/badlogic/gdx/physics/bullet/btHashString.java (java)\n\n## Code Content:\n```java\n/* ----------------------------------------------------------------------------\n * This file was automatically generated by SWIG (http://www.swig.org).\n * Version 2.0.10\n *\n * Do not make changes to this file unless you know what you are doing--modify\n * the SWIG interface file instead.\n * ----------------------------------------------------------------------------- */\n\npackage com.badlogic.gdx.physics.bullet;\n\nimport com.badlogic.gdx.math.Vector3;\nimport com.badlogic.gdx.math.Quaternion;\nimport com.badlogic.gdx.math.Matrix3;\nimport com.badlogic.gdx.math.Matrix4;\n\npublic class btHashString extends BulletBase {\n\tprivate long swigCPtr;\n\t\n\tprotected btHashString(final String className, long cPtr, boolean cMemoryOwn) {\n\t\tsuper(className, cPtr, cMemoryOwn);\n\t\tswigCPtr = cPtr;\n\t}\n\t\n\tprotected btHashString(long cPtr, boolean cMemoryOwn) {\n\t\tthis(\"btHashString\", cPtr, cMemoryOwn);\n\t\tconstruct();\n\t}\n\t\n\t@Override\n\tprotected void reset(long cPtr, boolean cMemoryOwn) {\n\t\tif (!destroyed)\n\t\t\tdestroy();\n\t\tsuper.reset(swigCPtr = cPtr, cMemoryOwn);\n\t}\n\t\n\tpublic static long getCPtr(btHashString obj) {\n\t\treturn (obj == null) ? 0 : obj.swigCPtr;\n\t}\n\n\t@Override\n\tprotected void finalize() throws Throwable {\n\t\tif (!destroyed)\n\t\t\tdestroy();\n\t\tsuper.finalize();\n\t}\n\n  @Override protected synchronized void delete() {\n\t\tif (swigCPtr != 0) {\n\t\t\tif (swigCMemOwn) {\n\t\t\t\tswigCMemOwn = false;\n\t\t\t\tgdxBulletJNI.delete_btHashString(swigCPtr);\n\t\t\t}\n\t\t\tswigCPtr = 0;\n\t\t}\n\t\tsuper.delete();\n\t}\n\n  public void setString(String value) {\n    gdxBulletJNI.btHashString_string_set(swigCPtr, this, value);\n  }\n\n  public String getString() {\n    return gdxBulletJNI.btHashString_string_get(swigCPtr, this);\n  }\n\n  public void setHash(long value) {\n    gdxBulletJNI.btHashString_hash_set(swigCPtr, this, value);\n  }",
+      "metadata": {
+        "language": "java",
+        "file_path": "extensions/gdx-bullet/jni/swig-src/com/badlogic/gdx/physics/bullet/btHashString.java",
+        "chunk_index": 0,
+        "total_chunks": 2,
+        "strategy": "basic"
+      },
+      "similarity_score": 1.5121501684188843
+    },
+    {
+      "content": "setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);\n        setTitle(\"Texture Packer GUI\");\n\n        configPanel.setOpaque(false);\n\n        titlePanel.setOpaque(false);\n\n        jLabel14.setIcon(new javax.swing.ImageIcon(getClass().getResource(\"/res/gfx/lgdx-logo.png\"))); // NOI18N\n\n        jLabel15.setIcon(new javax.swing.ImageIcon(getClass().getResource(\"/res/gfx/title.png\"))); // NOI18N\n\n        jLabel13.setIcon(new javax.swing.ImageIcon(getClass().getResource(\"/res/gfx/texture.png\"))); // NOI18N\n        jLabel13.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);\n\n        jLabel16.setForeground(Theme.MAIN_FOREGROUND);\n        jLabel16.setText(\"v3.0.0\");",
+      "metadata": {
+        "file_path": "extensions/gdx-texturepacker-gui/src/aurelienribon/texturepackergui/MainWindow.java",
+        "language": "java",
+        "total_chunks": 33,
+        "chunk_index": 9,
+        "strategy": "basic"
+      },
+      "similarity_score": 1.512177586555481
+    },
+    {
+      "content": "# File: extensions/gdx-bullet/jni/swig-src/com/badlogic/gdx/physics/bullet/btOverlappingPairCache.java (java)\n\n## Code Content:\n```java\n/* ----------------------------------------------------------------------------\n * This file was automatically generated by SWIG (http://www.swig.org).\n * Version 2.0.10\n *\n * Do not make changes to this file unless you know what you are doing--modify\n * the SWIG interface file instead.\n * ----------------------------------------------------------------------------- */\n\npackage com.badlogic.gdx.physics.bullet;\n\nimport com.badlogic.gdx.math.Vector3;\nimport com.badlogic.gdx.math.Quaternion;\nimport com.badlogic.gdx.math.Matrix3;\nimport com.badlogic.gdx.math.Matrix4;\n\npublic class btOverlappingPairCache extends btOverlappingPairCallback {\n\tprivate long swigCPtr;\n\t\n\tprotected btOverlappingPairCache(final String className, long cPtr, boolean cMemoryOwn) {\n\t\tsuper(className, gdxBulletJNI.btOverlappingPairCache_SWIGUpcast(cPtr), cMemoryOwn);\n\t\tswigCPtr = cPtr;\n\t}\n\t\n\tprotected btOverlappingPairCache(long cPtr, boolean cMemoryOwn) {\n\t\tthis(\"btOverlappingPairCache\", cPtr, cMemoryOwn);\n\t\tconstruct();\n\t}\n\t\n\t@Override\n\tprotected void reset(long cPtr, boolean cMemoryOwn) {\n\t\tif (!destroyed)\n\t\t\tdestroy();\n\t\tsuper.reset(gdxBulletJNI.btOverlappingPairCache_SWIGUpcast(swigCPtr = cPtr), cMemoryOwn);\n\t}\n\t\n\tpublic static long getCPtr(btOverlappingPairCache obj) {\n\t\treturn (obj == null) ? 0 : obj.swigCPtr;\n\t}\n\n\t@Override\n\tprotected void finalize() throws Throwable {\n\t\tif (!destroyed)\n\t\t\tdestroy();\n\t\tsuper.finalize();\n\t}\n\n  @Override protected synchronized void delete() {\n\t\tif (swigCPtr != 0) {\n\t\t\tif (swigCMemOwn) {\n\t\t\t\tswigCMemOwn = false;\n\t\t\t\tgdxBulletJNI.delete_btOverlappingPairCache(swigCPtr);\n\t\t\t}\n\t\t\tswigCPtr = 0;\n\t\t}\n\t\tsuper.delete();\n\t}",
+      "metadata": {
+        "file_path": "extensions/gdx-bullet/jni/swig-src/com/badlogic/gdx/physics/bullet/btOverlappingPairCache.java",
+        "strategy": "basic",
+        "total_chunks": 3,
+        "language": "java",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.5125097036361694
+    },
+    {
+      "content": "# File: extensions/gdx-bullet/jni/swig-src/com/badlogic/gdx/physics/bullet/btConcaveShape.java (java)\n\n## Code Content:\n```java\n/* ----------------------------------------------------------------------------\n * This file was automatically generated by SWIG (http://www.swig.org).\n * Version 2.0.10\n *\n * Do not make changes to this file unless you know what you are doing--modify\n * the SWIG interface file instead.\n * ----------------------------------------------------------------------------- */\n\npackage com.badlogic.gdx.physics.bullet;\n\nimport com.badlogic.gdx.math.Vector3;\nimport com.badlogic.gdx.math.Quaternion;\nimport com.badlogic.gdx.math.Matrix3;\nimport com.badlogic.gdx.math.Matrix4;\n\npublic class btConcaveShape extends btCollisionShape {\n\tprivate long swigCPtr;\n\t\n\tprotected btConcaveShape(final String className, long cPtr, boolean cMemoryOwn) {\n\t\tsuper(className, gdxBulletJNI.btConcaveShape_SWIGUpcast(cPtr), cMemoryOwn);\n\t\tswigCPtr = cPtr;\n\t}\n\t\n\tprotected btConcaveShape(long cPtr, boolean cMemoryOwn) {\n\t\tthis(\"btConcaveShape\", cPtr, cMemoryOwn);\n\t\tconstruct();\n\t}\n\t\n\t@Override\n\tprotected void reset(long cPtr, boolean cMemoryOwn) {\n\t\tif (!destroyed)\n\t\t\tdestroy();\n\t\tsuper.reset(gdxBulletJNI.btConcaveShape_SWIGUpcast(swigCPtr = cPtr), cMemoryOwn);\n\t}\n\t\n\tpublic static long getCPtr(btConcaveShape obj) {\n\t\treturn (obj == null) ? 0 : obj.swigCPtr;\n\t}\n\n\t@Override\n\tprotected void finalize() throws Throwable {\n\t\tif (!destroyed)\n\t\t\tdestroy();\n\t\tsuper.finalize();\n\t}\n\n  @Override protected synchronized void delete() {\n\t\tif (swigCPtr != 0) {\n\t\t\tif (swigCMemOwn) {\n\t\t\t\tswigCMemOwn = false;\n\t\t\t\tgdxBulletJNI.delete_btConcaveShape(swigCPtr);\n\t\t\t}\n\t\t\tswigCPtr = 0;\n\t\t}\n\t\tsuper.delete();\n\t}\n\n  public void processAllTriangles(btTriangleCallback callback, Vector3 aabbMin, Vector3 aabbMax) {\n    gdxBulletJNI.btConcaveShape_processAllTriangles(swigCPtr, this, btTriangleCallback.getCPtr(callback), callback, aabbMin, aabbMax);\n  }\n\n}\n```",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "extensions/gdx-bullet/jni/swig-src/com/badlogic/gdx/physics/bullet/btConcaveShape.java",
+        "total_chunks": 1,
+        "strategy": "basic",
+        "language": "java"
+      },
+      "similarity_score": 1.5148725509643555
+    },
+    {
+      "content": "package com.badlogic.gdx.graphics.g2d;\n\nimport com.badlogic.gdx.graphics.Color;\nimport com.badlogic.gdx.graphics.Texture;\nimport com.badlogic.gdx.utils.GdxRuntimeException;\n\n/** A 3x3 grid of texture regions. Any of the regions may be omitted. Padding may be set as a hint on how to inset content on top\n * of the ninepatch (by default the eight \"edge\" textures of the nine-patch define the padding). When drawn the eight \"edge\"\n * patches will not be scaled, only the interior patch will be scaled.\n * \n * <p>\n * <b>NOTE</b>: This class expects a \"post-processed\" nine-patch, and not a raw \".9.png\" texture. That is, the textures given to\n * this class should <em>not</em> include the meta-data pixels from a \".9.png\" that describe the layout of the ninepatch over the\n * interior of the graphic. That information should be passed into the constructor either implicitly as the size of the individual\n * patch textures, or via the <code>left, right, top, bottom</code> parameters to {@link #NinePatch(Texture, int, int, int, int)}\n * or {@link #NinePatch(TextureRegion, int, int, int, int)}.\n * \n * <p>\n * A correctly created {@link TextureAtlas} is one way to generate a post-processed nine-patch from a \".9.png\" file. */\npublic class NinePatch {\n\tpublic static final int TOP_LEFT = 0;\n\tpublic static final int TOP_CENTER = 1;\n\tpublic static final int TOP_RIGHT = 2;\n\tpublic static final int MIDDLE_LEFT = 3;\n\tpublic static final int MIDDLE_CENTER = 4;\n\tpublic static final int MIDDLE_RIGHT = 5;\n\tpublic static final int BOTTOM_LEFT = 6;\n\t/** Indices for {@link #NinePatch(TextureRegion...)} constructor */\n\t// alphabetically first in javadoc\n\tpublic static final int BOTTOM_CENTER = 7;\n\tpublic static final int BOTTOM_RIGHT = 8;\n\n\tstatic private final Color tmpDrawColor = new Color();",
+      "metadata": {
+        "total_chunks": 13,
+        "strategy": "basic",
+        "chunk_index": 1,
+        "file_path": "gdx/src/com/badlogic/gdx/graphics/g2d/NinePatch.java",
+        "language": "java"
+      },
+      "similarity_score": 1.520531177520752
+    },
+    {
+      "content": "# File: demos/pax-britannica/pax-britannica/src/de/swagner/paxbritannica/help/Help.java (java)\n\n## Code Content:\n```java\npackage de.swagner.paxbritannica.help;\n\nimport com.badlogic.gdx.Game;\nimport com.badlogic.gdx.Gdx;\nimport com.badlogic.gdx.Input;\nimport com.badlogic.gdx.InputProcessor;\nimport com.badlogic.gdx.graphics.GL10;\nimport com.badlogic.gdx.graphics.OrthographicCamera;\nimport com.badlogic.gdx.graphics.Texture.TextureFilter;\nimport com.badlogic.gdx.graphics.g2d.BitmapFont;\nimport com.badlogic.gdx.graphics.g2d.Sprite;\nimport com.badlogic.gdx.graphics.g2d.SpriteBatch;\nimport com.badlogic.gdx.math.Intersector;\nimport com.badlogic.gdx.math.Vector3;\nimport com.badlogic.gdx.math.collision.BoundingBox;\nimport com.badlogic.gdx.math.collision.Ray;\n\nimport de.swagner.paxbritannica.DefaultScreen;\nimport de.swagner.paxbritannica.GameInstance;\nimport de.swagner.paxbritannica.Resources;\nimport de.swagner.paxbritannica.background.BackgroundFXRenderer;\nimport de.swagner.paxbritannica.mainmenu.MainMenu;\n\npublic class Help extends DefaultScreen implements InputProcessor {\n\t\n\tSprite back;\n\t\n\tBoundingBox collisionBack = new BoundingBox();\n\tBoundingBox collisionMusic = new BoundingBox();\n\n\tSprite fighter;\n\tSprite bomber;\n\tSprite frigate;\n\tSprite upgrade;\n\t\n\tBackgroundFXRenderer backgroundFX = new BackgroundFXRenderer();\n\tSprite blackFade;\n\n\tOrthographicCamera cam;\n\t\n\tBitmapFont font;\n\t\n\tSpriteBatch titleBatch;\n\tSpriteBatch fadeBatch;\n\t\n\tRay collisionRay;\n\n\tboolean finished = false;\n\t\n\tfloat time = 0;\n\tfloat fade = 1.0f;\n\n\tprivate int width = 800;\n\tprivate int height = 480;\n\n\tpublic Help(Game game) {\n\t\tsuper(game);\n\t\tGdx.input.setCatchBackKey( true );\n\t\tGdx.input.setInputProcessor(this);\n\t}",
+      "metadata": {
+        "strategy": "basic",
+        "chunk_index": 0,
+        "language": "java",
+        "total_chunks": 7,
+        "file_path": "demos/pax-britannica/pax-britannica/src/de/swagner/paxbritannica/help/Help.java"
+      },
+      "similarity_score": 1.522737741470337
+    },
+    {
+      "content": "# File: extensions/gdx-bullet/jni/swig-src/com/badlogic/gdx/physics/bullet/btSoftBodyFloatData.java (java)\n\n## Code Content:\n```java\n/* ----------------------------------------------------------------------------\n * This file was automatically generated by SWIG (http://www.swig.org).\n * Version 2.0.10\n *\n * Do not make changes to this file unless you know what you are doing--modify\n * the SWIG interface file instead.\n * ----------------------------------------------------------------------------- */\n\npackage com.badlogic.gdx.physics.bullet;\n\nimport com.badlogic.gdx.math.Vector3;\nimport com.badlogic.gdx.math.Quaternion;\nimport com.badlogic.gdx.math.Matrix3;\nimport com.badlogic.gdx.math.Matrix4;\n\npublic class btSoftBodyFloatData extends BulletBase {\n\tprivate long swigCPtr;\n\t\n\tprotected btSoftBodyFloatData(final String className, long cPtr, boolean cMemoryOwn) {\n\t\tsuper(className, cPtr, cMemoryOwn);\n\t\tswigCPtr = cPtr;\n\t}\n\t\n\tprotected btSoftBodyFloatData(long cPtr, boolean cMemoryOwn) {\n\t\tthis(\"btSoftBodyFloatData\", cPtr, cMemoryOwn);\n\t\tconstruct();\n\t}\n\t\n\t@Override\n\tprotected void reset(long cPtr, boolean cMemoryOwn) {\n\t\tif (!destroyed)\n\t\t\tdestroy();\n\t\tsuper.reset(swigCPtr = cPtr, cMemoryOwn);\n\t}\n\t\n\tpublic static long getCPtr(btSoftBodyFloatData obj) {\n\t\treturn (obj == null) ? 0 : obj.swigCPtr;\n\t}\n\n\t@Override\n\tprotected void finalize() throws Throwable {\n\t\tif (!destroyed)\n\t\t\tdestroy();\n\t\tsuper.finalize();\n\t}\n\n  @Override protected synchronized void delete() {\n\t\tif (swigCPtr != 0) {\n\t\t\tif (swigCMemOwn) {\n\t\t\t\tswigCMemOwn = false;\n\t\t\t\tgdxBulletJNI.delete_btSoftBodyFloatData(swigCPtr);\n\t\t\t}\n\t\t\tswigCPtr = 0;\n\t\t}\n\t\tsuper.delete();\n\t}\n\n  public void setCollisionObjectData(btCollisionObjectFloatData value) {\n    gdxBulletJNI.btSoftBodyFloatData_collisionObjectData_set(swigCPtr, this, btCollisionObjectFloatData.getCPtr(value), value);\n  }",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "extensions/gdx-bullet/jni/swig-src/com/badlogic/gdx/physics/bullet/btSoftBodyFloatData.java",
+        "language": "java",
+        "strategy": "basic",
+        "total_chunks": 5
+      },
+      "similarity_score": 1.5230393409729004
+    },
+    {
+      "content": "# File: extensions/gdx-bullet/jni/swig-src/com/badlogic/gdx/physics/bullet/btUsageBitfield.java (java)\n\n## Code Content:\n```java\n/* ----------------------------------------------------------------------------\n * This file was automatically generated by SWIG (http://www.swig.org).\n * Version 2.0.10\n *\n * Do not make changes to this file unless you know what you are doing--modify\n * the SWIG interface file instead.\n * ----------------------------------------------------------------------------- */\n\npackage com.badlogic.gdx.physics.bullet;\n\nimport com.badlogic.gdx.math.Vector3;\nimport com.badlogic.gdx.math.Quaternion;\nimport com.badlogic.gdx.math.Matrix3;\nimport com.badlogic.gdx.math.Matrix4;\n\npublic class btUsageBitfield extends BulletBase {\n\tprivate long swigCPtr;\n\t\n\tprotected btUsageBitfield(final String className, long cPtr, boolean cMemoryOwn) {\n\t\tsuper(className, cPtr, cMemoryOwn);\n\t\tswigCPtr = cPtr;\n\t}\n\t\n\tprotected btUsageBitfield(long cPtr, boolean cMemoryOwn) {\n\t\tthis(\"btUsageBitfield\", cPtr, cMemoryOwn);\n\t\tconstruct();\n\t}\n\t\n\t@Override\n\tprotected void reset(long cPtr, boolean cMemoryOwn) {\n\t\tif (!destroyed)\n\t\t\tdestroy();\n\t\tsuper.reset(swigCPtr = cPtr, cMemoryOwn);\n\t}\n\t\n\tpublic static long getCPtr(btUsageBitfield obj) {\n\t\treturn (obj == null) ? 0 : obj.swigCPtr;\n\t}\n\n\t@Override\n\tprotected void finalize() throws Throwable {\n\t\tif (!destroyed)\n\t\t\tdestroy();\n\t\tsuper.finalize();\n\t}\n\n  @Override protected synchronized void delete() {\n\t\tif (swigCPtr != 0) {\n\t\t\tif (swigCMemOwn) {\n\t\t\t\tswigCMemOwn = false;\n\t\t\t\tgdxBulletJNI.delete_btUsageBitfield(swigCPtr);\n\t\t\t}\n\t\t\tswigCPtr = 0;\n\t\t}\n\t\tsuper.delete();\n\t}\n\n  public btUsageBitfield() {\n    this(gdxBulletJNI.new_btUsageBitfield(), true);\n  }\n\n  public void reset() {\n    gdxBulletJNI.btUsageBitfield_reset(swigCPtr, this);\n  }\n\n  public void setUsedVertexA(int value) {\n    gdxBulletJNI.btUsageBitfield_usedVertexA_set(swigCPtr, this, value);\n  }",
+      "metadata": {
+        "strategy": "basic",
+        "chunk_index": 0,
+        "file_path": "extensions/gdx-bullet/jni/swig-src/com/badlogic/gdx/physics/bullet/btUsageBitfield.java",
+        "total_chunks": 2,
+        "language": "java"
+      },
+      "similarity_score": 1.5241074562072754
+    },
+    {
+      "content": "# File: demos/cuboc/cuboc/src/com/badlogic/cubocy/MapRenderer.java (java)\n\n## Code Content:\n```java\npackage com.badlogic.cubocy;\n\nimport com.badlogic.gdx.Gdx;\nimport com.badlogic.gdx.graphics.FPSLogger;\nimport com.badlogic.gdx.graphics.GL10;\nimport com.badlogic.gdx.graphics.OrthographicCamera;\nimport com.badlogic.gdx.graphics.Texture;\nimport com.badlogic.gdx.graphics.g2d.Animation;\nimport com.badlogic.gdx.graphics.g2d.SpriteBatch;\nimport com.badlogic.gdx.graphics.g2d.SpriteCache;\nimport com.badlogic.gdx.graphics.g2d.TextureRegion;\nimport com.badlogic.gdx.graphics.glutils.ImmediateModeRenderer20;\nimport com.badlogic.gdx.math.Vector3;\n\npublic class MapRenderer {\n\tMap map;\n\tOrthographicCamera cam;\n\tSpriteCache cache;\n\tSpriteBatch batch = new SpriteBatch(5460);\n\tImmediateModeRenderer20 renderer = new ImmediateModeRenderer20(false, true, 0);\n\tint[][] blocks;\n\tTextureRegion tile;\n\tAnimation bobLeft;\n\tAnimation bobRight;\n\tAnimation bobJumpLeft;\n\tAnimation bobJumpRight;\n\tAnimation bobIdleLeft;\n\tAnimation bobIdleRight;\n\tAnimation bobDead;\n\tAnimation zap;\n\tTextureRegion cube;\n\tAnimation cubeFixed;\n\tTextureRegion cubeControlled;\n\tTextureRegion dispenser;\n\tAnimation spawn;\n\tAnimation dying;\n\tTextureRegion spikes;\n\tAnimation rocket;\n\tAnimation rocketExplosion;\n\tTextureRegion rocketPad;\n\tTextureRegion endDoor;\n\tTextureRegion movingSpikes;\n\tTextureRegion laser;\n\tFPSLogger fps = new FPSLogger();\n\n\tpublic MapRenderer (Map map) {\n\t\tthis.map = map;\n\t\tthis.cam = new OrthographicCamera(24, 16);\n\t\tthis.cam.position.set(map.bob.pos.x, map.bob.pos.y, 0);\n\t\tthis.cache = new SpriteCache(this.map.tiles.length * this.map.tiles[0].length, false);\n\t\tthis.blocks = new int[(int)Math.ceil(this.map.tiles.length / 24.0f)][(int)Math.ceil(this.map.tiles[0].length / 16.0f)];\n\n\t\tcreateAnimations();\n\t\tcreateBlocks();\n\t}",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "demos/cuboc/cuboc/src/com/badlogic/cubocy/MapRenderer.java",
+        "strategy": "basic",
+        "total_chunks": 6,
+        "language": "java"
+      },
+      "similarity_score": 1.524809718132019
+    },
+    {
+      "content": "label.setText(FilenameUtils.getName(name));\n\t\t\t\t\tlabel.setIcon(isDir ? Res.getImage(\"gfx/ic_folder.png\") : Res.getImage(\"gfx/ic_file.png\"));\n\t\t\t\t}\n\n\t\t\t\treturn label;\n\t\t\t}\n\t\t};\n\t}\n\n\t// -------------------------------------------------------------------------\n\t// Generated stuff\n\t// -------------------------------------------------------------------------\n\n    @SuppressWarnings(\"unchecked\")\n    // <editor-fold defaultstate=\"collapsed\" desc=\"Generated Code\">//GEN-BEGIN:initComponents\n    private void initComponents() {\n\n        headerPanel = new javax.swing.JPanel();\n        jLabel4 = new javax.swing.JLabel();\n        numberLabel = new javax.swing.JLabel();\n\n        setLayout(new java.awt.BorderLayout());\n\n        jLabel4.setText(\"<html> Virtual view of the file tree that will be generated.\");\n        jLabel4.setVerticalAlignment(javax.swing.SwingConstants.TOP);\n\n        numberLabel.setText(\"3\");\n\n        javax.swing.GroupLayout headerPanelLayout = new javax.swing.GroupLayout(headerPanel);\n        headerPanel.setLayout(headerPanelLayout);\n        headerPanelLayout.setHorizontalGroup(\n            headerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)\n            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, headerPanelLayout.createSequentialGroup()\n                .addComponent(numberLabel)\n                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)\n                .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, 209, Short.MAX_VALUE))\n        );\n        headerPanelLayout.setVerticalGroup(\n            headerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)\n            .addComponent(jLabel4)\n            .addComponent(numberLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)\n        );\n\n        add(headerPanel, java.awt.BorderLayout.NORTH);\n    }// </editor-fold>//GEN-END:initComponents",
+      "metadata": {
+        "file_path": "extensions/gdx-setup-ui/src/aurelienribon/gdxsetupui/ui/panels/PreviewPanel.java",
+        "total_chunks": 8,
+        "language": "java",
+        "strategy": "basic",
+        "chunk_index": 6
+      },
+      "similarity_score": 1.5283317565917969
+    }
+  ],
+  "enhanced": [
+    {
+      "content": "### Commit 4\n- ID: 5bc7239e\n- Author: badlogicgames (badlogicgames@6c4fd544-2939-11df-bb46-9574ba5d0bfa)\n- Date: 2011-02-05 05:38:06\n- Message: [changed] metagun is working :p\n- Changes:\n```diff\n@@ -1,74 +1,102 @@\n-package com.mojang.metagun;\n-\n-import java.awt.*;\n-import java.awt.image.BufferedImage;\n \n-import javax.imageio.ImageIO;\n+package com.mojang.metagun;\n \n+import com.badlogic.gdx.Gdx;\n+import com.badlogic.gdx.graphics.Pixmap;\n+import com.badlogic.gdx.graphics.Texture;\n import com.badlogic.gdx.graphics.g2d.TextureRegion;\n \n public class Art {\n-//    public static BufferedImage[][] guys = split(load(\"/guys.png\"), 6, 6);\n-//    public static BufferedImage[][] player1 = split(load(...\n```\n\n### Commit 5\n- ID: 7823449f\n- Author: badlogicgames (badlogicgames@6c4fd544-2939-11df-bb46-9574ba5d0bfa)\n- Date: 2011-02-05 00:19:07\n- Message: [added] metagun hackadihack. not operational at the moment. more to come...\n- Changes:\n```diff\n@@ -0,0 +1,74 @@\n+package com.mojang.metagun;\n+\n+import java.awt.*;\n+import java.awt.image.BufferedImage;\n+\n+import javax.imageio.ImageIO;\n+\n+import com.badlogic.gdx.graphics.g2d.TextureRegion;\n+\n+public class Art {\n+//    public static BufferedImage[][] guys = split(load(\"/guys.png\"), 6, 6);\n+//    public static BufferedImage[][] player1 = split(load(\"/player.png\"), 16, 32);\n+//    public static BufferedImage[][] player2 = mirrorsplit(load(\"/player.png\"), 16, 32);\n+//    public static BufferedI...\n```",
+      "metadata": {
+        "commit_count": 5,
+        "chunk_index": 3,
+        "file_path": "demos/metagun/metagun-desktop/src/com/mojang/metagun/Art.java",
+        "total_chunks": 4,
+        "strategy": "enhanced",
+        "language": "java"
+      },
+      "similarity_score": 1.3018063306808472
+    },
+    {
+      "content": "## Git Commit History\n\n### Commit 1\n- ID: ae6a87b3\n- Author: badlogicgames (badlogicgames@6c4fd544-2939-11df-bb46-9574ba5d0bfa)\n- Date: 2012-02-18 23:54:16\n- Message: [added] gdx-image, wraps libjpeg and libpng. WIP.\n- Changes:\n```diff\n@@ -0,0 +1,512 @@\n+/*\n+ * jdmainct.c\n+ *\n+ * Copyright (C) 1994-1996, Thomas G. Lane.\n+ * This file is part of the Independent JPEG Group's software.\n+ * For conditions of distribution and use, see the accompanying README file.\n+ *\n+ * This file contains the main buffer controller for decompression.\n+ * The main buffer lies between the JPEG decompressor proper and the\n+ * post-processor; it holds downsampled data in the JPEG colorspace.\n+ *\n+ * Note that this code is bypassed in raw-data mode, s...\n```",
+      "metadata": {
+        "language": "cpp",
+        "commit_count": 1,
+        "file_path": "extensions/gdx-image/jni/libjpeg/jdmainct.c",
+        "total_chunks": 14,
+        "chunk_index": 13,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.3111690282821655
+    },
+    {
+      "content": "## Git Commit History\n\n### Commit 1\n- ID: ae6a87b3\n- Author: badlogicgames (badlogicgames@6c4fd544-2939-11df-bb46-9574ba5d0bfa)\n- Date: 2012-02-18 23:54:16\n- Message: [added] gdx-image, wraps libjpeg and libpng. WIP.\n- Changes:\n```diff\n@@ -0,0 +1,293 @@\n+/*\n+ * jcmainct.c\n+ *\n+ * Copyright (C) 1994-1996, Thomas G. Lane.\n+ * This file is part of the Independent JPEG Group's software.\n+ * For conditions of distribution and use, see the accompanying README file.\n+ *\n+ * This file contains the main buffer controller for compression.\n+ * The main buffer lies between the pre-processor and the JPEG\n+ * compressor proper; it holds downsampled data in the JPEG colorspace.\n+ */\n+\n+#define JPEG_INTERNALS\n+#include \"jinclude.h\"\n+#include ...\n```",
+      "metadata": {
+        "total_chunks": 7,
+        "chunk_index": 6,
+        "file_path": "extensions/gdx-image/jni/libjpeg/jcmainct.c",
+        "language": "cpp",
+        "commit_count": 1,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.3170894384384155
+    },
+    {
+      "content": "public abstract void render ();\n\n\tpublic void tick (Input input) {\n\t}\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: d3cf1e5d\n- Author: badlogicgames (badlogicgames@6c4fd544-2939-11df-bb46-9574ba5d0bfa)\n- Date: 2012-08-09 19:53:16\n- Message: [fixed] Metagun, used the old sign trick for flipped regions...\n- Changes:\n```diff\n@@ -36,7 +36,7 @@ public abstract class Screen {\n \tpublic void draw (TextureRegion region, int x, int y) {\n \t\tint width = region.getRegionWidth();\n \t\tif (width < 0) width = -width;\n-\t\tspriteBatch.draw(region, x, y, width, -region.getRegionHeight());\n+\t\tspriteBatch.draw(region, x, y, width, region.getRegionHeight());\n \t}\n \n \tpublic void drawString (String string, int x, int y) {...\n```\n\n### Commit 2\n- ID: 7905c98f\n- Author: seraphim6x7@gmail.com (seraphim6x7@gmail.com@6c4fd544-2939-11df-bb46-9574ba5d0bfa)\n- Date: 2012-03-13 22:57:08\n- Message: cleaned comments and added @Override annotations\n- Changes:\n```diff\n@@ -11,6 +11,7 @@ import com.mojang.metagun.Input;\n import com.mojang.metagun.Metagun;\n \n public abstract class Screen {\n+\tprivate final String[] chars = {\"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\", \".,!?:;\\\"'+-=/\\\\< \"};\n \tprotected static Random random = new Random();\n \tprivate Metagun metagun;\n \tpublic SpriteBatch spriteBatch;\n@@ -32,8 +33,6 @@ public abstract class Screen {\n \t\tmetagun.setScreen(screen);\n \t}\n \n-\tString[] chars = {\"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\", \".,!?:;\\\"'+-=/\\\\< \"};\n-\n \tpu...\n```\n\n### Commit 3\n- ID: 2f412de0\n- Author: nathan.sweet (nathan.sweet@6c4fd544-2939-11df-bb46-9574ba5d0bfa)\n- Date: 2011-08-14 09:40:36\n- Message: [updated] Everything to use the latest source formatter. Yay! Use it, love it!\n- Changes:\n```diff\n@@ -36,7 +36,7 @@ public abstract class Screen {\n \n \tpublic void draw (TextureRegion region, int x, int y) {\n \t\tint width = region.getRegionWidth();\n-\t\tif(width <0) width = -width;\n+\t\tif (width < 0) width = -width;\n \t\tspriteBatch.draw(region, x, y, width, -region.getRegionHeight());\n \t}...\n```",
+      "metadata": {
+        "strategy": "enhanced",
+        "chunk_index": 1,
+        "language": "java",
+        "file_path": "demos/metagun/metagun-desktop/src/com/mojang/metagun/screen/Screen.java",
+        "total_chunks": 3,
+        "commit_count": 5
+      },
+      "similarity_score": 1.3240188360214233
+    },
+    {
+      "content": "public void update (float delta) {\n\t\tfor (Particle particle : particles) {\n\t\t\tif (particle.active) {\n\t\t\t\tparticle.update(delta);\n\t\t\t}\n\t\t}\n\t}\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 2f412de0\n- Author: nathan.sweet (nathan.sweet@6c4fd544-2939-11df-bb46-9574ba5d0bfa)\n- Date: 2011-08-14 09:40:36\n- Message: [updated] Everything to use the latest source formatter. Yay! Use it, love it!\n- Changes:\n```diff\n@@ -17,12 +17,12 @@ import com.badlogic.gdx.graphics.Color;\n import com.badlogic.gdx.utils.Array;\n \n public class ParticleManager {\n-\t\n+\n \tprivate final Array<Particle> particles;\n \tprivate final int maxParticles;\n \tprivate int index;\n \n-\tpublic ParticleManager(int maxParticles, float size) {\n+\tpublic ParticleManager (int maxParticles, float size) {\n \t\tparticles = new Array<Particle>(maxParticles);\n \t\tthis.maxParticles = maxParticles;\n \t\tfor (int i = 0; i < maxParticles; i++) {\n@@ -31,17 +31,17 ...\n```\n\n### Commit 2\n- ID: b93e4ed4\n- Author: badlogicgames (badlogicgames@6c4fd544-2939-11df-bb46-9574ba5d0bfa)\n- Date: 2011-06-25 19:40:31\n- Message: [added] Very Angry Robots! :D\n- Changes:\n```diff\n@@ -0,0 +1,60 @@\n+/*\n+ * Copyright 2011 Rod Hyde (rod@badlydrawngames.com)\n+ * \n+ * Licensed under the Apache License, Version 2.0 (the \"License\"); you may not use this file except in compliance with the\n+ * License. You may obtain a copy of the License at\n+ * \n+ * http://www.apache.org/licenses/LICENSE-2.0\n+ * \n+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\"\n+ * BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND...\n```",
+      "metadata": {
+        "chunk_index": 1,
+        "strategy": "enhanced",
+        "language": "java",
+        "file_path": "demos/very-angry-robots/very-angry-robots/src/com/badlydrawngames/general/ParticleManager.java",
+        "commit_count": 2,
+        "total_chunks": 2
+      },
+      "similarity_score": 1.355499267578125
+    },
+    {
+      "content": "# File: demos/pax-britannica/pax-britannica/src/de/swagner/paxbritannica/help/ScreenshotSaver.java (java)\n\n## Code Content:\n```java\npackage de.swagner.paxbritannica.help;\n\nimport java.awt.Point;\nimport java.awt.color.ColorSpace;\nimport java.awt.image.BufferedImage;\nimport java.awt.image.ColorModel;\nimport java.awt.image.ComponentColorModel;\nimport java.awt.image.DataBuffer;\nimport java.awt.image.DataBufferByte;\nimport java.awt.image.PixelInterleavedSampleModel;\nimport java.awt.image.Raster;\nimport java.awt.image.WritableRaster;\nimport java.io.File;\nimport java.io.IOException;\n\nimport javax.imageio.ImageIO;\n\nimport com.badlogic.gdx.Application.ApplicationType;\nimport com.badlogic.gdx.Gdx;\nimport com.badlogic.gdx.utils.ScreenUtils;\n\npublic class ScreenshotSaver {\n\n\tpublic static void saveScreenshot(String baseName) throws IOException {\n\t\tif(Gdx.app.getType()==ApplicationType.Android){\n\t\t\treturn;\n\t\t}\n\n\t\tbyte[] screenshotPixels = ScreenUtils.getFrameBufferPixels(true);\n\t\tint width = Gdx.graphics.getWidth();\n\t\tint height = Gdx.graphics.getHeight();\n\n\t\tDataBufferByte dataBuffer = new DataBufferByte(screenshotPixels, screenshotPixels.length);\n\n\t\tint[] offsets = { 0, 1, 2 };\n\t\tPixelInterleavedSampleModel sampleModel = new PixelInterleavedSampleModel(DataBuffer.TYPE_BYTE, width, height, 4, 4 * width, offsets);\n\n\t\tColorModel cm = new ComponentColorModel(ColorSpace.getInstance(ColorSpace.CS_sRGB), new int[] { 8, 8, 8 }, false, false, ComponentColorModel.OPAQUE, DataBuffer.TYPE_BYTE);\n\n\t\tWritableRaster raster = Raster.createWritableRaster(sampleModel, dataBuffer, new Point(0, 0));\n\n\t\tBufferedImage img = new BufferedImage(cm, raster, false, null);\n\n\t\tImageIO.write(img, \"png\", File.createTempFile(baseName, \".png\"));\n\t}\n\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 67dab540\n- Author: Jon Renner (rennerjc@gmail.com)\n- Date: 2013-09-07 15:59:34\n- Message: chmod -x a lot of .java source files\n- Changes:\n```diff\n...\n```",
+      "metadata": {
+        "file_path": "demos/pax-britannica/pax-britannica/src/de/swagner/paxbritannica/help/ScreenshotSaver.java",
+        "language": "java",
+        "chunk_index": 0,
+        "strategy": "enhanced",
+        "commit_count": 2,
+        "total_chunks": 2
+      },
+      "similarity_score": 1.360257625579834
+    },
+    {
+      "content": "### Commit 3\n- ID: 40f49c0a\n- Author: badlogic (badlogicgames@gmail.com)\n- Date: 2013-05-19 23:20:56\n- Message: fixed various import issues\n- Changes:\n```diff\n@@ -13,38 +13,23 @@\n \n package com.badlogic.gdxinvaders;\n \n-import java.util.ArrayList;\n-\n import com.badlogic.gdx.Gdx;\n import com.badlogic.gdx.graphics.Color;\n import com.badlogic.gdx.graphics.GL10;\n-import com.badlogic.gdx.graphics.GL20;\n import com.badlogic.gdx.graphics.GLCommon;\n-import com.badlogic.gdx.graphics.Mesh;\n import com.badlogic.gdx.graphics.PerspectiveCamera;\n import com.badlogic.gdx.graphics.Pixmap.Format;\n import com.badlogic.gdx.graphics.Texture;\n import com.badlogic.gdx.graph...\n```\n\n### Commit 4\n- ID: c1db98dc\n- Author: Xoppa (contact@xoppa.nl)\n- Date: 2013-04-18 01:13:03\n- Message: Refactor lighting\n- Changes:\n```diff\n@@ -32,6 +32,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;\n import com.badlogic.gdx.graphics.g3d.Light;\n import com.badlogic.gdx.graphics.g3d.ModelBatch;\n import com.badlogic.gdx.graphics.g3d.RenderableProvider;\n+import com.badlogic.gdx.graphics.g3d.lights.DirectionalLight;\n+import com.badlogic.gdx.graphics.g3d.lights.Lights;\n import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;\n import com.badlogic.gdx.graphics.glutils.ShaderProgram;\n import com.badlogic.gdx.math.Matrix3;\n@@ -73...\n```\n\n### Commit 5\n- ID: 51319c1e\n- Author: badlogic (badlogicgames@gmail.com)\n- Date: 2013-04-13 04:46:08\n- Message: added invader rotation and lights\n- Changes:\n```diff\n@@ -29,6 +29,7 @@ import com.badlogic.gdx.graphics.VertexAttribute;\n import com.badlogic.gdx.graphics.VertexAttributes.Usage;\n import com.badlogic.gdx.graphics.g2d.BitmapFont;\n import com.badlogic.gdx.graphics.g2d.SpriteBatch;\n+import com.badlogic.gdx.graphics.g3d.Light;\n import com.badlogic.gdx.graphics.g3d.ModelBatch;\n import com.badlogic.gdx.graphics.g3d.RenderableProvider;\n import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;\n@@ -71,6 +72,10 @@ public class Renderer {\n \t/** perspectiv...\n```",
+      "metadata": {
+        "strategy": "enhanced",
+        "total_chunks": 5,
+        "chunk_index": 4,
+        "language": "java",
+        "commit_count": 5,
+        "file_path": "demos/invaders/gdx-invaders/src/com/badlogic/gdxinvaders/Renderer.java"
+      },
+      "similarity_score": 1.3609718084335327
+    },
+    {
+      "content": "### Commit 3\n- ID: 5bc7239e\n- Author: badlogicgames (badlogicgames@6c4fd544-2939-11df-bb46-9574ba5d0bfa)\n- Date: 2011-02-05 05:38:06\n- Message: [changed] metagun is working :p\n- Changes:\n```diff\n@@ -1,10 +1,11 @@\n package com.mojang.metagun.entity;\n \n-import java.awt.*;\n-import java.awt.image.BufferedImage;\n-\n-import com.mojang.metagun.*;\n-import com.mojang.metagun.level.*;\n+import com.badlogic.gdx.graphics.g2d.TextureRegion;\n+import com.mojang.metagun.Art;\n+import com.mojang.metagun.Sound;\n+import com.mojang.metagun.level.Camera;\n+import com.mojang.metagun.level.Level;\n+import com.mojang.metagun.screen.Screen;\n \n public class Hat extends Entity {\n     double time = 0;\n@@ -51,7 +52,8 @@...\n```\n\n### Commit 4\n- ID: 7823449f\n- Author: badlogicgames (badlogicgames@6c4fd544-2939-11df-bb46-9574ba5d0bfa)\n- Date: 2011-02-05 00:19:07\n- Message: [added] metagun hackadihack. not operational at the moment. more to come...\n- Changes:\n```diff\n@@ -0,0 +1,82 @@\n+package com.mojang.metagun.entity;\n+\n+import java.awt.*;\n+import java.awt.image.BufferedImage;\n+\n+import com.mojang.metagun.*;\n+import com.mojang.metagun.level.*;\n+\n+public class Hat extends Entity {\n+    double time = 0;\n+    int noTakeTime = 30;\n+    private int xPos, yPos;\n+    public double xxa;\n+\n+    public Hat(double x, double y) {\n+        this(x, y, -1, -1);\n+    }\n+\n+    public Hat(double x, double y, int xPos, int yPos) {\n+        this.x = x;\n+        this.y = y;\n+  ...\n```",
+      "metadata": {
+        "chunk_index": 2,
+        "strategy": "enhanced",
+        "file_path": "demos/metagun/metagun-desktop/src/com/mojang/metagun/entity/Hat.java",
+        "language": "java",
+        "commit_count": 4,
+        "total_chunks": 3
+      },
+      "similarity_score": 1.361675500869751
+    },
+    {
+      "content": "@Override\n\tpublic void dispose () {\n\t\tshipModel.dispose();\n\t\tinvaderModel.dispose();\n\t\tblockModel.dispose();\n\t\tshotModel.dispose();\n\t\texplosionModel.dispose();\n\t}\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 33818677\n- Author: Xoppa (contact@xoppa.nl)\n- Date: 2013-09-28 07:09:12\n- Message: Update invaders\n- Changes:\n```diff\n@@ -23,12 +23,12 @@ import com.badlogic.gdx.graphics.Texture;\n import com.badlogic.gdx.graphics.Texture.TextureFilter;\n import com.badlogic.gdx.graphics.VertexAttribute;\n import com.badlogic.gdx.graphics.VertexAttributes.Usage;\n+import com.badlogic.gdx.graphics.g3d.Material;\n import com.badlogic.gdx.graphics.g3d.Model;\n+import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;\n+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;\n+import com.badlogic.gdx.graphics.g3d.attribut...\n```\n\n### Commit 2\n- ID: 80e6930b\n- Author: Xoppa (contact@xoppa.nl)\n- Date: 2013-05-25 01:32:58\n- Message: Fix ObjLoader\n- Changes:\n```diff\n@@ -68,10 +68,10 @@ public class Simulation implements Disposable {\n \n \tprivate void populate () {\n \t\tObjLoader objLoader = new ObjLoader();\n-\t\tshipModel = objLoader.loadObj(Gdx.files.internal(\"data/ship.obj\"));\n-\t\tinvaderModel = objLoader.loadObj(Gdx.files.internal(\"data/invader.obj\"));\n-\t\tblockModel = objLoader.loadObj(Gdx.files.internal(\"data/block.obj\"));\n-\t\tshotModel = objLoader.loadObj(Gdx.files.internal(\"data/shot.obj\"));\n+\t\tshipModel = objLoader.loadModel(Gdx.files.internal(\"data/ship.ob...\n```",
+      "metadata": {
+        "chunk_index": 7,
+        "commit_count": 5,
+        "file_path": "demos/invaders/gdx-invaders/src/com/badlogic/gdxinvaders/simulation/Simulation.java",
+        "strategy": "enhanced",
+        "total_chunks": 10,
+        "language": "java"
+      },
+      "similarity_score": 1.3739843368530273
+    },
+    {
+      "content": "private FileHandle resolve (AssetLoader loader, AssetDescriptor assetDesc) {\n\t\tif (assetDesc.file == null) assetDesc.file = loader.resolve(assetDesc.fileName);\n\t\treturn assetDesc.file;\n\t}\n\n\tpublic Object getAsset () {\n\t\treturn asset;\n\t}\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: f3b2d346\n- Author: NathanSweet (nathan.sweet@gmail.com)\n- Date: 2013-08-03 00:20:19\n- Message: AssetLoader changed to receive the resolved FileHandle along with the file name.\n\nSee comments in #517.\n- Changes:\n```diff\n@@ -19,6 +19,7 @@ package com.badlogic.gdx.assets;\n import com.badlogic.gdx.assets.loaders.AssetLoader;\n import com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader;\n import com.badlogic.gdx.assets.loaders.SynchronousAssetLoader;\n+import com.badlogic.gdx.files.FileHandle;\n import com.badlogic.gdx.utils.Array;\n import com.badlogic.gdx.utils.GdxRuntimeException;\n import com.badlogic.gdx.utils.Logger;\n@@ -60,24 +61,24 @@ class AssetLoadingTask implements AsyncTask<Void> {\n \tpublic Void call () t...\n```\n\n### Commit 2\n- ID: ea0ac5cc\n- Author: NathanSweet (nathan.sweet@gmail.com)\n- Date: 2013-06-28 17:01:33\n- Message: Fixed exception being hidden when image fails to load.\n- Changes:\n```diff\n@@ -115,7 +115,7 @@ class AssetLoadingTask implements AsyncTask<Void> {\n \t\t\t\t\ttry {\n \t\t\t\t\t\tdepsFuture.get();\n \t\t\t\t\t} catch (Exception e) {\n-\t\t\t\t\t\tthrow new GdxRuntimeException(\"Couldn't load dependencies of asset '\" + assetDesc.fileName + \"'\", e);\n+\t\t\t\t\t\tthrow new GdxRuntimeException(\"Couldn't load dependencies of asset: \" + assetDesc.fileName, e);\n \t\t\t\t\t}\n \t\t\t\t\tdependenciesLoaded = true;\n \t\t\t\t\tif (asyncDone) {\n@@ -133,7 +133,7 @@ class AssetLoadingTask implements AsyncTask<Void> {\n \t\t\t\t\ttry {\n ...\n```\n\n### Commit 3\n- ID: 85dc3bd7\n- Author: NathanSweet (nathan.sweet@gmail.com)\n- Date: 2013-06-24 03:13:09\n- Message: Removed generics from Array and ArrayMap.",
+      "metadata": {
+        "language": "java",
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "total_chunks": 6,
+        "chunk_index": 3,
+        "file_path": "gdx/src/com/badlogic/gdx/assets/AssetLoadingTask.java"
+      },
+      "similarity_score": 1.3834551572799683
+    },
+    {
+      "content": "import org.lwjgl.opengl.GL11;\n\nimport com.badlogic.gdx.ApplicationListener;\nimport com.badlogic.gdx.Gdx;\nimport com.badlogic.gdx.backends.lwjgl.LwjglCanvas;\nimport com.badlogic.gdx.graphics.Color;\nimport com.badlogic.gdx.graphics.Texture;\nimport com.badlogic.gdx.graphics.g2d.BitmapFont;\nimport com.badlogic.gdx.tools.hiero.unicodefont.GlyphPage;\nimport com.badlogic.gdx.tools.hiero.unicodefont.HieroSettings;\nimport com.badlogic.gdx.tools.hiero.unicodefont.UnicodeFont;\nimport com.badlogic.gdx.tools.hiero.unicodefont.effects.ColorEffect;\nimport com.badlogic.gdx.tools.hiero.unicodefont.effects.ConfigurableEffect;\nimport com.badlogic.gdx.tools.hiero.unicodefont.effects.ConfigurableEffect.Value;\nimport com.badlogic.gdx.tools.hiero.unicodefont.effects.DistanceFieldEffect;\nimport com.badlogic.gdx.tools.hiero.unicodefont.effects.EffectUtil;\nimport com.badlogic.gdx.tools.hiero.unicodefont.effects.GradientEffect;\nimport com.badlogic.gdx.tools.hiero.unicodefont.effects.OutlineEffect;\nimport com.badlogic.gdx.tools.hiero.unicodefont.effects.OutlineWobbleEffect;\nimport com.badlogic.gdx.tools.hiero.unicodefont.effects.OutlineZigzagEffect;\nimport com.badlogic.gdx.tools.hiero.unicodefont.effects.ShadowEffect;\n\nimport static org.lwjgl.opengl.GL11.*;\n\n/** A tool to visualize settings for {@link UnicodeFont} and to export BMFont files for use with {@link BitmapFont}.\n * @author Nathan Sweet */\npublic class Hiero extends JFrame {\n\tstatic final String NEHE = \"ABCDEFGHIJKLMNOPQRSTUVWXYZ\\n\" //\n\t\t+ \"abcdefghijklmnopqrstuvwxyz\\n1234567890\\n\" //\n\t\t+ \"\\\"!`?'.,;:()[]{}<>|/@\\\\^$-%+=#_&~*\\u007F\";\n\n\tvolatile UnicodeFont newUnicodeFont;\n\tUnicodeFont unicodeFont;\n\tColor renderingBackgroundColor = Color.BLACK;\n\tList effectPanels = new ArrayList();\n\tPreferences prefs;\n\tColorEffect colorEffect;",
+      "metadata": {
+        "total_chunks": 33,
+        "file_path": "extensions/gdx-tools/src/com/badlogic/gdx/tools/hiero/Hiero.java",
+        "strategy": "enhanced",
+        "chunk_index": 2,
+        "commit_count": 5,
+        "language": "java"
+      },
+      "similarity_score": 1.3910703659057617
+    },
+    {
+      "content": "### Commit 3\n- ID: 40f49c0a\n- Author: badlogic (badlogicgames@gmail.com)\n- Date: 2013-05-19 23:20:56\n- Message: fixed various import issues\n- Changes:\n```diff\n@@ -16,15 +16,13 @@ package com.badlogic.gdxinvaders.simulation;\n import java.util.ArrayList;\n \n import com.badlogic.gdx.Gdx;\n-import com.badlogic.gdx.graphics.Color;\n import com.badlogic.gdx.graphics.GL10;\n import com.badlogic.gdx.graphics.Mesh;\n-import com.badlogic.gdx.graphics.Texture;\n-import com.badlogic.gdx.graphics.VertexAttribute;\n import com.badlogic.gdx.graphics.Pixmap.Format;\n+import com.badlogic.gdx.graphics.Texture;\n import com.badlogic.gdx.graphics.Texture.TextureFilter;\n+import co...\n```\n\n### Commit 4\n- ID: b8e938c6\n- Author: Xoppa (contact@xoppa.nl)\n- Date: 2013-04-16 05:40:24\n- Message: Rename Material#add to #set, allow mask for vertex attributes.\n- Changes:\n```diff\n@@ -79,13 +79,13 @@ public class Simulation implements Disposable {\n \t\tshipTexture.setFilter(TextureFilter.MipMap, TextureFilter.Linear);\n \t\tfinal Texture invaderTexture = new Texture(Gdx.files.internal(\"data/invader.png\"), Format.RGB565, true);\n \t\tinvaderTexture.setFilter(TextureFilter.MipMap, TextureFilter.Linear);\n-\t\tshipModel.materials.get(0).add(TextureAttribute.createDiffuse(shipTexture));\n-\t\tinvaderModel.materials.get(0).add(TextureAttribute.createDiffuse(invaderTexture));\n+\t\tshipModel.ma...\n```",
+      "metadata": {
+        "chunk_index": 8,
+        "strategy": "enhanced",
+        "total_chunks": 10,
+        "commit_count": 5,
+        "language": "java",
+        "file_path": "demos/invaders/gdx-invaders/src/com/badlogic/gdxinvaders/simulation/Simulation.java"
+      },
+      "similarity_score": 1.3940043449401855
+    },
+    {
+      "content": "### Commit 4\n- ID: 4834cf94\n- Author: badlogic (badlogicgames@gmail.com)\n- Date: 2013-03-25 02:28:47\n- Message: removed RenderBatch and consorts, merged Renderable and RenderInstance, separated RenderBatchListener into RenderableSorter and ShaderProvider\n- Changes:\n```diff\n@@ -3,7 +3,7 @@ package com.badlogic.gdx.graphics.g3d.utils;\n import com.badlogic.gdx.Gdx;\n import com.badlogic.gdx.files.FileHandle;\n import com.badlogic.gdx.graphics.Texture;\n-import com.badlogic.gdx.graphics.g3d.model.Model;\n+import com.badlogic.gdx.graphics.g3d.Model;\n import com.badlogic.gdx.graphics.g3d.model.data.ModelData;\n \n /**...\n```\n\n### Commit 5\n- ID: cafa1d75\n- Author: badlogic (badlogicgames@gmail.com)\n- Date: 2013-03-24 07:24:09\n- Message: added first draft of new Model class\n- Changes:\n```diff\n@@ -0,0 +1,23 @@\n+package com.badlogic.gdx.graphics.g3d.utils;\n+\n+import com.badlogic.gdx.Gdx;\n+import com.badlogic.gdx.files.FileHandle;\n+import com.badlogic.gdx.graphics.Texture;\n+import com.badlogic.gdx.graphics.g3d.model.Model;\n+import com.badlogic.gdx.graphics.g3d.model.data.ModelData;\n+\n+/**\n+ * Used by {@link Model} to load textures from {@link ModelData}.\n+ * @author badlogic\n+ *\n+ */\n+public interface TextureProvider {\n+\tpublic Texture load(String fileName);\n+\t\n+\tpublic static class Fil...\n```",
+      "metadata": {
+        "language": "java",
+        "commit_count": 5,
+        "chunk_index": 2,
+        "total_chunks": 3,
+        "file_path": "gdx/src/com/badlogic/gdx/graphics/g3d/utils/TextureProvider.java",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.3989334106445312
+    },
+    {
+      "content": "### Commit 3\n- ID: 79bc6c74\n- Author: Xoppa (contact@xoppa.nl)\n- Date: 2013-09-28 07:03:50\n- Message: Various changes regarding lights/environment/defaultshaders\n- Changes:\n```diff\n@@ -9,11 +9,10 @@ import com.badlogic.gdx.graphics.Mesh;\n import com.badlogic.gdx.graphics.Texture;\n import com.badlogic.gdx.graphics.VertexAttribute;\n import com.badlogic.gdx.graphics.VertexAttributes;\n-import com.badlogic.gdx.graphics.g3d.materials.BlendingAttribute;\n-import com.badlogic.gdx.graphics.g3d.materials.ColorAttribute;\n-import com.badlogic.gdx.graphics.g3d.materials.FloatAttribute;\n-import com.badlogic.gdx.graphics.g3d.materials.Material;\n-import com.badlogic.gdx.graphics.g3d.materi...\n```\n\n### Commit 4\n- ID: a19b9a3f\n- Author: Mario Zechner (contact@badlogicgames.com)\n- Date: 2013-09-15 18:05:49\n- Message: Merge pull request #589 from jrenner/graphics-array-refactor\n\nrefactor gdx.graphics to use Array instead of ArrayList\n- Changes:\n```diff\n@@ -69,7 +69,7 @@ public class Model implements Disposable {\n \tpublic final Array<Mesh> meshes = new Array<Mesh>();\n \t/** parts of meshes, used by nodes that have a graphical representation FIXME not sure if superfluous, stored in Nodes as well, could be useful to create bullet meshes **/\n \tpublic final Array<MeshPart> meshParts = new Array<MeshPart>();\n-\t/** List of disposable resources like textures or meshes the Model is responsible for disposing **/\n+\t/** Array of disposable resources like t...\n```",
+      "metadata": {
+        "commit_count": 5,
+        "file_path": "gdx/src/com/badlogic/gdx/graphics/g3d/Model.java",
+        "chunk_index": 15,
+        "language": "java",
+        "strategy": "enhanced",
+        "total_chunks": 17
+      },
+      "similarity_score": 1.4138141870498657
+    },
+    {
+      "content": "### Commit 3\n- ID: 2c9030de\n- Author: Nathan Sweet (nathan.sweet@gmail.com)\n- Date: 2012-08-11 10:23:26\n- Message: ERL YER SERC CERN HERS BERN RERFERCKTERERD!\n- Changes:\n```diff\n@@ -16,7 +16,6 @@\n \n package com.badlogic.gdx.graphics.glutils;\n \n-import com.badlogic.gdx.Application.ApplicationType;\n import com.badlogic.gdx.Gdx;\n import com.badlogic.gdx.files.FileHandle;\n import com.badlogic.gdx.graphics.GL10;...\n```\n\n### Commit 4\n- ID: 399384e4\n- Author: badlogicgames (badlogicgames@6c4fd544-2939-11df-bb46-9574ba5d0bfa)\n- Date: 2012-08-05 05:24:44\n- Message: [fixed] issue 979, ETC1TextureData more robust.\n- Changes:\n```diff\n@@ -75,7 +75,7 @@ public class ETC1TextureData implements TextureData {\n \tpublic void consumeCompressedData () {\n \t\tif (!isPrepared) throw new GdxRuntimeException(\"Call prepare() before calling consumeCompressedData()\");\n \n-\t\tif (Gdx.app.getType() == ApplicationType.Desktop || Gdx.graphics.isGL20Available() == false) {\n+\t\tif (!Gdx.graphics.supportsExtension(\"GL_OES_compressed_ETC1_RGB8_texture\") || Gdx.graphics.isGL20Available() == false) {\n \t\t\tPixmap pixmap = ETC1.decodeImage(data, Format.RGB56...\n```\n\n### Commit 5\n- ID: dcbd891e\n- Author: nathan.sweet (nathan.sweet@6c4fd544-2939-11df-bb46-9574ba5d0bfa)\n- Date: 2011-11-06 19:58:44\n- Message: Organize imports and format.\n- Changes:\n```diff\n@@ -63,7 +63,7 @@ public class ETC1TextureData implements TextureData {\n \tpublic void prepare () {\n \t\tif (isPrepared) throw new GdxRuntimeException(\"Already prepared\");\n \t\tif (file == null && data == null) throw new GdxRuntimeException(\"Can only load once from ETC1Data\");\n-\t\tif(file != null) {\n+\t\tif (file != null) {\n \t\t\tdata = new ETC1Data(file);\n \t\t}\n \t\twidth = data.width;\n@@ -91,12 +91,12 @@ public class ETC1TextureData implements TextureData {\n \t\tdata = null;\n \t\tisPrepared = false;\n \t}\n-\t\n+\n ...\n```",
+      "metadata": {
+        "total_chunks": 4,
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "chunk_index": 3,
+        "language": "java",
+        "file_path": "gdx/src/com/badlogic/gdx/graphics/glutils/ETC1TextureData.java"
+      },
+      "similarity_score": 1.4153680801391602
+    },
+    {
+      "content": "## Git Commit History\n\n### Commit 1\n- ID: ba5b1920\n- Author: Xoppa (contact@xoppa.nl)\n- Date: 2013-04-13 03:54:36\n- Message: Small changes: share modelinstance#transform and add camerainputcontroller\n- Changes:\n```diff\n@@ -21,6 +21,7 @@ import com.badlogic.gdx.Graphics;\n import com.badlogic.gdx.Input;\n import com.badlogic.gdx.graphics.g2d.SpriteBatch;\n import com.badlogic.gdx.math.Frustum;\n+import com.badlogic.gdx.math.Matrix3;\n import com.badlogic.gdx.math.Matrix4;\n import com.badlogic.gdx.math.Quaternion;\n import com.badlogic.gdx.math.Vector3;\n@@ -86,21 +87,21 @@ public abstract class Camera {\n \t * @param z the x-coordinate of the point to look at */\n \tpublic void lookAt (float x, float y, float z) {\n \t\tdire...\n```\n\n### Commit 2\n- ID: dfc79194\n- Author: Xoppa (contact@xoppa.nl)\n- Date: 2013-03-24 04:38:11\n- Message: Fix incorrect order of arguments.\n- Changes:\n```diff\n@@ -111,8 +111,8 @@ public abstract class Camera {\n \t * @param axisY the y-component of the axis\n \t * @param axisZ the z-component of the axis */\n \tpublic void rotate (float angle, float axisX, float axisY, float axisZ) {\n-\t\tdirection.rotate(axisX, axisY, axisZ, angle);\n-\t\tup.rotate(axisX, axisY, axisZ, angle);\n+\t\tdirection.rotate(angle, axisX, axisY, axisZ);\n+\t\tup.rotate(angle, axisX, axisY, axisZ);\n \t}\n \n \t/** Rotates the direction and up vector of this camera by the given angle around the giv...\n```\n\n### Commit 3\n- ID: afc80945\n- Author: Mario Zechner (contact@badlogicgames.com)\n- Date: 2013-03-17 08:12:40\n- Message: Merge pull request #300 from xoppa/bullet",
+      "metadata": {
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "chunk_index": 8,
+        "total_chunks": 11,
+        "language": "java",
+        "file_path": "gdx/src/com/badlogic/gdx/graphics/Camera.java"
+      },
+      "similarity_score": 1.4189677238464355
+    },
+    {
+      "content": "### Commit 5\n- ID: 2c9030de\n- Author: Nathan Sweet (nathan.sweet@gmail.com)\n- Date: 2012-08-11 10:23:26\n- Message: ERL YER SERC CERN HERS BERN RERFERCKTERERD!\n- Changes:\n```diff\n@@ -13,8 +13,8 @@\n \n package com.badlogic.gdxinvaders.screens;\n \n-import com.badlogic.gdx.Gdx;\n import com.badlogic.gdx.Application.ApplicationType;\n+import com.badlogic.gdx.Gdx;\n import com.badlogic.gdx.graphics.Color;\n import com.badlogic.gdx.graphics.GL10;\n import com.badlogic.gdx.graphics.Texture;\n@@ -82,7 +82,7 @@ public class MainMenu extends InvadersScreen {\n \t\tString text = \"Touch screen to start!\";\n \t\tfloat width = font.getBounds(text).width;\n \t\tfont.draw(spriteBatch, text, 240 - width ...\n```",
+      "metadata": {
+        "chunk_index": 4,
+        "file_path": "demos/invaders/gdx-invaders/src/com/badlogic/gdxinvaders/screens/MainMenu.java",
+        "strategy": "enhanced",
+        "language": "java",
+        "total_chunks": 5,
+        "commit_count": 5
+      },
+      "similarity_score": 1.420339822769165
+    },
+    {
+      "content": "### Commit 5\n- ID: b5f9a9af\n- Author: badlogicgames (badlogicgames@6c4fd544-2939-11df-bb46-9574ba5d0bfa)\n- Date: 2011-05-30 03:43:52\n- Message: [added] cuboc\n- Changes:\n```diff\n@@ -0,0 +1,56 @@\n+package com.badlogic.cubocy;\n+\n+import com.badlogic.gdx.Gdx;\n+import com.badlogic.gdx.Application.ApplicationType;\n+import com.badlogic.gdx.graphics.Texture;\n+import com.badlogic.gdx.graphics.g2d.SpriteBatch;\n+import com.badlogic.gdx.graphics.g2d.TextureRegion;\n+\n+public class OnscreenControlRenderer {\n+\tMap map;\n+\tSpriteBatch batch;\n+\tTextureRegion dpad;\n+\tTextureRegion left;\n+\tTextureRegion right;\n+\tTextureRegion jump;\n+\tTextureRegion cube;\n+\t\n+\tpublic OnscreenControlRenderer...\n```",
+      "metadata": {
+        "chunk_index": 3,
+        "total_chunks": 4,
+        "language": "java",
+        "file_path": "demos/cuboc/cuboc/src/com/badlogic/cubocy/OnscreenControlRenderer.java",
+        "commit_count": 5,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.4332975149154663
+    },
+    {
+      "content": "package com.badlogic.gdx.maps.tiled;\n\nimport java.io.IOException;\nimport java.util.StringTokenizer;\n\nimport com.badlogic.gdx.assets.AssetDescriptor;\nimport com.badlogic.gdx.assets.AssetLoaderParameters;\nimport com.badlogic.gdx.assets.AssetManager;\nimport com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader;\nimport com.badlogic.gdx.assets.loaders.FileHandleResolver;\nimport com.badlogic.gdx.assets.loaders.TextureLoader;\nimport com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter;\nimport com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;\nimport com.badlogic.gdx.files.FileHandle;\nimport com.badlogic.gdx.graphics.Texture;\nimport com.badlogic.gdx.graphics.Texture.TextureFilter;\nimport com.badlogic.gdx.graphics.g2d.TextureRegion;\nimport com.badlogic.gdx.maps.ImageResolver;\nimport com.badlogic.gdx.maps.ImageResolver.AssetManagerImageResolver;\nimport com.badlogic.gdx.maps.ImageResolver.DirectImageResolver;\nimport com.badlogic.gdx.maps.MapLayer;\nimport com.badlogic.gdx.maps.MapObject;\nimport com.badlogic.gdx.maps.MapProperties;\nimport com.badlogic.gdx.maps.objects.EllipseMapObject;\nimport com.badlogic.gdx.maps.objects.PolygonMapObject;\nimport com.badlogic.gdx.maps.objects.PolylineMapObject;\nimport com.badlogic.gdx.maps.objects.RectangleMapObject;\nimport com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;\nimport com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile;\nimport com.badlogic.gdx.math.Polygon;\nimport com.badlogic.gdx.math.Polyline;\nimport com.badlogic.gdx.utils.Array;\nimport com.badlogic.gdx.utils.Base64Coder;\nimport com.badlogic.gdx.utils.GdxRuntimeException;\nimport com.badlogic.gdx.utils.ObjectMap;\nimport com.badlogic.gdx.utils.XmlReader;\nimport com.badlogic.gdx.utils.XmlReader.Element;\n\n/** @brief synchronous loader for TMX maps created with the Tiled tool */\npublic class TmxMapLoader extends AsynchronousAssetLoader<TiledMap, TmxMapLoader.Parameters> {",
+      "metadata": {
+        "commit_count": 5,
+        "file_path": "backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/maps/tiled/TmxMapLoader.java",
+        "chunk_index": 1,
+        "strategy": "enhanced",
+        "language": "java",
+        "total_chunks": 19
+      },
+      "similarity_score": 1.4373714923858643
+    },
+    {
+      "content": "### Commit 3\n- ID: be546450\n- Author: seraphim6x7@gmail.com (seraphim6x7@gmail.com@6c4fd544-2939-11df-bb46-9574ba5d0bfa)\n- Date: 2012-03-13 04:21:34\n- Message: resolved issue 652: Superjumper uses builtin Game and Screen classes\n- Changes:\n```diff\n@@ -16,7 +16,9 @@\n \n package com.badlogicgames.superjumper;\n \n+import com.badlogic.gdx.Game;\n import com.badlogic.gdx.Gdx;\n+import com.badlogic.gdx.Screen;\n import com.badlogic.gdx.graphics.GL10;\n import com.badlogic.gdx.graphics.GLCommon;\n import com.badlogic.gdx.graphics.OrthographicCamera;\n@@ -24,7 +26,9 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;\n import com.badlogic.gdx.math.Rectangle;\n import com.badlogic.gdx.math.Vector3;\n \n-public class HighscoresScreen extends Screen {\n+public ...\n```\n\n### Commit 4\n- ID: c05e1499\n- Author: badlogicgames (badlogicgames@6c4fd544-2939-11df-bb46-9574ba5d0bfa)\n- Date: 2012-03-13 00:50:45\n- Message: [added] Super Jumper GWT version :p\n- Changes:\n```diff\n@@ -66,9 +66,6 @@ public class HighscoresScreen extends Screen {\n \t\tGLCommon gl = Gdx.gl;\n \t\tgl.glClear(GL10.GL_COLOR_BUFFER_BIT);\n \t\tguiCam.update();\n-\t\tguiCam.apply(Gdx.gl10);\n-\n-\t\tgl.glEnable(GL10.GL_TEXTURE_2D);\n \n \t\tbatcher.disableBlending();\n \t\tbatcher.begin();...\n```\n\n### Commit 5\n- ID: 2f412de0\n- Author: nathan.sweet (nathan.sweet@6c4fd544-2939-11df-bb46-9574ba5d0bfa)\n- Date: 2011-08-14 09:40:36\n- Message: [updated] Everything to use the latest source formatter. Yay! Use it, love it!\n- Changes:\n```diff\n@@ -13,6 +13,7 @@\n  * See the License for the specific language governing permissions and\n  * limitations under the License.\n  ******************************************************************************/\n+\n package com.badlogicgames.superjumper;\n \n import com.badlogic.gdx.Gdx;\n@@ -34,7 +35,7 @@ public class HighscoresScreen extends Screen {\n \tpublic HighscoresScreen (Game game) {\n \t\tsuper(game);\n \n-\t\tguiCam = new OrthographicCamera(320, 480);\t\t\n+\t\tguiCam = new OrthographicCamera(320, 480);\n \t...\n```",
+      "metadata": {
+        "strategy": "enhanced",
+        "total_chunks": 4,
+        "language": "java",
+        "file_path": "demos/superjumper/superjumper/src/com/badlogicgames/superjumper/HighscoresScreen.java",
+        "commit_count": 5,
+        "chunk_index": 3
+      },
+      "similarity_score": 1.441633701324463
+    }
+  ],
+  "compressed": [
+    {
+      "content": "# File: gdx/src/com/badlogic/gdx/assets/loaders/ParticleEffectLoader.java (java)\n\n## Key Code Elements:\nimport com.badlogic.gdx.assets.AssetDescriptor;\nimport com.badlogic.gdx.assets.AssetLoaderParameters;\nimport com.badlogic.gdx.assets.AssetManager;\nimport com.badlogic.gdx.files.FileHandle;\nimport com.badlogic.gdx.graphics.g2d.ParticleEffect;\nimport com.badlogic.gdx.graphics.g2d.TextureAtlas;\nimport com.badlogic.gdx.utils.Array;\n\t@Override\n\t@Override\n\n## Recent Changes:\n- 21f1a70e by Jon Renner (rennerjc@gmail.com): ran gdx-tools HeaderFixer tool...\n- cdedfe1a by hneuer (hanno.neuer@gmail.com): Added ParticleLoader....",
+      "metadata": {
+        "language": "java",
+        "file_path": "gdx/src/com/badlogic/gdx/assets/loaders/ParticleEffectLoader.java",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "commit_count": 2
+      },
+      "similarity_score": 1.0825917720794678
+    },
+    {
+      "content": "# File: extensions/gdx-tools/src/com/badlogic/gdx/tools/particleeditor/ImagePanel.java (java)\n\n## Key Code Elements:\nimport java.awt.FileDialog;\nimport java.awt.GridBagConstraints;\nimport java.awt.Insets;\nimport java.awt.event.ActionEvent;\nimport java.awt.event.ActionListener;\nimport java.io.File;\nimport javax.swing.ImageIcon;\nimport javax.swing.JButton;\nimport javax.swing.JLabel;\nimport javax.swing.JPanel;\nimport com.badlogic.gdx.graphics.g2d.ParticleEmitter;\nclass ImagePanel extends EditorPanel {\n\n## Recent Changes:\n- 167f2034 by nathan.sweet (nathan.sweet@6c4fd544-2939-11df-bb46-9574ba5d0bfa): Particle editor update....\n- 51174f33 by nathan.sweet (nathan.sweet@6c4fd544-2939-11df-bb46-9574ba5d0bfa): [updated] Warnings and format....\n- d4a915ee by badlogicgames (badlogicgames@6c4fd544-2939-11df-bb46-9574ba5d0bfa): [added] gdx-tools, containing image packer, particle editor and so on....",
+      "metadata": {
+        "total_chunks": 1,
+        "file_path": "extensions/gdx-tools/src/com/badlogic/gdx/tools/particleeditor/ImagePanel.java",
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "commit_count": 3,
+        "language": "java"
+      },
+      "similarity_score": 1.1548386812210083
+    },
+    {
+      "content": "# File: extensions/gdx-tools/src/com/badlogic/gdx/tools/hiero/unicodefont/effects/Effect.java (java)\n\n## Key Code Elements:\nimport java.awt.Graphics2D;\nimport java.awt.image.BufferedImage;\nimport com.badlogic.gdx.tools.hiero.unicodefont.Glyph;\nimport com.badlogic.gdx.tools.hiero.unicodefont.UnicodeFont;\n\n## Recent Changes:\n- 51174f33 by nathan.sweet (nathan.sweet@6c4fd544-2939-11df-bb46-9574ba5d0bfa): [updated] Warnings and format....\n- d4a915ee by badlogicgames (badlogicgames@6c4fd544-2939-11df-bb46-9574ba5d0bfa): [added] gdx-tools, containing image packer, particle editor and so on....",
+      "metadata": {
+        "file_path": "extensions/gdx-tools/src/com/badlogic/gdx/tools/hiero/unicodefont/effects/Effect.java",
+        "chunk_index": 0,
+        "language": "java",
+        "commit_count": 2,
+        "total_chunks": 1,
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.1737819910049438
+    },
+    {
+      "content": "# File: gdx/src/com/badlogic/gdx/graphics/g2d/ParticleEffectPool.java (java)\n\n## Key Code Elements:\nimport com.badlogic.gdx.graphics.g2d.ParticleEffectPool.PooledEffect;\nimport com.badlogic.gdx.utils.Pool;\n\t\t@Override\n\n## Recent Changes:\n- aa23b57e by Mario Zechner (contact@badlogicgames.com): fixed gwt backend, updated to 2.5.0. Typed arrays clashed, ParticleEffect emu didn't implement reset...\n- 76b37870 by NathanSweet (nathan.sweet@gmail.com): 1096, fixed pooled particle effects not being reset properly....\n- 2c9030de by Nathan Sweet (nathan.sweet@gmail.com): ERL YER SERC CERN HERS BERN RERFERCKTERERD!...",
+      "metadata": {
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "file_path": "gdx/src/com/badlogic/gdx/graphics/g2d/ParticleEffectPool.java",
+        "commit_count": 5,
+        "language": "java",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.1941633224487305
+    },
+    {
+      "content": "# File: extensions/gdx-tools/src/com/badlogic/gdx/tools/hiero/unicodefont/effects/FilterEffect.java (java)\n\n## Key Code Elements:\nimport java.awt.Graphics2D;\nimport java.awt.image.BufferedImage;\nimport java.awt.image.BufferedImageOp;\nimport com.badlogic.gdx.tools.hiero.unicodefont.Glyph;\nimport com.badlogic.gdx.tools.hiero.unicodefont.UnicodeFont;\n\n## Recent Changes:\n- 51174f33 by nathan.sweet (nathan.sweet@6c4fd544-2939-11df-bb46-9574ba5d0bfa): [updated] Warnings and format....\n- d4a915ee by badlogicgames (badlogicgames@6c4fd544-2939-11df-bb46-9574ba5d0bfa): [added] gdx-tools, containing image packer, particle editor and so on....",
+      "metadata": {
+        "commit_count": 2,
+        "strategy": "compressed",
+        "file_path": "extensions/gdx-tools/src/com/badlogic/gdx/tools/hiero/unicodefont/effects/FilterEffect.java",
+        "chunk_index": 0,
+        "language": "java",
+        "total_chunks": 1
+      },
+      "similarity_score": 1.2002990245819092
+    },
+    {
+      "content": "# File: backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/graphics/g2d/ParticleEffect.java (java)\n\n## Key Code Elements:\nimport java.io.BufferedReader;\nimport java.io.File;\nimport java.io.IOException;\nimport java.io.InputStream;\nimport java.io.InputStreamReader;\nimport com.badlogic.gdx.files.FileHandle;\nimport com.badlogic.gdx.graphics.Texture;\nimport com.badlogic.gdx.math.collision.BoundingBox;\nimport com.badlogic.gdx.utils.Array;\nimport com.badlogic.gdx.utils.Disposable;\nimport com.badlogic.gdx.utils.GdxRuntimeException;\nimport com.badlogic.gdx.utils.StreamUtils;\n\t@Override\n\n## Recent Changes:\n- 2fe19354 by hneuer (hanno.neuer@gmail.com): ParticleEffect: Don't dispose external textures...\n- d8c0ca16 by hneuer (hanno.neuer@gmail.com): Some cleanup regarding stream closing....\n- 5528cb82 by hneuer (hanno.neuer@gmail.com): Added bounding box for particle effects....",
+      "metadata": {
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "commit_count": 5,
+        "file_path": "backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/graphics/g2d/ParticleEffect.java",
+        "chunk_index": 0,
+        "language": "java"
+      },
+      "similarity_score": 1.229831576347351
+    },
+    {
+      "content": "# File: extensions/gdx-tools/src/com/badlogic/gdx/tools/hiero/unicodefont/effects/ConfigurableEffect.java (java)\n\n## Key Code Elements:\nimport java.util.List;\n\n## Recent Changes:\n- 51174f33 by nathan.sweet (nathan.sweet@6c4fd544-2939-11df-bb46-9574ba5d0bfa): [updated] Warnings and format....\n- d4a915ee by badlogicgames (badlogicgames@6c4fd544-2939-11df-bb46-9574ba5d0bfa): [added] gdx-tools, containing image packer, particle editor and so on....",
+      "metadata": {
+        "total_chunks": 1,
+        "file_path": "extensions/gdx-tools/src/com/badlogic/gdx/tools/hiero/unicodefont/effects/ConfigurableEffect.java",
+        "commit_count": 2,
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "language": "java"
+      },
+      "similarity_score": 1.2352131605148315
+    },
+    {
+      "content": "# File: gdx/src/com/badlogic/gdx/graphics/g2d/ParticleEmitter.java (java)\n\n## Key Code Elements:\nimport java.io.BufferedReader;\nimport java.io.IOException;\nimport java.io.Writer;\nimport com.badlogic.gdx.graphics.GL10;\nimport com.badlogic.gdx.graphics.Texture;\nimport com.badlogic.gdx.math.MathUtils;\nimport com.badlogic.gdx.math.Rectangle;\nimport com.badlogic.gdx.math.collision.BoundingBox;\n\t\touter:\n\t\t\t\tcase top:\n\t\t\t\tcase bottom:\n\t\t\t\tdefault:\n\n## Recent Changes:\n- 9c8a80ef by hneuer (hanno.neuer@gmail.com): Possible fix for ParticleEffect shows unmodified sprite on the first run...\n- a7fb5c14 by hneuer (hanno.neuer@gmail.com): Merge branch 'master' into effectbounds\n\nConflicts:\n\tCHANGES...\n- d1e46741 by Mario Zechner (contact@badlogicgames.com): Merge pull request #564 from hneuer/pool\n\nParticleEmitter now resets the active particles too....",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "java",
+        "strategy": "compressed",
+        "commit_count": 5,
+        "total_chunks": 1,
+        "file_path": "gdx/src/com/badlogic/gdx/graphics/g2d/ParticleEmitter.java"
+      },
+      "similarity_score": 1.2454025745391846
+    },
+    {
+      "content": "# File: gdx/src/com/badlogic/gdx/graphics/g2d/ParticleEffect.java (java)\n\n## Key Code Elements:\nimport java.io.BufferedReader;\nimport java.io.File;\nimport java.io.FileWriter;\nimport java.io.IOException;\nimport java.io.InputStream;\nimport java.io.InputStreamReader;\nimport java.io.Writer;\nimport com.badlogic.gdx.files.FileHandle;\nimport com.badlogic.gdx.graphics.Texture;\nimport com.badlogic.gdx.math.collision.BoundingBox;\nimport com.badlogic.gdx.utils.Array;\nimport com.badlogic.gdx.utils.Disposable;\nimport com.badlogic.gdx.utils.GdxRuntimeException;\nimport com.badlogic.gdx.utils.StreamUtils;\n\n## Recent Changes:\n- 2fe19354 by hneuer (hanno.neuer@gmail.com): ParticleEffect: Don't dispose external textures...\n- d8c0ca16 by hneuer (hanno.neuer@gmail.com): Some cleanup regarding stream closing....\n- 5528cb82 by hneuer (hanno.neuer@gmail.com): Added bounding box for particle effects....",
+      "metadata": {
+        "strategy": "compressed",
+        "commit_count": 5,
+        "total_chunks": 1,
+        "file_path": "gdx/src/com/badlogic/gdx/graphics/g2d/ParticleEffect.java",
+        "language": "java",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.2487393617630005
+    },
+    {
+      "content": "# File: extensions/gdx-image/.classpath (text)\n\n## Recent Changes:\n- 9c4a334c by badlogicgames (badlogicgames@6c4fd544-2939-11df-bb46-9574ba5d0bfa): [fixed] more projects and more exports....\n- 6adb9205 by badlogicgames (badlogicgames@6c4fd544-2939-11df-bb46-9574ba5d0bfa): [fixed] native loading in Jpeg...\n- ae6a87b3 by badlogicgames (badlogicgames@6c4fd544-2939-11df-bb46-9574ba5d0bfa): [added] gdx-image, wraps libjpeg and libpng. WIP....",
+      "metadata": {
+        "file_path": "extensions/gdx-image/.classpath",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "commit_count": 3,
+        "language": "text",
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.2496198415756226
+    },
+    {
+      "content": "# File: tests/gdx-tests/src/com/badlogic/gdx/tests/PixelPerfectTest.java (java)\n\n## Key Code Elements:\nimport com.badlogic.gdx.Gdx;\nimport com.badlogic.gdx.graphics.Color;\nimport com.badlogic.gdx.graphics.GL20;\nimport com.badlogic.gdx.graphics.OrthographicCamera;\nimport com.badlogic.gdx.graphics.Pixmap;\nimport com.badlogic.gdx.graphics.Texture;\nimport com.badlogic.gdx.graphics.g2d.SpriteBatch;\nimport com.badlogic.gdx.tests.utils.GdxTest;\n\t@Override\n\t@Override\n\t@Override\n\n## Recent Changes:\n- 21f1a70e by Jon Renner (rennerjc@gmail.com): ran gdx-tools HeaderFixer tool...\n- e94a7c9d by badlogic (badlogicgames@gmail.com): reverted the camera fix, because it is wrong...\n- 886d2b03 by badlogic (badlogicgames@gmail.com): added PixelPerfectTest, removed iso cam stuff from ortho camera...",
+      "metadata": {
+        "commit_count": 3,
+        "file_path": "tests/gdx-tests/src/com/badlogic/gdx/tests/PixelPerfectTest.java",
+        "total_chunks": 1,
+        "language": "java",
+        "chunk_index": 0,
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.2749743461608887
+    },
+    {
+      "content": "# File: gdx/src/com/badlogic/gdx/scenes/scene2d/ui/VerticalGroup.java (java)\n\n## Key Code Elements:\nimport com.badlogic.gdx.scenes.scene2d.Actor;\nimport com.badlogic.gdx.scenes.scene2d.Touchable;\nimport com.badlogic.gdx.scenes.scene2d.utils.Align;\nimport com.badlogic.gdx.scenes.scene2d.utils.Layout;\nimport com.badlogic.gdx.utils.SnapshotArray;\n\n## Recent Changes:\n- 9e4dc0af by NathanSweet (nathan.sweet@gmail.com): Added HorizontalGroup, spacing....\n- b219ad31 by NathanSweet (nathan.sweet@gmail.com): Ran HeaderFixer....\n- bce96ac3 by NathanSweet (nathan.sweet@gmail.com): VerticalGroup, fixed layout when not reversed....",
+      "metadata": {
+        "language": "java",
+        "commit_count": 4,
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "file_path": "gdx/src/com/badlogic/gdx/scenes/scene2d/ui/VerticalGroup.java"
+      },
+      "similarity_score": 1.2838106155395508
+    },
+    {
+      "content": "# File: extensions/gdx-tools/src/com/badlogic/gdx/tools/particleeditor/ParticleEditor.java (java)\n\n## Key Code Elements:\nimport java.awt.BorderLayout;\nimport java.awt.Component;\nimport java.awt.EventQueue;\nimport java.awt.Graphics;\nimport java.awt.GridBagConstraints;\nimport java.awt.GridBagLayout;\nimport java.awt.Insets;\nimport java.awt.event.WindowAdapter;\nimport java.awt.event.WindowEvent;\nimport java.io.File;\nimport java.net.MalformedURLException;\nimport java.net.URL;\nimport java.util.HashMap;\nimport javax.swing.BorderFactory;\nimport javax.swing.ImageIcon;\n\n## Recent Changes:\n- da424b82 by Mario Zechner (contact@badlogicgames.com): Merge pull request #135 from junkdog/master\n\nParticleEditor: delta multiplier and simpler new emitte...\n- 28a47ecd by TimeToPlay (morozov.oleg7@gmail.com): Issue #1376 Solution for ParticleEditor keyboard events handler....\n- 257c6d91 by Adrian Papari (blackrax@gmail.com): New emitters are configured as bare-boned skeletons.\n\nInitial emitter remains the same however....",
+      "metadata": {
+        "file_path": "extensions/gdx-tools/src/com/badlogic/gdx/tools/particleeditor/ParticleEditor.java",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "commit_count": 5,
+        "strategy": "compressed",
+        "language": "java"
+      },
+      "similarity_score": 1.2880756855010986
+    },
+    {
+      "content": "# File: extensions/gdx-tools/src/com/badlogic/gdx/tools/hiero/unicodefont/effects/ShadowEffect.java (java)\n\n## Key Code Elements:\nimport java.awt.AlphaComposite;\nimport java.awt.Color;\nimport java.awt.Composite;\nimport java.awt.Graphics2D;\nimport java.awt.RenderingHints;\nimport java.awt.image.BufferedImage;\nimport java.awt.image.ConvolveOp;\nimport java.awt.image.Kernel;\nimport java.util.ArrayList;\nimport java.util.Iterator;\nimport java.util.List;\nimport com.badlogic.gdx.tools.hiero.unicodefont.Glyph;\nimport com.badlogic.gdx.tools.hiero.unicodefont.UnicodeFont;\n\n## Recent Changes:\n- 51174f33 by nathan.sweet (nathan.sweet@6c4fd544-2939-11df-bb46-9574ba5d0bfa): [updated] Warnings and format....\n- d4a915ee by badlogicgames (badlogicgames@6c4fd544-2939-11df-bb46-9574ba5d0bfa): [added] gdx-tools, containing image packer, particle editor and so on....",
+      "metadata": {
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "file_path": "extensions/gdx-tools/src/com/badlogic/gdx/tools/hiero/unicodefont/effects/ShadowEffect.java",
+        "commit_count": 2,
+        "language": "java",
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.2915912866592407
+    },
+    {
+      "content": "# File: extensions/gdx-image/jni/libjpeg/jcmaster.c (cpp)\n\n## Key Code Elements:\n * NOTE: this is exported for possible use by application.\n  const jpeg_scan_info * scanptr;\n    const jpeg_scan_info * scanptr = cinfo->scan_info + master->scan_number;\n  case main_pass:\n  case huff_opt_pass:\n  case output_pass:\n  default:\n  case main_pass:\n  case huff_opt_pass:\n  case output_pass:\n\n## Recent Changes:\n- ae6a87b3 by badlogicgames (badlogicgames@6c4fd544-2939-11df-bb46-9574ba5d0bfa): [added] gdx-image, wraps libjpeg and libpng. WIP....",
+      "metadata": {
+        "commit_count": 1,
+        "chunk_index": 0,
+        "file_path": "extensions/gdx-image/jni/libjpeg/jcmaster.c",
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "language": "cpp"
+      },
+      "similarity_score": 1.3024500608444214
+    },
+    {
+      "content": "# File: demos/very-angry-robots/very-angry-robots/src/com/badlydrawngames/general/ParticleManager.java (java)\n\n## Key Code Elements:\nimport com.badlogic.gdx.graphics.Color;\nimport com.badlogic.gdx.utils.Array;\n\n## Recent Changes:\n- 2f412de0 by nathan.sweet (nathan.sweet@6c4fd544-2939-11df-bb46-9574ba5d0bfa): [updated] Everything to use the latest source formatter. Yay! Use it, love it!...\n- b93e4ed4 by badlogicgames (badlogicgames@6c4fd544-2939-11df-bb46-9574ba5d0bfa): [added] Very Angry Robots! :D...",
+      "metadata": {
+        "strategy": "compressed",
+        "file_path": "demos/very-angry-robots/very-angry-robots/src/com/badlydrawngames/general/ParticleManager.java",
+        "language": "java",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "commit_count": 2
+      },
+      "similarity_score": 1.31565523147583
+    },
+    {
+      "content": "# File: extensions/gdx-tools/src/com/badlogic/gdx/tools/imagepacker/ImageProcessor.java (java)\n\n## Key Code Elements:\nimport com.badlogic.gdx.tools.imagepacker.TexturePacker2.Alias;\nimport com.badlogic.gdx.tools.imagepacker.TexturePacker2.Rect;\nimport com.badlogic.gdx.tools.imagepacker.TexturePacker2.Settings;\nimport com.badlogic.gdx.utils.Array;\nimport java.awt.image.BufferedImage;\nimport java.awt.image.WritableRaster;\nimport java.io.File;\nimport java.io.IOException;\nimport java.math.BigInteger;\nimport java.security.MessageDigest;\nimport java.security.NoSuchAlgorithmException;\nimport java.util.Arrays;\nimport java.util.HashMap;\nimport java.util.regex.Matcher;\nimport java.util.regex.Pattern;\n\n## Recent Changes:\n- cc4a26d6 by NathanSweet (nathan.sweet@gmail.com): Fixed the texture packer.\n\nI suck....\n- 30cb901e by NathanSweet (nathan.sweet@gmail.com): Setting to only keep one image in memory at a time.\n\nLoads images twice, but makes only a very small...\n- 92462ff9 by NathanSweet (nathan.sweet@gmail.com): Fixed 1490, keep splits and pads when a region is aliased....",
+      "metadata": {
+        "file_path": "extensions/gdx-tools/src/com/badlogic/gdx/tools/imagepacker/ImageProcessor.java",
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "commit_count": 5,
+        "language": "java"
+      },
+      "similarity_score": 1.3182257413864136
+    },
+    {
+      "content": "# File: gdx/src/com/badlogic/gdx/assets/loaders/BitmapFontLoader.java (java)\n\n## Key Code Elements:\nimport com.badlogic.gdx.assets.AssetDescriptor;\nimport com.badlogic.gdx.assets.AssetLoaderParameters;\nimport com.badlogic.gdx.assets.AssetManager;\nimport com.badlogic.gdx.files.FileHandle;\nimport com.badlogic.gdx.graphics.Texture;\nimport com.badlogic.gdx.graphics.Texture.TextureFilter;\nimport com.badlogic.gdx.graphics.g2d.BitmapFont;\nimport com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData;\nimport com.badlogic.gdx.graphics.g2d.TextureRegion;\nimport com.badlogic.gdx.utils.Array;\n\t@Override\n\t@Override\n\t@Override\n\n## Recent Changes:\n- 6b7028b0 by mattdesl (dave.des@gmail.com): Adding multi-page fonts to BitmapFont; updating FreeTypeFontGenerator for packing multiple fonts tog...\n- f3b2d346 by NathanSweet (nathan.sweet@gmail.com): AssetLoader changed to receive the resolved FileHandle along with the file name.\n\nSee comments in #5...\n- 2c9030de by Nathan Sweet (nathan.sweet@gmail.com): ERL YER SERC CERN HERS BERN RERFERCKTERERD!...",
+      "metadata": {
+        "file_path": "gdx/src/com/badlogic/gdx/assets/loaders/BitmapFontLoader.java",
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "language": "java",
+        "commit_count": 5,
+        "total_chunks": 1
+      },
+      "similarity_score": 1.3263174295425415
+    },
+    {
+      "content": "# File: demos/pax-britannica/pax-britannica/src/de/swagner/paxbritannica/particlesystem/ParticleEmitter.java (java)\n\n## Key Code Elements:\nimport com.badlogic.gdx.Gdx;\nimport com.badlogic.gdx.graphics.g2d.Sprite;\nimport com.badlogic.gdx.graphics.g2d.SpriteBatch;\nimport com.badlogic.gdx.math.Vector2;\nimport com.badlogic.gdx.utils.Array;\nimport com.badlogic.gdx.utils.Pool;\n\t\t@Override\n\t@Override\n\n## Recent Changes:\n- 67dab540 by Jon Renner (rennerjc@gmail.com): chmod -x a lot of .java source files...\n- 06b556a7 by seroperson (seroperson@gmail.com): remove the use of deprecated #mul()...\n- 37ca614e by Mario Zechner (contact@badlogicgames.com): added pax britannica to demos, thanks Stefan...",
+      "metadata": {
+        "file_path": "demos/pax-britannica/pax-britannica/src/de/swagner/paxbritannica/particlesystem/ParticleEmitter.java",
+        "chunk_index": 0,
+        "commit_count": 3,
+        "language": "java",
+        "total_chunks": 1,
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.3314814567565918
+    },
+    {
+      "content": "# File: extensions/gdx-tools/src/com/badlogic/gdx/tools/hiero/unicodefont/Glyph.java (java)\n\n## Key Code Elements:\nimport java.awt.Rectangle;\nimport java.awt.Shape;\nimport java.awt.font.GlyphMetrics;\nimport java.awt.font.GlyphVector;\nimport com.badlogic.gdx.graphics.Texture;\n\n## Recent Changes:\n- 51174f33 by nathan.sweet (nathan.sweet@6c4fd544-2939-11df-bb46-9574ba5d0bfa): [updated] Warnings and format....\n- d4a915ee by badlogicgames (badlogicgames@6c4fd544-2939-11df-bb46-9574ba5d0bfa): [added] gdx-tools, containing image packer, particle editor and so on....",
+      "metadata": {
+        "commit_count": 2,
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "file_path": "extensions/gdx-tools/src/com/badlogic/gdx/tools/hiero/unicodefont/Glyph.java",
+        "language": "java"
+      },
+      "similarity_score": 1.3334190845489502
+    }
+  ]
+}

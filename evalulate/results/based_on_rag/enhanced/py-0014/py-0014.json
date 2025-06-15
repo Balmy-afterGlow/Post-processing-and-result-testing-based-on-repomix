@@ -1,0 +1,7 @@
+{
+  "reason": "The issue is related to the SSLKEYLOGFILE not containing TLSv1.3 secrets, which are required for decrypting TLSv1.3 traffic in tools like Wireshark. The current implementation in mitmproxy's MasterSecretLogger class does not properly handle TLSv1.3 key logging.",
+  "location": [
+    "mitmproxy/net/tls.py"
+  ],
+  "fix": "Update the MasterSecretLogger class in mitmproxy/net/tls.py to include TLSv1.3 key logging by checking for TLSv1.3 connections and logging the appropriate secrets (CLIENT_HANDSHAKE_TRAFFIC_SECRET, SERVER_HANDSHAKE_TRAFFIC_SECRET, CLIENT_TRAFFIC_SECRET_0, SERVER_TRAFFIC_SECRET_0, EXPORTER_SECRET) when the handshake is done."
+}

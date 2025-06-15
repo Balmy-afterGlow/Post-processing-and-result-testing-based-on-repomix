@@ -1,0 +1,8 @@
+{
+  "reason": "NullPointerException occurs in ResValueFactory.factory due to a null value being passed when decoding resources from the APK.",
+  "location": [
+    "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/data/value/ResValueFactory.java",
+    "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/decoder/ARSCDecoder.java"
+  ],
+  "fix": "In ResValueFactory.factory, add a null check before processing the value. For example:\n\npublic static ResValue factory(ResPackage pkg, int type, int value, String rawValue) throws AndrolibException {\n    if (rawValue == null) {\n        return new ResEmptyValue();\n    }\n    // existing code\n}"
+}

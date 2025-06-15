@@ -1,0 +1,7 @@
+{
+  "reason": "The issue occurs when querying data containing Chinese characters in PostgreSQL, due to incorrect character encoding handling between the proxy and the database.",
+  "location": [
+    "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/datasource/JDBCBackendDataSource.java"
+  ],
+  "fix": "Ensure the connection properties include character encoding settings. Modify the JDBCBackendDataSource class to include 'characterEncoding=UTF-8' in the connection properties when creating DataSource for PostgreSQL."
+}

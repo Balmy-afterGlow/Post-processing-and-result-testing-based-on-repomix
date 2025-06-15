@@ -1,0 +1,7 @@
+{
+  "reason": "The issue occurs when querying data containing Chinese characters in PostgreSQL, causing an 'extraneous data in \"D\" message' error. This suggests a character encoding mismatch between the client and server.",
+  "location": [
+    "sharding-proxy/sharding-proxy-frontend/sharding-proxy-frontend-postgresql/src/main/java/org/apache/shardingsphere/shardingproxy/frontend/postgresql/command/query/text/PostgreSQLComQueryExecutor.java"
+  ],
+  "fix": "Ensure proper character encoding (UTF-8) is set in the PostgreSQL connection parameters. Modify the PostgreSQLComQueryExecutor to explicitly set the client encoding to UTF-8 when establishing connections."
+}

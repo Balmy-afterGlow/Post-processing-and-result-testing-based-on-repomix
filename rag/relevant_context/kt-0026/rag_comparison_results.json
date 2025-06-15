@@ -1,0 +1,708 @@
+{
+  "basic": [
+    {
+      "content": "/**\n * Iterator for [ReceiveChannel]. Instances of this interface are *not thread-safe* and shall not be used\n * from concurrent coroutines.\n */\npublic interface ChannelIterator<out E> {\n    /**\n     * Returns `true` if the channel has more elements, suspending the caller while this channel is empty,\n     * or returns `false` if the channel [is closed for `receive`][ReceiveChannel.isClosedForReceive] without a cause.\n     * It throws the original [close][SendChannel.close] cause exception if the channel has _failed_.\n     *\n     * This function retrieves and removes an element from this channel for the subsequent invocation\n     * of [next].\n     *\n     * This suspending function is cancellable. If the [Job] of the current coroutine is cancelled or completed while this\n     * function is suspended, this function immediately resumes with a [CancellationException].\n     * There is a **prompt cancellation guarantee**. If the job was cancelled while this function was\n     * suspended, it will not resume successfully. The `hasNext` call can retrieve the element from the channel,\n     * but then throw [CancellationException], thus failing to deliver the element.\n     * See \"Undelivered elements\" section in [Channel] documentation for details on handling undelivered elements.\n     *\n     * Note that this function does not check for cancellation when it is not suspended.\n     * Use [yield] or [CoroutineScope.isActive] to periodically check for cancellation in tight loops if needed.\n     */\n    public suspend operator fun hasNext(): Boolean",
+      "metadata": {
+        "strategy": "basic",
+        "total_chunks": 29,
+        "language": "kotlin",
+        "file_path": "kotlinx-coroutines-core/common/src/channels/Channel.kt",
+        "chunk_index": 19
+      },
+      "similarity_score": 0.7295747995376587
+    },
+    {
+      "content": "override fun close() {\n        worker.requestTermination().result // Note: calling \"result\" blocks\n    }\n}\n\nprivate class MultiWorkerDispatcher(\n    private val name: String,\n    workersCount: Int\n) : CloseableCoroutineDispatcher() {\n    private val tasksQueue = Channel<Runnable>(Channel.UNLIMITED)\n    private val availableWorkers = Channel<CancellableContinuation<Runnable>>(Channel.UNLIMITED)\n    private val workerPool = OnDemandAllocatingPool(workersCount) {\n        Worker.start(name = \"$name-$it\").apply {\n            executeAfter { workerRunLoop() }\n        }\n    }\n\n    /**\n     * (number of tasks - number of workers) * 2 + (1 if closed)\n     */\n    private val tasksAndWorkersCounter = atomic(0L)\n\n    private inline fun Long.isClosed() = this and 1L == 1L\n    private inline fun Long.hasTasks() = this >= 2\n    private inline fun Long.hasWorkers() = this < 0\n\n    private fun workerRunLoop() = runBlocking {\n        while (true) {\n            val state = tasksAndWorkersCounter.getAndUpdate {\n                if (it.isClosed() && !it.hasTasks()) return@runBlocking\n                it - 2\n            }\n            if (state.hasTasks()) {\n                // we promised to process a task, and there are some\n                tasksQueue.receive().run()\n            } else {\n                try {\n                    suspendCancellableCoroutine {\n                        val result = availableWorkers.trySend(it)\n                        checkChannelResult(result)\n                    }.run()\n                } catch (e: CancellationException) {\n                    /** we are cancelled from [close] and thus will never get back to this branch of code,\n                    but there may still be pending work, so we can't just exit here. */\n                }\n            }\n        }\n    }",
+      "metadata": {
+        "language": "kotlin",
+        "total_chunks": 5,
+        "strategy": "basic",
+        "file_path": "kotlinx-coroutines-core/native/src/MultithreadedDispatchers.kt",
+        "chunk_index": 2
+      },
+      "similarity_score": 0.7890456914901733
+    },
+    {
+      "content": "/**\n     * Sends the specified [element] to this channel, suspending the caller while the buffer of this channel is full\n     * or if it does not exist, or throws an exception if the channel [is closed for `send`][isClosedForSend] (see [close] for details).\n     *\n     * [Closing][close] a channel _after_ this function has suspended does not cause this suspended [send] invocation\n     * to abort, because closing a channel is conceptually like sending a special \"close token\" over this channel.\n     * All elements sent over the channel are delivered in first-in first-out order. The sent element\n     * will be delivered to receivers before the close token.\n     *\n     * This suspending function is cancellable. If the [Job] of the current coroutine is cancelled or completed while this\n     * function is suspended, this function immediately resumes with a [CancellationException].\n     * There is a **prompt cancellation guarantee**. If the job was cancelled while this function was\n     * suspended, it will not resume successfully. The `send` call can send the element to the channel,\n     * but then throw [CancellationException], thus an exception should not be treated as a failure to deliver the element.\n     * See \"Undelivered elements\" section in [Channel] documentation for details on handling undelivered elements.\n     *\n     * Note that this function does not check for cancellation when it is not suspended.\n     * Use [yield] or [CoroutineScope.isActive] to periodically check for cancellation in tight loops if needed.\n     *\n     * This function can be used in [select] invocations with the [onSend] clause.\n     * Use [trySend] to try sending to this channel without waiting.\n     */\n    public suspend fun send(element: E)",
+      "metadata": {
+        "strategy": "basic",
+        "total_chunks": 29,
+        "language": "kotlin",
+        "file_path": "kotlinx-coroutines-core/common/src/channels/Channel.kt",
+        "chunk_index": 1
+      },
+      "similarity_score": 0.8222478032112122
+    },
+    {
+      "content": "/**\n     * Abstract receive implementation.\n     */\n    private inline fun <R> receiveImpl(\n        /* The waiter to be stored in case of suspension,\n        or `null` if the waiter is not created yet.\n        In the latter case, if the algorithm decides\n        to suspend, [onNoWaiterSuspend] is called. */\n        waiter: Any?,\n        /* This lambda is invoked when an element has been\n        successfully retrieved, either from the buffer or\n        by making a rendezvous with a suspended sender. */\n        onElementRetrieved: (element: E) -> R,\n        /* This lambda is called when the operation suspends in the cell\n        specified by the segment and its global and in-segment indices. */\n        onSuspend: (segm: ChannelSegment<E>, i: Int, r: Long) -> R,\n        /* This lambda is called when the channel is observed\n        in the closed state and no waiting sender is found,\n        which means that it is closed for receiving. */\n        onClosed: () -> R,\n        /* This lambda is called when the operation decides\n        to suspend, but the waiter is not provided (equals `null`).\n        It should create a waiter and delegate to `sendImplOnNoWaiter`. */\n        onNoWaiterSuspend: (\n            segm: ChannelSegment<E>,\n            i: Int,\n            r: Long\n        ) -> R = { _, _, _ -> error(\"unexpected\") }\n    ): R {\n        // Read the segment reference before the counter increment;\n        // it is crucial to be able to find the required segment later.\n        var segment = receiveSegment.value\n        while (true) {\n            // Similar to the `send(e)` operation, `receive()` first checks\n            // whether the channel is already closed for receiving.\n            if (isClosedForReceive) return onClosed()\n            // Atomically increments the `receivers` counter\n            // and obtain the value right before the increment.\n            val r = this.receivers.getAndIncrement()",
+      "metadata": {
+        "language": "kotlin",
+        "strategy": "basic",
+        "file_path": "kotlinx-coroutines-core/common/src/channels/BufferedChannel.kt",
+        "chunk_index": 26,
+        "total_chunks": 104
+      },
+      "similarity_score": 0.8333801031112671
+    },
+    {
+      "content": "/**\n     * Schedules resume of a specified [continuation] after a specified delay [timeMillis].\n     *\n     * Continuation **must be scheduled** to resume even if it is already cancelled, because a cancellation is just\n     * an exception that the coroutine that used `delay` might wanted to catch and process. It might\n     * need to close some resources in its `finally` blocks, for example.\n     *\n     * This implementation is supposed to use dispatcher's native ability for scheduled execution in its thread(s).\n     * In order to avoid an extra delay of execution, the following code shall be used to resume this\n     * [continuation] when the code is already executing in the appropriate thread:\n     *\n     * ```kotlin\n     * with(continuation) { resumeUndispatchedWith(Unit) }\n     * ```\n     */\n    public fun scheduleResumeAfterDelay(timeMillis: Long, continuation: CancellableContinuation<Unit>)\n\n    /**\n     * Schedules invocation of a specified [block] after a specified delay [timeMillis].\n     * The resulting [DisposableHandle] can be used to [dispose][DisposableHandle.dispose] of this invocation\n     * request if it is not needed anymore.\n     */\n    public fun invokeOnTimeout(timeMillis: Long, block: Runnable, context: CoroutineContext): DisposableHandle =\n        DefaultDelay.invokeOnTimeout(timeMillis, block, context)\n}\n\n/**\n * Enhanced [Delay] interface that provides additional diagnostics for [withTimeout].\n * Is going to be removed once there is proper JVM-default support.\n * Then we'll be able put this function into [Delay] without breaking binary compatibility.\n */\n@InternalCoroutinesApi\ninternal interface DelayWithTimeoutDiagnostics : Delay {\n    /**\n     * Returns a string that explains that the timeout has occurred, and explains what can be done about it.\n     */\n    fun timeoutMessage(timeout: Duration): String\n}",
+      "metadata": {
+        "file_path": "kotlinx-coroutines-core/common/src/Delay.kt",
+        "total_chunks": 5,
+        "language": "kotlin",
+        "strategy": "basic",
+        "chunk_index": 1
+      },
+      "similarity_score": 0.8555219173431396
+    },
+    {
+      "content": "/**\n     * Registers a [handler] which is synchronously invoked once the channel is [closed][close]\n     * or the receiving side of this channel is [cancelled][ReceiveChannel.cancel].\n     * Only one handler can be attached to a channel during its lifetime.\n     * The `handler` is invoked when [isClosedForSend] starts to return `true`.\n     * If the channel is closed already, the handler is invoked immediately.\n     *\n     * The meaning of `cause` that is passed to the handler:\n     * - `null` if the channel was closed normally without the corresponding argument.\n     * - Instance of [CancellationException] if the channel was cancelled normally without the corresponding argument.\n     * - The cause of `close` or `cancel` otherwise.\n     *\n     * ### Execution context and exception safety\n     *\n     * The [handler] is executed as part of the closing or cancelling operation, and only after the channel reaches its final state.\n     * This means that if the handler throws an exception or hangs, the channel will still be successfully closed or cancelled.\n     * Unhandled exceptions from [handler] are propagated to the closing or cancelling operation's caller.\n     *\n     * Example of usage:\n     * ```\n     * val events = Channel<Event>(UNLIMITED)\n     * callbackBasedApi.registerCallback { event ->\n     *   events.trySend(event)\n     *       .onClosed { /* channel is already closed, but the callback hasn't stopped yet */ }\n     * }\n     *\n     * val uiUpdater = uiScope.launch(Dispatchers.Main) {\n     *    events.consume { /* handle events */ }\n     * }\n     * // Stop the callback after the channel is closed or cancelled\n     * events.invokeOnClose { callbackBasedApi.stop() }\n     * ```\n     *\n     * **Stability note.** This function constitutes a stable API surface, with the only exception being\n     * that an [IllegalStateException] is thrown when multiple handlers are registered.\n     * This restriction could be lifted in the future.\n     *",
+      "metadata": {
+        "language": "kotlin",
+        "total_chunks": 29,
+        "file_path": "kotlinx-coroutines-core/common/src/channels/Channel.kt",
+        "strategy": "basic",
+        "chunk_index": 4
+      },
+      "similarity_score": 0.8584336638450623
+    },
+    {
+      "content": "/**\n     * Cancels suspended `receive` requests from the end to the beginning,\n     * also moving empty cells to the `CHANNEL_CLOSED` state.\n     */\n    private fun cancelSuspendedReceiveRequests(lastSegment: ChannelSegment<E>, sendersCounter: Long) {\n        // To perform synchronization correctly, it is critical to\n        // extract suspended requests in the reverse order,\n        // from the end to the beginning.\n        // However, according to the API, they should be cancelled\n        // in the order of their suspension. Therefore, we need to\n        // collect the suspended requests first, cancelling them\n        // in the reverse order after that.\n        var suspendedReceivers = InlineList<Waiter>()\n        var segment: ChannelSegment<E>? = lastSegment\n        process_segments@ while (segment != null) {\n            for (index in SEGMENT_SIZE - 1 downTo 0) {\n                // Is the cell already covered by a sender? Finish immediately in this case.\n                if (segment.id * SEGMENT_SIZE + index < sendersCounter) break@process_segments\n                // Try to move the cell state to `CHANNEL_CLOSED`.\n                cell_update@ while (true) {\n                    val state = segment.getState(index)\n                    when {\n                        state === null || state === IN_BUFFER -> {\n                            if (segment.casState(index, state, CHANNEL_CLOSED)) {\n                                segment.onSlotCleaned()\n                                break@cell_update\n                            }\n                        }\n                        state is WaiterEB -> {\n                            if (segment.casState(index, state, CHANNEL_CLOSED)) {\n                                suspendedReceivers += state.waiter // save for cancellation.\n                                segment.onCancelledRequest(index = index, receiver = true)\n                                break@cell_update\n                            }\n                        }",
+      "metadata": {
+        "strategy": "basic",
+        "total_chunks": 104,
+        "chunk_index": 70,
+        "language": "kotlin",
+        "file_path": "kotlinx-coroutines-core/common/src/channels/BufferedChannel.kt"
+      },
+      "similarity_score": 0.8616541028022766
+    },
+    {
+      "content": "internal fun dispatchWithContext(block: Runnable, context: TaskContext, tailDispatch: Boolean) {\n        try {\n            coroutineScheduler.dispatch(block, context, tailDispatch)\n        } catch (e: RejectedExecutionException) {\n            // CoroutineScheduler only rejects execution when it is being closed and this behavior is reserved\n            // for testing purposes, so we don't have to worry about cancelling the affected Job here.\n            // TaskContext shouldn't be lost here to properly invoke before/after task\n            DefaultExecutor.enqueue(coroutineScheduler.createTask(block, context))\n        }\n    }\n\n    private fun createScheduler() = CoroutineScheduler(corePoolSize, maxPoolSize, idleWorkerKeepAliveNs, schedulerName)\n}\n\nprivate class LimitingDispatcher(\n    private val dispatcher: ExperimentalCoroutineDispatcher,\n    private val parallelism: Int,\n    private val name: String?,\n    override val taskMode: Int\n) : ExecutorCoroutineDispatcher(), TaskContext, Executor {\n\n    private val queue = ConcurrentLinkedQueue<Runnable>()\n    private val inFlightTasks = atomic(0)\n\n    override val executor: Executor\n        get() = this\n\n    override fun execute(command: Runnable) = dispatch(command, false)\n\n    override fun close(): Unit = error(\"Close cannot be invoked on LimitingBlockingDispatcher\")\n\n    override fun dispatch(context: CoroutineContext, block: Runnable) = dispatch(block, false)\n\n    private fun dispatch(block: Runnable, tailDispatch: Boolean) {\n        var taskToSchedule = block\n        while (true) {\n            // Commit in-flight tasks slot\n            val inFlight = inFlightTasks.incrementAndGet()\n\n            // Fast path, if parallelism limit is not reached, dispatch task and return\n            if (inFlight <= parallelism) {\n                dispatcher.dispatchWithContext(taskToSchedule, this, tailDispatch)\n                return\n            }",
+      "metadata": {
+        "chunk_index": 3,
+        "total_chunks": 6,
+        "file_path": "kotlinx-coroutines-core/jvm/src/scheduling/Deprecated.kt",
+        "strategy": "basic",
+        "language": "kotlin"
+      },
+      "similarity_score": 0.866380512714386
+    },
+    {
+      "content": "/**\n     * Resumes this receiver because this channel is closed.\n     * This function does not take any effect if the operation has already been resumed or cancelled.\n     */\n    private fun Waiter.resumeReceiverOnClosedChannel() = resumeWaiterOnClosedChannel(receiver = true)\n\n    /**\n     * Resumes this sender because this channel is cancelled.\n     * This function does not take any effect if the operation has already been resumed or cancelled.\n     */\n    private fun Waiter.resumeSenderOnCancelledChannel() = resumeWaiterOnClosedChannel(receiver = false)\n\n    private fun Waiter.resumeWaiterOnClosedChannel(receiver: Boolean) {\n        when (this) {\n            is SendBroadcast -> cont.resume(false)\n            is CancellableContinuation<*> -> resumeWithException(if (receiver) receiveException else sendException)\n            is ReceiveCatching<*> -> cont.resume(closed(closeCause))\n            is BufferedChannel<*>.BufferedChannelIterator -> tryResumeHasNextOnClosedChannel()\n            is SelectInstance<*> -> trySelect(this@BufferedChannel, CHANNEL_CLOSED)\n            else -> error(\"Unexpected waiter: $this\")\n        }\n    }\n\n    @ExperimentalCoroutinesApi\n    override val isClosedForSend: Boolean\n        get() = sendersAndCloseStatus.value.isClosedForSend0\n\n    private val Long.isClosedForSend0 get() =\n        isClosed(this, isClosedForReceive = false)\n\n    @ExperimentalCoroutinesApi\n    override val isClosedForReceive: Boolean\n        get() = sendersAndCloseStatus.value.isClosedForReceive0\n\n    private val Long.isClosedForReceive0 get() =\n        isClosed(this, isClosedForReceive = true)",
+      "metadata": {
+        "file_path": "kotlinx-coroutines-core/common/src/channels/BufferedChannel.kt",
+        "total_chunks": 104,
+        "language": "kotlin",
+        "strategy": "basic",
+        "chunk_index": 72
+      },
+      "similarity_score": 0.8682383894920349
+    },
+    {
+      "content": "private suspend fun produce(element: Int, dummy: Channel<Int>?) {\n        if (_3_withSelect) {\n            select<Unit> {\n                channel.onSend(element) {}\n                dummy!!.onReceive {}\n            }\n        } else {\n            channel.send(element)\n        }\n        doWork(_5_workSize)\n    }\n\n    private suspend fun consume(dummy: Channel<Int>?) {\n        if (_3_withSelect) {\n            select<Unit> {\n                channel.onReceive {}\n                dummy!!.onReceive {}\n            }\n        } else {\n            channel.receive()\n        }\n        doWork(_5_workSize)\n    }\n}\n\nenum class DispatcherCreator(val create: (parallelism: Int) -> CoroutineDispatcher) {\n    //FORK_JOIN({ parallelism ->  ForkJoinPool(parallelism).asCoroutineDispatcher() }),\n    @Suppress(\"INVISIBLE_MEMBER\", \"INVISIBLE_REFERENCE\")\n    DEFAULT({ parallelism -> ExperimentalCoroutineDispatcher(corePoolSize = parallelism, maxPoolSize = parallelism) })\n}\n\nenum class ChannelCreator(private val capacity: Int) {\n    RENDEZVOUS(Channel.RENDEZVOUS),\n    BUFFERED_16(16),\n    BUFFERED_64(64),\n    BUFFERED_UNLIMITED(Channel.UNLIMITED);\n\n    fun create(): Channel<Int> = Channel(capacity)\n}\n\nprivate fun doWork(workSize: Int): Unit = doGeomDistrWork(workSize)\n\nprivate const val APPROX_BATCH_SIZE = 100_000\n```",
+      "metadata": {
+        "file_path": "benchmarks/src/jmh/kotlin/benchmarks/ChannelProducerConsumerBenchmark.kt",
+        "strategy": "basic",
+        "language": "kotlin",
+        "total_chunks": 3,
+        "chunk_index": 2
+      },
+      "similarity_score": 0.8710289001464844
+    },
+    {
+      "content": "/**\n     * Closes this channel.\n     * This is an idempotent operation &mdash; subsequent invocations of this function have no effect and return `false`.\n     * Conceptually, it sends a special \"close token\" over this channel.\n     *\n     * Immediately after invocation of this function,\n     * [isClosedForSend] starts returning `true`. However, [isClosedForReceive][ReceiveChannel.isClosedForReceive]\n     * on the side of [ReceiveChannel] starts returning `true` only after all previously sent elements\n     * are received.\n     *\n     * A channel that was closed without a [cause] throws a [ClosedSendChannelException] on attempts to [send]\n     * and [ClosedReceiveChannelException] on attempts to [receive][ReceiveChannel.receive].\n     * A channel that was closed with non-null [cause] is called a _failed_ channel. Attempts to send or\n     * receive on a failed channel throw the specified [cause] exception.\n     */\n    public fun close(cause: Throwable? = null): Boolean",
+      "metadata": {
+        "chunk_index": 3,
+        "strategy": "basic",
+        "language": "kotlin",
+        "file_path": "kotlinx-coroutines-core/common/src/channels/Channel.kt",
+        "total_chunks": 29
+      },
+      "similarity_score": 0.8835272192955017
+    },
+    {
+      "content": "/**\n     * Invariant: Called only by the owner of the queue, returns\n     * `null` if task was added, task that wasn't added otherwise.\n     */\n    private fun addLast(task: Task): Task? {\n        if (bufferSize == BUFFER_CAPACITY - 1) return task\n        if (task.isBlocking) blockingTasksInBuffer.incrementAndGet()\n        val nextIndex = producerIndex.value and MASK\n        /*\n         * If current element is not null then we're racing with a really slow consumer that committed the consumer index,\n         * but hasn't yet nulled out the slot, effectively preventing us from using it.\n         * Such situations are very rare in practise (although possible) and we decided to give up a progress guarantee\n         * to have a stronger invariant \"add to queue with bufferSize == 0 is always successful\".\n         * This algorithm can still be wait-free for add, but if and only if tasks are not reusable, otherwise\n         * nulling out the buffer wouldn't be possible.\n         */\n        while (buffer[nextIndex] != null) {\n            Thread.yield()\n        }\n        buffer.lazySet(nextIndex, task)\n        producerIndex.incrementAndGet()\n        return null\n    }",
+      "metadata": {
+        "chunk_index": 3,
+        "file_path": "kotlinx-coroutines-core/jvm/src/scheduling/WorkQueue.kt",
+        "language": "kotlin",
+        "total_chunks": 8,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.8859903812408447
+    },
+    {
+      "content": "override suspend fun receive(): E =\n        receiveImpl( // <-- this is an inline function\n            // Do not create a continuation until it is required;\n            // it is created later via [onNoWaiterSuspend], if needed.\n            waiter = null,\n            // Return the received element on successful retrieval from\n            // the buffer or rendezvous with a suspended sender.\n            // Also, inform `BufferedChannel` extensions that\n            // synchronization of this receive operation is completed.\n            onElementRetrieved = { element ->\n                return element\n            },\n            // As no waiter is provided, suspension is impossible.\n            onSuspend = { _, _, _ -> error(\"unexpected\") },\n            // Throw an exception if the channel is already closed.\n            onClosed = { throw recoverStackTrace(receiveException) },\n            // If `receive()` decides to suspend, the corresponding\n            // `suspend` function that creates a continuation is called.\n            // The tail-call optimization is applied here.\n            onNoWaiterSuspend = { segm, i, r -> receiveOnNoWaiterSuspend(segm, i, r) }\n        )",
+      "metadata": {
+        "total_chunks": 104,
+        "strategy": "basic",
+        "chunk_index": 20,
+        "file_path": "kotlinx-coroutines-core/common/src/channels/BufferedChannel.kt",
+        "language": "kotlin"
+      },
+      "similarity_score": 0.8874704241752625
+    },
+    {
+      "content": "/**\n     * Retrieves and removes an element from this channel if it's not empty, returning a [successful][ChannelResult.success]\n     * result, returns [failed][ChannelResult.failed] result if the channel is empty, and [closed][ChannelResult.closed]\n     * result if the channel is closed.\n     */\n    public fun tryReceive(): ChannelResult<E>\n\n    /**\n     * Returns a new iterator to receive elements from this channel using a `for` loop.\n     * Iteration completes normally when the channel [is closed for `receive`][isClosedForReceive] without a cause and\n     * throws the original [close][SendChannel.close] cause exception if the channel has _failed_.\n     */\n    public operator fun iterator(): ChannelIterator<E>\n\n    /**\n     * Cancels reception of remaining elements from this channel with an optional [cause].\n     * This function closes the channel and removes all buffered sent elements from it.\n     *\n     * A cause can be used to specify an error message or to provide other details on\n     * the cancellation reason for debugging purposes.\n     * If the cause is not specified, then an instance of [CancellationException] with a\n     * default message is created to [close][SendChannel.close] the channel.\n     *\n     * Immediately after invocation of this function [isClosedForReceive] and\n     * [isClosedForSend][SendChannel.isClosedForSend]\n     * on the side of [SendChannel] start returning `true`. Any attempt to send to or receive from this channel\n     * will lead to a [CancellationException].\n     */\n    public fun cancel(cause: CancellationException? = null)\n\n    /**\n     * @suppress This method implements old version of JVM ABI. Use [cancel].\n     */\n    @Deprecated(level = DeprecationLevel.HIDDEN, message = \"Since 1.2.0, binary compatibility with versions <= 1.1.x\")\n    public fun cancel(): Unit = cancel(null)",
+      "metadata": {
+        "strategy": "basic",
+        "chunk_index": 10,
+        "total_chunks": 29,
+        "file_path": "kotlinx-coroutines-core/common/src/channels/Channel.kt",
+        "language": "kotlin"
+      },
+      "similarity_score": 0.8924372792243958
+    },
+    {
+      "content": "override fun invokeOnClose(handler: (cause: Throwable?) -> Unit) {\n        // Try to install the handler, finishing on success.\n        if (closeHandler.compareAndSet(null, handler)) {\n            // Handler has been successfully set, finish the operation.\n            return\n        }\n        // Either another handler is already set, or this channel is closed.\n        // In the latter case, the current handler should be invoked.\n        // However, the implementation must ensure that at most one\n        // handler is called, throwing an `IllegalStateException`\n        // if another close handler has been invoked.\n        closeHandler.loop { cur ->\n            when {\n                cur === CLOSE_HANDLER_CLOSED -> {\n                    // Try to update the state from `CLOSED` to `INVOKED`.\n                    // This is crucial to guarantee that at most one handler can be called.\n                    // On success, invoke the handler and finish.\n                    if (closeHandler.compareAndSet(CLOSE_HANDLER_CLOSED, CLOSE_HANDLER_INVOKED)) {\n                        handler(closeCause)\n                        return\n                    }\n                }\n                cur === CLOSE_HANDLER_INVOKED -> error(\"Another handler was already registered and successfully invoked\")\n                else -> error(\"Another handler is already registered: $cur\")\n            }\n        }\n    }",
+      "metadata": {
+        "file_path": "kotlinx-coroutines-core/common/src/channels/BufferedChannel.kt",
+        "chunk_index": 60,
+        "language": "kotlin",
+        "total_chunks": 104,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.9000183939933777
+    },
+    {
+      "content": "internal class DisposeOnCompletion(\n    private val handle: DisposableHandle\n) : JobNode() {\n    override fun invoke(cause: Throwable?) = handle.dispose()\n}\n\n// -------- invokeOnCancellation nodes\n\n/**\n * Marker for node that shall be invoked on in _cancelling_ state.\n * **Note: may be invoked multiple times.**\n */\ninternal abstract class JobCancellingNode : JobNode()\n\nprivate class InvokeOnCancelling(\n    private val handler: CompletionHandler\n) : JobCancellingNode()  {\n    // delegate handler shall be invoked at most once, so here is an additional flag\n    private val _invoked = atomic(0) // todo: replace with atomic boolean after migration to recent atomicFu\n    override fun invoke(cause: Throwable?) {\n        if (_invoked.compareAndSet(0, 1)) handler.invoke(cause)\n    }\n}\n\ninternal class ChildHandleNode(\n    @JvmField val childJob: ChildJob\n) : JobCancellingNode(), ChildHandle {\n    override val parent: Job get() = job\n    override fun invoke(cause: Throwable?) = childJob.parentCancelled(job)\n    override fun childCancelled(cause: Throwable): Boolean = job.childCancelled(cause)\n}\n\n// Same as ChildHandleNode, but for cancellable continuation\n@PublishedApi\ninternal class ChildContinuation(\n    // Used by the IDEA debugger via reflection and must be kept binary-compatible, see KTIJ-24102\n    @JvmField val child: CancellableContinuationImpl<*>\n) : JobCancellingNode() {\n    override fun invoke(cause: Throwable?) {\n        child.parentCancelled(child.getContinuationCancellationCause(job))\n    }\n}\n```",
+      "metadata": {
+        "total_chunks": 44,
+        "file_path": "kotlinx-coroutines-core/common/src/JobSupport.kt",
+        "language": "kotlin",
+        "chunk_index": 43,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.9081175923347473
+    },
+    {
+      "content": "private inline fun sendImplOnNoWaiter(\n        /* The working cell is specified by\n        the segment and the index in it. */\n        segment: ChannelSegment<E>,\n        index: Int,\n        /* The element to be sent. */\n        element: E,\n        /* The global index of the cell. */\n        s: Long,\n        /* The waiter to be stored in case of suspension. */\n        waiter: Waiter,\n        /* This lambda is invoked when the element has been\n        buffered or a rendezvous with a receiver happens.*/\n        onRendezvousOrBuffered: () -> Unit,\n        /* This lambda is called when the channel\n        is observed in the closed state. */\n        onClosed: () -> Unit,\n    ) {\n        // Update the cell again, now with the non-null waiter,\n        // restarting the operation from the beginning on failure.\n        // Check the `sendImpl(..)` function for the comments.\n        when (updateCellSend(segment, index, element, s, waiter, false)) {\n            RESULT_RENDEZVOUS -> {\n                segment.cleanPrev()\n                onRendezvousOrBuffered()\n            }\n            RESULT_BUFFERED -> {\n                onRendezvousOrBuffered()\n            }\n            RESULT_SUSPEND -> {\n                waiter.prepareSenderForSuspension(segment, index)\n            }\n            RESULT_CLOSED -> {\n                if (s < receiversCounter) segment.cleanPrev()\n                onClosed()\n            }\n            RESULT_FAILED -> {\n                segment.cleanPrev()\n                sendImpl(\n                    element = element,\n                    waiter = waiter,\n                    onRendezvousOrBuffered = onRendezvousOrBuffered,\n                    onSuspend = { _, _ -> },\n                    onClosed = onClosed,\n                )\n            }\n            else -> error(\"unexpected\")\n        }\n    }",
+      "metadata": {
+        "chunk_index": 11,
+        "file_path": "kotlinx-coroutines-core/common/src/channels/BufferedChannel.kt",
+        "strategy": "basic",
+        "language": "kotlin",
+        "total_chunks": 104
+      },
+      "similarity_score": 0.9089372158050537
+    },
+    {
+      "content": "/**\n     * Retrieves and removes an element from this channel if it's not empty, or suspends the caller while this channel is empty.\n     * This method returns [ChannelResult] with the value of an element successfully retrieved from the channel\n     * or the close cause if the channel was closed. Closed cause may be `null` if the channel was closed normally.\n     * The result cannot be [failed][ChannelResult.isFailure] without being [closed][ChannelResult.isClosed].\n     *\n     * This suspending function is cancellable. If the [Job] of the current coroutine is cancelled or completed while this\n     * function is suspended, this function immediately resumes with a [CancellationException].\n     * There is a **prompt cancellation guarantee**. If the job was cancelled while this function was\n     * suspended, it will not resume successfully. The `receiveCatching` call can retrieve the element from the channel,\n     * but then throw [CancellationException], thus failing to deliver the element.\n     * See \"Undelivered elements\" section in [Channel] documentation for details on handling undelivered elements.\n     *\n     * Note that this function does not check for cancellation when it is not suspended.\n     * Use [yield] or [CoroutineScope.isActive] to periodically check for cancellation in tight loops if needed.\n     *\n     * This function can be used in [select] invocations with the [onReceiveCatching] clause.\n     * Use [tryReceive] to try receiving from this channel without waiting.\n     */\n    public suspend fun receiveCatching(): ChannelResult<E>\n\n    /**\n     * Clause for the [select] expression of the [onReceiveCatching] suspending function that selects with the [ChannelResult] with a value\n     * that is received from the channel or with a close cause if the channel\n     * [is closed for `receive`][isClosedForReceive].\n     */\n    public val onReceiveCatching: SelectClause1<ChannelResult<E>>",
+      "metadata": {
+        "total_chunks": 29,
+        "language": "kotlin",
+        "strategy": "basic",
+        "file_path": "kotlinx-coroutines-core/common/src/channels/Channel.kt",
+        "chunk_index": 9
+      },
+      "similarity_score": 0.9154964685440063
+    },
+    {
+      "content": "BUFFERED -> {} // The cell stores a buffered element.\n                    is Waiter -> {} // The cell stores a suspended request.\n                    INTERRUPTED_RCV, INTERRUPTED_SEND, CHANNEL_CLOSED -> {\n                        // The cell stored an interrupted request or indicates\n                        // that this channel is already closed.\n                        // Check that the element slot is cleaned and increment\n                        // the number of cells in closed/interrupted state.\n                        check(segment.getElement(i) == null)\n                        interruptedOrClosedCells++\n                    }\n                    POISONED, DONE_RCV -> {\n                        // The cell is successfully processed or poisoned.\n                        // Check that the element slot is cleaned.\n                        check(segment.getElement(i) == null)\n                    }\n                    // Other states are illegal after all running operations finish.\n                    else -> error(\"Unexpected segment cell state: $state.\\nChannel state: $this\")\n                }\n            }\n            // Is this segment full of cancelled/closed cells?\n            // If so, this segment should be removed from the\n            // linked list if nether `receiveSegment`, nor\n            // `sendSegment`, nor `bufferEndSegment` reference it.\n            if (interruptedOrClosedCells == SEGMENT_SIZE) {\n                check(segment === receiveSegment.value || segment === sendSegment.value || segment === bufferEndSegment.value) {\n                    \"Logically removed segment is reachable.\\nChannel state: $this\"\n                }\n            }\n            // Process the next segment.\n            segment = segment.next!!\n        }\n    }\n}",
+      "metadata": {
+        "chunk_index": 93,
+        "total_chunks": 104,
+        "strategy": "basic",
+        "file_path": "kotlinx-coroutines-core/common/src/channels/BufferedChannel.kt",
+        "language": "kotlin"
+      },
+      "similarity_score": 0.9164982438087463
+    },
+    {
+      "content": "// ######################\n    // ## Iterator Support ##\n    // ######################\n\n    override fun iterator(): ChannelIterator<E> = BufferedChannelIterator()\n\n    /**\n     * The key idea is that an iterator is a special receiver type,\n     * which should be resumed differently to [receive] and [onReceive]\n     * operations, but can be served as a waiter in a way similar to\n     * [CancellableContinuation] and [SelectInstance].\n     *\n     * Roughly, [hasNext] is a [receive] sibling, while [next] simply\n     * returns the already retrieved element. From the implementation\n     * side, [receiveResult] stores the element retrieved by [hasNext]\n     * (or a special [CHANNEL_CLOSED] token if the channel is closed).\n     *\n     * The [invoke] function is a [CancelHandler] implementation,\n     * which requires knowing the [segment] and the [index] in it\n     * that specify the location of the stored iterator.\n     *\n     * To resume the suspended [hasNext] call, a special [tryResumeHasNext]\n     * function should be used in a way similar to [CancellableContinuation.tryResume]\n     * and [SelectInstance.trySelect]. When the channel becomes closed,\n     * [tryResumeHasNextOnClosedChannel] should be used instead.\n     */\n    private inner class BufferedChannelIterator : ChannelIterator<E>, Waiter {\n        /**\n         * Stores the element retrieved by [hasNext] or\n         * a special [CHANNEL_CLOSED] token if this channel is closed.\n         * If [hasNext] has not been invoked yet, [NO_RECEIVE_RESULT] is stored.\n         */\n        private var receiveResult: Any? = NO_RECEIVE_RESULT\n\n        /**\n         * When [hasNext] suspends, this field stores the corresponding\n         * continuation. The [tryResumeHasNext] and [tryResumeHasNextOnClosedChannel]\n         * function resume this continuation when the [hasNext] invocation should complete.\n         */\n        private var continuation: CancellableContinuationImpl<Boolean>? = null",
+      "metadata": {
+        "total_chunks": 104,
+        "file_path": "kotlinx-coroutines-core/common/src/channels/BufferedChannel.kt",
+        "language": "kotlin",
+        "chunk_index": 50,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.9191750288009644
+    }
+  ],
+  "enhanced": [
+    {
+      "content": "/**\n * Iterator for [ReceiveChannel]. Instances of this interface are *not thread-safe* and shall not be used\n * from concurrent coroutines.\n */\npublic interface ChannelIterator<out E> {\n    /**\n     * Returns `true` if the channel has more elements, suspending the caller while this channel is empty,\n     * or returns `false` if the channel [is closed for `receive`][ReceiveChannel.isClosedForReceive] without a cause.\n     * It throws the original [close][SendChannel.close] cause exception if the channel has _failed_.\n     *\n     * This function retrieves and removes an element from this channel for the subsequent invocation\n     * of [next].\n     *\n     * This suspending function is cancellable. If the [Job] of the current coroutine is cancelled or completed while this\n     * function is suspended, this function immediately resumes with a [CancellationException].\n     * There is a **prompt cancellation guarantee**. If the job was cancelled while this function was\n     * suspended, it will not resume successfully. The `hasNext` call can retrieve the element from the channel,\n     * but then throw [CancellationException], thus failing to deliver the element.\n     * See \"Undelivered elements\" section in [Channel] documentation for details on handling undelivered elements.\n     *\n     * Note that this function does not check for cancellation when it is not suspended.\n     * Use [yield] or [CoroutineScope.isActive] to periodically check for cancellation in tight loops if needed.\n     */\n    public suspend operator fun hasNext(): Boolean",
+      "metadata": {
+        "commit_count": 5,
+        "language": "kotlin",
+        "chunk_index": 19,
+        "total_chunks": 32,
+        "file_path": "kotlinx-coroutines-core/common/src/channels/Channel.kt",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.7295747995376587
+    },
+    {
+      "content": "### Commit 2\n- ID: 2da68175\n- Author: Nikita Koval (ndkoval@ya.ru)\n- Date: 2023-02-28 22:05:35\n- Message: Optimize `CancellableContinuationImpl.invokeOnCancellation(..)` for `Segment`s (#3084)\n\n\n* This optimization enables allocation-free channel operations, as we no longer have to allocate a cancellation handler for suspending channel operations\n* Add a sequential semaphore benchmark and a generalized version of `ChannelSinkBenchmark` that supports buffered channels and pre-allocates elements to isolate the effect\n\n\nSigned-off-by: Nikita Koval <ndkoval@ya.ru>\nCo-authored-by: Vsevolod Tolstopyatov <qwwdfsad@gmail.com>\n- Changes:\n```diff\n@@ -188,8 +188,21 @@ internal abstract class ConcurrentLinkedListNode<N : ConcurrentLinkedListNode<N>\n  * Each segment in the list has a unique id and is created by the provided to [findSegmentAndMoveForward] method.\n  * Essentially, this is a node in the Michael-Scott queue algorithm,\n  * but with maintaining [prev] pointer for efficient [remove] implementation.\n+ *\n+ * NB: this class cannot be public or leak into user's code as public type as [CancellableContinuationImpl]\n+ * instance-check it...\n```\n\n### Commit 3\n- ID: f538af68\n- Author: Vsevolod Tolstopyatov (qwwdfsad@gmail.com)\n- Date: 2023-02-14 17:03:24\n- Message: Workaround for debugger+compiler crash (#3625)",
+      "metadata": {
+        "total_chunks": 10,
+        "file_path": "kotlinx-coroutines-core/common/src/internal/ConcurrentLinkedList.kt",
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "chunk_index": 7,
+        "language": "kotlin"
+      },
+      "similarity_score": 0.7737131714820862
+    },
+    {
+      "content": "override fun close() {\n        worker.requestTermination().result // Note: calling \"result\" blocks\n    }\n}\n\nprivate class MultiWorkerDispatcher(\n    private val name: String,\n    workersCount: Int\n) : CloseableCoroutineDispatcher() {\n    private val tasksQueue = Channel<Runnable>(Channel.UNLIMITED)\n    private val availableWorkers = Channel<CancellableContinuation<Runnable>>(Channel.UNLIMITED)\n    private val workerPool = OnDemandAllocatingPool(workersCount) {\n        Worker.start(name = \"$name-$it\").apply {\n            executeAfter { workerRunLoop() }\n        }\n    }\n\n    /**\n     * (number of tasks - number of workers) * 2 + (1 if closed)\n     */\n    private val tasksAndWorkersCounter = atomic(0L)\n\n    private inline fun Long.isClosed() = this and 1L == 1L\n    private inline fun Long.hasTasks() = this >= 2\n    private inline fun Long.hasWorkers() = this < 0\n\n    private fun workerRunLoop() = runBlocking {\n        while (true) {\n            val state = tasksAndWorkersCounter.getAndUpdate {\n                if (it.isClosed() && !it.hasTasks()) return@runBlocking\n                it - 2\n            }\n            if (state.hasTasks()) {\n                // we promised to process a task, and there are some\n                tasksQueue.receive().run()\n            } else {\n                try {\n                    suspendCancellableCoroutine {\n                        val result = availableWorkers.trySend(it)\n                        checkChannelResult(result)\n                    }.run()\n                } catch (e: CancellationException) {\n                    /** we are cancelled from [close] and thus will never get back to this branch of code,\n                    but there may still be pending work, so we can't just exit here. */\n                }\n            }\n        }\n    }",
+      "metadata": {
+        "language": "kotlin",
+        "chunk_index": 2,
+        "file_path": "kotlinx-coroutines-core/native/src/MultithreadedDispatchers.kt",
+        "total_chunks": 7,
+        "commit_count": 5,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.7890456914901733
+    },
+    {
+      "content": "/**\n     * Sends the specified [element] to this channel, suspending the caller while the buffer of this channel is full\n     * or if it does not exist, or throws an exception if the channel [is closed for `send`][isClosedForSend] (see [close] for details).\n     *\n     * [Closing][close] a channel _after_ this function has suspended does not cause this suspended [send] invocation\n     * to abort, because closing a channel is conceptually like sending a special \"close token\" over this channel.\n     * All elements sent over the channel are delivered in first-in first-out order. The sent element\n     * will be delivered to receivers before the close token.\n     *\n     * This suspending function is cancellable. If the [Job] of the current coroutine is cancelled or completed while this\n     * function is suspended, this function immediately resumes with a [CancellationException].\n     * There is a **prompt cancellation guarantee**. If the job was cancelled while this function was\n     * suspended, it will not resume successfully. The `send` call can send the element to the channel,\n     * but then throw [CancellationException], thus an exception should not be treated as a failure to deliver the element.\n     * See \"Undelivered elements\" section in [Channel] documentation for details on handling undelivered elements.\n     *\n     * Note that this function does not check for cancellation when it is not suspended.\n     * Use [yield] or [CoroutineScope.isActive] to periodically check for cancellation in tight loops if needed.\n     *\n     * This function can be used in [select] invocations with the [onSend] clause.\n     * Use [trySend] to try sending to this channel without waiting.\n     */\n    public suspend fun send(element: E)",
+      "metadata": {
+        "total_chunks": 32,
+        "chunk_index": 1,
+        "strategy": "enhanced",
+        "language": "kotlin",
+        "commit_count": 5,
+        "file_path": "kotlinx-coroutines-core/common/src/channels/Channel.kt"
+      },
+      "similarity_score": 0.8222478032112122
+    },
+    {
+      "content": "/**\n     * Abstract receive implementation.\n     */\n    private inline fun <R> receiveImpl(\n        /* The waiter to be stored in case of suspension,\n        or `null` if the waiter is not created yet.\n        In the latter case, if the algorithm decides\n        to suspend, [onNoWaiterSuspend] is called. */\n        waiter: Any?,\n        /* This lambda is invoked when an element has been\n        successfully retrieved, either from the buffer or\n        by making a rendezvous with a suspended sender. */\n        onElementRetrieved: (element: E) -> R,\n        /* This lambda is called when the operation suspends in the cell\n        specified by the segment and its global and in-segment indices. */\n        onSuspend: (segm: ChannelSegment<E>, i: Int, r: Long) -> R,\n        /* This lambda is called when the channel is observed\n        in the closed state and no waiting sender is found,\n        which means that it is closed for receiving. */\n        onClosed: () -> R,\n        /* This lambda is called when the operation decides\n        to suspend, but the waiter is not provided (equals `null`).\n        It should create a waiter and delegate to `sendImplOnNoWaiter`. */\n        onNoWaiterSuspend: (\n            segm: ChannelSegment<E>,\n            i: Int,\n            r: Long\n        ) -> R = { _, _, _ -> error(\"unexpected\") }\n    ): R {\n        // Read the segment reference before the counter increment;\n        // it is crucial to be able to find the required segment later.\n        var segment = receiveSegment.value\n        while (true) {\n            // Similar to the `send(e)` operation, `receive()` first checks\n            // whether the channel is already closed for receiving.\n            if (isClosedForReceive) return onClosed()\n            // Atomically increments the `receivers` counter\n            // and obtain the value right before the increment.\n            val r = this.receivers.getAndIncrement()",
+      "metadata": {
+        "chunk_index": 26,
+        "total_chunks": 107,
+        "file_path": "kotlinx-coroutines-core/common/src/channels/BufferedChannel.kt",
+        "commit_count": 5,
+        "language": "kotlin",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.8333801031112671
+    },
+    {
+      "content": "To support fairness w.r.t. the tasks that want to run on the\nwrapped dispatcher outside of its view, `LimitedDispatcher`\nredispatches the work loop periodically. This can happen even when\nthere are no more tasks in `LimitedDispatcher`'s queue.\nTypically, this behavior is completely benign: after being\nredistpatched, the new runner just checks the queue, sees that\nthere is nothing there, and leaves. However, with closable\ndispatchers, this affects correctness, as this redispatch may\nhappen even after all the dispatched tasks were run and the\ndispatcher was closed.\n- Changes:\n```diff\n@@ -7,7 +7,6 @@ package kotlinx.coroutines.internal\n import kotlinx.atomicfu.*\n import kotlinx.coroutines.*\n import kotlin.coroutines.*\n-import kotlin.jvm.*\n \n /**\n  * The result of .limitedParallelism(x) call, a dispatcher\n@@ -27,7 +26,7 @@ import kotlin.jvm.*\n internal class LimitedDispatcher(\n     private val dispatcher: CoroutineDispatcher,\n     private val parallelism: Int\n-) : CoroutineDispatcher(), Runnable, Delay by (dispatcher as? Delay ?: DefaultDelay) {\n+) : CoroutineDispatcher(), Del...\n```\n\n### Commit 2\n- ID: bddfb898\n- Author: Vsevolod Tolstopyatov (qwwdfsad@gmail.com)\n- Date: 2023-03-03 23:45:23\n- Message: Introduce internal API to run the current work queue of the system dispatcher #3641)\n\n\n* Added internal API to run both Dispatchers.Default and Dispatchers.IO\n* Added internal API to check whether the current thread is IO \n* Reworked WorkQueue API to have the concept of polling and stealing in \"exclusive\" modes for the sake of these APIs\n\nFixes #3439",
+      "metadata": {
+        "file_path": "kotlinx-coroutines-core/common/src/internal/LimitedDispatcher.kt",
+        "commit_count": 5,
+        "language": "kotlin",
+        "chunk_index": 3,
+        "total_chunks": 6,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.8449654579162598
+    },
+    {
+      "content": "/**\n     * Schedules resume of a specified [continuation] after a specified delay [timeMillis].\n     *\n     * Continuation **must be scheduled** to resume even if it is already cancelled, because a cancellation is just\n     * an exception that the coroutine that used `delay` might wanted to catch and process. It might\n     * need to close some resources in its `finally` blocks, for example.\n     *\n     * This implementation is supposed to use dispatcher's native ability for scheduled execution in its thread(s).\n     * In order to avoid an extra delay of execution, the following code shall be used to resume this\n     * [continuation] when the code is already executing in the appropriate thread:\n     *\n     * ```kotlin\n     * with(continuation) { resumeUndispatchedWith(Unit) }\n     * ```\n     */\n    public fun scheduleResumeAfterDelay(timeMillis: Long, continuation: CancellableContinuation<Unit>)\n\n    /**\n     * Schedules invocation of a specified [block] after a specified delay [timeMillis].\n     * The resulting [DisposableHandle] can be used to [dispose][DisposableHandle.dispose] of this invocation\n     * request if it is not needed anymore.\n     */\n    public fun invokeOnTimeout(timeMillis: Long, block: Runnable, context: CoroutineContext): DisposableHandle =\n        DefaultDelay.invokeOnTimeout(timeMillis, block, context)\n}\n\n/**\n * Enhanced [Delay] interface that provides additional diagnostics for [withTimeout].\n * Is going to be removed once there is proper JVM-default support.\n * Then we'll be able put this function into [Delay] without breaking binary compatibility.\n */\n@InternalCoroutinesApi\ninternal interface DelayWithTimeoutDiagnostics : Delay {\n    /**\n     * Returns a string that explains that the timeout has occurred, and explains what can be done about it.\n     */\n    fun timeoutMessage(timeout: Duration): String\n}",
+      "metadata": {
+        "file_path": "kotlinx-coroutines-core/common/src/Delay.kt",
+        "total_chunks": 8,
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "language": "kotlin",
+        "chunk_index": 1
+      },
+      "similarity_score": 0.8555219173431396
+    },
+    {
+      "content": "/**\n     * Registers a [handler] which is synchronously invoked once the channel is [closed][close]\n     * or the receiving side of this channel is [cancelled][ReceiveChannel.cancel].\n     * Only one handler can be attached to a channel during its lifetime.\n     * The `handler` is invoked when [isClosedForSend] starts to return `true`.\n     * If the channel is closed already, the handler is invoked immediately.\n     *\n     * The meaning of `cause` that is passed to the handler:\n     * - `null` if the channel was closed normally without the corresponding argument.\n     * - Instance of [CancellationException] if the channel was cancelled normally without the corresponding argument.\n     * - The cause of `close` or `cancel` otherwise.\n     *\n     * ### Execution context and exception safety\n     *\n     * The [handler] is executed as part of the closing or cancelling operation, and only after the channel reaches its final state.\n     * This means that if the handler throws an exception or hangs, the channel will still be successfully closed or cancelled.\n     * Unhandled exceptions from [handler] are propagated to the closing or cancelling operation's caller.\n     *\n     * Example of usage:\n     * ```\n     * val events = Channel<Event>(UNLIMITED)\n     * callbackBasedApi.registerCallback { event ->\n     *   events.trySend(event)\n     *       .onClosed { /* channel is already closed, but the callback hasn't stopped yet */ }\n     * }\n     *\n     * val uiUpdater = uiScope.launch(Dispatchers.Main) {\n     *    events.consume { /* handle events */ }\n     * }\n     * // Stop the callback after the channel is closed or cancelled\n     * events.invokeOnClose { callbackBasedApi.stop() }\n     * ```\n     *\n     * **Stability note.** This function constitutes a stable API surface, with the only exception being\n     * that an [IllegalStateException] is thrown when multiple handlers are registered.\n     * This restriction could be lifted in the future.\n     *",
+      "metadata": {
+        "commit_count": 5,
+        "language": "kotlin",
+        "chunk_index": 4,
+        "strategy": "enhanced",
+        "file_path": "kotlinx-coroutines-core/common/src/channels/Channel.kt",
+        "total_chunks": 32
+      },
+      "similarity_score": 0.8584336638450623
+    },
+    {
+      "content": "/**\n     * Cancels suspended `receive` requests from the end to the beginning,\n     * also moving empty cells to the `CHANNEL_CLOSED` state.\n     */\n    private fun cancelSuspendedReceiveRequests(lastSegment: ChannelSegment<E>, sendersCounter: Long) {\n        // To perform synchronization correctly, it is critical to\n        // extract suspended requests in the reverse order,\n        // from the end to the beginning.\n        // However, according to the API, they should be cancelled\n        // in the order of their suspension. Therefore, we need to\n        // collect the suspended requests first, cancelling them\n        // in the reverse order after that.\n        var suspendedReceivers = InlineList<Waiter>()\n        var segment: ChannelSegment<E>? = lastSegment\n        process_segments@ while (segment != null) {\n            for (index in SEGMENT_SIZE - 1 downTo 0) {\n                // Is the cell already covered by a sender? Finish immediately in this case.\n                if (segment.id * SEGMENT_SIZE + index < sendersCounter) break@process_segments\n                // Try to move the cell state to `CHANNEL_CLOSED`.\n                cell_update@ while (true) {\n                    val state = segment.getState(index)\n                    when {\n                        state === null || state === IN_BUFFER -> {\n                            if (segment.casState(index, state, CHANNEL_CLOSED)) {\n                                segment.onSlotCleaned()\n                                break@cell_update\n                            }\n                        }\n                        state is WaiterEB -> {\n                            if (segment.casState(index, state, CHANNEL_CLOSED)) {\n                                suspendedReceivers += state.waiter // save for cancellation.\n                                segment.onCancelledRequest(index = index, receiver = true)\n                                break@cell_update\n                            }\n                        }",
+      "metadata": {
+        "total_chunks": 107,
+        "commit_count": 5,
+        "file_path": "kotlinx-coroutines-core/common/src/channels/BufferedChannel.kt",
+        "chunk_index": 70,
+        "strategy": "enhanced",
+        "language": "kotlin"
+      },
+      "similarity_score": 0.8616541028022766
+    },
+    {
+      "content": "Related to #3576\n- Changes:\n```diff\n@@ -19,8 +19,8 @@ public expect abstract class CloseableCoroutineDispatcher() : CoroutineDispatche\n \n     /**\n      * Initiate the closing sequence of the coroutine dispatcher.\n-     * After a successful call to [close], no new tasks will\n-     * be accepted to be [dispatched][dispatch], but the previously dispatched tasks will be run.\n+     * After a successful call to [close], no new tasks will be accepted to be [dispatched][dispatch].\n+     * The previously-submitted tasks will still be run, ...\n```\n\n### Commit 2\n- ID: 7523368d\n- Author: Vsevolod Tolstopyatov (qwwdfsad@gmail.com)\n- Date: 2021-09-09 20:44:21\n- Message: Introduce CloseableCoroutineDispatcher abstract class (#2903)\n\n* Introduce CloseableCoroutineDispatcher abstract class\n* Alias it to ExecutorCoroutineDispatcher on JVM as the most appropriate candidate\n* Add abstract classes to JVM and Native\n* This class will be implemented by new dispatchers for K/N new memory model\n\nCo-authored-by: dkhalanskyjb <52952525+dkhalanskyjb@users.noreply.github.com>\n- Changes:\n```diff\n@@ -0,0 +1,28 @@\n+/*\n+ * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.\n+ */\n+\n+package kotlinx.coroutines\n+\n+/**\n+ * [CoroutineDispatcher] that provides a method to close it,\n+ * causing the rejection of any new tasks and cleanup of all underlying resources\n+ * associated with the current dispatcher.\n+ * Examples of closeable dispatchers are dispatchers backed by `java.lang.Executor` and\n+ * by `kotlin.native.Worker`.\n+ *\n+ * **The `Closeable...\n```",
+      "metadata": {
+        "file_path": "kotlinx-coroutines-core/common/src/CloseableCoroutineDispatcher.kt",
+        "strategy": "enhanced",
+        "total_chunks": 2,
+        "language": "kotlin",
+        "commit_count": 2,
+        "chunk_index": 1
+      },
+      "similarity_score": 0.864853024482727
+    },
+    {
+      "content": "/**\n     * Resumes this receiver because this channel is closed.\n     * This function does not take any effect if the operation has already been resumed or cancelled.\n     */\n    private fun Waiter.resumeReceiverOnClosedChannel() = resumeWaiterOnClosedChannel(receiver = true)\n\n    /**\n     * Resumes this sender because this channel is cancelled.\n     * This function does not take any effect if the operation has already been resumed or cancelled.\n     */\n    private fun Waiter.resumeSenderOnCancelledChannel() = resumeWaiterOnClosedChannel(receiver = false)\n\n    private fun Waiter.resumeWaiterOnClosedChannel(receiver: Boolean) {\n        when (this) {\n            is SendBroadcast -> cont.resume(false)\n            is CancellableContinuation<*> -> resumeWithException(if (receiver) receiveException else sendException)\n            is ReceiveCatching<*> -> cont.resume(closed(closeCause))\n            is BufferedChannel<*>.BufferedChannelIterator -> tryResumeHasNextOnClosedChannel()\n            is SelectInstance<*> -> trySelect(this@BufferedChannel, CHANNEL_CLOSED)\n            else -> error(\"Unexpected waiter: $this\")\n        }\n    }\n\n    @ExperimentalCoroutinesApi\n    override val isClosedForSend: Boolean\n        get() = sendersAndCloseStatus.value.isClosedForSend0\n\n    private val Long.isClosedForSend0 get() =\n        isClosed(this, isClosedForReceive = false)\n\n    @ExperimentalCoroutinesApi\n    override val isClosedForReceive: Boolean\n        get() = sendersAndCloseStatus.value.isClosedForReceive0\n\n    private val Long.isClosedForReceive0 get() =\n        isClosed(this, isClosedForReceive = true)",
+      "metadata": {
+        "total_chunks": 107,
+        "chunk_index": 72,
+        "commit_count": 5,
+        "language": "kotlin",
+        "file_path": "kotlinx-coroutines-core/common/src/channels/BufferedChannel.kt",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.8682383894920349
+    },
+    {
+      "content": "private suspend fun produce(element: Int, dummy: Channel<Int>?) {\n        if (_3_withSelect) {\n            select<Unit> {\n                channel.onSend(element) {}\n                dummy!!.onReceive {}\n            }\n        } else {\n            channel.send(element)\n        }\n        doWork(_5_workSize)\n    }\n\n    private suspend fun consume(dummy: Channel<Int>?) {\n        if (_3_withSelect) {\n            select<Unit> {\n                channel.onReceive {}\n                dummy!!.onReceive {}\n            }\n        } else {\n            channel.receive()\n        }\n        doWork(_5_workSize)\n    }\n}\n\nenum class DispatcherCreator(val create: (parallelism: Int) -> CoroutineDispatcher) {\n    //FORK_JOIN({ parallelism ->  ForkJoinPool(parallelism).asCoroutineDispatcher() }),\n    @Suppress(\"INVISIBLE_MEMBER\", \"INVISIBLE_REFERENCE\")\n    DEFAULT({ parallelism -> ExperimentalCoroutineDispatcher(corePoolSize = parallelism, maxPoolSize = parallelism) })\n}\n\nenum class ChannelCreator(private val capacity: Int) {\n    RENDEZVOUS(Channel.RENDEZVOUS),\n    BUFFERED_16(16),\n    BUFFERED_64(64),\n    BUFFERED_UNLIMITED(Channel.UNLIMITED);\n\n    fun create(): Channel<Int> = Channel(capacity)\n}\n\nprivate fun doWork(workSize: Int): Unit = doGeomDistrWork(workSize)\n\nprivate const val APPROX_BATCH_SIZE = 100_000\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: e7cf6321\n- Author: Nikita Koval (ndkoval@ya.ru)\n- Date: 2023-02-13 19:06:46\n- Message: Introduce fast and scalable channels (#3103)\n\nSee #3621 for detailed description and rationale",
+      "metadata": {
+        "file_path": "benchmarks/src/jmh/kotlin/benchmarks/ChannelProducerConsumerBenchmark.kt",
+        "strategy": "enhanced",
+        "total_chunks": 5,
+        "chunk_index": 2,
+        "commit_count": 5,
+        "language": "kotlin"
+      },
+      "similarity_score": 0.8710289001464844
+    },
+    {
+      "content": "### Commit 3\n- ID: bddfb898\n- Author: Vsevolod Tolstopyatov (qwwdfsad@gmail.com)\n- Date: 2023-03-03 23:45:23\n- Message: Introduce internal API to run the current work queue of the system dispatcher #3641)\n\n\n* Added internal API to run both Dispatchers.Default and Dispatchers.IO\n* Added internal API to check whether the current thread is IO \n* Reworked WorkQueue API to have the concept of polling and stealing in \"exclusive\" modes for the sake of these APIs\n\nFixes #3439\n\nCo-authored-by: Dmitry Khalanskiy <52952525+dkhalanskyjb@users.noreply.github.com>\n- Changes:\n```diff\n@@ -720,6 +720,30 @@ internal class CoroutineScheduler(\n             tryReleaseCpu(WorkerState.TERMINATED)\n         }\n \n+        /**\n+         * See [runSingleTaskFromCurrentSystemDispatcher] for rationale and details.\n+         * This is a fine-tailored method for a specific use-case not expected to be used widely.\n+         */\n+        fun runSingleTask(): Long {\n+            val stateSnapshot = state\n+            val isCpuThread  = state == WorkerState.CPU_ACQUIRED\n+            val task = if ...\n```\n\n### Commit 4\n- ID: 87d1af97\n- Author: Vsevolod Tolstopyatov (qwwdfsad@gmail.com)\n- Date: 2023-01-17 00:08:00\n- Message: Introduce a separate slot for stealing tasks into in CoroutineScheduler (#3537)\n\n* Introduce a separate slot for stealing tasks into in CoroutineScheduler\n\nIt solves two problems:\n\n* Stealing into exclusively owned local queue does no longer require CAS'es or atomic operations where they were previously not needed. It should save a few cycles on the stealing code path\n* The overall timing perturbations should be slightly better now: previously it was possible for the stolen task to be immediately got stolen again from the stealer thread because it was actually published to the owner's queue, but its submission time was never updated (#3416)",
+      "metadata": {
+        "total_chunks": 36,
+        "language": "kotlin",
+        "chunk_index": 34,
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "file_path": "kotlinx-coroutines-core/jvm/src/scheduling/CoroutineScheduler.kt"
+      },
+      "similarity_score": 0.8729821443557739
+    },
+    {
+      "content": "Related to #3576\n- Changes:\n```diff\n@@ -4,6 +4,7 @@\n \n package kotlinx.coroutines\n \n+import kotlinx.atomicfu.*\n import kotlinx.coroutines.channels.*\n import kotlinx.coroutines.internal.*\n import kotlin.coroutines.*\n@@ -73,38 +74,78 @@ private class MultiWorkerDispatcher(\n     workersCount: Int\n ) : CloseableCoroutineDispatcher() {\n     private val tasksQueue = Channel<Runnable>(Channel.UNLIMITED)\n+    private val availableWorkers = Channel<CancellableContinuation<Runnable>>(Channel.UNLIMITED)\n     private val workerPool = OnDemand...\n```\n\n### Commit 3\n- ID: 298eb114\n- Author: Vsevolod Tolstopyatov (qwwdfsad@gmail.com)\n- Date: 2022-10-13 04:04:21\n- Message: New implementation of K/N multi-threaded dispatchers  (#3421)\n\n* Get rid of the race on LimitedDispatcher due to @Volatile being no-op on K/N\n\nImprove newFixedThreadPoolContext on K/N:\n\n* Create workers lazily\n* Do properly handle rejection\n* Await termination in parallel\n* Extract the concurrent structure from MultithreadedDispatchers to test it with Lincheck\n\n* Fix a race\n\nCo-authored-by: dkhalanskyjb <52952525+dkhalanskyjb@users.noreply.github.com>\nCo-authored-by: Dmitry Khalanskiy <Dmitry.Khalanskiy@jetbrains.com>\n- Changes:\n```diff\n@@ -5,6 +5,7 @@\n package kotlinx.coroutines\n \n import kotlinx.coroutines.channels.*\n+import kotlinx.coroutines.internal.*\n import kotlin.coroutines.*\n import kotlin.native.concurrent.*\n \n@@ -14,7 +15,7 @@ public actual fun newSingleThreadContext(name: String): CloseableCoroutineDispat\n }\n \n public actual fun newFixedThreadPoolContext(nThreads: Int, name: String): CloseableCoroutineDispatcher {\n-    require(nThreads >= 1) { \"Expected at least one thread, but got: $nThreads\"}\n+    require(nThreads...\n```",
+      "metadata": {
+        "chunk_index": 5,
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "language": "kotlin",
+        "file_path": "kotlinx-coroutines-core/native/src/MultithreadedDispatchers.kt",
+        "total_chunks": 7
+      },
+      "similarity_score": 0.8817906975746155
+    },
+    {
+      "content": "@ExperimentalCoroutinesApi\npublic expect fun newFixedThreadPoolContext(nThreads: Int, name: String): CloseableCoroutineDispatcher\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: c7545b5b\n- Author: Dmitry Khalanskiy (52952525+dkhalanskyjb@users.noreply.github.com)\n- Date: 2023-06-29 17:21:57\n- Message: Fix newSingleThreadContext awaiting cancelled scheduled coroutines (#3769)\n\n* Fix newSingleThreadContext awaiting cancelled scheduled coroutines\n\nBefore the change, the Worker is not notified about its work being\ncancelled, due to no API being present for that.\nWe work around the issue by checking every 100 milliseconds whether\ncancellation happened.\n\nAlso, alias 'newSingleThreadContext' to 'newFixedThreadPoolContext(1)` for the sake of consistent implementation\n\nFixes #3768\n- Changes:\n```diff\n@@ -2,10 +2,40 @@\n  * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.\n  */\n \n+@file:JvmMultifileClass\n+@file:JvmName(\"ThreadPoolDispatcherKt\")\n package kotlinx.coroutines\n \n+import kotlin.jvm.*\n+\n+/**\n+ * Creates a coroutine execution context using a single thread with built-in [yield] support.\n+ * **NOTE: The resulting [CloseableCoroutineDispatcher] owns native resources (its thread).\n+ * Resources are reclaimed by [CloseableCoroutineDispatche...\n```\n\n### Commit 2\n- ID: 04272058\n- Author: Vsevolod Tolstopyatov (qwwdfsad@gmail.com)\n- Date: 2021-11-15 17:09:43\n- Message: Incorporate new Native memory model into kotlinx-coroutines mainline (#2833)",
+      "metadata": {
+        "language": "kotlin",
+        "file_path": "kotlinx-coroutines-core/concurrent/src/MultithreadedDispatchers.common.kt",
+        "strategy": "enhanced",
+        "commit_count": 2,
+        "chunk_index": 1,
+        "total_chunks": 3
+      },
+      "similarity_score": 0.8829334378242493
+    },
+    {
+      "content": "/**\n     * Closes this channel.\n     * This is an idempotent operation &mdash; subsequent invocations of this function have no effect and return `false`.\n     * Conceptually, it sends a special \"close token\" over this channel.\n     *\n     * Immediately after invocation of this function,\n     * [isClosedForSend] starts returning `true`. However, [isClosedForReceive][ReceiveChannel.isClosedForReceive]\n     * on the side of [ReceiveChannel] starts returning `true` only after all previously sent elements\n     * are received.\n     *\n     * A channel that was closed without a [cause] throws a [ClosedSendChannelException] on attempts to [send]\n     * and [ClosedReceiveChannelException] on attempts to [receive][ReceiveChannel.receive].\n     * A channel that was closed with non-null [cause] is called a _failed_ channel. Attempts to send or\n     * receive on a failed channel throw the specified [cause] exception.\n     */\n    public fun close(cause: Throwable? = null): Boolean",
+      "metadata": {
+        "total_chunks": 32,
+        "language": "kotlin",
+        "chunk_index": 3,
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "file_path": "kotlinx-coroutines-core/common/src/channels/Channel.kt"
+      },
+      "similarity_score": 0.8835272192955017
+    },
+    {
+      "content": "override suspend fun receive(): E =\n        receiveImpl( // <-- this is an inline function\n            // Do not create a continuation until it is required;\n            // it is created later via [onNoWaiterSuspend], if needed.\n            waiter = null,\n            // Return the received element on successful retrieval from\n            // the buffer or rendezvous with a suspended sender.\n            // Also, inform `BufferedChannel` extensions that\n            // synchronization of this receive operation is completed.\n            onElementRetrieved = { element ->\n                return element\n            },\n            // As no waiter is provided, suspension is impossible.\n            onSuspend = { _, _, _ -> error(\"unexpected\") },\n            // Throw an exception if the channel is already closed.\n            onClosed = { throw recoverStackTrace(receiveException) },\n            // If `receive()` decides to suspend, the corresponding\n            // `suspend` function that creates a continuation is called.\n            // The tail-call optimization is applied here.\n            onNoWaiterSuspend = { segm, i, r -> receiveOnNoWaiterSuspend(segm, i, r) }\n        )",
+      "metadata": {
+        "total_chunks": 107,
+        "language": "kotlin",
+        "file_path": "kotlinx-coroutines-core/common/src/channels/BufferedChannel.kt",
+        "strategy": "enhanced",
+        "chunk_index": 20,
+        "commit_count": 5
+      },
+      "similarity_score": 0.8874704241752625
+    },
+    {
+      "content": "/**\n     * Retrieves and removes an element from this channel if it's not empty, returning a [successful][ChannelResult.success]\n     * result, returns [failed][ChannelResult.failed] result if the channel is empty, and [closed][ChannelResult.closed]\n     * result if the channel is closed.\n     */\n    public fun tryReceive(): ChannelResult<E>\n\n    /**\n     * Returns a new iterator to receive elements from this channel using a `for` loop.\n     * Iteration completes normally when the channel [is closed for `receive`][isClosedForReceive] without a cause and\n     * throws the original [close][SendChannel.close] cause exception if the channel has _failed_.\n     */\n    public operator fun iterator(): ChannelIterator<E>\n\n    /**\n     * Cancels reception of remaining elements from this channel with an optional [cause].\n     * This function closes the channel and removes all buffered sent elements from it.\n     *\n     * A cause can be used to specify an error message or to provide other details on\n     * the cancellation reason for debugging purposes.\n     * If the cause is not specified, then an instance of [CancellationException] with a\n     * default message is created to [close][SendChannel.close] the channel.\n     *\n     * Immediately after invocation of this function [isClosedForReceive] and\n     * [isClosedForSend][SendChannel.isClosedForSend]\n     * on the side of [SendChannel] start returning `true`. Any attempt to send to or receive from this channel\n     * will lead to a [CancellationException].\n     */\n    public fun cancel(cause: CancellationException? = null)\n\n    /**\n     * @suppress This method implements old version of JVM ABI. Use [cancel].\n     */\n    @Deprecated(level = DeprecationLevel.HIDDEN, message = \"Since 1.2.0, binary compatibility with versions <= 1.1.x\")\n    public fun cancel(): Unit = cancel(null)",
+      "metadata": {
+        "strategy": "enhanced",
+        "chunk_index": 10,
+        "file_path": "kotlinx-coroutines-core/common/src/channels/Channel.kt",
+        "commit_count": 5,
+        "total_chunks": 32,
+        "language": "kotlin"
+      },
+      "similarity_score": 0.8924372792243958
+    },
+    {
+      "content": "override fun invokeOnClose(handler: (cause: Throwable?) -> Unit) {\n        // Try to install the handler, finishing on success.\n        if (closeHandler.compareAndSet(null, handler)) {\n            // Handler has been successfully set, finish the operation.\n            return\n        }\n        // Either another handler is already set, or this channel is closed.\n        // In the latter case, the current handler should be invoked.\n        // However, the implementation must ensure that at most one\n        // handler is called, throwing an `IllegalStateException`\n        // if another close handler has been invoked.\n        closeHandler.loop { cur ->\n            when {\n                cur === CLOSE_HANDLER_CLOSED -> {\n                    // Try to update the state from `CLOSED` to `INVOKED`.\n                    // This is crucial to guarantee that at most one handler can be called.\n                    // On success, invoke the handler and finish.\n                    if (closeHandler.compareAndSet(CLOSE_HANDLER_CLOSED, CLOSE_HANDLER_INVOKED)) {\n                        handler(closeCause)\n                        return\n                    }\n                }\n                cur === CLOSE_HANDLER_INVOKED -> error(\"Another handler was already registered and successfully invoked\")\n                else -> error(\"Another handler is already registered: $cur\")\n            }\n        }\n    }",
+      "metadata": {
+        "language": "kotlin",
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "total_chunks": 107,
+        "file_path": "kotlinx-coroutines-core/common/src/channels/BufferedChannel.kt",
+        "chunk_index": 60
+      },
+      "similarity_score": 0.9000183939933777
+    },
+    {
+      "content": "### Commit 4\n- ID: 4a44fef1\n- Author: dkhalanskyjb (52952525+dkhalanskyjb@users.noreply.github.com)\n- Date: 2022-09-08 23:39:46\n- Message: Fix another potential memory leak in WorkerDispatcher (#3445)\n- Changes:\n```diff\n@@ -26,12 +26,16 @@ internal class WorkerDispatcher(name: String) : CloseableCoroutineDispatcher(),\n     }\n \n     override fun scheduleResumeAfterDelay(timeMillis: Long, continuation: CancellableContinuation<Unit>) {\n-        worker.executeAfter(timeMillis.toMicrosSafe()) {\n+        val handle = schedule(timeMillis, Runnable {\n             with(continuation) { resumeUndispatched(Unit) }\n-        }\n+        })\n+        continuation.disposeOnCancellation(handle)\n     }\n \n-    override fun invokeOn...\n```\n\n### Commit 5\n- ID: 5c582eeb\n- Author: Vsevolod Tolstopyatov (qwwdfsad@gmail.com)\n- Date: 2022-07-27 23:38:46\n- Message: Get rid of the old Kotlin/Native memory model (#3376)\n\n* Get rid of the old Kotlin/Native memory model\n\nFixes #3375\n- Changes:\n```diff\n@@ -5,18 +5,15 @@\n package kotlinx.coroutines\n \n import kotlinx.coroutines.channels.*\n-import kotlinx.coroutines.internal.*\n import kotlin.coroutines.*\n import kotlin.native.concurrent.*\n \n @ExperimentalCoroutinesApi\n public actual fun newSingleThreadContext(name: String): CloseableCoroutineDispatcher {\n-    if (!multithreadingSupported) throw IllegalStateException(\"This API is only supported for experimental K/N memory model\")\n     return WorkerDispatcher(name)\n }\n \n public actual fun newFixedT...\n```",
+      "metadata": {
+        "total_chunks": 7,
+        "strategy": "enhanced",
+        "chunk_index": 6,
+        "commit_count": 5,
+        "file_path": "kotlinx-coroutines-core/native/src/MultithreadedDispatchers.kt",
+        "language": "kotlin"
+      },
+      "similarity_score": 0.9057682752609253
+    }
+  ],
+  "compressed": [
+    {
+      "content": "# File: kotlinx-coroutines-core/common/src/CloseableCoroutineDispatcher.kt (kotlin)\n\n## Key Code Elements:\n@ExperimentalCoroutinesApi\n\n## Recent Changes:\n- e946cd76 by Dmitry Khalanskiy (52952525+dkhalanskyjb@users.noreply.github.com): Don't allocate threads on every dispatch in Native's thread pools (#3595)\n\nRelated to #3576...\n- 7523368d by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Introduce CloseableCoroutineDispatcher abstract class (#2903)\n\n* Introduce CloseableCoroutineDispatc...",
+      "metadata": {
+        "language": "kotlin",
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "commit_count": 2,
+        "file_path": "kotlinx-coroutines-core/common/src/CloseableCoroutineDispatcher.kt"
+      },
+      "similarity_score": 0.97693932056427
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/concurrent/src/MultithreadedDispatchers.common.kt (kotlin)\n\n## Key Code Elements:\n@file:JvmMultifileClass\n@file:JvmName(\"ThreadPoolDispatcherKt\")\nimport kotlin.jvm.*\n * **NOTE: The resulting [CloseableCoroutineDispatcher] owns native resources (its thread).\n * attempt to submit a task is made, then:\n * JDK executors, use the following expression:\n@ExperimentalCoroutinesApi\n@DelicateCoroutinesApi\n@ExperimentalCoroutinesApi\n\n## Recent Changes:\n- c7545b5b by Dmitry Khalanskiy (52952525+dkhalanskyjb@users.noreply.github.com): Fix newSingleThreadContext awaiting cancelled scheduled coroutines (#3769)\n\n* Fix newSingleThreadCon...\n- 04272058 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Incorporate new Native memory model into kotlinx-coroutines mainline (#2833)\n\n* Support of new K/N m...",
+      "metadata": {
+        "commit_count": 2,
+        "language": "kotlin",
+        "file_path": "kotlinx-coroutines-core/concurrent/src/MultithreadedDispatchers.common.kt",
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "total_chunks": 1
+      },
+      "similarity_score": 0.9797329902648926
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/jvm/src/ThreadPoolDispatcher.kt (kotlin)\n\n## Key Code Elements:\n@file:JvmMultifileClass\n@file:JvmName(\"ThreadPoolDispatcherKt\")\nimport java.util.concurrent.*\nimport java.util.concurrent.atomic.AtomicInteger\n * **NOTE: The resulting [ExecutorCoroutineDispatcher] owns native resources (its threads).\n * JDK executors, use the following expression:\n@DelicateCoroutinesApi\n\n## Recent Changes:\n- c7545b5b by Dmitry Khalanskiy (52952525+dkhalanskyjb@users.noreply.github.com): Fix newSingleThreadContext awaiting cancelled scheduled coroutines (#3769)\n\n* Fix newSingleThreadCon...\n- 04272058 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Incorporate new Native memory model into kotlinx-coroutines mainline (#2833)\n\n* Support of new K/N m...\n- 73ba62aa by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Promote newSingleThreadContext and newFixedThreadPoolContext to delicate API (#2922)\n\n* Mention Coro...",
+      "metadata": {
+        "commit_count": 5,
+        "chunk_index": 0,
+        "file_path": "kotlinx-coroutines-core/jvm/src/ThreadPoolDispatcher.kt",
+        "strategy": "compressed",
+        "language": "kotlin",
+        "total_chunks": 1
+      },
+      "similarity_score": 1.0237504243850708
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/jvm/src/scheduling/WorkQueue.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.atomicfu.*\nimport kotlinx.coroutines.*\nimport java.util.concurrent.atomic.*\nimport kotlin.jvm.internal.Ref.ObjectRef\n     * The only harmful race is:\n     * [StealingMode] controls what tasks to steal:\n        var start = consumerIndex.value\n        var end = producerIndex.value\n            // TODO time wraparound ?\n\n## Recent Changes:\n- bddfb898 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Introduce internal API to run the current work queue of the system dispatcher #3641)\n\n\n* Added inter...\n- 4102f908 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Increment WorkQueue.blockingTasksInBuffer only after capacity check (#3569)\n\nOtherwise, it is possib...\n- 87d1af97 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Introduce a separate slot for stealing tasks into in CoroutineScheduler (#3537)\n\n* Introduce a separ...",
+      "metadata": {
+        "commit_count": 5,
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "language": "kotlin",
+        "file_path": "kotlinx-coroutines-core/jvm/src/scheduling/WorkQueue.kt",
+        "total_chunks": 1
+      },
+      "similarity_score": 1.0246111154556274
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/jvm/test/scheduling/BlockingCoroutineDispatcherTerminationStressTest.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.coroutines.scheduling.*\nimport org.junit.*\nimport java.util.*\nimport java.util.concurrent.*\nclass BlockingCoroutineDispatcherTerminationStressTest : TestBase() {\n    @After\n    @Test\n\n## Recent Changes:\n- 1df0be55 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Introduce CoroutineDispatcher.limitedParallelism and make Dispatchers.IO unbounded for limited paral...\n- d77c17c2 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Improve performance of task acquisition\n\n    * Do not push worker to the stack during second pass of...",
+      "metadata": {
+        "language": "kotlin",
+        "commit_count": 2,
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "file_path": "kotlinx-coroutines-core/jvm/test/scheduling/BlockingCoroutineDispatcherTerminationStressTest.kt",
+        "total_chunks": 1
+      },
+      "similarity_score": 1.0416613817214966
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/jvm/src/scheduling/Dispatcher.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.internal.*\nimport java.util.concurrent.*\nimport kotlin.coroutines.*\n    @ExperimentalCoroutinesApi\n    @InternalCoroutinesApi\n    @ExperimentalCoroutinesApi\n    @ExperimentalCoroutinesApi\n    @InternalCoroutinesApi\n    @Synchronized\n    @Synchronized\n\n## Recent Changes:\n- b74e0391 by Daniil Ovchinnikov (5519549+dovchinnikov@users.noreply.github.com): Eliminate unneeded `LimitedDispatcher` instances on `Dispatchers.Default` and `Dispatchers.IO` (#356...\n- 1df0be55 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Introduce CoroutineDispatcher.limitedParallelism and make Dispatchers.IO unbounded for limited paral...\n- 1786eb09 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Introduce Dispatchers.shutdown (#2915)\n\n\nFixes #2558...",
+      "metadata": {
+        "language": "kotlin",
+        "file_path": "kotlinx-coroutines-core/jvm/src/scheduling/Dispatcher.kt",
+        "strategy": "compressed",
+        "commit_count": 5,
+        "chunk_index": 0,
+        "total_chunks": 1
+      },
+      "similarity_score": 1.0461633205413818
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/jvm/test/CancellableContinuationResumeCloseStressTest.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.atomicfu.*\nimport org.junit.*\nimport java.util.concurrent.*\nimport kotlin.test.*\nimport kotlin.test.Test\nclass CancellableContinuationResumeCloseStressTest : TestBase() {\n    @get:Rule\n    @Test\n    @Suppress(\"BlockingMethodInNonBlockingContext\")\n\n## Recent Changes:\n- 6d1a6e36 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Update copyright year...\n- 455c255a by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Introduce ExecutorRule for stress-tests for simpler development process...\n- 2740aa5d by Roman Elizarov (elizarov@gmail.com): Fix a race in Job.join that sporadically results in normal completion\n\nThe race happens in the slow-...",
+      "metadata": {
+        "total_chunks": 1,
+        "file_path": "kotlinx-coroutines-core/jvm/test/CancellableContinuationResumeCloseStressTest.kt",
+        "commit_count": 3,
+        "language": "kotlin",
+        "strategy": "compressed",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.0539417266845703
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/concurrent/test/LimitedParallelismConcurrentTest.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.atomicfu.*\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.exceptions.*\nimport kotlin.coroutines.*\nimport kotlin.test.*\nclass LimitedParallelismConcurrentTest : TestBase() {\n    @Test\n    @Test\n    @Test\n        class NaggingDispatcher: CoroutineDispatcher() {\n\n## Recent Changes:\n- 33b2a9a6 by Dmitry Khalanskiy (52952525+dkhalanskyjb@users.noreply.github.com): Fix `limitedParallelism` doing dispatches when it has no tasks (#3672)\n\nTo support fairness w.r.t. t...\n- 5c582eeb by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Get rid of the old Kotlin/Native memory model (#3376)\n\n* Get rid of the old Kotlin/Native memory mod...\n- 163a55ed by shmuelr (shmuelr@users.noreply.github.com): Add missing package statement to test file (#3249)...",
+      "metadata": {
+        "total_chunks": 1,
+        "commit_count": 4,
+        "chunk_index": 0,
+        "language": "kotlin",
+        "file_path": "kotlinx-coroutines-core/concurrent/test/LimitedParallelismConcurrentTest.kt",
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.0550225973129272
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/jvm/test/scheduling/BlockingCoroutineDispatcherThreadLimitStressTest.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.coroutines.*\nimport org.junit.Ignore\nimport org.junit.Test\nimport java.util.concurrent.*\nimport java.util.concurrent.atomic.*\nimport kotlin.test.*\nclass BlockingCoroutineDispatcherThreadLimitStressTest : SchedulerTestBase() {\n    @Test\n    @Test\n    @Ignore\n\n## Recent Changes:\n- c526c3fa by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Do not request additional worker from 'yield' calls and during post-e… (#1728)\n\nDo not request addit...\n- ab30d724 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): New deterministic algorithm for working with blocking tasks\n\nInvariants:\n\n    * Steal only one task ...",
+      "metadata": {
+        "commit_count": 2,
+        "chunk_index": 0,
+        "language": "kotlin",
+        "file_path": "kotlinx-coroutines-core/jvm/test/scheduling/BlockingCoroutineDispatcherThreadLimitStressTest.kt",
+        "total_chunks": 1,
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.062424898147583
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/jvm/test/scheduling/BlockingCoroutineDispatcherWorkSignallingStressTest.kt (kotlin)\n\n## Key Code Elements:\n@file:Suppress(\"DeferredResultUnused\")\nimport kotlinx.coroutines.*\nimport org.junit.Test\nimport java.util.concurrent.*\nimport kotlin.test.*\nclass BlockingCoroutineDispatcherWorkSignallingStressTest : SchedulerTestBase() {\n    @Test\n    @Test\n    @Test\n\n## Recent Changes:\n- 1df0be55 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Introduce CoroutineDispatcher.limitedParallelism and make Dispatchers.IO unbounded for limited paral...\n- ab30d724 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): New deterministic algorithm for working with blocking tasks\n\nInvariants:\n\n    * Steal only one task ...",
+      "metadata": {
+        "language": "kotlin",
+        "total_chunks": 1,
+        "file_path": "kotlinx-coroutines-core/jvm/test/scheduling/BlockingCoroutineDispatcherWorkSignallingStressTest.kt",
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "commit_count": 2
+      },
+      "similarity_score": 1.0769602060317993
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/jvm/src/internal/ResizableAtomicArray.kt (kotlin)\n\n## Key Code Elements:\nimport java.util.concurrent.atomic.*\n    @Volatile\n\n## Recent Changes:\n- 6427e0e7 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Reduce contention on worker's lock in CoroutineScheduler (#3686)\n\nThe previous implementation was pr...\n- a1f5ab8f by Roman Elizarov (elizarov@gmail.com): Optimization: resizable workers array (#3137)\n\nInstead of allocating an array of maxPoolSize (~2M) e...",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "kotlin",
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "commit_count": 2,
+        "file_path": "kotlinx-coroutines-core/jvm/src/internal/ResizableAtomicArray.kt"
+      },
+      "similarity_score": 1.079359531402588
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/native/test/MultithreadedDispatchersTest.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.atomicfu.*\nimport kotlinx.coroutines.channels.*\nimport kotlinx.coroutines.internal.*\nimport kotlin.native.concurrent.*\nimport kotlin.test.*\nimport kotlin.time.Duration.Companion.seconds\nclass MultithreadedDispatchersTest {\n    @Test\n    @Test\n\n## Recent Changes:\n- c7545b5b by Dmitry Khalanskiy (52952525+dkhalanskyjb@users.noreply.github.com): Fix newSingleThreadContext awaiting cancelled scheduled coroutines (#3769)\n\n* Fix newSingleThreadCon...\n- e946cd76 by Dmitry Khalanskiy (52952525+dkhalanskyjb@users.noreply.github.com): Don't allocate threads on every dispatch in Native's thread pools (#3595)\n\nRelated to #3576...",
+      "metadata": {
+        "file_path": "kotlinx-coroutines-core/native/test/MultithreadedDispatchersTest.kt",
+        "commit_count": 2,
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "language": "kotlin",
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.079625129699707
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/jvm/src/scheduling/CoroutineScheduler.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.atomicfu.*\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.internal.*\nimport java.io.*\nimport java.util.concurrent.*\nimport java.util.concurrent.locks.*\nimport kotlin.jvm.internal.Ref.ObjectRef\nimport kotlin.math.*\nimport kotlin.random.*\n * Current scheduler implementation has two optimization targets:\n@Suppress(\"NOTHING_TO_INLINE\")\n    @JvmField val corePoolSize: Int,\n    @JvmField val maxPoolSize: Int,\n    @JvmField val idleWorkerKeepAliveNs: Long = IDLE_WORKER_KEEP_ALIVE_NS,\n    @JvmField val schedulerName: String = DEFAULT_SCHEDULER_NAME\n\n## Recent Changes:\n- 6427e0e7 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Reduce contention on worker's lock in CoroutineScheduler (#3686)\n\nThe previous implementation was pr...\n- 1c5ae48a by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Fix oversubscription in Dispatchers.Default (#3684)\n\nPreviously, an arbitrary task was added to the ...\n- bddfb898 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Introduce internal API to run the current work queue of the system dispatcher #3641)\n\n\n* Added inter...",
+      "metadata": {
+        "chunk_index": 0,
+        "commit_count": 5,
+        "total_chunks": 1,
+        "file_path": "kotlinx-coroutines-core/jvm/src/scheduling/CoroutineScheduler.kt",
+        "strategy": "compressed",
+        "language": "kotlin"
+      },
+      "similarity_score": 1.0839170217514038
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/jvm/test/scheduling/BlockingCoroutineDispatcherMixedStealingStressTest.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.coroutines.*\nimport org.junit.*\nimport java.util.concurrent.*\nclass BlockingCoroutineDispatcherMixedStealingStressTest : SchedulerTestBase() {\n    @Before\n    @Test\n    @Test\n\n## Recent Changes:\n- addff4b4 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Prevent potential re-park when the unparking thread is too slow (#2381)...\n- ab30d724 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): New deterministic algorithm for working with blocking tasks\n\nInvariants:\n\n    * Steal only one task ...",
+      "metadata": {
+        "language": "kotlin",
+        "chunk_index": 0,
+        "commit_count": 2,
+        "total_chunks": 1,
+        "file_path": "kotlinx-coroutines-core/jvm/test/scheduling/BlockingCoroutineDispatcherMixedStealingStressTest.kt",
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.0924104452133179
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/native/src/MultithreadedDispatchers.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.atomicfu.*\nimport kotlinx.coroutines.channels.*\nimport kotlinx.coroutines.internal.*\nimport kotlin.coroutines.*\nimport kotlin.native.concurrent.*\nimport kotlin.time.*\nimport kotlin.time.Duration.Companion.milliseconds\n@OptIn(ExperimentalTime::class)\n        class DisposableBlock(block: Runnable) : DisposableHandle, Function0<Unit> {\n\n## Recent Changes:\n- c7545b5b by Dmitry Khalanskiy (52952525+dkhalanskyjb@users.noreply.github.com): Fix newSingleThreadContext awaiting cancelled scheduled coroutines (#3769)\n\n* Fix newSingleThreadCon...\n- e946cd76 by Dmitry Khalanskiy (52952525+dkhalanskyjb@users.noreply.github.com): Don't allocate threads on every dispatch in Native's thread pools (#3595)\n\nRelated to #3576...\n- 298eb114 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): New implementation of K/N multi-threaded dispatchers  (#3421)\n\n* Get rid of the race on LimitedDispa...",
+      "metadata": {
+        "chunk_index": 0,
+        "commit_count": 5,
+        "total_chunks": 1,
+        "language": "kotlin",
+        "file_path": "kotlinx-coroutines-core/native/src/MultithreadedDispatchers.kt",
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.1117948293685913
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/jvm/test/scheduling/WorkQueueStressTest.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.coroutines.*\nimport org.junit.*\nimport org.junit.Test\nimport java.util.concurrent.*\nimport kotlin.concurrent.*\nimport kotlin.jvm.internal.*\nimport kotlin.test.*\nclass WorkQueueStressTest : TestBase() {\n    @Volatile\n    @Before\n    @After\n    @Test\n    @Test\n\n## Recent Changes:\n- 87d1af97 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Introduce a separate slot for stealing tasks into in CoroutineScheduler (#3537)\n\n* Introduce a separ...\n- ab30d724 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): New deterministic algorithm for working with blocking tasks\n\nInvariants:\n\n    * Steal only one task ...\n- 4236c8c5 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): New work stealing and unparking strategies\n\n    * Work stealing: get rid of global queue for offload...",
+      "metadata": {
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "commit_count": 5,
+        "total_chunks": 1,
+        "language": "kotlin",
+        "file_path": "kotlinx-coroutines-core/jvm/test/scheduling/WorkQueueStressTest.kt"
+      },
+      "similarity_score": 1.1119134426116943
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/concurrent/test/MultithreadedDispatcherStressTest.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.atomicfu.*\nimport kotlin.coroutines.*\nimport kotlin.test.*\nclass MultithreadedDispatcherStressTest {\n    @Test\n\n## Recent Changes:\n- e946cd76 by Dmitry Khalanskiy (52952525+dkhalanskyjb@users.noreply.github.com): Don't allocate threads on every dispatch in Native's thread pools (#3595)\n\nRelated to #3576...",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "kotlinx-coroutines-core/concurrent/test/MultithreadedDispatcherStressTest.kt",
+        "strategy": "compressed",
+        "language": "kotlin",
+        "total_chunks": 1,
+        "commit_count": 1
+      },
+      "similarity_score": 1.1123852729797363
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/common/src/flow/internal/AbstractSharedFlow.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.coroutines.channels.*\nimport kotlinx.coroutines.flow.*\nimport kotlinx.coroutines.internal.*\nimport kotlin.coroutines.*\nimport kotlin.jvm.*\n@JvmField\n    @Suppress(\"UNCHECKED_CAST\")\n            var index = nextIndex\n            var slot: S\n    @Suppress(\"UNCHECKED_CAST\")\n * The importance of non-conflating can be demonstrated with the following example:\n\n## Recent Changes:\n- 6427e0e7 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Reduce contention on worker's lock in CoroutineScheduler (#3686)\n\nThe previous implementation was pr...\n- 4e97c835 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Get rid of workaround for KT-16222 that is long time fixed (#3446)\n\n\n* The correctness of the change...\n- 5c582eeb by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Get rid of the old Kotlin/Native memory model (#3376)\n\n* Get rid of the old Kotlin/Native memory mod...",
+      "metadata": {
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "commit_count": 5,
+        "file_path": "kotlinx-coroutines-core/common/src/flow/internal/AbstractSharedFlow.kt",
+        "strategy": "compressed",
+        "language": "kotlin"
+      },
+      "similarity_score": 1.114375114440918
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/common/src/CancellableContinuationImpl.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.atomicfu.*\nimport kotlinx.coroutines.internal.*\nimport kotlin.coroutines.*\nimport kotlin.coroutines.intrinsics.*\nimport kotlin.jvm.*\n@Suppress(\"NOTHING_TO_INLINE\")\n@JvmField\n@PublishedApi\n     * CancellableContinuationImpl is a subset of Job with following limitations:\n     * This field has a concurrent rendezvous in the following scenario:\n     * T1 writes:\n     * Any other T writes if the parent job is cancelled in detachChild:\n     * We want to preserve a strict invariant on parentHandle transition, allowing only three of them:\n    @JvmName(\"resetStateReusable\") // Prettier stack traces\n    @PublishedApi\n\n## Recent Changes:\n- 435844a1 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Get rid of BeforeResumeCancelHandler (#3744)\n\n\n* Remove effectively duplicating code\n* BufferedChann...\n- 46765ed6 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): Release reusability token when suspendCancellableCoroutineReusable's … (#3634)\n\n* Release reusabilit...\n- 2da68175 by Nikita Koval (ndkoval@ya.ru): Optimize `CancellableContinuationImpl.invokeOnCancellation(..)` for `Segment`s (#3084)\n\n\n* This opti...",
+      "metadata": {
+        "file_path": "kotlinx-coroutines-core/common/src/CancellableContinuationImpl.kt",
+        "commit_count": 5,
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "language": "kotlin",
+        "total_chunks": 1
+      },
+      "similarity_score": 1.1183547973632812
+    },
+    {
+      "content": "# File: kotlinx-coroutines-core/jvm/test/scheduling/CoroutineSchedulerLivenessStressTest.kt (kotlin)\n\n## Key Code Elements:\nimport kotlinx.coroutines.*\nimport kotlinx.coroutines.scheduling.CoroutineScheduler.Companion.MAX_SUPPORTED_POOL_SIZE\nimport org.junit.*\nimport java.util.concurrent.*\nclass CoroutineSchedulerLivenessStressTest : TestBase() {\n    @After\n    @Test\n    @Test\n\n## Recent Changes:\n- ab30d724 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): New deterministic algorithm for working with blocking tasks\n\nInvariants:\n\n    * Steal only one task ...\n- 4236c8c5 by Vsevolod Tolstopyatov (qwwdfsad@gmail.com): New work stealing and unparking strategies\n\n    * Work stealing: get rid of global queue for offload...",
+      "metadata": {
+        "strategy": "compressed",
+        "file_path": "kotlinx-coroutines-core/jvm/test/scheduling/CoroutineSchedulerLivenessStressTest.kt",
+        "language": "kotlin",
+        "commit_count": 2,
+        "chunk_index": 0,
+        "total_chunks": 1
+      },
+      "similarity_score": 1.1197125911712646
+    }
+  ]
+}

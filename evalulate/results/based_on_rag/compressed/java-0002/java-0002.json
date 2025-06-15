@@ -1,0 +1,7 @@
+{
+  "reason": "The issue occurs when the SSH connection is configured with an encrypted certificate but the server login is left blank. The system defaults to using the OS login instead of prompting for the server login.",
+  "location": [
+    "plugins/org.jkiss.dbeaver.net.ssh.ui/src/org/jkiss/dbeaver/ui/net/ssh/SSHTunnelConfiguratorUI.java"
+  ],
+  "fix": "Modify the SSHTunnelConfiguratorUI.java to include a prompt for server login when it is left blank, similar to how it prompts for certificate passwords. Ensure the UI checks for empty username fields and requests user input before proceeding with the connection."
+}

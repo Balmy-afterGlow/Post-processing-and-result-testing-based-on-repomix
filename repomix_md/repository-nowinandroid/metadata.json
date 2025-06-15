@@ -1,0 +1,60 @@
+{
+  "repository": {
+    "name": "android/nowinandroid",
+    "sha": "6a8736d4d00e96a543ee496d3374ea612c32ea97",
+    "generation_date": "2025-06-15T11:00:37.528345"
+  },
+  "files": {
+    "standard": {
+      "file_name": "repomix-output-nowinandroid.md",
+      "file_size_mb": 2.84,
+      "character_count": 2975063,
+      "line_count": 56820,
+      "word_count": 158880,
+      "token_counts": {
+        "gpt-4": 761853,
+        "estimated": 743765
+      },
+      "created_time": "2025-06-15T10:59:08.123087",
+      "modified_time": "2025-06-15T10:59:08.123087",
+      "generation_time": "2025-06-15T11:00:34.598460"
+    },
+    "compressed": {
+      "file_name": "repomix-output-nowinandroid-compress.md",
+      "file_size_mb": 2.84,
+      "character_count": 2975253,
+      "line_count": 56822,
+      "word_count": 158910,
+      "token_counts": {
+        "gpt-4": 761892,
+        "estimated": 743813
+      },
+      "created_time": "2025-06-15T10:59:23.550545",
+      "modified_time": "2025-06-15T10:59:23.550545",
+      "generation_time": "2025-06-15T11:00:35.069913"
+    },
+    "git_enhanced": {
+      "file_name": "repomix-output-nowinandroid-with-git.md",
+      "file_size_mb": 15.26,
+      "character_count": 15935187,
+      "line_count": 230450,
+      "word_count": 527816,
+      "token_counts": {
+        "gpt-4": 4483800,
+        "estimated": 3983796
+      },
+      "created_time": "2025-06-15T11:00:33.718512",
+      "modified_time": "2025-06-15T11:00:33.718512",
+      "generation_time": "2025-06-15T11:00:37.521786"
+    }
+  },
+  "summary": {
+    "total_files": 3,
+    "total_size_bytes": 0,
+    "total_tokens_gpt4": 6007545,
+    "compression_ratio": {
+      "size": 0,
+      "tokens": 1.0
+    }
+  }
+}

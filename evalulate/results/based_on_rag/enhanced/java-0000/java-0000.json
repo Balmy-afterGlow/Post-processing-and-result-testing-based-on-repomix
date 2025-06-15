@@ -1,0 +1,7 @@
+{
+  "reason": "OkHttp's current implementation explicitly excludes caching for HTTP 302-308 redirect responses, even though RFC 2616 allows caching these responses when proper cache headers are present.",
+  "location": [
+    "okhttp/src/main/java/com/squareup/okhttp/internal/http/CacheStrategy.java"
+  ],
+  "fix": "Modify the isCacheable() method in CacheStrategy.java to include HTTP 307 (and other redirect codes) when proper cache headers (Cache-Control or Expires) are present. The fix would involve checking for these headers before rejecting redirect responses."
+}

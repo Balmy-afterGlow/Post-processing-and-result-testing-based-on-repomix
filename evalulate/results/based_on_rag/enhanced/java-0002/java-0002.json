@@ -1,0 +1,7 @@
+{
+  "reason": "The SSH connection defaults to OS login when the server login is not saved in settings, because the UI does not prompt for the username when using encrypted certificates.",
+  "location": [
+    "plugins/org.jkiss.dbeaver.net.ssh.ui/src/org/jkiss/dbeaver/ui/net/ssh/SSHTunnelConfiguratorUI.java"
+  ],
+  "fix": "Modify the SSHTunnelConfiguratorUI.java to ensure the username is prompted when it's not saved in settings, even when using encrypted certificates. Add a check in the loadSettings method to prompt for username if it's empty."
+}

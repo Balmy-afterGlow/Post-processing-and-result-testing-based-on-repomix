@@ -2,11 +2,11 @@
   "repo_name": "spring-cloud-alibaba",
   "source_file": "../repomix_md/repository-spring-cloud-alibaba/repomix-output-spring-cloud-alibaba-with-git.md",
   "file_size_mb": 0.9257946014404297,
-  "build_time": "2025-06-15T09:57:04.192438",
+  "build_time": "2025-06-15T10:57:41.171570",
   "processing_time": {
-    "parse_time_seconds": 0.088043,
-    "index_time_seconds": 22.981025,
-    "total_time_seconds": 23.069067999999998
+    "parse_time_seconds": 0.082401,
+    "index_time_seconds": 22.22818,
+    "total_time_seconds": 22.310581
   },
   "code_blocks_count": 139,
   "original_documents_count": {

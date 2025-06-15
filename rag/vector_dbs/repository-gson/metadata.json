@@ -2,11 +2,11 @@
   "repo_name": "gson",
   "source_file": "../repomix_md/repository-gson/repomix-output-gson-with-git.md",
   "file_size_mb": 4.796608924865723,
-  "build_time": "2025-06-15T10:02:17.737339",
+  "build_time": "2025-06-15T11:02:51.091021",
   "processing_time": {
-    "parse_time_seconds": 0.70238,
-    "index_time_seconds": 96.166891,
-    "total_time_seconds": 96.86927100000001
+    "parse_time_seconds": 0.388424,
+    "index_time_seconds": 93.75096,
+    "total_time_seconds": 94.139384
   },
   "code_blocks_count": 261,
   "original_documents_count": {

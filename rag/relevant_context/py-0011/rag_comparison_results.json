@@ -1,0 +1,708 @@
+{
+  "basic": [
+    {
+      "content": "# inputs = tf.keras.Input((256, 256, 3))\n# x = tf.keras.layers.Conv2D(filters=3, kernel_size=(3, 3))(inputs)\n# x = tf.keras.layers.Flatten()(x)\n# outputs = tf.keras.layers.Dense(1)(x)\n# model = tf.keras.Model(inputs, outputs)\nFUNCTIONAL_CNN = {\n    'input_layers': [['input_2', 0, 0]],\n    'layers': [{\n        'class_name': 'InputLayer',\n        'config': {\n            'batch_input_shape': (None, 256, 256, 3),\n            'dtype': 'float32',\n            'name': 'input_2',\n            'ragged': False,\n            'sparse': False\n        },\n        'inbound_nodes': [],\n        'name': 'input_2'\n    }, {\n        'class_name': 'Conv2D',\n        'config': {\n            'activation': 'linear',\n            'activity_regularizer': None,\n            'bias_constraint': None,\n            'bias_initializer': {\n                'class_name': 'Zeros',\n                'config': {}\n            },\n            'bias_regularizer': None,\n            'data_format': 'channels_last',\n            'dilation_rate': (1, 1),\n            'dtype': 'float32',\n            'filters': 3,\n            'kernel_constraint': None,\n            'kernel_initializer': {\n                'class_name': 'GlorotUniform',\n                'config': {\n                    'seed': None\n                }\n            },\n            'kernel_regularizer': None,\n            'kernel_size': (3, 3),\n            'name': 'conv2d',\n            'padding': 'valid',\n            'strides': (1, 1),\n            'trainable': True,\n            'use_bias': True\n        },\n        'inbound_nodes': [[['input_2', 0, 0, {}]]],\n        'name': 'conv2d'\n    }, {\n        'class_name': 'Flatten',\n        'config': {\n            'data_format': 'channels_last',\n            'dtype': 'float32',\n            'name': 'flatten',\n            'trainable': True\n        },\n        'inbound_nodes': [[['conv2d', 0, 0, {}]]],\n        'name': 'flatten'\n    }, {\n        'class_name': 'Dense',\n        'config': {\n            'activation': 'linear',",
+      "metadata": {
+        "language": "python",
+        "strategy": "basic",
+        "file_path": "keras/tests/get_config_samples.py",
+        "total_chunks": 12,
+        "chunk_index": 3
+      },
+      "similarity_score": 0.8126619458198547
+    },
+    {
+      "content": "@keras_export(v1=['keras.__internal__.legacy.layers.conv2d'])\n@tf_export(v1=['layers.conv2d'])\ndef conv2d(inputs,\n           filters,\n           kernel_size,\n           strides=(1, 1),\n           padding='valid',\n           data_format='channels_last',\n           dilation_rate=(1, 1),\n           activation=None,\n           use_bias=True,\n           kernel_initializer=None,\n           bias_initializer=tf.compat.v1.zeros_initializer(),\n           kernel_regularizer=None,\n           bias_regularizer=None,\n           activity_regularizer=None,\n           kernel_constraint=None,\n           bias_constraint=None,\n           trainable=True,\n           name=None,\n           reuse=None):\n  \"\"\"Functional interface for the 2D convolution layer.\n\n  This layer creates a convolution kernel that is convolved\n  (actually cross-correlated) with the layer input to produce a tensor of\n  outputs. If `use_bias` is True (and a `bias_initializer` is provided),\n  a bias vector is created and added to the outputs. Finally, if\n  `activation` is not `None`, it is applied to the outputs as well.",
+      "metadata": {
+        "language": "python",
+        "chunk_index": 13,
+        "total_chunks": 66,
+        "strategy": "basic",
+        "file_path": "keras/legacy_tf_layers/convolutional.py"
+      },
+      "similarity_score": 0.8474785089492798
+    },
+    {
+      "content": "After:\n\n  To migrate code using TF1 functional layers use the [Keras Functional API]\n  (https://www.tensorflow.org/guide/keras/functional):\n\n  ```python\n   x = tf.keras.Input((28, 28, 1))\n   y = tf.keras.layers.SeparableConv2D(filters=3, kernels_size=3)(x)\n   model = tf.keras.Model(x, y)\n  ```\n  @end_compatibility\n  \"\"\"\n  warnings.warn(\n      '`tf.layers.separable_conv2d` is deprecated and '\n      'will be removed in a future version. '\n      'Please Use `tf.keras.layers.SeparableConv2D` instead.',\n      stacklevel=2)\n  layer = SeparableConv2D(\n      filters=filters,\n      kernel_size=kernel_size,\n      strides=strides,\n      padding=padding,\n      data_format=data_format,\n      dilation_rate=dilation_rate,\n      depth_multiplier=depth_multiplier,\n      activation=activation,\n      use_bias=use_bias,\n      depthwise_initializer=depthwise_initializer,\n      pointwise_initializer=pointwise_initializer,\n      bias_initializer=bias_initializer,\n      depthwise_regularizer=depthwise_regularizer,\n      pointwise_regularizer=pointwise_regularizer,\n      bias_regularizer=bias_regularizer,\n      activity_regularizer=activity_regularizer,\n      depthwise_constraint=depthwise_constraint,\n      pointwise_constraint=pointwise_constraint,\n      bias_constraint=bias_constraint,\n      trainable=trainable,\n      name=name,\n      _reuse=reuse,\n      _scope=name)\n  return layer.apply(inputs)\n\n\n@keras_export(v1=['keras.__internal__.legacy.layers.Conv2DTranspose'])\n@tf_export(v1=['layers.Conv2DTranspose'])\nclass Conv2DTranspose(keras_layers.Conv2DTranspose, base.Layer):\n  \"\"\"Transposed 2D convolution layer (sometimes called 2D Deconvolution).",
+      "metadata": {
+        "file_path": "keras/legacy_tf_layers/convolutional.py",
+        "total_chunks": 66,
+        "chunk_index": 46,
+        "language": "python",
+        "strategy": "basic"
+      },
+      "similarity_score": 0.8744646310806274
+    },
+    {
+      "content": "x, tf_data_format = _preprocess_conv1d_input(x, data_format)\n  x = tf.compat.v1.nn.convolution(\n      input=x,\n      filter=kernel,\n      dilation_rate=dilation_rate,\n      strides=strides,\n      padding=padding,\n      data_format=tf_data_format)\n  if data_format == 'channels_first' and tf_data_format == 'NWC':\n    x = tf.compat.v1.transpose(x, (0, 2, 1))  # NWC -> NCW\n  return x\n\n\n@keras_export('keras.backend.conv2d')\n@tf.__internal__.dispatch.add_dispatch_support\n@doc_controls.do_not_generate_docs\ndef conv2d(x,\n           kernel,\n           strides=(1, 1),\n           padding='valid',\n           data_format=None,\n           dilation_rate=(1, 1)):\n  \"\"\"2D convolution.\n\n  Args:\n      x: Tensor or variable.\n      kernel: kernel tensor.\n      strides: strides tuple.\n      padding: string, `\"same\"` or `\"valid\"`.\n      data_format: `\"channels_last\"` or `\"channels_first\"`.\n      dilation_rate: tuple of 2 integers.\n\n  Returns:\n      A tensor, result of 2D convolution.\n\n  Raises:\n      ValueError: if `data_format` is neither `channels_last` or\n      `channels_first`.\n  \"\"\"\n  if data_format is None:\n    data_format = image_data_format()\n  if data_format not in {'channels_first', 'channels_last'}:\n    raise ValueError('Unknown data_format: ' + str(data_format))\n\n  x, tf_data_format = _preprocess_conv2d_input(x, data_format)\n  padding = _preprocess_padding(padding)\n  x = tf.compat.v1.nn.convolution(\n      input=x,\n      filter=kernel,\n      dilation_rate=dilation_rate,\n      strides=strides,\n      padding=padding,\n      data_format=tf_data_format)\n  if data_format == 'channels_first' and tf_data_format == 'NHWC':\n    x = tf.compat.v1.transpose(x, (0, 3, 1, 2))  # NHWC -> NCHW\n  return x",
+      "metadata": {
+        "strategy": "basic",
+        "language": "python",
+        "total_chunks": 130,
+        "chunk_index": 103,
+        "file_path": "keras/backend.py"
+      },
+      "similarity_score": 0.8822722434997559
+    },
+    {
+      "content": "# model = tf.keras.Sequential()\n# model.add(tf.keras.layers.Conv2D(32, (3, 3)))\n# model.add(tf.keras.layers.Flatten())\n# model.add(tf.keras.layers.Dense(1))\nSEQUENTIAL_CNN = {\n    'layers': [{\n        'class_name': 'Conv2D',\n        'config': {\n            'activation': 'linear',\n            'activity_regularizer': None,\n            'bias_constraint': None,\n            'bias_initializer': {\n                'class_name': 'Zeros',\n                'config': {}\n            },\n            'bias_regularizer': None,\n            'data_format': 'channels_last',\n            'dilation_rate': (1, 1),\n            'dtype': 'float32',\n            'filters': 32,\n            'kernel_constraint': None,\n            'kernel_initializer': {\n                'class_name': 'GlorotUniform',\n                'config': {\n                    'seed': None\n                }\n            },\n            'kernel_regularizer': None,\n            'kernel_size': (3, 3),\n            'name': 'conv2d_1',\n            'padding': 'valid',\n            'strides': (1, 1),\n            'trainable': True,\n            'use_bias': True\n        }\n    }, {\n        'class_name': 'Flatten',\n        'config': {\n            'data_format': 'channels_last',\n            'dtype': 'float32',\n            'name': 'flatten_1',\n            'trainable': True\n        }\n    }, {\n        'class_name': 'Dense',\n        'config': {\n            'activation': 'linear',\n            'activity_regularizer': None,\n            'bias_constraint': None,\n            'bias_initializer': {\n                'class_name': 'Zeros',\n                'config': {}\n            },\n            'bias_regularizer': None,\n            'dtype': 'float32',\n            'kernel_constraint': None,\n            'kernel_initializer': {\n                'class_name': 'GlorotUniform',\n                'config': {\n                    'seed': None\n                }\n            },\n            'kernel_regularizer': None,\n            'name': 'dense_6',",
+      "metadata": {
+        "total_chunks": 12,
+        "chunk_index": 8,
+        "strategy": "basic",
+        "file_path": "keras/tests/get_config_samples.py",
+        "language": "python"
+      },
+      "similarity_score": 0.8898627758026123
+    },
+    {
+      "content": "def test_compute_mask_with_positional_mask_arg(self):\n\n    class MyLayer(keras.layers.Layer):\n\n      def call(self, inputs, mask=None):\n        return inputs\n\n      def compute_mask(self, inputs, mask=None):\n        if mask is not None:\n          return tf.ones(())\n        else:\n          return tf.zeros(())\n\n    x, mask = tf.ones((1, 1)), tf.ones((1, 1))\n    layer = MyLayer()\n    y = layer(x, mask)\n    # Check that `mask` was correctly sent to `compute_mask`.\n    self.assertEqual(keras.backend.get_value(y._keras_mask), 1)\n\n  def test_activation(self):\n    # with string argument\n    testing_utils.layer_test(\n        keras.layers.Activation,\n        kwargs={'activation': 'relu'},\n        input_shape=(3, 2))\n\n    # with function argument\n    testing_utils.layer_test(\n        keras.layers.Activation,\n        kwargs={'activation': keras.backend.relu},\n        input_shape=(3, 2))\n\n  def test_dense(self):\n    testing_utils.layer_test(\n        keras.layers.Dense, kwargs={'units': 3}, input_shape=(3, 2))\n\n    testing_utils.layer_test(\n        keras.layers.Dense, kwargs={'units': 3}, input_shape=(3, 4, 2))\n\n    testing_utils.layer_test(\n        keras.layers.Dense, kwargs={'units': 3}, input_shape=(None, None, 2))\n\n    testing_utils.layer_test(\n        keras.layers.Dense, kwargs={'units': 3}, input_shape=(3, 4, 5, 2))\n\n  def test_dense_output(self):\n    dense_inputs = tf.convert_to_tensor(\n        np.random.uniform(size=(10, 10)).astype('f'))\n    # Create some sparse data where multiple rows and columns are missing.\n    sparse_inputs = tf.SparseTensor(\n        indices=np.random.randint(low=0, high=10, size=(5, 2)),\n        values=np.random.uniform(size=(5,)).astype('f'),\n        dense_shape=[10, 10])\n    sparse_inputs = tf.sparse.reorder(sparse_inputs)\n    # Create some ragged data.\n    ragged_inputs = tf.RaggedTensor.from_row_splits(\n        np.random.uniform(size=(10, 10)).astype('f'),\n        row_splits=[0, 4, 6, 6, 9, 10])",
+      "metadata": {
+        "strategy": "basic",
+        "chunk_index": 9,
+        "file_path": "keras/layers/core/core_test.py",
+        "total_chunks": 14,
+        "language": "python"
+      },
+      "similarity_score": 0.8931341171264648
+    },
+    {
+      "content": "def __init__(self,\n               layer,\n               merge_mode='concat',\n               weights=None,\n               backward_layer=None,\n               **kwargs):\n    if not isinstance(layer, Layer):\n      raise ValueError(\n          'Please initialize `Bidirectional` layer with a '\n          f'`tf.keras.layers.Layer` instance. Received: {layer}')\n    if backward_layer is not None and not isinstance(backward_layer, Layer):\n      raise ValueError(\n          '`backward_layer` need to be a `tf.keras.layers.Layer` instance. '\n          f'Received: {backward_layer}')\n    if merge_mode not in ['sum', 'mul', 'ave', 'concat', None]:\n      raise ValueError(f'Invalid merge mode. Received: {merge_mode}. '\n                       'Merge mode should be one of '\n                       '{\"sum\", \"mul\", \"ave\", \"concat\", None}')\n    # We don't want to track `layer` since we're already tracking the two copies\n    # of it we actually run.\n    self._setattr_tracking = False\n    super(Bidirectional, self).__init__(layer, **kwargs)\n    self._setattr_tracking = True\n\n    # Recreate the forward layer from the original layer config, so that it will\n    # not carry over any state from the layer.\n    self.forward_layer = self._recreate_layer_from_config(layer)\n\n    if backward_layer is None:\n      self.backward_layer = self._recreate_layer_from_config(\n          layer, go_backwards=True)\n    else:\n      self.backward_layer = backward_layer\n      # Keep the custom backward layer config, so that we can save it later. The\n      # layer's name might be updated below with prefix 'backward_', and we want\n      # to preserve the original config.\n      self._backward_layer_config = generic_utils.serialize_keras_object(\n          backward_layer)\n\n    self.forward_layer._name = 'forward_' + self.forward_layer.name\n    self.backward_layer._name = 'backward_' + self.backward_layer.name\n\n    self._verify_layer_config()",
+      "metadata": {
+        "file_path": "keras/layers/wrappers.py",
+        "strategy": "basic",
+        "language": "python",
+        "chunk_index": 13,
+        "total_chunks": 22
+      },
+      "similarity_score": 0.912426769733429
+    },
+    {
+      "content": "Before:\n\n  ```python\n   dense = tf.compat.v1.layers.Dense(units=3)\n  ```\n\n  After:\n\n  ```python\n   dense = tf.keras.layers.Dense(units=3)\n  ```\n\n  @end_compatibility\n  \"\"\"\n\n  def __init__(self, units,\n               activation=None,\n               use_bias=True,\n               kernel_initializer=None,\n               bias_initializer=tf.compat.v1.zeros_initializer(),\n               kernel_regularizer=None,\n               bias_regularizer=None,\n               activity_regularizer=None,\n               kernel_constraint=None,\n               bias_constraint=None,\n               trainable=True,\n               name=None,\n               **kwargs):\n    super(Dense, self).__init__(units=units,\n                                activation=activation,\n                                use_bias=use_bias,\n                                kernel_initializer=kernel_initializer,\n                                bias_initializer=bias_initializer,\n                                kernel_regularizer=kernel_regularizer,\n                                bias_regularizer=bias_regularizer,\n                                activity_regularizer=activity_regularizer,\n                                kernel_constraint=kernel_constraint,\n                                bias_constraint=bias_constraint,\n                                trainable=trainable,\n                                name=name,\n                                **kwargs)\n\n\n@keras_export(v1=['keras.__internal__.legacy.layers.dense'])\n@tf_export(v1=['layers.dense'])\ndef dense(\n    inputs, units,\n    activation=None,\n    use_bias=True,\n    kernel_initializer=None,\n    bias_initializer=tf.compat.v1.zeros_initializer(),\n    kernel_regularizer=None,\n    bias_regularizer=None,\n    activity_regularizer=None,\n    kernel_constraint=None,\n    bias_constraint=None,\n    trainable=True,\n    name=None,\n    reuse=None):\n  \"\"\"Functional interface for the densely-connected layer.",
+      "metadata": {
+        "language": "python",
+        "chunk_index": 3,
+        "strategy": "basic",
+        "total_chunks": 12,
+        "file_path": "keras/legacy_tf_layers/core.py"
+      },
+      "similarity_score": 0.913499116897583
+    },
+    {
+      "content": "After:\n\n  To migrate code using TF1 functional layers use the [Keras Functional API]\n  (https://www.tensorflow.org/guide/keras/functional):\n\n  ```python\n   x = tf.keras.Input((28, 28, 1))\n   y = tf.keras.layers.MaxPooling2D(pool_size=2, strides=2)(x)\n   model = tf.keras.Model(x, y)\n  ```\n  @end_compatibility\n  \"\"\"\n  warnings.warn(\n      '`tf.layers.max_pooling2d` is deprecated and '\n      'will be removed in a future version. '\n      'Please use `tf.keras.layers.MaxPooling2D` instead.',\n      stacklevel=2)\n  layer = MaxPooling2D(pool_size=pool_size, strides=strides,\n                       padding=padding, data_format=data_format,\n                       name=name)\n  return layer.apply(inputs)\n\n\n@keras_export(v1=['keras.__internal__.legacy.layers.AveragePooling3D'])\n@tf_export(v1=['layers.AveragePooling3D'])\nclass AveragePooling3D(keras_layers.AveragePooling3D, base.Layer):\n  \"\"\"Average pooling layer for 3D inputs (e.g. volumes).\n\n  Args:\n    pool_size: An integer or tuple/list of 3 integers:\n      (pool_depth, pool_height, pool_width)\n      specifying the size of the pooling window.\n      Can be a single integer to specify the same value for\n      all spatial dimensions.\n    strides: An integer or tuple/list of 3 integers,\n      specifying the strides of the pooling operation.\n      Can be a single integer to specify the same value for\n      all spatial dimensions.\n    padding: A string. The padding method, either 'valid' or 'same'.\n      Case-insensitive.\n    data_format: A string. The ordering of the dimensions in the inputs.\n      `channels_last` (default) and `channels_first` are supported.\n      `channels_last` corresponds to inputs with shape\n      `(batch, depth, height, width, channels)` while `channels_first`\n      corresponds to inputs with shape\n      `(batch, channels, depth, height, width)`.\n    name: A string, the name of the layer.",
+      "metadata": {
+        "chunk_index": 12,
+        "language": "python",
+        "total_chunks": 19,
+        "file_path": "keras/legacy_tf_layers/pooling.py",
+        "strategy": "basic"
+      },
+      "similarity_score": 0.9158756732940674
+    },
+    {
+      "content": "if mask_already_computed:\n      flat_masks = [getattr(x, '_keras_mask', None) for x in flat_outputs]\n    elif not should_compute_mask:\n      flat_masks = [None for _ in flat_outputs]\n    else:\n      output_masks = self.compute_mask(inputs, previous_mask)\n      # `compute_mask` can return a single `None` even when a Layer\n      # has multiple outputs.\n      if output_masks is None:\n        flat_masks = [None for _ in flat_outputs]\n      else:\n        flat_masks = tf.nest.flatten(output_masks)\n\n    for output, mask in zip(flat_outputs, flat_masks):\n      try:\n        output._keras_mask = mask\n      except AttributeError:\n        # C Type such as np.ndarray.\n        pass\n\n    if tf_utils.are_all_symbolic_tensors(flat_outputs):\n      for output in flat_outputs:\n        if getattr(output, '_keras_mask', None) is not None:\n          # Do not track masks for `TensorFlowOpLayer` construction.\n          output._keras_mask._keras_history_checked = True\n\n  def _collect_input_masks(self, inputs, args, kwargs):\n    \"\"\"Checks if `mask` argument was passed, else gathers mask from inputs.\"\"\"\n    if self._call_arg_was_passed('mask', args, kwargs):\n      return self._get_call_arg_value('mask', args, kwargs)\n\n    if not self._should_compute_mask:\n      return None\n\n    input_masks = tf.nest.map_structure(lambda t: getattr(t, '_keras_mask', None),\n                                     inputs)\n    if generic_utils.is_all_none(input_masks):\n      return None\n    return input_masks\n\n  def _call_arg_was_passed(self, arg_name, args, kwargs, inputs_in_args=False):\n    if arg_name in kwargs:\n      return True\n    call_fn_args = self._call_fn_args\n    if not inputs_in_args:\n      # Ignore `inputs` arg.\n      call_fn_args = call_fn_args[1:]\n    if arg_name in dict(zip(call_fn_args, args)):\n      return True\n    return False",
+      "metadata": {
+        "strategy": "basic",
+        "language": "python",
+        "total_chunks": 59,
+        "chunk_index": 47,
+        "file_path": "keras/engine/base_layer_v1.py"
+      },
+      "similarity_score": 0.9234046936035156
+    },
+    {
+      "content": "@keras_export(v1=['keras.__internal__.legacy.layers.Conv2D'])\n@tf_export(v1=['layers.Conv2D'])\nclass Conv2D(keras_layers.Conv2D, base.Layer):\n  \"\"\"2D convolution layer (e.g. spatial convolution over images).\n\n  This layer creates a convolution kernel that is convolved\n  (actually cross-correlated) with the layer input to produce a tensor of\n  outputs. If `use_bias` is True (and a `bias_initializer` is provided),\n  a bias vector is created and added to the outputs. Finally, if\n  `activation` is not `None`, it is applied to the outputs as well.\n\n  Args:\n    filters: Integer, the dimensionality of the output space (i.e. the number\n      of filters in the convolution).\n    kernel_size: An integer or tuple/list of 2 integers, specifying the\n      height and width of the 2D convolution window.\n      Can be a single integer to specify the same value for\n      all spatial dimensions.\n    strides: An integer or tuple/list of 2 integers,\n      specifying the strides of the convolution along the height and width.\n      Can be a single integer to specify the same value for\n      all spatial dimensions.\n      Specifying any stride value != 1 is incompatible with specifying\n      any `dilation_rate` value != 1.\n    padding: One of `\"valid\"` or `\"same\"` (case-insensitive).\n      `\"valid\"` means no padding. `\"same\"` results in padding evenly to\n      the left/right or up/down of the input such that output has the same\n      height/width dimension as the input.\n    data_format: A string, one of `channels_last` (default) or `channels_first`.\n      The ordering of the dimensions in the inputs.\n      `channels_last` corresponds to inputs with shape\n      `(batch, height, width, channels)` while `channels_first` corresponds to\n      inputs with shape `(batch, channels, height, width)`.",
+      "metadata": {
+        "strategy": "basic",
+        "total_chunks": 66,
+        "chunk_index": 9,
+        "file_path": "keras/legacy_tf_layers/convolutional.py",
+        "language": "python"
+      },
+      "similarity_score": 0.925035834312439
+    },
+    {
+      "content": "@keras_export(v1=['keras.__internal__.legacy.layers.conv3d'])\n@tf_export(v1=['layers.conv3d'])\ndef conv3d(inputs,\n           filters,\n           kernel_size,\n           strides=(1, 1, 1),\n           padding='valid',\n           data_format='channels_last',\n           dilation_rate=(1, 1, 1),\n           activation=None,\n           use_bias=True,\n           kernel_initializer=None,\n           bias_initializer=tf.compat.v1.zeros_initializer(),\n           kernel_regularizer=None,\n           bias_regularizer=None,\n           activity_regularizer=None,\n           kernel_constraint=None,\n           bias_constraint=None,\n           trainable=True,\n           name=None,\n           reuse=None):\n  \"\"\"Functional interface for the 3D convolution layer.\n\n  This layer creates a convolution kernel that is convolved\n  (actually cross-correlated) with the layer input to produce a tensor of\n  outputs. If `use_bias` is True (and a `bias_initializer` is provided),\n  a bias vector is created and added to the outputs. Finally, if\n  `activation` is not `None`, it is applied to the outputs as well.",
+      "metadata": {
+        "language": "python",
+        "file_path": "keras/legacy_tf_layers/convolutional.py",
+        "strategy": "basic",
+        "total_chunks": 66,
+        "chunk_index": 22
+      },
+      "similarity_score": 0.9257073998451233
+    },
+    {
+      "content": "@keras_export(v1=['keras.__internal__.legacy.layers.separable_conv2d'])\n@tf_export(v1=['layers.separable_conv2d'])\ndef separable_conv2d(inputs,\n                     filters,\n                     kernel_size,\n                     strides=(1, 1),\n                     padding='valid',\n                     data_format='channels_last',\n                     dilation_rate=(1, 1),\n                     depth_multiplier=1,\n                     activation=None,\n                     use_bias=True,\n                     depthwise_initializer=None,\n                     pointwise_initializer=None,\n                     bias_initializer=tf.compat.v1.zeros_initializer(),\n                     depthwise_regularizer=None,\n                     pointwise_regularizer=None,\n                     bias_regularizer=None,\n                     activity_regularizer=None,\n                     depthwise_constraint=None,\n                     pointwise_constraint=None,\n                     bias_constraint=None,\n                     trainable=True,\n                     name=None,\n                     reuse=None):\n  \"\"\"Functional interface for the depthwise separable 2D convolution layer.\n\n  This layer performs a depthwise convolution that acts separately on\n  channels, followed by a pointwise convolution that mixes channels.\n  If `use_bias` is True and a bias initializer is provided,\n  it adds a bias vector to the output.\n  It then optionally applies an activation function to produce the final output.",
+      "metadata": {
+        "chunk_index": 41,
+        "strategy": "basic",
+        "total_chunks": 66,
+        "file_path": "keras/legacy_tf_layers/convolutional.py",
+        "language": "python"
+      },
+      "similarity_score": 0.9281407594680786
+    },
+    {
+      "content": ">>> m.reset_state()\n  >>> m.update_state([0, 1, 1, 1], [0, 1, 0, 0], sample_weight=[0, 0, 1, 0])\n  >>> m.result().numpy()\n  1.0\n\n  Usage with `compile()` API:\n\n  ```python\n  model.compile(optimizer='sgd',\n                loss='mse',\n                metrics=[tf.keras.metrics.FalseNegatives()])\n  ```\n  \"\"\"\n\n  def __init__(self, thresholds=None, name=None, dtype=None):\n    super(FalseNegatives, self).__init__(\n        confusion_matrix_cond=metrics_utils.ConfusionMatrix.FALSE_NEGATIVES,\n        thresholds=thresholds,\n        name=name,\n        dtype=dtype)\n\n\n@keras_export('keras.metrics.TrueNegatives')\nclass TrueNegatives(_ConfusionMatrixConditionCount):\n  \"\"\"Calculates the number of true negatives.\n\n  If `sample_weight` is given, calculates the sum of the weights of\n  true negatives. This metric creates one local variable, `accumulator`\n  that is used to keep track of the number of true negatives.\n\n  If `sample_weight` is `None`, weights default to 1.\n  Use `sample_weight` of 0 to mask values.\n\n  Args:\n    thresholds: (Optional) Defaults to 0.5. A float value or a python\n      list/tuple of float threshold values in [0, 1]. A threshold is compared\n      with prediction values to determine the truth value of predictions\n      (i.e., above the threshold is `true`, below is `false`). One metric\n      value is generated for each threshold value.\n    name: (Optional) string name of the metric instance.\n    dtype: (Optional) data type of the metric result.\n\n  Standalone usage:\n\n  >>> m = tf.keras.metrics.TrueNegatives()\n  >>> m.update_state([0, 1, 0, 0], [1, 1, 0, 0])\n  >>> m.result().numpy()\n  2.0\n\n  >>> m.reset_state()\n  >>> m.update_state([0, 1, 0, 0], [1, 1, 0, 0], sample_weight=[0, 0, 1, 0])\n  >>> m.result().numpy()\n  1.0\n\n  Usage with `compile()` API:\n\n  ```python\n  model.compile(optimizer='sgd',\n                loss='mse',\n                metrics=[tf.keras.metrics.TrueNegatives()])\n  ```\n  \"\"\"",
+      "metadata": {
+        "chunk_index": 24,
+        "total_chunks": 88,
+        "language": "python",
+        "file_path": "keras/metrics.py",
+        "strategy": "basic"
+      },
+      "similarity_score": 0.9297419190406799
+    },
+    {
+      "content": "@keras_export(v1=['keras.__internal__.legacy.layers.conv1d'])\n@tf_export(v1=['layers.conv1d'])\ndef conv1d(inputs,\n           filters,\n           kernel_size,\n           strides=1,\n           padding='valid',\n           data_format='channels_last',\n           dilation_rate=1,\n           activation=None,\n           use_bias=True,\n           kernel_initializer=None,\n           bias_initializer=tf.compat.v1.zeros_initializer(),\n           kernel_regularizer=None,\n           bias_regularizer=None,\n           activity_regularizer=None,\n           kernel_constraint=None,\n           bias_constraint=None,\n           trainable=True,\n           name=None,\n           reuse=None):\n  \"\"\"Functional interface for 1D convolution layer (e.g. temporal convolution).\n\n  This layer creates a convolution kernel that is convolved\n  (actually cross-correlated) with the layer input to produce a tensor of\n  outputs. If `use_bias` is True (and a `bias_initializer` is provided),\n  a bias vector is created and added to the outputs. Finally, if\n  `activation` is not `None`, it is applied to the outputs as well.",
+      "metadata": {
+        "file_path": "keras/legacy_tf_layers/convolutional.py",
+        "language": "python",
+        "total_chunks": 66,
+        "strategy": "basic",
+        "chunk_index": 5
+      },
+      "similarity_score": 0.9304358959197998
+    },
+    {
+      "content": "Usage with `compile()` API:\n\n  ```python\n  model.compile(optimizer='sgd',\n                loss='mse',\n                metrics=[tf.keras.metrics.TrueNegatives()])\n  ```\n  \"\"\"\n\n  def __init__(self, thresholds=None, name=None, dtype=None):\n    super(TrueNegatives, self).__init__(\n        confusion_matrix_cond=metrics_utils.ConfusionMatrix.TRUE_NEGATIVES,\n        thresholds=thresholds,\n        name=name,\n        dtype=dtype)\n\n\n@keras_export('keras.metrics.TruePositives')\nclass TruePositives(_ConfusionMatrixConditionCount):\n  \"\"\"Calculates the number of true positives.\n\n  If `sample_weight` is given, calculates the sum of the weights of\n  true positives. This metric creates one local variable, `true_positives`\n  that is used to keep track of the number of true positives.\n\n  If `sample_weight` is `None`, weights default to 1.\n  Use `sample_weight` of 0 to mask values.\n\n  Args:\n    thresholds: (Optional) Defaults to 0.5. A float value or a python\n      list/tuple of float threshold values in [0, 1]. A threshold is compared\n      with prediction values to determine the truth value of predictions\n      (i.e., above the threshold is `true`, below is `false`). One metric\n      value is generated for each threshold value.\n    name: (Optional) string name of the metric instance.\n    dtype: (Optional) data type of the metric result.\n\n  Standalone usage:\n\n  >>> m = tf.keras.metrics.TruePositives()\n  >>> m.update_state([0, 1, 1, 1], [1, 0, 1, 1])\n  >>> m.result().numpy()\n  2.0\n\n  >>> m.reset_state()\n  >>> m.update_state([0, 1, 1, 1], [1, 0, 1, 1], sample_weight=[0, 0, 1, 0])\n  >>> m.result().numpy()\n  1.0\n\n  Usage with `compile()` API:\n\n  ```python\n  model.compile(optimizer='sgd',\n                loss='mse',\n                metrics=[tf.keras.metrics.TruePositives()])\n  ```\n  \"\"\"",
+      "metadata": {
+        "total_chunks": 88,
+        "strategy": "basic",
+        "chunk_index": 25,
+        "file_path": "keras/metrics.py",
+        "language": "python"
+      },
+      "similarity_score": 0.930492639541626
+    },
+    {
+      "content": "return outputs\n\n  def _assert_built_as_v1(self):\n    if not hasattr(self, '_originally_built_as_v1'):\n      raise ValueError(\n          'Your Layer or Model is in an invalid state. '\n          'This can happen for the following cases:\\n '\n          '1. You might be interleaving estimator/non-estimator models or '\n          'interleaving models/layers made in tf.compat.v1.Graph.as_default() '\n          'with models/layers created outside of it. '\n          'Converting a model to an estimator (via model_to_estimator) '\n          'invalidates all models/layers made before the conversion (even '\n          'if they were not the model converted to an estimator). '\n          'Similarly, making a layer or a model inside a '\n          'a tf.compat.v1.Graph invalidates all layers/models you previously '\n          'made outside of the graph.\\n'\n          '2. You might be using a custom keras layer implementation with '\n          ' custom __init__ which didn\\'t call super().__init__. '\n          ' Please check the implementation of %s and its bases.' %\n          (type(self),))\n\n  @property\n  def dtype(self):\n    return self._dtype_policy.variable_dtype\n\n  @property\n  def name(self):\n    return self._name\n\n  @property\n  def dynamic(self):\n    return any(layer._dynamic for layer in self._flatten_layers())\n\n  @property\n  @doc_controls.do_not_generate_docs\n  def stateful(self):\n    return any(layer._stateful for layer in self._flatten_layers())\n\n  @stateful.setter\n  def stateful(self, value):\n    self._stateful = value\n\n  @property\n  def trainable(self):\n    return self._trainable\n\n  @trainable.setter\n  def trainable(self, value):\n    self._trainable = value\n    for layer in getattr(self, '_self_tracked_trackables', []):\n      layer.trainable = value\n\n  @property\n  def activity_regularizer(self):\n    \"\"\"Optional regularizer function for the output of this layer.\"\"\"\n    return self._activity_regularizer",
+      "metadata": {
+        "file_path": "keras/engine/base_layer_v1.py",
+        "strategy": "basic",
+        "chunk_index": 23,
+        "total_chunks": 59,
+        "language": "python"
+      },
+      "similarity_score": 0.9305965304374695
+    },
+    {
+      "content": "After:\n\n  To migrate code using TF1 functional layers use the [Keras Functional API]\n  (https://www.tensorflow.org/guide/keras/functional):\n\n  ```python\n   x = tf.keras.Input((28, 28, 1))\n   y = tf.keras.layers.AveragePooling2D(pool_size=2, strides=2)(x)\n   model = tf.keras.Model(x, y)\n  ```\n  @end_compatibility\n  \"\"\"\n  warnings.warn(\n      '`tf.layers.average_pooling2d` is deprecated and '\n      'will be removed in a future version. '\n      'Please use `tf.keras.layers.AveragePooling2D` instead.',\n      stacklevel=2)\n  layer = AveragePooling2D(pool_size=pool_size, strides=strides,\n                           padding=padding, data_format=data_format,\n                           name=name)\n  return layer.apply(inputs)\n\n\n@keras_export(v1=['keras.__internal__.legacy.layers.MaxPooling2D'])\n@tf_export(v1=['layers.MaxPooling2D'])\nclass MaxPooling2D(keras_layers.MaxPooling2D, base.Layer):\n  \"\"\"Max pooling layer for 2D inputs (e.g. images).\n\n  Args:\n    pool_size: An integer or tuple/list of 2 integers: (pool_height, pool_width)\n      specifying the size of the pooling window.\n      Can be a single integer to specify the same value for\n      all spatial dimensions.\n    strides: An integer or tuple/list of 2 integers,\n      specifying the strides of the pooling operation.\n      Can be a single integer to specify the same value for\n      all spatial dimensions.\n    padding: A string. The padding method, either 'valid' or 'same'.\n      Case-insensitive.\n    data_format: A string. The ordering of the dimensions in the inputs.\n      `channels_last` (default) and `channels_first` are supported.\n      `channels_last` corresponds to inputs with shape\n      `(batch, height, width, channels)` while `channels_first` corresponds to\n      inputs with shape `(batch, channels, height, width)`.\n    name: A string, the name of the layer.",
+      "metadata": {
+        "strategy": "basic",
+        "file_path": "keras/legacy_tf_layers/pooling.py",
+        "language": "python",
+        "chunk_index": 9,
+        "total_chunks": 19
+      },
+      "similarity_score": 0.9330759048461914
+    },
+    {
+      "content": "```python\n   y = tf.compat.v1.layers.dropout(x)\n  ```\n\n  After:\n\n  To migrate code using TF1 functional layers use the [Keras Functional API]\n  (https://www.tensorflow.org/guide/keras/functional):\n\n  ```python\n   x = tf.keras.Input((28, 28, 1))\n   y = tf.keras.layers.Dropout()(x)\n   model = tf.keras.Model(x, y)\n  ```\n  @end_compatibility\n  \"\"\"\n  warnings.warn(\n      '`tf.layers.dropout` is deprecated and '\n      'will be removed in a future version. '\n      'Please use `tf.keras.layers.Dropout` instead.',\n      stacklevel=2)\n  layer = Dropout(rate, noise_shape=noise_shape, seed=seed, name=name)\n  return layer.apply(inputs, training=training)\n\n\n@keras_export(v1=['keras.__internal__.legacy.layers.Flatten'])\n@tf_export(v1=['layers.Flatten'])\nclass Flatten(keras_layers.Flatten, base.Layer):\n  \"\"\"Flattens an input tensor while preserving the batch axis (axis 0).\n\n  Args:\n    data_format: A string, one of `channels_last` (default) or `channels_first`.\n      The ordering of the dimensions in the inputs.\n      `channels_last` corresponds to inputs with shape\n      `(batch, ..., channels)` while `channels_first` corresponds to\n      inputs with shape `(batch, channels, ...)`.\n\n  Examples:\n\n  ```\n    x = tf.compat.v1.placeholder(shape=(None, 4, 4), dtype='float32')\n    y = Flatten()(x)\n    # now `y` has shape `(None, 16)`\n\n    x = tf.compat.v1.placeholder(shape=(None, 3, None), dtype='float32')\n    y = Flatten()(x)\n    # now `y` has shape `(None, None)`\n  ```\n\n  @compatibility(TF2)\n  This API is a legacy api that is only compatible with eager execution and\n  `tf.function` if you combine it with\n  `tf.compat.v1.keras.utils.track_tf1_style_variables`\n\n  Please refer to [tf.layers model mapping section of the migration guide]\n  (https://www.tensorflow.org/guide/migrate/model_mapping)\n  to learn how to use your TensorFlow v1 model in TF2 with Keras.\n\n  The corresponding TensorFlow v2 layer is `tf.keras.layers.Flatten`.\n\n\n  #### Structural Mapping to Native TF2",
+      "metadata": {
+        "language": "python",
+        "chunk_index": 9,
+        "file_path": "keras/legacy_tf_layers/core.py",
+        "total_chunks": 12,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.9341480731964111
+    },
+    {
+      "content": "Standalone usage:\n  >>> y_true = [[1], [1], [0], [0]]\n  >>> y_pred = [[1], [1], [0], [0]]\n  >>> m = tf.keras.metrics.binary_accuracy(y_true, y_pred)\n  >>> assert m.shape == (4,)\n  >>> m.numpy()\n  array([1., 1., 1., 1.], dtype=float32)\n\n  Args:\n    y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`.\n    y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.\n    threshold: (Optional) Float representing the threshold for deciding whether\n      prediction values are 1 or 0.\n\n  Returns:\n    Binary accuracy values. shape = `[batch_size, d0, .. dN-1]`\n  \"\"\"\n  y_pred = tf.convert_to_tensor(y_pred)\n  threshold = tf.cast(threshold, y_pred.dtype)\n  y_pred = tf.cast(y_pred > threshold, y_pred.dtype)\n  return backend.mean(tf.equal(y_true, y_pred), axis=-1)\n\n\n@keras_export('keras.metrics.categorical_accuracy')\n@tf.__internal__.dispatch.add_dispatch_support\ndef categorical_accuracy(y_true, y_pred):\n  \"\"\"Calculates how often predictions match one-hot labels.\n\n  Standalone usage:\n  >>> y_true = [[0, 0, 1], [0, 1, 0]]\n  >>> y_pred = [[0.1, 0.9, 0.8], [0.05, 0.95, 0]]\n  >>> m = tf.keras.metrics.categorical_accuracy(y_true, y_pred)\n  >>> assert m.shape == (2,)\n  >>> m.numpy()\n  array([0., 1.], dtype=float32)\n\n  You can provide logits of classes as `y_pred`, since argmax of\n  logits and probabilities are same.\n\n  Args:\n    y_true: One-hot ground truth values.\n    y_pred: The prediction values.\n\n  Returns:\n    Categorical accuracy values.\n  \"\"\"\n  return tf.cast(\n      tf.equal(\n          tf.compat.v1.argmax(y_true, axis=-1), tf.compat.v1.argmax(y_pred, axis=-1)),\n      backend.floatx())\n\n\n@keras_export('keras.metrics.sparse_categorical_accuracy')\n@tf.__internal__.dispatch.add_dispatch_support\ndef sparse_categorical_accuracy(y_true, y_pred):\n  \"\"\"Calculates how often predictions match integer labels.",
+      "metadata": {
+        "language": "python",
+        "strategy": "basic",
+        "total_chunks": 88,
+        "chunk_index": 83,
+        "file_path": "keras/metrics.py"
+      },
+      "similarity_score": 0.9382596015930176
+    }
+  ],
+  "enhanced": [
+    {
+      "content": "# inputs = tf.keras.Input((256, 256, 3))\n# x = tf.keras.layers.Conv2D(filters=3, kernel_size=(3, 3))(inputs)\n# x = tf.keras.layers.Flatten()(x)\n# outputs = tf.keras.layers.Dense(1)(x)\n# model = tf.keras.Model(inputs, outputs)\nFUNCTIONAL_CNN = {\n    'input_layers': [['input_2', 0, 0]],\n    'layers': [{\n        'class_name': 'InputLayer',\n        'config': {\n            'batch_input_shape': (None, 256, 256, 3),\n            'dtype': 'float32',\n            'name': 'input_2',\n            'ragged': False,\n            'sparse': False\n        },\n        'inbound_nodes': [],\n        'name': 'input_2'\n    }, {\n        'class_name': 'Conv2D',\n        'config': {\n            'activation': 'linear',\n            'activity_regularizer': None,\n            'bias_constraint': None,\n            'bias_initializer': {\n                'class_name': 'Zeros',\n                'config': {}\n            },\n            'bias_regularizer': None,\n            'data_format': 'channels_last',\n            'dilation_rate': (1, 1),\n            'dtype': 'float32',\n            'filters': 3,\n            'kernel_constraint': None,\n            'kernel_initializer': {\n                'class_name': 'GlorotUniform',\n                'config': {\n                    'seed': None\n                }\n            },\n            'kernel_regularizer': None,\n            'kernel_size': (3, 3),\n            'name': 'conv2d',\n            'padding': 'valid',\n            'strides': (1, 1),\n            'trainable': True,\n            'use_bias': True\n        },\n        'inbound_nodes': [[['input_2', 0, 0, {}]]],\n        'name': 'conv2d'\n    }, {\n        'class_name': 'Flatten',\n        'config': {\n            'data_format': 'channels_last',\n            'dtype': 'float32',\n            'name': 'flatten',\n            'trainable': True\n        },\n        'inbound_nodes': [[['conv2d', 0, 0, {}]]],\n        'name': 'flatten'\n    }, {\n        'class_name': 'Dense',\n        'config': {\n            'activation': 'linear',",
+      "metadata": {
+        "language": "python",
+        "file_path": "keras/tests/get_config_samples.py",
+        "strategy": "enhanced",
+        "chunk_index": 3,
+        "commit_count": 2,
+        "total_chunks": 13
+      },
+      "similarity_score": 0.8126619458198547
+    },
+    {
+      "content": "### Commit 4\n- ID: 2d6b0974\n- Author: Scott Zhu (scottzhu@google.com)\n- Date: 2021-06-11 07:21:22\n- Message: Sync OSS keras to head.\n\nPiperOrigin-RevId: 378758774\n- Changes:\n```diff\n@@ -21,14 +21,14 @@ from __future__ import print_function\n import tensorflow.compat.v2 as tf\n \n import copy\n-import functools\n import warnings\n from keras import backend\n from keras.engine import base_layer\n from keras.engine import base_layer_utils\n+from keras.legacy_tf_layers import variable_scope_shim\n from keras.mixed_precision import policy\n from keras.utils import tf_contextlib\n-from keras.utils import tf_inspect\n+from tensorflow.python.ops import variable_scope as vs\n from tensorflow.pyth...\n```\n\n### Commit 5\n- ID: be4cef42\n- Author: Scott Zhu (scottzhu@google.com)\n- Date: 2021-05-28 07:45:25\n- Message: Sync OSS keras to head.\n\nPiperOrigin-RevId: 376276691\n- Changes:\n```diff\n@@ -301,7 +301,7 @@ class Layer(base_layer.Layer):\n           new_losses,\n           tf.compat.v1.GraphKeys.REGULARIZATION_LOSSES)\n \n-  def _name_scope(self):\n+  def _name_scope(self):  # pylint: disable=method-hidden\n     \"\"\"Determines op naming for the Layer.\"\"\"\n     if self._keras_style:\n       return super(Layer, self)._name_scope()\n@@ -445,7 +445,7 @@ class Layer(base_layer.Layer):\n     with tf.compat.v1.variable_scope(\n         self._scope, reuse=reuse, auxiliary_name_scope=False) as scope...\n```",
+      "metadata": {
+        "chunk_index": 15,
+        "file_path": "keras/legacy_tf_layers/base.py",
+        "commit_count": 5,
+        "total_chunks": 16,
+        "strategy": "enhanced",
+        "language": "python"
+      },
+      "similarity_score": 0.8335512280464172
+    },
+    {
+      "content": "### Commit 2\n- ID: 8a4074b3\n- Author: Scott Zhu (scottzhu@google.com)\n- Date: 2021-08-06 07:25:19\n- Message: Update error messages for several keras/layers\n\nPiperOrigin-RevId: 389050188\n- Changes:\n```diff\n@@ -119,9 +119,9 @@ class Embedding(Layer):\n       else:\n         kwargs['input_shape'] = (None,)\n     if input_dim <= 0 or output_dim <= 0:\n-      raise ValueError('Both `input_dim` and `output_dim` should be positive, '\n-                       'found input_dim {} and output_dim {}'.format(\n-                           input_dim, output_dim))\n+      raise ValueError(\n+          'Both `input_dim` and `output_dim` should be positive, '\n+          f'Received input_dim = {input_dim} and output_dim =...\n```\n\n### Commit 3\n- ID: 8a96b50b\n- Author: Scott Zhu (scottzhu@google.com)\n- Date: 2021-03-31 02:48:16\n- Message: Sync OSS keras to head.\n\nPiperOrigin-RevId: 365861361\n- Changes:\n```diff\n@@ -15,6 +15,8 @@\n \"\"\"Embedding layer.\"\"\"\n \n import tensorflow.compat.v2 as tf\n+# pylint: disable=g-classes-have-attributes\n+\n from keras import backend\n from keras import constraints\n from keras import initializers\n@@ -77,6 +79,28 @@ class Embedding(Layer):\n \n   Output shape:\n     3D tensor with shape: `(batch_size, input_length, output_dim)`.\n+\n+  **Note on variable placement:**\n+  By default, if a GPU is available, the embedding matrix will be placed on\n+  the GPU. This achieves the best perf...\n```\n\n### Commit 4\n- ID: d71247dc\n- Author: Scott Zhu (scottzhu@google.com)\n- Date: 2021-03-26 04:43:52\n- Message: Sync OSS keras.",
+      "metadata": {
+        "strategy": "enhanced",
+        "language": "python",
+        "file_path": "keras/layers/embeddings.py",
+        "chunk_index": 6,
+        "total_chunks": 8,
+        "commit_count": 5
+      },
+      "similarity_score": 0.8359253406524658
+    },
+    {
+      "content": "### Commit 3\n- ID: 01551c85\n- Author: Francois Chollet (fchollet@google.com)\n- Date: 2021-07-30 02:21:26\n- Message: Add traceback filtering to primary Keras API endpoints.\n\nPiperOrigin-RevId: 387628150\n- Changes:\n```diff\n@@ -23,6 +23,7 @@ from keras.engine import keras_tensor\n from keras.engine import node as node_module\n from keras.saving.saved_model import layer_serialization\n from keras.utils import tf_utils\n+from keras.utils import traceback_utils\n from tensorflow.python.util.tf_export import keras_export\n \n \n@@ -92,6 +93,7 @@ class InputLayer(base_layer.Layer):\n       name: Optional name of the layer (string).\n   \"\"\"\n \n+  @traceback_utils.filter_traceback\n   def __init__(self,\n                input_shape=No...\n```\n\n### Commit 4\n- ID: d71247dc\n- Author: Scott Zhu (scottzhu@google.com)\n- Date: 2021-03-26 04:43:52\n- Message: Sync OSS keras.\n\nPiperOrigin-RevId: 365115170\n- Changes:\n```diff\n@@ -13,11 +13,7 @@\n # limitations under the License.\n # ==============================================================================\n # pylint: disable=protected-access\n-\"\"\"Input layer code (`Input` and `InputLayer`).\n-\"\"\"\n-from __future__ import absolute_import\n-from __future__ import division\n-from __future__ import print_function\n+\"\"\"Input layer code (`Input` and `InputLayer`).\"\"\"\n \n import tensorflow.compat.v2 as tf\n from keras import backend...\n```\n\n### Commit 5\n- ID: e3f6e4b5\n- Author: Scott Zhu (scottzhu@google.com)\n- Date: 2021-03-12 08:06:12\n- Message: Sync OSS keras to head.",
+      "metadata": {
+        "strategy": "enhanced",
+        "file_path": "keras/engine/input_layer.py",
+        "commit_count": 5,
+        "language": "python",
+        "chunk_index": 12,
+        "total_chunks": 14
+      },
+      "similarity_score": 0.8443480730056763
+    },
+    {
+      "content": "### Commit 3\n- ID: e0a232af\n- Author: leondgarse (leondgarse@aol.com)\n- Date: 2021-11-09 14:45:21\n- Message: Bypass the require a config warning for marge layers\n\nBypass the warning `warnings.warn('Custom mask layers require a config and must override '` when saving a model containing marge layers like `Add` / `Multiply`.\n- Before:\n  ```py\n  inputs = keras.layers.Input(shape=(32, 32, 3))\n  keras.models.Model(inputs, keras.layers.Add()([inputs, inputs])).save('aa.h5')\n  # WARNING:tensorflow:Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.\n  # /opt/anaconda3/lib/python3.8/site-packages/keras/utils/generic_utils.py:494: CustomMaskWarning: Custom mask layers require a config and must override get_config. When loading, the custom mask layer must be passed to the custom_objects argument.\n  #   warnings.warn('Custom mask layers require a config and must override '\n  ```\n- After:\n  ```py\n  inputs = keras.layers.Input(shape=(32, 32, 3))\n  keras.models.Model(inputs, keras.layers.Add()([inputs, inputs])).save('aa.h5')\n  # WARNING:tensorflow:Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.\n  ```\n- Changes:\n```diff\n@@ -219,6 +219,9 @@ class _Merge(Layer):\n     return backend.all(\n         backend.concatenate(masks, axis=0), axis=0, keepdims=False)\n \n+  def get_config(self):\n+    return super(_Merge, self).get_config()\n+\n \n @keras_export('keras.layers.Add')\n class Add(_Merge):...\n```\n\n### Commit 4\n- ID: fdf91ec0\n- Author: Francois Chollet (fchollet@google.com)\n- Date: 2021-07-31 05:29:22\n- Message: Improve a number of error messages in Keras layers.",
+      "metadata": {
+        "chunk_index": 22,
+        "language": "python",
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "file_path": "keras/layers/merge.py",
+        "total_chunks": 24
+      },
+      "similarity_score": 0.8474302887916565
+    },
+    {
+      "content": "PiperOrigin-RevId: 395780095\n- Changes:\n```diff\n@@ -14,11 +14,8 @@\n #,============================================================================\n \"\"\"Tests for layer graphs construction & handling.\"\"\"\n \n-import tensorflow.compat.v2 as tf\n-\n import warnings\n \n-import numpy as np\n from keras import backend\n from keras import combinations\n from keras import initializers\n@@ -34,7 +31,14 @@ from keras.engine import sequential\n from keras.engine import training as training_lib\n from keras.utils import layer_utils\n from keras.utils import tf_utils\n...\n```\n\n### Commit 3\n- ID: d4dc8979\n- Author: Katherine Wu (kathywu@google.com)\n- Date: 2021-08-05 07:15:04\n- Message: Fix node ordering in functional model reconstruction.\n\nPiperOrigin-RevId: 388807147\n- Changes:\n```diff\n@@ -807,6 +807,26 @@ class NetworkConstructionTest(keras_parameterized.TestCase):\n     output_val_2 = m2.predict(x_val)\n     self.assertAllClose(output_val, output_val_2, atol=1e-6)\n \n+  def test_layer_sharing_maintains_node_order(self):\n+    # See https://github.com/keras-team/keras/issues/14838.\n+    inp = input_layer_lib.Input(shape=[5], name='main_input')\n+\n+    zeros = layers.Lambda(tf.zeros_like, name='generate_zeros')(inp)\n+    ones = layers.Lambda(tf.ones_like, name='generate_ones')(inp)...\n```\n\n### Commit 4\n- ID: 32febb6c\n- Author: Mihai Maruseac (mihaimaruseac@google.com)\n- Date: 2021-08-04 02:20:20\n- Message: Use the safer `safe_load` function instead of `unsafe_load` when possible\n\nThere is no need to open ourselves up to arbitrary code execution, especially since this is not in a performance critical loop, so we can take the slowdown due to safety.",
+      "metadata": {
+        "commit_count": 5,
+        "language": "python",
+        "file_path": "keras/engine/functional_test.py",
+        "strategy": "enhanced",
+        "total_chunks": 55,
+        "chunk_index": 53
+      },
+      "similarity_score": 0.8498409390449524
+    },
+    {
+      "content": "### Commit 5\n- ID: 1e8d2865\n- Author: Francois Chollet (fchollet@google.com)\n- Date: 2021-07-30 07:59:37\n- Message: Improve a number of error messages in core layers.\n\nPiperOrigin-RevId: 387699866\n- Changes:\n```diff\n@@ -17,7 +17,6 @@\n import tensorflow.compat.v2 as tf\n # pylint: enable=g-bad-import-order\n \n-import textwrap\n from keras import backend as K\n from keras.engine import keras_tensor\n from keras.engine.base_layer import Layer\n@@ -72,15 +71,15 @@ class ClassMethod(Layer):\n \n   def get_config(self):\n     if not self.cls_symbol:\n-      raise ValueError('This Keras class method conversion tried to convert '\n-                       'a method belonging to class %s, a class '\n-                       'that...\n```",
+      "metadata": {
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "language": "python",
+        "total_chunks": 14,
+        "file_path": "keras/layers/core/tf_op_layer.py",
+        "chunk_index": 13
+      },
+      "similarity_score": 0.8564984202384949
+    },
+    {
+      "content": "### Commit 3\n- ID: a92e154b\n- Author: Daniel Speckhard (dts@google.com)\n- Date: 2021-08-05 18:17:31\n- Message: Cleans up comments/docstring.\n\nPiperOrigin-RevId: 388895044\n- Changes:\n```diff\n@@ -74,14 +74,13 @@ MACs stands for Multiply Adds\n       https://arxiv.org/abs/1801.04381) (CVPR 2018)\n \"\"\"\n \n-import tensorflow.compat.v2 as tf\n-\n from keras import backend\n from keras.applications import imagenet_utils\n from keras.engine import training\n from keras.layers import VersionAwareLayers\n from keras.utils import data_utils\n from keras.utils import layer_utils\n+import tensorflow.compat.v2 as tf\n from tensorflow.python.platform import tf_logging as logging\n from tensorflow.python.util....\n```\n\n### Commit 4\n- ID: 98a76222\n- Author: Scott Zhu (scottzhu@google.com)\n- Date: 2021-06-05 02:18:30\n- Message: Sync OSS keras to head.\n\nPiperOrigin-RevId: 377550815\n- Changes:\n```diff\n@@ -150,7 +150,7 @@ def MobileNetV2(input_shape=None,\n           of filters in each layer.\n       - If `alpha` > 1.0, proportionally increases the number\n           of filters in each layer.\n-      - If `alpha` = 1, default number of filters from the paper\n+      - If `alpha` = 1.0, default number of filters from the paper\n           are used at each layer.\n     include_top: Boolean, whether to include the fully-connected\n       layer at the top of the network. Defaults to `True`.\n@@ -405,13 +40...\n```\n\n### Commit 5\n- ID: d71247dc\n- Author: Scott Zhu (scottzhu@google.com)\n- Date: 2021-03-26 04:43:52\n- Message: Sync OSS keras.\n\nPiperOrigin-RevId: 365115170\n- Changes:\n```diff\n@@ -73,9 +73,6 @@ MACs stands for Multiply Adds\n   - [MobileNetV2: Inverted Residuals and Linear Bottlenecks](\n       https://arxiv.org/abs/1801.04381) (CVPR 2018)\n \"\"\"\n-from __future__ import absolute_import\n-from __future__ import division\n-from __future__ import print_function\n \n import tensorflow.compat.v2 as tf...\n```",
+      "metadata": {
+        "total_chunks": 15,
+        "commit_count": 5,
+        "language": "python",
+        "file_path": "keras/applications/mobilenet_v2.py",
+        "chunk_index": 14,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.875359296798706
+    },
+    {
+      "content": "PiperOrigin-RevId: 395783105\n- Changes:\n```diff\n@@ -14,13 +14,12 @@\n # ==============================================================================\n \"\"\"Tests for Keras TF utils.\"\"\"\n \n-import tensorflow.compat.v2 as tf\n-\n from absl.testing import parameterized\n-import numpy as np\n import keras\n from keras import combinations\n from keras.utils import tf_utils\n+import numpy as np\n+import tensorflow.compat.v2 as tf\n \n try:\n   import attr  # pylint:disable=g-import-not-at-top\n@@ -251,5 +250,64 @@ class TestRandomSeedSetting(tf.test.TestCase):\n  ...\n```\n\n### Commit 3\n- ID: 5550cb0c\n- Author: Scott Zhu (scottzhu@google.com)\n- Date: 2021-09-09 02:56:38\n- Message: Fix remaining broken tests in v1.\n\nPiperOrigin-RevId: 395526123\n- Changes:\n```diff\n@@ -232,6 +232,8 @@ class TestIsExtensionType(tf.test.TestCase):\n class TestRandomSeedSetting(tf.test.TestCase):\n \n   def test_seeds(self):\n+    if not tf.__internal__.tf2.enabled():\n+      self.skipTest('set_random_seed() is only expected to work in tf2.')\n     def get_model_output():\n       model = keras.Sequential([\n           keras.layers.Dense(10),...\n```\n\n### Commit 4\n- ID: e4815a1e\n- Author: Francois Chollet (fchollet@google.com)\n- Date: 2021-08-26 01:31:34\n- Message: Add Keras utility for making user programs deterministic.\n\nPiperOrigin-RevId: 392927432\n- Changes:\n```diff\n@@ -17,7 +17,7 @@\n import tensorflow.compat.v2 as tf\n \n from absl.testing import parameterized\n-\n+import numpy as np\n import keras\n from keras import combinations\n from keras.utils import tf_utils\n@@ -228,5 +228,26 @@ class TestIsExtensionType(tf.test.TestCase):\n     tensor = [1., 2., 3.]\n     self.assertFalse(tf_utils.is_extension_type(tensor))\n \n+\n+class TestRandomSeedSetting(tf.test.TestCase):\n+\n+  def test_seeds(self):\n+    def get_model_output():\n+      model = keras.Sequential([\n+         ...\n```",
+      "metadata": {
+        "commit_count": 5,
+        "language": "python",
+        "total_chunks": 10,
+        "chunk_index": 8,
+        "strategy": "enhanced",
+        "file_path": "keras/utils/tf_utils_test.py"
+      },
+      "similarity_score": 0.8800093531608582
+    },
+    {
+      "content": "### Commit 2\n- ID: fdf91ec0\n- Author: Francois Chollet (fchollet@google.com)\n- Date: 2021-07-31 05:29:22\n- Message: Improve a number of error messages in Keras layers.\n\nPiperOrigin-RevId: 387883278\n- Changes:\n```diff\n@@ -76,19 +76,19 @@ class RandomFourierFeaturesTest(tf.test.TestCase, parameterized.TestCase):\n \n   def test_invalid_output_dim(self):\n     with self.assertRaisesRegex(\n-        ValueError, r'`output_dim` should be a positive integer. Given: -3.'):\n+        ValueError, '`output_dim` should be a positive integer'):\n       _ = kernel_layers.RandomFourierFeatures(output_dim=-3, scale=2.0)\n \n   def test_unsupported_kernel_type(self):\n     with self.assertRaisesRegex(\n-        ValueError, r'Unsupport...\n```\n\n### Commit 3\n- ID: d71247dc\n- Author: Scott Zhu (scottzhu@google.com)\n- Date: 2021-03-26 04:43:52\n- Message: Sync OSS keras.\n\nPiperOrigin-RevId: 365115170\n- Changes:\n```diff\n@@ -14,10 +14,6 @@\n # ==============================================================================\n \"\"\"Tests for kernelized.py.\"\"\"\n \n-from __future__ import absolute_import\n-from __future__ import division\n-from __future__ import print_function\n-\n import tensorflow.compat.v2 as tf\n \n import functools\n@@ -27,7 +23,6 @@ import shutil\n \n from absl.testing import parameterized\n import numpy as np\n-import six\n from tensorflow.python.framework import test_util\n from keras import backend as keras_bac...\n```\n\n### Commit 4\n- ID: 0f8da5a7\n- Author: Scott Zhu (scottzhu@google.com)\n- Date: 2021-02-20 03:30:05\n- Message: Update keras to import tensorflow.compat.v2 as tf.\n\nThis is to avoid issue when tf is build with tf_api_version=1.\n\nThe existing tf.compat.v1 symbol will still work since tensorflow.compat.v2.compat.v1 is same as tensorflow.compat.v1.",
+      "metadata": {
+        "total_chunks": 12,
+        "strategy": "enhanced",
+        "language": "python",
+        "commit_count": 5,
+        "file_path": "keras/layers/kernelized_test.py",
+        "chunk_index": 10
+      },
+      "similarity_score": 0.8863017559051514
+    },
+    {
+      "content": "# model = tf.keras.Sequential()\n# model.add(tf.keras.layers.Conv2D(32, (3, 3)))\n# model.add(tf.keras.layers.Flatten())\n# model.add(tf.keras.layers.Dense(1))\nSEQUENTIAL_CNN = {\n    'layers': [{\n        'class_name': 'Conv2D',\n        'config': {\n            'activation': 'linear',\n            'activity_regularizer': None,\n            'bias_constraint': None,\n            'bias_initializer': {\n                'class_name': 'Zeros',\n                'config': {}\n            },\n            'bias_regularizer': None,\n            'data_format': 'channels_last',\n            'dilation_rate': (1, 1),\n            'dtype': 'float32',\n            'filters': 32,\n            'kernel_constraint': None,\n            'kernel_initializer': {\n                'class_name': 'GlorotUniform',\n                'config': {\n                    'seed': None\n                }\n            },\n            'kernel_regularizer': None,\n            'kernel_size': (3, 3),\n            'name': 'conv2d_1',\n            'padding': 'valid',\n            'strides': (1, 1),\n            'trainable': True,\n            'use_bias': True\n        }\n    }, {\n        'class_name': 'Flatten',\n        'config': {\n            'data_format': 'channels_last',\n            'dtype': 'float32',\n            'name': 'flatten_1',\n            'trainable': True\n        }\n    }, {\n        'class_name': 'Dense',\n        'config': {\n            'activation': 'linear',\n            'activity_regularizer': None,\n            'bias_constraint': None,\n            'bias_initializer': {\n                'class_name': 'Zeros',\n                'config': {}\n            },\n            'bias_regularizer': None,\n            'dtype': 'float32',\n            'kernel_constraint': None,\n            'kernel_initializer': {\n                'class_name': 'GlorotUniform',\n                'config': {\n                    'seed': None\n                }\n            },\n            'kernel_regularizer': None,\n            'name': 'dense_6',",
+      "metadata": {
+        "commit_count": 2,
+        "strategy": "enhanced",
+        "language": "python",
+        "total_chunks": 13,
+        "chunk_index": 8,
+        "file_path": "keras/tests/get_config_samples.py"
+      },
+      "similarity_score": 0.8898627758026123
+    },
+    {
+      "content": "## Git Commit History\n\n### Commit 1\n- ID: 372515ca\n- Author: Francois Chollet (fchollet@google.com)\n- Date: 2021-08-25 06:50:40\n- Message: Rename references to \"K\" as \"backend\" for consistency.\n\nPiperOrigin-RevId: 392765629\n- Changes:\n```diff\n@@ -15,7 +15,6 @@\n \"\"\"Contains the Masking layer.\"\"\"\n # pylint: disable=g-classes-have-attributes,g-direct-tensorflow-import\n \n-from keras import backend as K\n from keras.engine.base_layer import Layer\n import tensorflow.compat.v2 as tf\n from tensorflow.python.util.tf_export import keras_export\n@@ -69,10 +68,10 @@ class Masking(Layer):\n     self._compute_output_and_mask_jointly = True\n \n   def compute_mask(self, inputs, mask=None):\n-    return K.any(tf.not_equal(inputs, self.mask_value), axis=-1...\n```\n\n### Commit 2\n- ID: 948df87f\n- Author: Luke Wood (lukewood@google.com)\n- Date: 2021-07-14 01:21:55\n- Message: Refactor `core.py` into smaller logically organized files hosted under a `core` directory.\n\nPiperOrigin-RevId: 384494141\n- Changes:\n```diff\n@@ -0,0 +1,88 @@\n+# Copyright 2015 The TensorFlow Authors. All Rights Reserved.\n+#\n+# Licensed under the Apache License, Version 2.0 (the \"License\");\n+# you may not use this file except in compliance with the License.\n+# You may obtain a copy of the License at\n+#\n+#     http://www.apache.org/licenses/LICENSE-2.0\n+#\n+# Unless required by applicable law or agreed to in writing, software\n+# distributed under the License is distributed on an \"AS IS\" BASIS,\n+# WITHOUT WARRANTIES OR CONDITIONS OF ANY ...\n```\n\n### Commit 3\n- ID: beb579d5\n- Author: Kuangyuan Chen (chky@google.com)\n- Date: 2021-07-09 06:45:35\n- Message: Refactor `core.py` into smaller logically organized files hosted under a `core` directory.",
+      "metadata": {
+        "total_chunks": 4,
+        "file_path": "keras/layers/core/masking.py",
+        "language": "python",
+        "commit_count": 4,
+        "chunk_index": 2,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.9129186868667603
+    },
+    {
+      "content": "if mask_already_computed:\n      flat_masks = [getattr(x, '_keras_mask', None) for x in flat_outputs]\n    elif not should_compute_mask:\n      flat_masks = [None for _ in flat_outputs]\n    else:\n      output_masks = self.compute_mask(inputs, previous_mask)\n      # `compute_mask` can return a single `None` even when a Layer\n      # has multiple outputs.\n      if output_masks is None:\n        flat_masks = [None for _ in flat_outputs]\n      else:\n        flat_masks = tf.nest.flatten(output_masks)\n\n    for output, mask in zip(flat_outputs, flat_masks):\n      try:\n        output._keras_mask = mask\n      except AttributeError:\n        # C Type such as np.ndarray.\n        pass\n\n    if tf_utils.are_all_symbolic_tensors(flat_outputs):\n      for output in flat_outputs:\n        if getattr(output, '_keras_mask', None) is not None:\n          # Do not track masks for `TensorFlowOpLayer` construction.\n          output._keras_mask._keras_history_checked = True\n\n  def _collect_input_masks(self, inputs, args, kwargs):\n    \"\"\"Checks if `mask` argument was passed, else gathers mask from inputs.\"\"\"\n    if self._call_arg_was_passed('mask', args, kwargs):\n      return self._get_call_arg_value('mask', args, kwargs)\n\n    if not self._should_compute_mask:\n      return None\n\n    input_masks = tf.nest.map_structure(lambda t: getattr(t, '_keras_mask', None),\n                                     inputs)\n    if generic_utils.is_all_none(input_masks):\n      return None\n    return input_masks\n\n  def _call_arg_was_passed(self, arg_name, args, kwargs, inputs_in_args=False):\n    if arg_name in kwargs:\n      return True\n    call_fn_args = self._call_fn_args\n    if not inputs_in_args:\n      # Ignore `inputs` arg.\n      call_fn_args = call_fn_args[1:]\n    if arg_name in dict(zip(call_fn_args, args)):\n      return True\n    return False",
+      "metadata": {
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "file_path": "keras/engine/base_layer_v1.py",
+        "language": "python",
+        "total_chunks": 61,
+        "chunk_index": 47
+      },
+      "similarity_score": 0.9234046936035156
+    },
+    {
+      "content": "@keras_export(v1=['keras.__internal__.legacy.layers.separable_conv2d'])\n@tf_export(v1=['layers.separable_conv2d'])\ndef separable_conv2d(inputs,\n                     filters,\n                     kernel_size,\n                     strides=(1, 1),\n                     padding='valid',\n                     data_format='channels_last',\n                     dilation_rate=(1, 1),\n                     depth_multiplier=1,\n                     activation=None,\n                     use_bias=True,\n                     depthwise_initializer=None,\n                     pointwise_initializer=None,\n                     bias_initializer=tf.compat.v1.zeros_initializer(),\n                     depthwise_regularizer=None,\n                     pointwise_regularizer=None,\n                     bias_regularizer=None,\n                     activity_regularizer=None,\n                     depthwise_constraint=None,\n                     pointwise_constraint=None,\n                     bias_constraint=None,\n                     trainable=True,\n                     name=None,\n                     reuse=None):\n  \"\"\"Functional interface for the depthwise separable 2D convolution layer.\n\n  This layer performs a depthwise convolution that acts separately on\n  channels, followed by a pointwise convolution that mixes channels.\n  If `use_bias` is True and a bias initializer is provided,\n  it adds a bias vector to the output.\n  It then optionally applies an activation function to produce the final output.",
+      "metadata": {
+        "strategy": "enhanced",
+        "chunk_index": 41,
+        "total_chunks": 68,
+        "commit_count": 5,
+        "file_path": "keras/legacy_tf_layers/convolutional.py",
+        "language": "python"
+      },
+      "similarity_score": 0.9281407594680786
+    },
+    {
+      "content": "PiperOrigin-RevId: 420939364\n- Changes:\n```diff\n@@ -14,15 +14,13 @@\n # ==============================================================================\n \"\"\"Training-related part of the Keras engine.\"\"\"\n \n-import tensorflow.compat.v2 as tf\n-\n import copy\n import itertools\n import json\n import os\n import warnings\n import weakref\n-from tensorflow.python.eager import context\n+\n from keras import backend\n from keras import callbacks as callbacks_module\n from keras import optimizer_v1\n@@ -36,25 +34,26 @@ from keras.mixed_precision import loss_scale_o...\n```\n\n### Commit 5\n- ID: 30d7bdbd\n- Author: Haifeng Jin (haifengj@google.com)\n- Date: 2022-01-11 13:22:58\n- Message: Change the default value for verbose in Model.predict() to auto to be consistent with Model.fit() and Model.evaluate().\n\nPiperOrigin-RevId: 420932194\n- Changes:\n```diff\n@@ -1609,7 +1609,7 @@ class Model(base_layer.Layer, version_utils.ModelVersionSelector):\n           generators, or `keras.utils.Sequence` instances (since they generate\n           batches).\n         verbose: `\"auto\"`, 0, 1, or 2. Verbosity mode.\n-            0 = silent, 1 = progress bar, 2 = one line per epoch.\n+            0 = silent, 1 = progress bar, 2 = single line.\n             `\"auto\"` defaults to 1 for most cases, and to 2 when used with\n             `ParameterServerStrategy`. Note that t...\n```",
+      "metadata": {
+        "commit_count": 5,
+        "total_chunks": 93,
+        "language": "python",
+        "chunk_index": 92,
+        "file_path": "keras/engine/training.py",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.928568422794342
+    },
+    {
+      "content": ">>> m.reset_state()\n  >>> m.update_state([0, 1, 1, 1], [0, 1, 0, 0], sample_weight=[0, 0, 1, 0])\n  >>> m.result().numpy()\n  1.0\n\n  Usage with `compile()` API:\n\n  ```python\n  model.compile(optimizer='sgd',\n                loss='mse',\n                metrics=[tf.keras.metrics.FalseNegatives()])\n  ```\n  \"\"\"\n\n  def __init__(self, thresholds=None, name=None, dtype=None):\n    super(FalseNegatives, self).__init__(\n        confusion_matrix_cond=metrics_utils.ConfusionMatrix.FALSE_NEGATIVES,\n        thresholds=thresholds,\n        name=name,\n        dtype=dtype)\n\n\n@keras_export('keras.metrics.TrueNegatives')\nclass TrueNegatives(_ConfusionMatrixConditionCount):\n  \"\"\"Calculates the number of true negatives.\n\n  If `sample_weight` is given, calculates the sum of the weights of\n  true negatives. This metric creates one local variable, `accumulator`\n  that is used to keep track of the number of true negatives.\n\n  If `sample_weight` is `None`, weights default to 1.\n  Use `sample_weight` of 0 to mask values.\n\n  Args:\n    thresholds: (Optional) Defaults to 0.5. A float value or a python\n      list/tuple of float threshold values in [0, 1]. A threshold is compared\n      with prediction values to determine the truth value of predictions\n      (i.e., above the threshold is `true`, below is `false`). One metric\n      value is generated for each threshold value.\n    name: (Optional) string name of the metric instance.\n    dtype: (Optional) data type of the metric result.\n\n  Standalone usage:\n\n  >>> m = tf.keras.metrics.TrueNegatives()\n  >>> m.update_state([0, 1, 0, 0], [1, 1, 0, 0])\n  >>> m.result().numpy()\n  2.0\n\n  >>> m.reset_state()\n  >>> m.update_state([0, 1, 0, 0], [1, 1, 0, 0], sample_weight=[0, 0, 1, 0])\n  >>> m.result().numpy()\n  1.0\n\n  Usage with `compile()` API:\n\n  ```python\n  model.compile(optimizer='sgd',\n                loss='mse',\n                metrics=[tf.keras.metrics.TrueNegatives()])\n  ```\n  \"\"\"",
+      "metadata": {
+        "commit_count": 5,
+        "language": "python",
+        "file_path": "keras/metrics.py",
+        "chunk_index": 24,
+        "total_chunks": 91,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.9297419190406799
+    },
+    {
+      "content": "Usage with `compile()` API:\n\n  ```python\n  model.compile(optimizer='sgd',\n                loss='mse',\n                metrics=[tf.keras.metrics.TrueNegatives()])\n  ```\n  \"\"\"\n\n  def __init__(self, thresholds=None, name=None, dtype=None):\n    super(TrueNegatives, self).__init__(\n        confusion_matrix_cond=metrics_utils.ConfusionMatrix.TRUE_NEGATIVES,\n        thresholds=thresholds,\n        name=name,\n        dtype=dtype)\n\n\n@keras_export('keras.metrics.TruePositives')\nclass TruePositives(_ConfusionMatrixConditionCount):\n  \"\"\"Calculates the number of true positives.\n\n  If `sample_weight` is given, calculates the sum of the weights of\n  true positives. This metric creates one local variable, `true_positives`\n  that is used to keep track of the number of true positives.\n\n  If `sample_weight` is `None`, weights default to 1.\n  Use `sample_weight` of 0 to mask values.\n\n  Args:\n    thresholds: (Optional) Defaults to 0.5. A float value or a python\n      list/tuple of float threshold values in [0, 1]. A threshold is compared\n      with prediction values to determine the truth value of predictions\n      (i.e., above the threshold is `true`, below is `false`). One metric\n      value is generated for each threshold value.\n    name: (Optional) string name of the metric instance.\n    dtype: (Optional) data type of the metric result.\n\n  Standalone usage:\n\n  >>> m = tf.keras.metrics.TruePositives()\n  >>> m.update_state([0, 1, 1, 1], [1, 0, 1, 1])\n  >>> m.result().numpy()\n  2.0\n\n  >>> m.reset_state()\n  >>> m.update_state([0, 1, 1, 1], [1, 0, 1, 1], sample_weight=[0, 0, 1, 0])\n  >>> m.result().numpy()\n  1.0\n\n  Usage with `compile()` API:\n\n  ```python\n  model.compile(optimizer='sgd',\n                loss='mse',\n                metrics=[tf.keras.metrics.TruePositives()])\n  ```\n  \"\"\"",
+      "metadata": {
+        "chunk_index": 25,
+        "total_chunks": 91,
+        "strategy": "enhanced",
+        "file_path": "keras/metrics.py",
+        "language": "python",
+        "commit_count": 5
+      },
+      "similarity_score": 0.930492639541626
+    },
+    {
+      "content": "return outputs\n\n  def _assert_built_as_v1(self):\n    if not hasattr(self, '_originally_built_as_v1'):\n      raise ValueError(\n          'Your Layer or Model is in an invalid state. '\n          'This can happen for the following cases:\\n '\n          '1. You might be interleaving estimator/non-estimator models or '\n          'interleaving models/layers made in tf.compat.v1.Graph.as_default() '\n          'with models/layers created outside of it. '\n          'Converting a model to an estimator (via model_to_estimator) '\n          'invalidates all models/layers made before the conversion (even '\n          'if they were not the model converted to an estimator). '\n          'Similarly, making a layer or a model inside a '\n          'a tf.compat.v1.Graph invalidates all layers/models you previously '\n          'made outside of the graph.\\n'\n          '2. You might be using a custom keras layer implementation with '\n          ' custom __init__ which didn\\'t call super().__init__. '\n          ' Please check the implementation of %s and its bases.' %\n          (type(self),))\n\n  @property\n  def dtype(self):\n    return self._dtype_policy.variable_dtype\n\n  @property\n  def name(self):\n    return self._name\n\n  @property\n  def dynamic(self):\n    return any(layer._dynamic for layer in self._flatten_layers())\n\n  @property\n  @doc_controls.do_not_generate_docs\n  def stateful(self):\n    return any(layer._stateful for layer in self._flatten_layers())\n\n  @stateful.setter\n  def stateful(self, value):\n    self._stateful = value\n\n  @property\n  def trainable(self):\n    return self._trainable\n\n  @trainable.setter\n  def trainable(self, value):\n    self._trainable = value\n    for layer in getattr(self, '_self_tracked_trackables', []):\n      layer.trainable = value\n\n  @property\n  def activity_regularizer(self):\n    \"\"\"Optional regularizer function for the output of this layer.\"\"\"\n    return self._activity_regularizer",
+      "metadata": {
+        "total_chunks": 61,
+        "commit_count": 5,
+        "language": "python",
+        "strategy": "enhanced",
+        "file_path": "keras/engine/base_layer_v1.py",
+        "chunk_index": 23
+      },
+      "similarity_score": 0.9305965304374695
+    },
+    {
+      "content": "### Commit 2\n- ID: b693bb84\n- Author: Francois Chollet (fchollet@google.com)\n- Date: 2021-07-30 09:35:53\n- Message: Improve error messages in Keras activations / constraints / metrics.\n\nPiperOrigin-RevId: 387713769\n- Changes:\n```diff\n@@ -103,8 +103,10 @@ def set_floatx(value):\n       ValueError: In case of invalid value.\n   \"\"\"\n   global _FLOATX\n-  if value not in {'float16', 'float32', 'float64'}:\n-    raise ValueError('Unknown floatx type: ' + str(value))\n+  accepted_dtypes = {'float16', 'float32', 'float64'}\n+  if value not in accepted_dtypes:\n+    raise ValueError(\n+        f'Unknown `floatx` value: {value}. Expected one of {accepted_dtypes}')\n   _FLOATX = str(value)\n \n \n@@ -142,6 +144,9 @@ def set_image_data_format(data...\n```\n\n### Commit 3\n- ID: d71247dc\n- Author: Scott Zhu (scottzhu@google.com)\n- Date: 2021-03-26 04:43:52\n- Message: Sync OSS keras.\n\nPiperOrigin-RevId: 365115170\n- Changes:\n```diff\n@@ -13,9 +13,6 @@\n # limitations under the License.\n # ==============================================================================\n \"\"\"Keras backend config API.\"\"\"\n-from __future__ import absolute_import\n-from __future__ import division\n-from __future__ import print_function\n \n import tensorflow.compat.v2 as tf\n from tensorflow.python.util.tf_export import keras_export...\n```\n\n### Commit 4\n- ID: 0f8da5a7\n- Author: Scott Zhu (scottzhu@google.com)\n- Date: 2021-02-20 03:30:05\n- Message: Update keras to import tensorflow.compat.v2 as tf.\n\nThis is to avoid issue when tf is build with tf_api_version=1.\n\nThe existing tf.compat.v1 symbol will still work since tensorflow.compat.v2.compat.v1 is same as tensorflow.compat.v1.",
+      "metadata": {
+        "total_chunks": 5,
+        "commit_count": 5,
+        "language": "python",
+        "chunk_index": 3,
+        "file_path": "keras/backend_config.py",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.9308587312698364
+    },
+    {
+      "content": "### Commit 2\n- ID: d71247dc\n- Author: Scott Zhu (scottzhu@google.com)\n- Date: 2021-03-26 04:43:52\n- Message: Sync OSS keras.\n\nPiperOrigin-RevId: 365115170\n- Changes:\n```diff\n@@ -14,10 +14,6 @@\n # ==============================================================================\n \"\"\"Tests for convolutional recurrent layers.\"\"\"\n \n-from __future__ import absolute_import\n-from __future__ import division\n-from __future__ import print_function\n-\n import tensorflow.compat.v2 as tf\n \n from absl.testing import parameterized...\n```\n\n### Commit 3\n- ID: 2f1cc103\n- Author: Scott Zhu (scottzhu@google.com)\n- Date: 2021-03-23 01:27:55\n- Message: Sync OSS keras to head.\n\nPiperOrigin-RevId: 364350506\n- Changes:\n```diff\n@@ -202,6 +202,9 @@ class ConvLSTMTest(keras_parameterized.TestCase):\n       outputs = clone.predict(test_inputs)\n       self.assertAllClose(reference_outputs, outputs, atol=1e-5)\n \n+  @tf.test.disable_with_predicate(\n+      pred=tf.test.is_built_with_rocm,\n+      skip_message='Skipping the test as OOM occurred with 1 GB budget.')\n   def test_conv_lstm_with_initial_state(self):\n     num_samples = 32\n     sequence_len = 5...\n```\n\n### Commit 4\n- ID: 0f8da5a7\n- Author: Scott Zhu (scottzhu@google.com)\n- Date: 2021-02-20 03:30:05\n- Message: Update keras to import tensorflow.compat.v2 as tf.\n\nThis is to avoid issue when tf is build with tf_api_version=1.\n\nThe existing tf.compat.v1 symbol will still work since tensorflow.compat.v2.compat.v1 is same as tensorflow.compat.v1.\n\nPiperOrigin-RevId: 358446889\n- Changes:\n```diff\n@@ -18,7 +18,7 @@ from __future__ import absolute_import\n from __future__ import division\n from __future__ import print_function\n \n-import tensorflow as tf\n+import tensorflow.compat.v2 as tf\n \n from absl.testing import parameterized\n import numpy as np...\n```\n\n### Commit 5\n- ID: 4fd825dd\n- Author: Keras Team (keras-team@google.com)\n- Date: 2020-12-04 06:13:16\n- Message: Initial commit for tensorflow/python/keras to Github project keras-team/keras.",
+      "metadata": {
+        "chunk_index": 8,
+        "total_chunks": 10,
+        "language": "python",
+        "file_path": "keras/layers/convolutional_recurrent_test.py",
+        "commit_count": 5,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.9309309124946594
+    }
+  ],
+  "compressed": [
+    {
+      "content": "# File: keras/engine/training_integration_test.py (python)\n\n## Key Code Elements:\nimport tensorflow.compat.v2 as tf\nimport collections\nimport itertools\nfrom absl.testing import parameterized\nimport numpy as np\nimport keras\nfrom keras import keras_parameterized\nfrom keras import testing_utils\ndef _conv2d_filter(**kwargs):\n#   layer_class:\n#   data_shape:\n#   fuzz_dims:\n#   constructor_args:\n#   filter_fn:\ndef _gather_test_cases():\n\n## Recent Changes:\n- d71247dc by Scott Zhu (scottzhu@google.com): Sync OSS keras.\n\nPiperOrigin-RevId: 365115170...\n- 0f8da5a7 by Scott Zhu (scottzhu@google.com): Update keras to import tensorflow.compat.v2 as tf.\n\nThis is to avoid issue when tf is build with tf_...\n- 4fd825dd by Keras Team (keras-team@google.com): Initial commit for tensorflow/python/keras to Github project keras-team/keras.\n\nCurrently the code i...",
+      "metadata": {
+        "commit_count": 3,
+        "file_path": "keras/engine/training_integration_test.py",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "language": "python"
+      },
+      "similarity_score": 0.7271424531936646
+    },
+    {
+      "content": "# File: keras/layers/convolutional/base_conv.py (python)\n\n## Key Code Elements:\nfrom keras import activations\nfrom keras import constraints\nfrom keras import initializers\nfrom keras import regularizers\nfrom keras.engine.base_layer import Layer\nfrom keras.engine.input_spec import InputSpec\nfrom keras.utils import conv_utils\nimport tensorflow.compat.v2 as tf\nclass Conv(Layer):\n  Args:\n  def __init__(self,\n               **kwargs):\n    if isinstance(filters, float):\n    if filters is not None and filters < 0:\n  def _validate_init(self):\n\n## Recent Changes:\n- 88f10c04 by Fabien Hertschuh (fhertschuh@google.com): Refactor `convolutional.py` into smaller logically organized files hosted under directories named `c...",
+      "metadata": {
+        "language": "python",
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "commit_count": 1,
+        "chunk_index": 0,
+        "file_path": "keras/layers/convolutional/base_conv.py"
+      },
+      "similarity_score": 0.802095890045166
+    },
+    {
+      "content": "# File: keras/applications/efficientnet_v2.py (python)\n\n## Key Code Elements:\nReference:\nimport copy\nimport math\nfrom keras import backend\nfrom keras import layers\nfrom keras.applications import imagenet_utils\nfrom keras.engine import training\nfrom keras.utils import data_utils\nfrom keras.utils import layer_utils\nimport tensorflow.compat.v2 as tf\nfrom tensorflow.python.util.tf_export import keras_export\n  Reference:\n  Args:\n  Returns:\ndef round_filters(filters, width_coefficient, min_depth, depth_divisor):\n\n## Recent Changes:\n- 796a8d4d by TensorFlower Gardener (gardener@tensorflow.org): Merge pull request #14935 from sebastian-sz:add-efficientnet-v2\n\nPiperOrigin-RevId: 406443719...\n- 3f66015f by Sebastian (mocart15@gmail.com): Added preprocessing fallback when num_channels is not 3....\n- c0ec44e0 by Sebastian (mocart15@gmail.com): Updated weights hashes....",
+      "metadata": {
+        "commit_count": 5,
+        "strategy": "compressed",
+        "language": "python",
+        "chunk_index": 0,
+        "file_path": "keras/applications/efficientnet_v2.py",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.8091890215873718
+    },
+    {
+      "content": "# File: keras/mixed_precision/get_layer_policy_test.py (python)\n\n## Key Code Elements:\nimport tensorflow.compat.v2 as tf\nfrom keras.engine import base_layer_utils\nfrom keras.layers import core\nfrom keras.mixed_precision import get_layer_policy\nfrom keras.mixed_precision import policy\nclass GetLayerPolicyTest(tf.test.TestCase):\n  def test_get_layer_policy(self):\n  def test_error(self):\n        ValueError, 'get_policy can only be called on a layer, but got: 1'):\nif __name__ == '__main__':\n\n## Recent Changes:\n- d71247dc by Scott Zhu (scottzhu@google.com): Sync OSS keras.\n\nPiperOrigin-RevId: 365115170...\n- 0f8da5a7 by Scott Zhu (scottzhu@google.com): Update keras to import tensorflow.compat.v2 as tf.\n\nThis is to avoid issue when tf is build with tf_...\n- 4fd825dd by Keras Team (keras-team@google.com): Initial commit for tensorflow/python/keras to Github project keras-team/keras.\n\nCurrently the code i...",
+      "metadata": {
+        "language": "python",
+        "strategy": "compressed",
+        "commit_count": 3,
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "file_path": "keras/mixed_precision/get_layer_policy_test.py"
+      },
+      "similarity_score": 0.8630975484848022
+    },
+    {
+      "content": "# File: keras/saving/metrics_serialization_test.py (python)\n\n## Key Code Elements:\nimport tensorflow.compat.v2 as tf\nimport os\nimport shutil\nfrom absl.testing import parameterized\nimport numpy as np\nimport keras\nfrom keras import keras_parameterized\nfrom keras import layers\nfrom keras import metrics\nfrom keras import optimizer_v2\nfrom keras import testing_utils\nfrom keras.utils import generic_utils\ntry:\n  import h5py  # pylint:disable=g-import-not-at-top\nexcept ImportError:\n\n## Recent Changes:\n- d71247dc by Scott Zhu (scottzhu@google.com): Sync OSS keras.\n\nPiperOrigin-RevId: 365115170...\n- 0f8da5a7 by Scott Zhu (scottzhu@google.com): Update keras to import tensorflow.compat.v2 as tf.\n\nThis is to avoid issue when tf is build with tf_...\n- 4fd825dd by Keras Team (keras-team@google.com): Initial commit for tensorflow/python/keras to Github project keras-team/keras.\n\nCurrently the code i...",
+      "metadata": {
+        "commit_count": 3,
+        "file_path": "keras/saving/metrics_serialization_test.py",
+        "chunk_index": 0,
+        "language": "python",
+        "strategy": "compressed",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.8668832182884216
+    },
+    {
+      "content": "# File: keras/legacy_tf_layers/convolutional_test.py (python)\n\n## Key Code Elements:\nfrom __future__ import absolute_import\nfrom __future__ import division\nfrom __future__ import print_function\nimport tensorflow.compat.v2 as tf\nimport numpy as np\nfrom keras.legacy_tf_layers import convolutional as conv_layers\nclass ConvTest(tf.test.TestCase):\n  def testInvalidDataFormat(self):\n    with self.assertRaisesRegex(ValueError, 'data_format'):\n  def testInvalidStrides(self):\n    with self.assertRaisesRegex(ValueError, 'strides'):\n    with self.assertRaisesRegex(ValueError, 'strides'):\n  def testInvalidKernelSize(self):\n    with self.assertRaisesRegex(ValueError, 'kernel_size'):\n    with self.assertRaisesRegex(ValueError, 'kernel_size'):\n\n## Recent Changes:\n- a4aeb375 by Haifeng Jin (haifengj@google.com): Improve error messages in convolutional.py.\n\nPiperOrigin-RevId: 389291450...\n- 0f8da5a7 by Scott Zhu (scottzhu@google.com): Update keras to import tensorflow.compat.v2 as tf.\n\nThis is to avoid issue when tf is build with tf_...\n- 4fd825dd by Keras Team (keras-team@google.com): Initial commit for tensorflow/python/keras to Github project keras-team/keras.\n\nCurrently the code i...",
+      "metadata": {
+        "commit_count": 3,
+        "language": "python",
+        "file_path": "keras/legacy_tf_layers/convolutional_test.py",
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.8717410564422607
+    },
+    {
+      "content": "# File: keras/layers/kernelized_test.py (python)\n\n## Key Code Elements:\nimport tensorflow.compat.v2 as tf\nimport functools\nimport math\nimport os\nimport shutil\nfrom absl.testing import parameterized\nimport numpy as np\nfrom tensorflow.python.framework import test_util\nfrom keras import backend as keras_backend\nfrom keras import combinations\nfrom keras import initializers\nfrom keras import testing_utils\nfrom keras.engine import base_layer_utils\nfrom keras.engine import input_layer\nfrom keras.engine import training\n\n## Recent Changes:\n- b0d33577 by Scott Zhu (scottzhu@google.com): Update keras RNG logic to use tf.random.Generator if possible.\n\nThis change also update the RNG beha...\n- fdf91ec0 by Francois Chollet (fchollet@google.com): Improve a number of error messages in Keras layers.\n\nPiperOrigin-RevId: 387883278...\n- d71247dc by Scott Zhu (scottzhu@google.com): Sync OSS keras.\n\nPiperOrigin-RevId: 365115170...",
+      "metadata": {
+        "commit_count": 5,
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "file_path": "keras/layers/kernelized_test.py",
+        "language": "python"
+      },
+      "similarity_score": 0.8937869071960449
+    },
+    {
+      "content": "# File: keras/saving/losses_serialization_test.py (python)\n\n## Key Code Elements:\nimport tensorflow.compat.v2 as tf\nimport os\nimport shutil\nfrom absl.testing import parameterized\nimport numpy as np\nimport keras\nfrom keras import keras_parameterized\nfrom keras import layers\nfrom keras import losses\nfrom keras import optimizer_v2\nfrom keras import testing_utils\nfrom keras.utils import generic_utils\nfrom keras.utils import losses_utils\ntry:\n  import h5py  # pylint:disable=g-import-not-at-top\n\n## Recent Changes:\n- d71247dc by Scott Zhu (scottzhu@google.com): Sync OSS keras.\n\nPiperOrigin-RevId: 365115170...\n- 0f8da5a7 by Scott Zhu (scottzhu@google.com): Update keras to import tensorflow.compat.v2 as tf.\n\nThis is to avoid issue when tf is build with tf_...\n- 4fd825dd by Keras Team (keras-team@google.com): Initial commit for tensorflow/python/keras to Github project keras-team/keras.\n\nCurrently the code i...",
+      "metadata": {
+        "strategy": "compressed",
+        "language": "python",
+        "total_chunks": 1,
+        "commit_count": 3,
+        "file_path": "keras/saving/losses_serialization_test.py",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.9052679538726807
+    },
+    {
+      "content": "# File: keras/engine/keras_tensor.py (python)\n\n## Key Code Elements:\nfrom keras.utils import object_identity\nimport tensorflow.compat.v2 as tf\nfrom tensorflow.python.data.util import structure  # pylint: disable=g-direct-tensorflow-import\nclass KerasTensor:\n  Currently, layers infer the output signature by:\n  **Automatically converting TF APIs to layers**:\n  Args:\n  def __init__(self, type_spec, inferred_value=None, name=None):\n    if not isinstance(type_spec, tf.TypeSpec):\n    if not isinstance(type_spec, structure.NoneTensorSpec):\n      if not hasattr(type_spec, 'shape'):\n      if not isinstance(type_spec.shape, tf.TensorShape):\n  @property\n  def type_spec(self):\n  @property\n\n## Recent Changes:\n- 6ad41681 by Edward Loper (edloper@google.com): Fix bug in KerasTensor.set_shape, where kt.set_shape(None) would erase existing shape information.  ...\n- f9d66e63 by Edward Loper (edloper@google.com): Change KerasTensor.set_shape back to mutate the nested TensorSpec in-place.\n\nPiperOrigin-RevId: 4047...\n- 53ea41ba by Edward Loper (edloper@google.com): Update type_spec_with_shape to use public APIs (instead of modifying a private field).  Modifying th...",
+      "metadata": {
+        "file_path": "keras/engine/keras_tensor.py",
+        "language": "python",
+        "chunk_index": 0,
+        "commit_count": 5,
+        "strategy": "compressed",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.9137398600578308
+    },
+    {
+      "content": "# File: keras/mixed_precision/policy.py (python)\n\n## Key Code Elements:\nimport tensorflow.compat.v2 as tf\nimport contextlib\nfrom keras import backend\nfrom keras.engine import base_layer_utils\nfrom keras.mixed_precision import device_compatibility_check\nfrom keras.mixed_precision import loss_scale as keras_loss_scale_module\nfrom keras.utils import generic_utils\nfrom tensorflow.python.platform import tf_logging\nfrom tensorflow.python.util.tf_export import keras_export\n@keras_export('keras.mixed_precision.Policy', v1=[])\nclass Policy:\n  Args:\n  computations and output to also be in the compute dtype. For example:\n  example:\n  >>> class MyLayer(tf.keras.layers.Layer):\n\n## Recent Changes:\n- b2f6e348 by Reed Wanderman-Milne (reedwm@google.com): Rename internal set_policy function to set_global_policy.\n\nAlso change some references to the experi...\n- 0dc8e73a by Francois Chollet (fchollet@google.com): Switch class definitions to py3 conventions.\n\nPiperOrigin-RevId: 387224410...\n- 07bb88c0 by Scott Zhu (scottzhu@google.com): Sync OSS keras to head.\n\nPiperOrigin-RevId: 368072119...",
+      "metadata": {
+        "file_path": "keras/mixed_precision/policy.py",
+        "strategy": "compressed",
+        "language": "python",
+        "total_chunks": 1,
+        "commit_count": 5,
+        "chunk_index": 0
+      },
+      "similarity_score": 0.9175857901573181
+    },
+    {
+      "content": "# File: keras/engine/base_preprocessing_layer_test.py (python)\n\n## Key Code Elements:\nimport os\nimport keras\nfrom keras import keras_parameterized\nfrom keras import testing_utils\nfrom keras.engine import base_preprocessing_layer\nimport numpy as np\nimport tensorflow.compat.v2 as tf\nclass AddingPreprocessingLayer(base_preprocessing_layer.PreprocessingLayer):\n  def build(self, input_shape):\n  def update_state(self, data):\n  def reset_state(self):  # pylint: disable=method-hidden\n  def set_total(self, sum_value):\n    Args:\n  def call(self, inputs):\n@keras_parameterized.run_all_keras_modes(always_skip_v1=True)\n\n## Recent Changes:\n- d5020486 by Matt Watson (mattdangerw@google.com): Improve SavedModel error message when loading a layer fails\n\nWe should not consume all ValueErrors a...\n- 967817c2 by Matt Watson (mattdangerw@google.com): Remove convert_to_list utility in base_preprocessing_layer\n\nThis was no longer used.\n\nPiperOrigin-Re...\n- f1b19394 by Matt Watson (mattdangerw@google.com): Remove CombinerPreprocessingLayer\n\nThere is no more use of this class, all adaptable layers are port...",
+      "metadata": {
+        "language": "python",
+        "file_path": "keras/engine/base_preprocessing_layer_test.py",
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "commit_count": 5,
+        "chunk_index": 0
+      },
+      "similarity_score": 0.9213179349899292
+    },
+    {
+      "content": "# File: keras/utils/np_utils_test.py (python)\n\n## Key Code Elements:\nimport tensorflow.compat.v2 as tf\nimport numpy as np\nfrom keras.utils import np_utils\nclass TestNPUtils(tf.test.TestCase):\n  def test_to_categorical(self):\n                                              expected_shapes):\nif __name__ == '__main__':\n\n## Recent Changes:\n- d71247dc by Scott Zhu (scottzhu@google.com): Sync OSS keras.\n\nPiperOrigin-RevId: 365115170...\n- 0f8da5a7 by Scott Zhu (scottzhu@google.com): Update keras to import tensorflow.compat.v2 as tf.\n\nThis is to avoid issue when tf is build with tf_...\n- 4fd825dd by Keras Team (keras-team@google.com): Initial commit for tensorflow/python/keras to Github project keras-team/keras.\n\nCurrently the code i...",
+      "metadata": {
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "commit_count": 3,
+        "file_path": "keras/utils/np_utils_test.py",
+        "language": "python"
+      },
+      "similarity_score": 0.9219222068786621
+    },
+    {
+      "content": "# File: keras/mixed_precision/testdata/BUILD (text)\n\n## Key Code Elements:\n# Description:\n# 2.2rc2. The final release of TF 2.2 was not out when this change was created.:\n\n## Recent Changes:\n- 42bf9972 by Scott Zhu (scottzhu@google.com): Add a \"keras friends\" target which contains Keras and its related packages.\n\nPiperOrigin-RevId: 4074...\n- 88f9cd32 by Scott Zhu (scottzhu@google.com): Sync OSS keras to head.\n\nPiperOrigin-RevId: 366078524...\n- 4fd825dd by Keras Team (keras-team@google.com): Initial commit for tensorflow/python/keras to Github project keras-team/keras.\n\nCurrently the code i...",
+      "metadata": {
+        "commit_count": 3,
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "file_path": "keras/mixed_precision/testdata/BUILD",
+        "language": "text"
+      },
+      "similarity_score": 0.9292844533920288
+    },
+    {
+      "content": "# File: keras/utils/tf_contextlib.py (python)\n\n## Key Code Elements:\nimport tensorflow.compat.v2 as tf\nimport contextlib as _contextlib\ndef contextmanager(target):\n  Args:\n  Returns:\n\n## Recent Changes:\n- d71247dc by Scott Zhu (scottzhu@google.com): Sync OSS keras.\n\nPiperOrigin-RevId: 365115170...\n- 0f8da5a7 by Scott Zhu (scottzhu@google.com): Update keras to import tensorflow.compat.v2 as tf.\n\nThis is to avoid issue when tf is build with tf_...\n- 4fd825dd by Keras Team (keras-team@google.com): Initial commit for tensorflow/python/keras to Github project keras-team/keras.\n\nCurrently the code i...",
+      "metadata": {
+        "strategy": "compressed",
+        "language": "python",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "commit_count": 3,
+        "file_path": "keras/utils/tf_contextlib.py"
+      },
+      "similarity_score": 0.9313226342201233
+    },
+    {
+      "content": "# File: keras/distribute/model_combinations.py (python)\n\n## Key Code Elements:\nimport tensorflow.compat.v2 as tf\nfrom keras.distribute import simple_models\n\n## Recent Changes:\n- d71247dc by Scott Zhu (scottzhu@google.com): Sync OSS keras.\n\nPiperOrigin-RevId: 365115170...\n- 0f8da5a7 by Scott Zhu (scottzhu@google.com): Update keras to import tensorflow.compat.v2 as tf.\n\nThis is to avoid issue when tf is build with tf_...\n- 4fd825dd by Keras Team (keras-team@google.com): Initial commit for tensorflow/python/keras to Github project keras-team/keras.\n\nCurrently the code i...",
+      "metadata": {
+        "commit_count": 3,
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "file_path": "keras/distribute/model_combinations.py",
+        "language": "python"
+      },
+      "similarity_score": 0.9329255223274231
+    },
+    {
+      "content": "# File: keras/metrics_correctness_test.py (python)\n\n## Key Code Elements:\nimport tensorflow.compat.v2 as tf\nfrom absl.testing import parameterized\nimport numpy as np\nfrom keras import keras_parameterized\nfrom keras import layers\nfrom keras import losses\nfrom keras import metrics\nfrom keras import testing_utils\nfrom keras.utils import losses_utils\ndef get_multi_io_model():\ndef custom_generator_multi_io(sample_weights=None):\n  while True:\n    if start > num_samples:\n    if sample_weights:\n    else:\n\n## Recent Changes:\n- d71247dc by Scott Zhu (scottzhu@google.com): Sync OSS keras.\n\nPiperOrigin-RevId: 365115170...\n- 0f8da5a7 by Scott Zhu (scottzhu@google.com): Update keras to import tensorflow.compat.v2 as tf.\n\nThis is to avoid issue when tf is build with tf_...\n- 0becb1fc by Scott Zhu (scottzhu@google.com): Move the LossReduction class from tf to Keras.\n\nPiperOrigin-RevId: 351654535...",
+      "metadata": {
+        "language": "python",
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "commit_count": 4,
+        "file_path": "keras/metrics_correctness_test.py",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.9355059862136841
+    },
+    {
+      "content": "# File: keras/layers/embeddings.py (python)\n\n## Key Code Elements:\nimport tensorflow.compat.v2 as tf\nfrom keras import backend\nfrom keras import constraints\nfrom keras import initializers\nfrom keras import regularizers\nfrom keras.engine import base_layer_utils\nfrom keras.engine.base_layer import Layer\nfrom keras.utils import tf_utils\nfrom tensorflow.python.util.tf_export import keras_export\n@keras_export('keras.layers.Embedding')\nclass Embedding(Layer):\n  Example:\n  Args:\n  Input shape:\n  Output shape:\n\n## Recent Changes:\n- acfed7be by Matt Watson (mattdangerw@google.com): Documentation updates for keras preprocessing layers\n\nDocument each adapt, and cross link StringLook...\n- 8a4074b3 by Scott Zhu (scottzhu@google.com): Update error messages for several keras/layers\n\nPiperOrigin-RevId: 389050188...\n- 8a96b50b by Scott Zhu (scottzhu@google.com): Sync OSS keras to head.\n\nPiperOrigin-RevId: 365861361...",
+      "metadata": {
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "commit_count": 5,
+        "language": "python",
+        "file_path": "keras/layers/embeddings.py"
+      },
+      "similarity_score": 0.944858729839325
+    },
+    {
+      "content": "# File: keras/layers/preprocessing/preprocessing_stage.py (python)\n\n## Key Code Elements:\nimport tensorflow.compat.v2 as tf\nimport numpy as np\nfrom keras.engine import base_preprocessing_layer\nfrom keras.engine import functional\nfrom keras.engine import sequential\nfrom keras.utils import tf_utils\nclass PreprocessingStage(sequential.Sequential,\n                         base_preprocessing_layer.PreprocessingLayer):\n  Args:\n  def adapt(self, data, reset_state=True):\n    Args:\n        data, (tf.data.Dataset, np.ndarray, tf.__internal__.EagerTensor)):\n    if isinstance(data, tf.data.Dataset):\n      if tf_utils.dataset_is_infinite(data):\n    for current_layer_index in range(0, len(self.layers)):\n\n## Recent Changes:\n- d67a43aa by Kian-Meng, Ang (kianmeng@cpan.org): Fix typos...\n- d8f79581 by A. Unique TensorFlower (gardener@tensorflow.org): Improve a number of error messages for keras layer\n\nPiperOrigin-RevId: 390304623...\n- 10b165f0 by slowy07 (slowy.arfy@gmail.com): fix: typo spelling...",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "keras/layers/preprocessing/preprocessing_stage.py",
+        "language": "python",
+        "commit_count": 5,
+        "strategy": "compressed",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.9485362768173218
+    },
+    {
+      "content": "# File: keras/layers/embeddings_test.py (python)\n\n## Key Code Elements:\nimport keras\nfrom keras import combinations\nfrom keras import keras_parameterized\nfrom keras import testing_utils\nfrom keras.mixed_precision import policy\nimport numpy as np\nimport tensorflow.compat.v2 as tf\nclass EmbeddingTest(keras_parameterized.TestCase):\n  @keras_parameterized.run_all_keras_modes\n  def test_embedding(self):\n    if tf.test.is_gpu_available():\n  @keras_parameterized.run_all_keras_modes\n  def test_embedding_correctness(self):\n  def test_embedding_incorrect_dimension(self):\n    with self.assertRaises(ValueError):\n\n## Recent Changes:\n- b2f6e348 by Reed Wanderman-Milne (reedwm@google.com): Rename internal set_policy function to set_global_policy.\n\nAlso change some references to the experi...\n- 948df87f by Luke Wood (lukewood@google.com): Refactor `core.py` into smaller logically organized files hosted under a `core` directory.\n\nPiperOri...\n- beb579d5 by Kuangyuan Chen (chky@google.com): Refactor `core.py` into smaller logically organized files hosted under a `core` directory.\n\nPiperOri...",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "commit_count": 5,
+        "total_chunks": 1,
+        "file_path": "keras/layers/embeddings_test.py",
+        "language": "python"
+      },
+      "similarity_score": 0.9500863552093506
+    },
+    {
+      "content": "# File: keras/datasets/cifar100.py (python)\n\n## Key Code Elements:\nimport os\nimport numpy as np\nfrom keras import backend\nfrom keras.datasets.cifar import load_batch\nfrom keras.utils.data_utils import get_file\nfrom tensorflow.python.util.tf_export import keras_export\n@keras_export('keras.datasets.cifar100.load_data')\ndef load_data(label_mode='fine'):\n  Args:\n  Returns:\n    from 0 to 255.\n    from 0 to 255.\n  Example:\n  if label_mode not in ['fine', 'coarse']:\n  if backend.image_data_format() == 'channels_last':\n\n## Recent Changes:\n- 59d53edd by Rishit Dagli (rishit.dagli@gmail.com): Fix a minor typo in CIFAR-100 README...\n- 09e95711 by Rick Chao (rchao@google.com): TF error message fixit: keras/datasets/cifar100.\n\nPiperOrigin-RevId: 388993480...\n- d71247dc by Scott Zhu (scottzhu@google.com): Sync OSS keras.\n\nPiperOrigin-RevId: 365115170...",
+      "metadata": {
+        "file_path": "keras/datasets/cifar100.py",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "language": "python",
+        "strategy": "compressed",
+        "commit_count": 5
+      },
+      "similarity_score": 0.9539575576782227
+    }
+  ]
+}

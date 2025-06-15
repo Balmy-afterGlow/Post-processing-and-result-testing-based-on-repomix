@@ -1,0 +1,7 @@
+{
+  "reason": "The issue highlights that the current documentation for `Flow.timeout` suggests using a generic `catch {}` operator without specifying how to handle `TimeoutCancellationException` specifically, which could lead to catching all exceptions unintentionally.",
+  "location": [
+    "kotlinx-coroutines-core/common/src/flow/operators/Delay.kt"
+  ],
+  "fix": "Update the documentation example to explicitly check for `TimeoutCancellationException` in the `catch` block, rethrowing other exceptions to maintain exception transparency. The suggested fix is to modify the example to include an explicit check for `TimeoutCancellationException`."
+}

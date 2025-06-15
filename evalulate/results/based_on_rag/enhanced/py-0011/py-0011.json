@@ -1,0 +1,7 @@
+{
+  "reason": "The validation code for the `filters` parameter in `Conv2D` layer only checks for negative values but not zero, which contradicts the error message stating that a positive value is expected.",
+  "location": [
+    "tensorflow/python/keras/layers/convolutional.py"
+  ],
+  "fix": "if filters is not None and filters <= 0:\n      raise ValueError(f'Received a non-positive value for `filters`.'\n                       f'Was expecting a positive value, got {filters}.')"
+}

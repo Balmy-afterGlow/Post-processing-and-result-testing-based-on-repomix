@@ -1,5 +1,12 @@
 import json
-from ..configs.prompts import system_prompt, format_user_prompt_from_rag
+import sys
+from pathlib import Path
+
+current_dir = Path(__file__).parent
+configs_dir = current_dir.parent / "configs"
+sys.path.insert(0, str(configs_dir))
+
+from prompts import system_prompt, format_user_prompt_from_rag
 
 
 def compose_chat_with_rag(

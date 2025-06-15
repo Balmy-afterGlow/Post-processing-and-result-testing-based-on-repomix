@@ -1,0 +1,7 @@
+{
+  "reason": "ActivityManager.getRunningAppProcesses() can return null, but LeakCanaryInternals.isInServiceProcess() doesn't handle this case, leading to a NullPointerException when trying to iterate over the null list.",
+  "location": [
+    "leakcanary-android/src/main/java/com/squareup/leakcanary/internal/LeakCanaryInternals.java"
+  ],
+  "fix": "Add a null check for the list returned by ActivityManager.getRunningAppProcesses() in the isInServiceProcess() method. The fix should look like:\n\nList<ActivityManager.RunningAppProcessInfo> runningProcesses = activityManager.getRunningAppProcesses();\nif (runningProcesses == null) {\n  return false;\n}\n// Continue with existing iteration code"
+}

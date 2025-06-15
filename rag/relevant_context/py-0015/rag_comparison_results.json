@@ -1,0 +1,708 @@
+{
+  "basic": [
+    {
+      "content": "# File: applications/Chat/coati/trainer/__init__.py (python)\n\n## Code Content:\n```python\nfrom .base import Trainer\nfrom .ppo import PPOTrainer\nfrom .rm import RewardModelTrainer\nfrom .sft import SFTTrainer\n\n__all__ = ['Trainer', 'PPOTrainer', 'RewardModelTrainer', 'SFTTrainer']\n```",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "python",
+        "total_chunks": 1,
+        "file_path": "applications/Chat/coati/trainer/__init__.py",
+        "strategy": "basic"
+      },
+      "similarity_score": 0.9365625381469727
+    },
+    {
+      "content": "class ChatPromptProcessor:\n    SAFE_RESPONSE = 'The input/response contains inappropriate content, please rephrase your prompt.'\n\n    def __init__(self, tokenizer, context: str, max_len: int = 2048, censored_words: List[str]=[]):\n        self.tokenizer = tokenizer\n        self.context = context\n        self.max_len = max_len\n        self.censored_words = set([word.lower() for word in censored_words])\n        # These will be initialized after the first call of preprocess_prompt()\n        self.context_len: Optional[int] = None\n        self.dialogue_placeholder_len: Optional[int] = None",
+      "metadata": {
+        "total_chunks": 6,
+        "file_path": "applications/Chat/inference/utils.py",
+        "strategy": "basic",
+        "chunk_index": 3,
+        "language": "python"
+      },
+      "similarity_score": 1.0044158697128296
+    },
+    {
+      "content": "# File: applications/Chat/coati/experience_maker/__init__.py (python)\n\n## Code Content:\n```python\nfrom .base import Experience, ExperienceMaker\nfrom .naive import NaiveExperienceMaker\n\n__all__ = ['Experience', 'ExperienceMaker', 'NaiveExperienceMaker']\n```",
+      "metadata": {
+        "total_chunks": 1,
+        "file_path": "applications/Chat/coati/experience_maker/__init__.py",
+        "chunk_index": 0,
+        "strategy": "basic",
+        "language": "python"
+      },
+      "similarity_score": 1.0159602165222168
+    },
+    {
+      "content": "# File: applications/Chat/coati/dataset/prompt_dataset.py (python)\n\n## Code Content:\n```python\nimport copy\nimport random\nfrom dataclasses import dataclass, field\nfrom typing import Callable, Dict, Sequence\n\nimport torch\nimport torch.distributed as dist\nimport transformers\nfrom torch.utils.data import Dataset\nfrom tqdm import tqdm\n\nfrom colossalai.logging import get_dist_logger\n\nfrom .utils import is_rank_0, jload\n\nlogger = get_dist_logger()\n\n\nclass PromptDataset(Dataset):\n    \"\"\"Dataset for supervised fine-tuning.\"\"\"\n\n    def __init__(self, data_path: str, tokenizer: transformers.PreTrainedTokenizer, max_datasets_size: int = None):\n        super(PromptDataset, self).__init__()\n        self.prompt = []\n        logger.info(\"Loading data...\")\n        list_data_dict = jload(data_path)\n        logger.info(f\"Loaded {len(list_data_dict)} examples.\")\n\n        if max_datasets_size is not None:\n            logger.info(f\"Limiting dataset to {max_datasets_size} examples.\")\n            list_data_dict = list_data_dict[:max_datasets_size]\n\n        for data_dict in list_data_dict:\n            token = tokenizer(data_dict[\"instruction\"],\n                              return_tensors='pt',\n                              max_length=96,\n                              padding='max_length',\n                              truncation=True)\n            for idx in token['input_ids']:\n                self.prompt.append(idx.to(torch.cuda.current_device()))\n\n    def __len__(self):\n        return len(self.prompt)\n\n    def __getitem__(self, i) -> Dict[str, torch.Tensor]:\n        return self.prompt[i]\n```",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "applications/Chat/coati/dataset/prompt_dataset.py",
+        "strategy": "basic",
+        "language": "python",
+        "total_chunks": 1
+      },
+      "similarity_score": 1.041268229484558
+    },
+    {
+      "content": "# File: applications/Chat/coati/trainer/callbacks/__init__.py (python)\n\n## Code Content:\n```python\nfrom .base import Callback\nfrom .performance_evaluator import PerformanceEvaluator\nfrom .save_checkpoint import SaveCheckpoint\n\n__all__ = ['Callback', 'PerformanceEvaluator', 'SaveCheckpoint']\n```",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "applications/Chat/coati/trainer/callbacks/__init__.py",
+        "language": "python",
+        "strategy": "basic",
+        "total_chunks": 1
+      },
+      "similarity_score": 1.043627381324768
+    },
+    {
+      "content": "# File: applications/Chat/coati/ray/__init__.py (python)\n\n## Code Content:\n```python\nfrom .src.detached_replay_buffer import DetachedReplayBuffer\nfrom .src.detached_trainer_ppo import DetachedPPOTrainer\n```",
+      "metadata": {
+        "total_chunks": 1,
+        "language": "python",
+        "file_path": "applications/Chat/coati/ray/__init__.py",
+        "strategy": "basic",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.0579484701156616
+    },
+    {
+      "content": "# File: applications/Chat/coati/replay_buffer/__init__.py (python)\n\n## Code Content:\n```python\nfrom .base import ReplayBuffer\nfrom .naive import NaiveReplayBuffer\n\n__all__ = ['ReplayBuffer', 'NaiveReplayBuffer']\n```",
+      "metadata": {
+        "total_chunks": 1,
+        "language": "python",
+        "strategy": "basic",
+        "file_path": "applications/Chat/coati/replay_buffer/__init__.py",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.0592567920684814
+    },
+    {
+      "content": "# File: applications/Chat/examples/train_prompts.py (python)\n\n## Code Content:\n```python\nimport argparse\n\nimport pandas as pd\nimport torch\nimport torch.distributed as dist\nfrom coati.dataset import DataCollatorForSupervisedDataset, PromptDataset, SupervisedDataset\nfrom coati.models.bloom import BLOOMRM, BLOOMActor, BLOOMCritic\nfrom coati.models.gpt import GPTRM, GPTActor, GPTCritic\nfrom coati.models.llama import LlamaActor, LlamaCritic, LlamaRM\nfrom coati.models.opt import OPTRM, OPTActor, OPTCritic\nfrom coati.models.roberta import RoBERTaRM, RoBERTaActor, RoBERTaCritic\nfrom coati.trainer import PPOTrainer\nfrom coati.trainer.strategies import ColossalAIStrategy, DDPStrategy, NaiveStrategy\nfrom coati.utils import prepare_llama_tokenizer_and_embedding\nfrom torch.optim import Adam\nfrom torch.utils.data import DataLoader\nfrom torch.utils.data.distributed import DistributedSampler\nfrom transformers import AutoTokenizer, BloomTokenizerFast, GPT2Tokenizer, LlamaTokenizer, RobertaTokenizer\n\nfrom colossalai.nn.optimizer import HybridAdam\n\n\ndef main(args):\n    # configure strategy\n    if args.strategy == 'naive':\n        strategy = NaiveStrategy()\n    elif args.strategy == 'ddp':\n        strategy = DDPStrategy()\n    elif args.strategy == 'colossalai_gemini':\n        strategy = ColossalAIStrategy(stage=3, placement_policy='cuda', initial_scale=2**5)\n    elif args.strategy == 'colossalai_zero2':\n        strategy = ColossalAIStrategy(stage=2, placement_policy='cuda')\n    else:\n        raise ValueError(f'Unsupported strategy \"{args.strategy}\"')\n\n    if args.rm_path is not None:\n        state_dict = torch.load(args.rm_path, map_location='cpu')",
+      "metadata": {
+        "total_chunks": 7,
+        "strategy": "basic",
+        "chunk_index": 0,
+        "language": "python",
+        "file_path": "applications/Chat/examples/train_prompts.py"
+      },
+      "similarity_score": 1.0697075128555298
+    },
+    {
+      "content": "# File: applications/Chat/coati/trainer/strategies/__init__.py (python)\n\n## Code Content:\n```python\nfrom .base import Strategy\nfrom .colossalai import ColossalAIStrategy\nfrom .ddp import DDPStrategy\nfrom .naive import NaiveStrategy\n\n__all__ = ['Strategy', 'NaiveStrategy', 'DDPStrategy', 'ColossalAIStrategy']\n```",
+      "metadata": {
+        "language": "python",
+        "file_path": "applications/Chat/coati/trainer/strategies/__init__.py",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "strategy": "basic"
+      },
+      "similarity_score": 1.0750913619995117
+    },
+    {
+      "content": "# File: colossalai/trainer/__init__.py (python)\n\n## Code Content:\n```python\nfrom ._trainer import Trainer\n\n__all__ = ['Trainer']\n```",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "python",
+        "total_chunks": 1,
+        "strategy": "basic",
+        "file_path": "colossalai/trainer/__init__.py"
+      },
+      "similarity_score": 1.090385913848877
+    },
+    {
+      "content": "# File: applications/Chat/coati/models/base/__init__.py (python)\n\n## Code Content:\n```python\nfrom .actor import Actor\nfrom .critic import Critic\nfrom .lm import LM\nfrom .reward_model import RewardModel\n\n__all__ = ['Actor', 'Critic', 'RewardModel', 'LM']\n```",
+      "metadata": {
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "strategy": "basic",
+        "language": "python",
+        "file_path": "applications/Chat/coati/models/base/__init__.py"
+      },
+      "similarity_score": 1.094241738319397
+    },
+    {
+      "content": "# File: applications/Chat/coati/trainer/base.py (python)\n\n## Code Content:\n```python\nfrom abc import ABC, abstractmethod\nfrom typing import Any, Callable, Dict, List, Optional, Union\n\nimport torch\nfrom coati.experience_maker import Experience\n\nfrom .callbacks import Callback\nfrom .strategies import Strategy\n\n\nclass Trainer(ABC):\n    \"\"\"\n        Base class for rlhf trainers.\n\n    Args:\n        strategy (Strategy):the strategy to use for training\n        max_epochs (int, defaults to 1): the number of epochs of training process\n        tokenizer (Callable, optional): the tokenizer to use for tokenizing the input\n        dataloader_pin_memory (bool, defaults to True): whether to pin memory for data loader\n        callbacks (List[Callback], defaults to []): the callbacks to call during training process\n        generate_kwargs (dict, optional): the kwargs to use while model generating\n    \"\"\"\n\n    def __init__(self,\n                 strategy: Strategy,\n                 max_epochs: int = 1,\n                 tokenizer: Optional[Callable[[Any], dict]] = None,\n                 dataloader_pin_memory: bool = True,\n                 callbacks: List[Callback] = [],\n                 **generate_kwargs) -> None:\n        super().__init__()\n        self.strategy = strategy\n        self.max_epochs = max_epochs\n        self.tokenizer = tokenizer\n        self.generate_kwargs = generate_kwargs\n        self.dataloader_pin_memory = dataloader_pin_memory\n        self.callbacks = callbacks\n\n    # TODO(ver217): maybe simplify these code using context\n    def _on_fit_start(self) -> None:\n        for callback in self.callbacks:\n            callback.on_fit_start()\n\n    def _on_fit_end(self) -> None:\n        for callback in self.callbacks:\n            callback.on_fit_end()\n\n    def _on_episode_start(self, episode: int) -> None:\n        for callback in self.callbacks:\n            callback.on_episode_start(episode)",
+      "metadata": {
+        "total_chunks": 2,
+        "language": "python",
+        "file_path": "applications/Chat/coati/trainer/base.py",
+        "chunk_index": 0,
+        "strategy": "basic"
+      },
+      "similarity_score": 1.0946608781814575
+    },
+    {
+      "content": "# File: applications/Chat/setup.py (python)\n\n## Code Content:\n```python\nfrom setuptools import find_packages, setup\n\n\ndef fetch_requirements(path):\n    with open(path, 'r') as fd:\n        return [r.strip() for r in fd.readlines()]\n\n\ndef fetch_readme():\n    with open('README.md', encoding='utf-8') as f:\n        return f.read()\n\n\ndef fetch_version():\n    with open('version.txt', 'r') as f:\n        return f.read().strip()\n\n\nsetup(\n    name='coati',\n    version=fetch_version(),\n    packages=find_packages(exclude=(\n        'tests',\n        'benchmarks',\n        '*.egg-info',\n    )),\n    description='Colossal-AI Talking Intelligence',\n    long_description=fetch_readme(),\n    long_description_content_type='text/markdown',\n    license='Apache Software License 2.0',\n    url='https://github.com/hpcaitech/Coati',\n    install_requires=fetch_requirements('requirements.txt'),\n    python_requires='>=3.6',\n    classifiers=[\n        'Programming Language :: Python :: 3',\n        'License :: OSI Approved :: Apache Software License',\n        'Environment :: GPU :: NVIDIA CUDA',\n        'Topic :: Scientific/Engineering :: Artificial Intelligence',\n        'Topic :: System :: Distributed Computing',\n    ],\n)\n```",
+      "metadata": {
+        "strategy": "basic",
+        "file_path": "applications/Chat/setup.py",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "language": "python"
+      },
+      "similarity_score": 1.0947718620300293
+    },
+    {
+      "content": "# File: applications/Chat/coati/replay_buffer/naive.py (python)\n\n## Code Content:\n```python\nimport random\nfrom typing import List\n\nimport torch\nfrom coati.experience_maker.base import Experience\n\nfrom .base import ReplayBuffer\nfrom .utils import BufferItem, make_experience_batch, split_experience_batch\n\n\nclass NaiveReplayBuffer(ReplayBuffer):\n    \"\"\"Naive replay buffer class. It stores experience.\n\n     Args:\n         sample_batch_size (int): Batch size when sampling.\n         limit (int, optional): Limit of number of experience samples. A number <= 0 means unlimited. Defaults to 0.\n         cpu_offload (bool, optional): Whether to offload experience to cpu when sampling. Defaults to True.\n    \"\"\"\n\n    def __init__(self, sample_batch_size: int, limit: int = 0, cpu_offload: bool = True) -> None:\n        super().__init__(sample_batch_size, limit)\n        self.cpu_offload = cpu_offload\n        self.target_device = torch.device(f'cuda:{torch.cuda.current_device()}')\n        # TODO(ver217): add prefetch\n        self.items: List[BufferItem] = []\n\n    @torch.no_grad()\n    def append(self, experience: Experience) -> None:\n        if self.cpu_offload:\n            experience.to_device(torch.device('cpu'))\n        items = split_experience_batch(experience)\n        self.items.extend(items)\n        if self.limit > 0:\n            samples_to_remove = len(self.items) - self.limit\n            if samples_to_remove > 0:\n                self.items = self.items[samples_to_remove:]\n\n    def clear(self) -> None:\n        self.items.clear()\n\n    @torch.no_grad()\n    def sample(self) -> Experience:\n        items = random.sample(self.items, self.sample_batch_size)\n        experience = make_experience_batch(items)\n        if self.cpu_offload:\n            experience.to_device(self.target_device)\n        return experience\n\n    def __len__(self) -> int:\n        return len(self.items)\n\n    def __getitem__(self, idx: int) -> BufferItem:\n        return self.items[idx]",
+      "metadata": {
+        "language": "python",
+        "total_chunks": 2,
+        "strategy": "basic",
+        "file_path": "applications/Chat/coati/replay_buffer/naive.py",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.104651927947998
+    },
+    {
+      "content": "# File: applications/Chat/coati/trainer/rm.py (python)\n\n## Code Content:\n```python\nfrom datetime import datetime\nfrom typing import Optional, List\n\nimport pandas as pd\nimport torch\nimport torch.distributed as dist\nfrom torch.optim import Optimizer, lr_scheduler\nfrom torch.utils.data import DataLoader, Dataset, DistributedSampler\nfrom tqdm import tqdm\nfrom transformers.tokenization_utils_base import PreTrainedTokenizerBase\n\nfrom .callbacks import Callback\nfrom .base import Trainer\nfrom .strategies import Strategy\nfrom .utils import is_rank_0\n\n\nclass RewardModelTrainer(Trainer):\n    \"\"\"\n        Trainer to use while training reward model.\n\n    Args:\n        model (torch.nn.Module): the model to train\n        strategy (Strategy): the strategy to use for training\n        optim(Optimizer): the optimizer to use for training\n        loss_fn (callable): the loss function to use for training\n        train_dataloader (DataLoader): the dataloader to use for training\n        valid_dataloader (DataLoader): the dataloader to use for validation\n        eval_dataloader (DataLoader): the dataloader to use for evaluation\n        batch_size (int, defaults to 1): the batch size while training\n        max_epochs (int, defaults to 2): the number of epochs to train\n        callbacks (List[Callback], defaults to []): the callbacks to call during training process\n    \"\"\"\n\n    def __init__(\n        self,\n        model,\n        strategy: Strategy,\n        optim: Optimizer,\n        loss_fn,\n        train_dataloader: DataLoader,\n        valid_dataloader: DataLoader,\n        eval_dataloader: DataLoader,\n        batch_size: int = 1,\n        max_epochs: int = 1,\n        callbacks: List[Callback] = [],\n    ) -> None:\n        super().__init__(strategy, max_epochs, callbacks=callbacks)\n        train_sampler = None\n\n        self.train_dataloader = train_dataloader\n        self.valid_dataloader = valid_dataloader\n        self.eval_dataloader = eval_dataloader",
+      "metadata": {
+        "language": "python",
+        "chunk_index": 0,
+        "total_chunks": 4,
+        "file_path": "applications/Chat/coati/trainer/rm.py",
+        "strategy": "basic"
+      },
+      "similarity_score": 1.1076797246932983
+    },
+    {
+      "content": "# File: applications/Chat/coati/trainer/strategies/base.py (python)\n\n## Code Content:\n```python\nfrom abc import ABC, abstractmethod\nfrom contextlib import nullcontext\nfrom typing import Any, List, Optional, Tuple, Union\n\nimport numpy as np\nimport torch\nimport torch.nn as nn\nfrom coati.models.base import LM, Actor, Critic, RewardModel\nfrom coati.replay_buffer import ReplayBuffer\nfrom torch.optim import Optimizer\nfrom torch.utils.data import DataLoader\nfrom transformers.tokenization_utils_base import PreTrainedTokenizerBase\n\nfrom .sampler import DistributedSampler\n\nModelOptimPair = Tuple[nn.Module, Optimizer]\nModelOrModelOptimPair = Union[nn.Module, ModelOptimPair]\n\n\nclass Strategy(ABC):\n    \"\"\"\n        Base class for training strategies.\n    \"\"\"\n\n    def __init__(self) -> None:\n        super().__init__()\n        self.setup_distributed()\n\n    @abstractmethod\n    def backward(self, loss: torch.Tensor, model: nn.Module, optimizer: Optimizer, **kwargs) -> None:\n        pass\n\n    @abstractmethod\n    def optimizer_step(self, optimizer: Optimizer, **kwargs) -> None:\n        pass\n\n    @abstractmethod\n    def setup_distributed(self) -> None:\n        pass\n\n    @abstractmethod\n    def setup_model(self, model: nn.Module) -> nn.Module:\n        pass\n\n    @abstractmethod\n    def setup_optimizer(self, optimizer: Optimizer, model: nn.Module) -> Optimizer:\n        pass\n\n    @abstractmethod\n    def setup_dataloader(self, replay_buffer: ReplayBuffer, pin_memory: bool = False) -> DataLoader:\n        pass\n\n    def model_init_context(self):\n        return nullcontext()\n\n    def prepare(\n        self, *models_or_model_optim_pairs: ModelOrModelOptimPair\n    ) -> Union[List[ModelOrModelOptimPair], ModelOrModelOptimPair]:\n        \"\"\"Prepare models or model-optimizer-pairs based on each strategy.",
+      "metadata": {
+        "language": "python",
+        "file_path": "applications/Chat/coati/trainer/strategies/base.py",
+        "chunk_index": 0,
+        "strategy": "basic",
+        "total_chunks": 3
+      },
+      "similarity_score": 1.1098421812057495
+    },
+    {
+      "content": "# File: applications/Chat/coati/ray/src/detached_replay_buffer.py (python)\n\n## Code Content:\n```python\nimport torch\nimport random\nfrom typing import List, Any\n# from torch.multiprocessing import Queue\nfrom ray.util.queue import Queue\nimport ray\nimport asyncio\nfrom coati.experience_maker.base import Experience\nfrom coati.replay_buffer.utils import BufferItem, make_experience_batch, split_experience_batch\nfrom coati.replay_buffer import ReplayBuffer\nfrom threading import Lock\nimport copy\n\nclass DetachedReplayBuffer:\n    '''\n        Detached replay buffer. Share Experience across workers on the same node. \n        Therefore a trainer node is expected to have only one instance. \n        It is ExperienceMakerHolder's duty to call append(exp) method, remotely.\n    \n    Args:\n        sample_batch_size: Batch size when sampling. Exp won't enqueue until they formed a batch.\n        tp_world_size: Number of workers in the same tp group\n        limit: Limit of number of experience sample BATCHs. A number <= 0 means unlimited. Defaults to 0.\n        cpu_offload: Whether to offload experience to cpu when sampling. Defaults to True.\n    '''\n\n    def __init__(self, sample_batch_size: int, tp_world_size: int = 1, limit : int = 0, cpu_offload: bool = True) -> None:\n        self.cpu_offload = cpu_offload\n        self.sample_batch_size = sample_batch_size\n        self.limit = limit\n        self.items = Queue(self.limit, actor_options={\"num_cpus\":1})\n        self.batch_collector : List[BufferItem] = []\n\n        '''\n        Workers in the same tp group share this buffer and need same sample for one step.\n            Therefore a held_sample should be returned tp_world_size times before it could be dropped.\n            worker_state records wheter a worker got the held_sample\n        '''\n        self.tp_world_size = tp_world_size\n        self.worker_state = [False] * self.tp_world_size\n        self.held_sample = None\n        self._worker_state_lock = Lock()",
+      "metadata": {
+        "strategy": "basic",
+        "total_chunks": 2,
+        "language": "python",
+        "file_path": "applications/Chat/coati/ray/src/detached_replay_buffer.py",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.1101658344268799
+    },
+    {
+      "content": "# File: applications/Chat/coati/dataset/__init__.py (python)\n\n## Code Content:\n```python\nfrom .prompt_dataset import PromptDataset\nfrom .reward_dataset import HhRlhfDataset, RmStaticDataset\nfrom .sft_dataset import DataCollatorForSupervisedDataset, SFTDataset, SupervisedDataset\nfrom .utils import is_rank_0\n\n__all__ = [\n    'RmStaticDataset', 'HhRlhfDataset', 'is_rank_0', 'SFTDataset', 'SupervisedDataset',\n    'DataCollatorForSupervisedDataset', 'PromptDataset'\n]\n```",
+      "metadata": {
+        "language": "python",
+        "file_path": "applications/Chat/coati/dataset/__init__.py",
+        "total_chunks": 1,
+        "strategy": "basic",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.1104345321655273
+    },
+    {
+      "content": "args = parser.parse_args()\n    env_local_rank = int(os.environ.get(\"LOCAL_RANK\", -1))\n    if env_local_rank != -1 and env_local_rank != args.local_rank:\n        args.local_rank = env_local_rank\n\n    if args.instance_data_dir is None:\n        raise ValueError(\"You must specify a train data directory.\")\n\n    if args.with_prior_preservation:\n        if args.class_data_dir is None:\n            raise ValueError(\"You must specify a data directory for class images.\")\n        if args.class_prompt is None:\n            raise ValueError(\"You must specify prompt for class images.\")\n\n    return args\n\n\nclass DreamBoothDataset(Dataset):\n    \"\"\"\n    A dataset to prepare the instance and class images with the prompts for fine-tuning the model.\n    It pre-processes the images and the tokenizes prompts.\n    \"\"\"\n\n    def __init__(\n        self,\n        instance_data_root,\n        instance_prompt,\n        tokenizer,\n        class_data_root=None,\n        class_prompt=None,\n        size=512,\n        center_crop=False,\n    ):\n        self.size = size\n        self.center_crop = center_crop\n        self.tokenizer = tokenizer\n\n        self.instance_data_root = Path(instance_data_root)\n        if not self.instance_data_root.exists():\n            raise ValueError(\"Instance images root doesn't exists.\")\n\n        self.instance_images_path = list(Path(instance_data_root).iterdir())\n        self.num_instance_images = len(self.instance_images_path)\n        self.instance_prompt = instance_prompt\n        self._length = self.num_instance_images",
+      "metadata": {
+        "file_path": "examples/images/dreambooth/train_dreambooth_inpaint.py",
+        "strategy": "basic",
+        "chunk_index": 6,
+        "language": "python",
+        "total_chunks": 19
+      },
+      "similarity_score": 1.1118437051773071
+    },
+    {
+      "content": "# File: applications/Chat/examples/community/ray/ray_job_script.py (python)\n\n## Code Content:\n```python\nimport sys\n\nfrom ray.job_submission import JobSubmissionClient\n\n\ndef main(api_server_endpoint=\"http://127.0.0.1:8265\"):\n    client = JobSubmissionClient(api_server_endpoint)\n    client.submit_job(\n        entrypoint=\n        \"python experimental/ray/train_prompts_on_ray.py --strategy colossalai_zero2 --prompt_csv_url https://huggingface.co/datasets/fka/awesome-chatgpt-prompts/resolve/main/prompts.csv\",\n        runtime_env={\n            \"working_dir\":\n                \"applications/Chat\",\n            \"pip\": [\n                \"torch==1.13.1\", \"transformers>=4.20.1\", \"datasets\", \"loralib\", \"colossalai>=0.2.4\", \"langchain\",\n                \"tokenizers\", \"fastapi\", \"sse_starlette\", \"wandb\", \"sentencepiece\", \"gpustat\"\n            ]\n        })\n\n\nif __name__ == \"__main__\":\n    main(sys.argv[1])\n```",
+      "metadata": {
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "language": "python",
+        "strategy": "basic",
+        "file_path": "applications/Chat/examples/community/ray/ray_job_script.py"
+      },
+      "similarity_score": 1.1180579662322998
+    }
+  ],
+  "enhanced": [
+    {
+      "content": "# File: applications/Chat/coati/utils/__init__.py (python)\n\n## Code Content:\n```python\nfrom .tokenizer_utils import prepare_llama_tokenizer_and_embedding, smart_tokenizer_and_embedding_resize\n\n__all__ = ['smart_tokenizer_and_embedding_resize', 'prepare_llama_tokenizer_and_embedding']\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: e3551443\n- Author: csric (59389055+CsRic@users.noreply.github.com)\n- Date: 2023-04-17 14:46:50\n- Message: [chatgpt] Detached PPO Training (#3195)\n\n* run the base\n\n* working on dist ppo\n\n* sync\n\n* detached trainer\n\n* update detached trainer. no maker update function\n\n* facing init problem\n\n* 1 maker 1 trainer detached run. but no model update\n\n* facing cuda problem\n\n* fix save functions\n\n* verified maker update\n\n* nothing\n\n* add ignore\n\n* analyize loss issue\n\n* remove some debug codes\n\n* facing 2m1t stuck issue\n\n* 2m1t verified\n\n* do not use torchrun\n\n* working on 2m2t\n\n* working on 2m2t\n\n* initialize strategy in ray actor env\n\n* facing actor's init order issue\n\n* facing ddp model update issue (need unwarp ddp)\n\n* unwrap ddp actor\n\n* checking 1m2t stuck problem\n\n* nothing\n\n* set timeout for trainer choosing. It solves the stuck problem!\n\n* delete some debug output\n\n* rename to sync with upstream\n\n* rename to sync with upstream\n\n* coati rename\n\n* nothing\n\n* I am going to detach the replaybuffer from trainer and make it a Ray Actor. Two benefits: 1. support TP trainer. 2. asynchronized buffer operations\n\n* experience_maker_holder performs target-revolving _send_experience() instead of length comparison.\n\n* move code to ray subfolder\n\n* working on pipeline inference\n\n* apply comments\n\n---------",
+      "metadata": {
+        "total_chunks": 2,
+        "file_path": "applications/Chat/coati/utils/__init__.py",
+        "commit_count": 2,
+        "language": "python",
+        "strategy": "enhanced",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.895554780960083
+    },
+    {
+      "content": "# File: applications/Chat/coati/ray/__init__.py (python)\n\n## Code Content:\n```python\nfrom .src.detached_replay_buffer import DetachedReplayBuffer\nfrom .src.detached_trainer_ppo import DetachedPPOTrainer\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: e3551443\n- Author: csric (59389055+CsRic@users.noreply.github.com)\n- Date: 2023-04-17 14:46:50\n- Message: [chatgpt] Detached PPO Training (#3195)\n\n* run the base\n\n* working on dist ppo\n\n* sync\n\n* detached trainer\n\n* update detached trainer. no maker update function\n\n* facing init problem\n\n* 1 maker 1 trainer detached run. but no model update\n\n* facing cuda problem\n\n* fix save functions\n\n* verified maker update\n\n* nothing\n\n* add ignore\n\n* analyize loss issue\n\n* remove some debug codes\n\n* facing 2m1t stuck issue\n\n* 2m1t verified\n\n* do not use torchrun\n\n* working on 2m2t\n\n* working on 2m2t\n\n* initialize strategy in ray actor env\n\n* facing actor's init order issue\n\n* facing ddp model update issue (need unwarp ddp)\n\n* unwrap ddp actor\n\n* checking 1m2t stuck problem\n\n* nothing\n\n* set timeout for trainer choosing. It solves the stuck problem!\n\n* delete some debug output\n\n* rename to sync with upstream\n\n* rename to sync with upstream\n\n* coati rename\n\n* nothing\n\n* I am going to detach the replaybuffer from trainer and make it a Ray Actor. Two benefits: 1. support TP trainer. 2. asynchronized buffer operations\n\n* experience_maker_holder performs target-revolving _send_experience() instead of length comparison.\n\n* move code to ray subfolder\n\n* working on pipeline inference\n\n* apply comments\n\n---------\n\nCo-authored-by: csric <richcsr256@gmail.com>\n- Changes:\n```diff\n@@ -0,0 +1,2 @@\n+from .src.detached_replay_buffer import DetachedReplayBuffer\n+from .src.detached_trainer_ppo import DetachedPPOTrainer...\n```",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "enhanced",
+        "language": "python",
+        "total_chunks": 1,
+        "commit_count": 1,
+        "file_path": "applications/Chat/coati/ray/__init__.py"
+      },
+      "similarity_score": 0.9056110382080078
+    },
+    {
+      "content": "# File: applications/Chat/coati/dataset/prompt_dataset.py (python)\n\n## Code Content:\n```python\nimport copy\nimport random\nfrom dataclasses import dataclass, field\nfrom typing import Callable, Dict, Sequence\n\nimport torch\nimport torch.distributed as dist\nimport transformers\nfrom torch.utils.data import Dataset\nfrom tqdm import tqdm\n\nfrom colossalai.logging import get_dist_logger\n\nfrom .utils import is_rank_0, jload\n\nlogger = get_dist_logger()\n\n\nclass PromptDataset(Dataset):\n    \"\"\"Dataset for supervised fine-tuning.\"\"\"\n\n    def __init__(self, data_path: str, tokenizer: transformers.PreTrainedTokenizer, max_datasets_size: int = None):\n        super(PromptDataset, self).__init__()\n        self.prompt = []\n        logger.info(\"Loading data...\")\n        list_data_dict = jload(data_path)\n        logger.info(f\"Loaded {len(list_data_dict)} examples.\")\n\n        if max_datasets_size is not None:\n            logger.info(f\"Limiting dataset to {max_datasets_size} examples.\")\n            list_data_dict = list_data_dict[:max_datasets_size]\n\n        for data_dict in list_data_dict:\n            token = tokenizer(data_dict[\"instruction\"],\n                              return_tensors='pt',\n                              max_length=96,\n                              padding='max_length',\n                              truncation=True)\n            for idx in token['input_ids']:\n                self.prompt.append(idx.to(torch.cuda.current_device()))\n\n    def __len__(self):\n        return len(self.prompt)\n\n    def __getitem__(self, i) -> Dict[str, torch.Tensor]:\n        return self.prompt[i]\n```\n\n## Git Commit History",
+      "metadata": {
+        "file_path": "applications/Chat/coati/dataset/prompt_dataset.py",
+        "chunk_index": 0,
+        "language": "python",
+        "strategy": "enhanced",
+        "commit_count": 1,
+        "total_chunks": 2
+      },
+      "similarity_score": 1.041268229484558
+    },
+    {
+      "content": "Update run_chatgpt_unit_tests.yml\n\nupdate test ci\n\nupdate\n\nupdate\n\nupdate\n\nupdate\n\nUpdate test_ci.sh\n\nupdate\n\nUpdate test_ci.sh\n\nUpdate test_ci.sh\n\nUpdate run_chatgpt_examples.yml\n\nUpdate run_chatgpt_examples.yml\n- Changes:\n```diff\n@@ -24,7 +24,8 @@ class GPTCritic(Critic):\n                  config: Optional[GPT2Config] = None,\n                  checkpoint: bool = False,\n                  lora_rank: int = 0,\n-                 lora_train_bias: str = 'none') -> None:\n+                 lora_train_bias: str = 'none',\n+                 **kwargs) -> None:\n         if pretrained is not None:\n             model = GPT2Model.from_pretrained(pretrained)\n         elif config is not None:\n@@ -34,4 +35,4 @@ class GPTCritic(Critic):\n    ...\n```\n\n### Commit 2\n- ID: b0ce5a10\n- Author: Fazzie-Maqianli (55798671+Fazziekey@users.noreply.github.com)\n- Date: 2023-03-28 20:25:36\n- Message: [Coati] first commit (#3283)\n- Changes:\n```diff\n@@ -0,0 +1,37 @@\n+from typing import Optional\n+\n+import torch.nn as nn\n+from transformers.models.gpt2.configuration_gpt2 import GPT2Config\n+from transformers.models.gpt2.modeling_gpt2 import GPT2Model\n+\n+from ..base import Critic\n+\n+\n+class GPTCritic(Critic):\n+    \"\"\"\n+    GPT Critic model.\n+\n+    Args:\n+        pretrained (str): Pretrained model name or path.\n+        config (GPT2Config): Model config.\n+        checkpoint (bool): Enable gradient checkpointing.\n+        lora_rank (int): Rank of ...\n```",
+      "metadata": {
+        "commit_count": 2,
+        "language": "python",
+        "chunk_index": 2,
+        "total_chunks": 3,
+        "strategy": "enhanced",
+        "file_path": "applications/Chat/coati/models/gpt/gpt_critic.py"
+      },
+      "similarity_score": 1.047903299331665
+    },
+    {
+      "content": "# File: applications/Chat/examples/train_prompts.py (python)\n\n## Code Content:\n```python\nimport argparse\n\nimport pandas as pd\nimport torch\nimport torch.distributed as dist\nfrom coati.dataset import DataCollatorForSupervisedDataset, PromptDataset, SupervisedDataset\nfrom coati.models.bloom import BLOOMRM, BLOOMActor, BLOOMCritic\nfrom coati.models.gpt import GPTRM, GPTActor, GPTCritic\nfrom coati.models.llama import LlamaActor, LlamaCritic, LlamaRM\nfrom coati.models.opt import OPTRM, OPTActor, OPTCritic\nfrom coati.models.roberta import RoBERTaRM, RoBERTaActor, RoBERTaCritic\nfrom coati.trainer import PPOTrainer\nfrom coati.trainer.strategies import ColossalAIStrategy, DDPStrategy, NaiveStrategy\nfrom coati.utils import prepare_llama_tokenizer_and_embedding\nfrom torch.optim import Adam\nfrom torch.utils.data import DataLoader\nfrom torch.utils.data.distributed import DistributedSampler\nfrom transformers import AutoTokenizer, BloomTokenizerFast, GPT2Tokenizer, LlamaTokenizer, RobertaTokenizer\n\nfrom colossalai.nn.optimizer import HybridAdam\n\n\ndef main(args):\n    # configure strategy\n    if args.strategy == 'naive':\n        strategy = NaiveStrategy()\n    elif args.strategy == 'ddp':\n        strategy = DDPStrategy()\n    elif args.strategy == 'colossalai_gemini':\n        strategy = ColossalAIStrategy(stage=3, placement_policy='cuda', initial_scale=2**5)\n    elif args.strategy == 'colossalai_zero2':\n        strategy = ColossalAIStrategy(stage=2, placement_policy='cuda')\n    else:\n        raise ValueError(f'Unsupported strategy \"{args.strategy}\"')\n\n    if args.rm_path is not None:\n        state_dict = torch.load(args.rm_path, map_location='cpu')",
+      "metadata": {
+        "commit_count": 4,
+        "language": "python",
+        "strategy": "enhanced",
+        "chunk_index": 0,
+        "total_chunks": 10,
+        "file_path": "applications/Chat/examples/train_prompts.py"
+      },
+      "similarity_score": 1.0697075128555298
+    },
+    {
+      "content": "# File: applications/Chat/coati/trainer/__init__.py (python)\n\n## Code Content:\n```python\nfrom .base import Trainer\nfrom .ppo import PPOTrainer\nfrom .rm import RewardModelTrainer\nfrom .sft import SFTTrainer\n\n__all__ = ['Trainer', 'PPOTrainer', 'RewardModelTrainer', 'SFTTrainer']\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: b0ce5a10\n- Author: Fazzie-Maqianli (55798671+Fazziekey@users.noreply.github.com)\n- Date: 2023-03-28 20:25:36\n- Message: [Coati] first commit (#3283)\n- Changes:\n```diff\n@@ -0,0 +1,6 @@\n+from .base import Trainer\n+from .ppo import PPOTrainer\n+from .rm import RewardModelTrainer\n+from .sft import SFTTrainer\n+\n+__all__ = ['Trainer', 'PPOTrainer', 'RewardModelTrainer', 'SFTTrainer']...\n```",
+      "metadata": {
+        "file_path": "applications/Chat/coati/trainer/__init__.py",
+        "commit_count": 1,
+        "chunk_index": 0,
+        "language": "python",
+        "strategy": "enhanced",
+        "total_chunks": 1
+      },
+      "similarity_score": 1.072622537612915
+    },
+    {
+      "content": "# File: applications/Chat/coati/trainer/base.py (python)\n\n## Code Content:\n```python\nfrom abc import ABC, abstractmethod\nfrom typing import Any, Callable, Dict, List, Optional, Union\n\nimport torch\nfrom coati.experience_maker import Experience\n\nfrom .callbacks import Callback\nfrom .strategies import Strategy\n\n\nclass Trainer(ABC):\n    \"\"\"\n        Base class for rlhf trainers.\n\n    Args:\n        strategy (Strategy):the strategy to use for training\n        max_epochs (int, defaults to 1): the number of epochs of training process\n        tokenizer (Callable, optional): the tokenizer to use for tokenizing the input\n        dataloader_pin_memory (bool, defaults to True): whether to pin memory for data loader\n        callbacks (List[Callback], defaults to []): the callbacks to call during training process\n        generate_kwargs (dict, optional): the kwargs to use while model generating\n    \"\"\"\n\n    def __init__(self,\n                 strategy: Strategy,\n                 max_epochs: int = 1,\n                 tokenizer: Optional[Callable[[Any], dict]] = None,\n                 dataloader_pin_memory: bool = True,\n                 callbacks: List[Callback] = [],\n                 **generate_kwargs) -> None:\n        super().__init__()\n        self.strategy = strategy\n        self.max_epochs = max_epochs\n        self.tokenizer = tokenizer\n        self.generate_kwargs = generate_kwargs\n        self.dataloader_pin_memory = dataloader_pin_memory\n        self.callbacks = callbacks\n\n    # TODO(ver217): maybe simplify these code using context\n    def _on_fit_start(self) -> None:\n        for callback in self.callbacks:\n            callback.on_fit_start()\n\n    def _on_fit_end(self) -> None:\n        for callback in self.callbacks:\n            callback.on_fit_end()\n\n    def _on_episode_start(self, episode: int) -> None:\n        for callback in self.callbacks:\n            callback.on_episode_start(episode)",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "applications/Chat/coati/trainer/base.py",
+        "commit_count": 2,
+        "total_chunks": 3,
+        "strategy": "enhanced",
+        "language": "python"
+      },
+      "similarity_score": 1.0946608781814575
+    },
+    {
+      "content": "# File: applications/Chat/setup.py (python)\n\n## Code Content:\n```python\nfrom setuptools import find_packages, setup\n\n\ndef fetch_requirements(path):\n    with open(path, 'r') as fd:\n        return [r.strip() for r in fd.readlines()]\n\n\ndef fetch_readme():\n    with open('README.md', encoding='utf-8') as f:\n        return f.read()\n\n\ndef fetch_version():\n    with open('version.txt', 'r') as f:\n        return f.read().strip()\n\n\nsetup(\n    name='coati',\n    version=fetch_version(),\n    packages=find_packages(exclude=(\n        'tests',\n        'benchmarks',\n        '*.egg-info',\n    )),\n    description='Colossal-AI Talking Intelligence',\n    long_description=fetch_readme(),\n    long_description_content_type='text/markdown',\n    license='Apache Software License 2.0',\n    url='https://github.com/hpcaitech/Coati',\n    install_requires=fetch_requirements('requirements.txt'),\n    python_requires='>=3.6',\n    classifiers=[\n        'Programming Language :: Python :: 3',\n        'License :: OSI Approved :: Apache Software License',\n        'Environment :: GPU :: NVIDIA CUDA',\n        'Topic :: Scientific/Engineering :: Artificial Intelligence',\n        'Topic :: System :: Distributed Computing',\n    ],\n)\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: b0ce5a10\n- Author: Fazzie-Maqianli (55798671+Fazziekey@users.noreply.github.com)\n- Date: 2023-03-28 20:25:36\n- Message: [Coati] first commit (#3283)\n- Changes:\n```diff\n@@ -0,0 +1,41 @@\n+from setuptools import find_packages, setup\n+\n+\n+def fetch_requirements(path):\n+    with open(path, 'r') as fd:\n+        return [r.strip() for r in fd.readlines()]\n+\n+\n+def fetch_readme():\n+    with open('README.md', encoding='utf-8') as f:\n+        return f.read()\n+\n+\n+def fetch_version():\n+    with open('version.txt', 'r') as f:\n+        return f.read().strip()\n+\n+\n+setup(\n+    name='coati',\n+    version=fetch_version(),\n+    packages=find_packages(exclude=(\n+        'tests',...\n```",
+      "metadata": {
+        "commit_count": 1,
+        "file_path": "applications/Chat/setup.py",
+        "chunk_index": 0,
+        "strategy": "enhanced",
+        "language": "python",
+        "total_chunks": 1
+      },
+      "similarity_score": 1.0947718620300293
+    },
+    {
+      "content": "# File: applications/Chat/coati/replay_buffer/naive.py (python)\n\n## Code Content:\n```python\nimport random\nfrom typing import List\n\nimport torch\nfrom coati.experience_maker.base import Experience\n\nfrom .base import ReplayBuffer\nfrom .utils import BufferItem, make_experience_batch, split_experience_batch\n\n\nclass NaiveReplayBuffer(ReplayBuffer):\n    \"\"\"Naive replay buffer class. It stores experience.\n\n     Args:\n         sample_batch_size (int): Batch size when sampling.\n         limit (int, optional): Limit of number of experience samples. A number <= 0 means unlimited. Defaults to 0.\n         cpu_offload (bool, optional): Whether to offload experience to cpu when sampling. Defaults to True.\n    \"\"\"\n\n    def __init__(self, sample_batch_size: int, limit: int = 0, cpu_offload: bool = True) -> None:\n        super().__init__(sample_batch_size, limit)\n        self.cpu_offload = cpu_offload\n        self.target_device = torch.device(f'cuda:{torch.cuda.current_device()}')\n        # TODO(ver217): add prefetch\n        self.items: List[BufferItem] = []\n\n    @torch.no_grad()\n    def append(self, experience: Experience) -> None:\n        if self.cpu_offload:\n            experience.to_device(torch.device('cpu'))\n        items = split_experience_batch(experience)\n        self.items.extend(items)\n        if self.limit > 0:\n            samples_to_remove = len(self.items) - self.limit\n            if samples_to_remove > 0:\n                self.items = self.items[samples_to_remove:]\n\n    def clear(self) -> None:\n        self.items.clear()\n\n    @torch.no_grad()\n    def sample(self) -> Experience:\n        items = random.sample(self.items, self.sample_batch_size)\n        experience = make_experience_batch(items)\n        if self.cpu_offload:\n            experience.to_device(self.target_device)\n        return experience\n\n    def __len__(self) -> int:\n        return len(self.items)\n\n    def __getitem__(self, idx: int) -> BufferItem:\n        return self.items[idx]",
+      "metadata": {
+        "total_chunks": 2,
+        "commit_count": 1,
+        "strategy": "enhanced",
+        "chunk_index": 0,
+        "language": "python",
+        "file_path": "applications/Chat/coati/replay_buffer/naive.py"
+      },
+      "similarity_score": 1.104651927947998
+    },
+    {
+      "content": "# File: applications/Chat/coati/trainer/rm.py (python)\n\n## Code Content:\n```python\nfrom datetime import datetime\nfrom typing import Optional, List\n\nimport pandas as pd\nimport torch\nimport torch.distributed as dist\nfrom torch.optim import Optimizer, lr_scheduler\nfrom torch.utils.data import DataLoader, Dataset, DistributedSampler\nfrom tqdm import tqdm\nfrom transformers.tokenization_utils_base import PreTrainedTokenizerBase\n\nfrom .callbacks import Callback\nfrom .base import Trainer\nfrom .strategies import Strategy\nfrom .utils import is_rank_0\n\n\nclass RewardModelTrainer(Trainer):\n    \"\"\"\n        Trainer to use while training reward model.\n\n    Args:\n        model (torch.nn.Module): the model to train\n        strategy (Strategy): the strategy to use for training\n        optim(Optimizer): the optimizer to use for training\n        loss_fn (callable): the loss function to use for training\n        train_dataloader (DataLoader): the dataloader to use for training\n        valid_dataloader (DataLoader): the dataloader to use for validation\n        eval_dataloader (DataLoader): the dataloader to use for evaluation\n        batch_size (int, defaults to 1): the batch size while training\n        max_epochs (int, defaults to 2): the number of epochs to train\n        callbacks (List[Callback], defaults to []): the callbacks to call during training process\n    \"\"\"\n\n    def __init__(\n        self,\n        model,\n        strategy: Strategy,\n        optim: Optimizer,\n        loss_fn,\n        train_dataloader: DataLoader,\n        valid_dataloader: DataLoader,\n        eval_dataloader: DataLoader,\n        batch_size: int = 1,\n        max_epochs: int = 1,\n        callbacks: List[Callback] = [],\n    ) -> None:\n        super().__init__(strategy, max_epochs, callbacks=callbacks)\n        train_sampler = None\n\n        self.train_dataloader = train_dataloader\n        self.valid_dataloader = valid_dataloader\n        self.eval_dataloader = eval_dataloader",
+      "metadata": {
+        "strategy": "enhanced",
+        "file_path": "applications/Chat/coati/trainer/rm.py",
+        "total_chunks": 5,
+        "language": "python",
+        "commit_count": 2,
+        "chunk_index": 0
+      },
+      "similarity_score": 1.1076797246932983
+    },
+    {
+      "content": "# File: applications/Chat/coati/trainer/strategies/base.py (python)\n\n## Code Content:\n```python\nfrom abc import ABC, abstractmethod\nfrom contextlib import nullcontext\nfrom typing import Any, List, Optional, Tuple, Union\n\nimport numpy as np\nimport torch\nimport torch.nn as nn\nfrom coati.models.base import LM, Actor, Critic, RewardModel\nfrom coati.replay_buffer import ReplayBuffer\nfrom torch.optim import Optimizer\nfrom torch.utils.data import DataLoader\nfrom transformers.tokenization_utils_base import PreTrainedTokenizerBase\n\nfrom .sampler import DistributedSampler\n\nModelOptimPair = Tuple[nn.Module, Optimizer]\nModelOrModelOptimPair = Union[nn.Module, ModelOptimPair]\n\n\nclass Strategy(ABC):\n    \"\"\"\n        Base class for training strategies.\n    \"\"\"\n\n    def __init__(self) -> None:\n        super().__init__()\n        self.setup_distributed()\n\n    @abstractmethod\n    def backward(self, loss: torch.Tensor, model: nn.Module, optimizer: Optimizer, **kwargs) -> None:\n        pass\n\n    @abstractmethod\n    def optimizer_step(self, optimizer: Optimizer, **kwargs) -> None:\n        pass\n\n    @abstractmethod\n    def setup_distributed(self) -> None:\n        pass\n\n    @abstractmethod\n    def setup_model(self, model: nn.Module) -> nn.Module:\n        pass\n\n    @abstractmethod\n    def setup_optimizer(self, optimizer: Optimizer, model: nn.Module) -> Optimizer:\n        pass\n\n    @abstractmethod\n    def setup_dataloader(self, replay_buffer: ReplayBuffer, pin_memory: bool = False) -> DataLoader:\n        pass\n\n    def model_init_context(self):\n        return nullcontext()\n\n    def prepare(\n        self, *models_or_model_optim_pairs: ModelOrModelOptimPair\n    ) -> Union[List[ModelOrModelOptimPair], ModelOrModelOptimPair]:\n        \"\"\"Prepare models or model-optimizer-pairs based on each strategy.",
+      "metadata": {
+        "commit_count": 1,
+        "strategy": "enhanced",
+        "total_chunks": 3,
+        "file_path": "applications/Chat/coati/trainer/strategies/base.py",
+        "chunk_index": 0,
+        "language": "python"
+      },
+      "similarity_score": 1.1098421812057495
+    },
+    {
+      "content": "# File: applications/Chat/coati/ray/src/detached_replay_buffer.py (python)\n\n## Code Content:\n```python\nimport torch\nimport random\nfrom typing import List, Any\n# from torch.multiprocessing import Queue\nfrom ray.util.queue import Queue\nimport ray\nimport asyncio\nfrom coati.experience_maker.base import Experience\nfrom coati.replay_buffer.utils import BufferItem, make_experience_batch, split_experience_batch\nfrom coati.replay_buffer import ReplayBuffer\nfrom threading import Lock\nimport copy\n\nclass DetachedReplayBuffer:\n    '''\n        Detached replay buffer. Share Experience across workers on the same node. \n        Therefore a trainer node is expected to have only one instance. \n        It is ExperienceMakerHolder's duty to call append(exp) method, remotely.\n    \n    Args:\n        sample_batch_size: Batch size when sampling. Exp won't enqueue until they formed a batch.\n        tp_world_size: Number of workers in the same tp group\n        limit: Limit of number of experience sample BATCHs. A number <= 0 means unlimited. Defaults to 0.\n        cpu_offload: Whether to offload experience to cpu when sampling. Defaults to True.\n    '''\n\n    def __init__(self, sample_batch_size: int, tp_world_size: int = 1, limit : int = 0, cpu_offload: bool = True) -> None:\n        self.cpu_offload = cpu_offload\n        self.sample_batch_size = sample_batch_size\n        self.limit = limit\n        self.items = Queue(self.limit, actor_options={\"num_cpus\":1})\n        self.batch_collector : List[BufferItem] = []\n\n        '''\n        Workers in the same tp group share this buffer and need same sample for one step.\n            Therefore a held_sample should be returned tp_world_size times before it could be dropped.\n            worker_state records wheter a worker got the held_sample\n        '''\n        self.tp_world_size = tp_world_size\n        self.worker_state = [False] * self.tp_world_size\n        self.held_sample = None\n        self._worker_state_lock = Lock()",
+      "metadata": {
+        "commit_count": 1,
+        "total_chunks": 3,
+        "file_path": "applications/Chat/coati/ray/src/detached_replay_buffer.py",
+        "language": "python",
+        "chunk_index": 0,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.1101658344268799
+    },
+    {
+      "content": "# File: applications/Chat/examples/community/ray/ray_job_script.py (python)\n\n## Code Content:\n```python\nimport sys\n\nfrom ray.job_submission import JobSubmissionClient\n\n\ndef main(api_server_endpoint=\"http://127.0.0.1:8265\"):\n    client = JobSubmissionClient(api_server_endpoint)\n    client.submit_job(\n        entrypoint=\n        \"python experimental/ray/train_prompts_on_ray.py --strategy colossalai_zero2 --prompt_csv_url https://huggingface.co/datasets/fka/awesome-chatgpt-prompts/resolve/main/prompts.csv\",\n        runtime_env={\n            \"working_dir\":\n                \"applications/Chat\",\n            \"pip\": [\n                \"torch==1.13.1\", \"transformers>=4.20.1\", \"datasets\", \"loralib\", \"colossalai>=0.2.4\", \"langchain\",\n                \"tokenizers\", \"fastapi\", \"sse_starlette\", \"wandb\", \"sentencepiece\", \"gpustat\"\n            ]\n        })\n\n\nif __name__ == \"__main__\":\n    main(sys.argv[1])\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 1a809edd\n- Author: MisterLin1995 (16671583+MisterLin1995@users.noreply.github.com)\n- Date: 2023-04-13 18:18:36\n- Message: [chat] ChatGPT train prompts on ray example (#3309)\n\n* [feat][chatgpt]train prompts on ray example\n\n* [fix]simplify code\n\n* [fix]remove depreciated parameter\n\n* [fix]add dependencies\n\n* [fix]method calling\n\n* [fix]experience maker\n\n* [fix]missing loss function\n\n* [fix]init optimizer\n\n* [feat]add usage comment\n\n* [fix]rename files\n\n* [fix]add readme\n\n* [fix]file path\n\n* [fix]move directory\n\n---------",
+      "metadata": {
+        "chunk_index": 0,
+        "commit_count": 1,
+        "strategy": "enhanced",
+        "total_chunks": 2,
+        "file_path": "applications/Chat/examples/community/ray/ray_job_script.py",
+        "language": "python"
+      },
+      "similarity_score": 1.1180579662322998
+    },
+    {
+      "content": "# File: applications/Chat/coati/trainer/callbacks/base.py (python)\n\n## Code Content:\n```python\nfrom abc import ABC\n\nfrom coati.experience_maker import Experience\n\n\nclass Callback(ABC):\n    \"\"\"\n        Base callback class. It defines the interface for callbacks.\n    \"\"\"\n\n    def on_fit_start(self) -> None:\n        pass\n\n    def on_fit_end(self) -> None:\n        pass\n\n    def on_episode_start(self, episode: int) -> None:\n        pass\n\n    def on_episode_end(self, episode: int) -> None:\n        pass\n\n    def on_make_experience_start(self) -> None:\n        pass\n\n    def on_make_experience_end(self, experience: Experience) -> None:\n        pass\n\n    def on_learn_epoch_start(self, epoch: int) -> None:\n        pass\n\n    def on_learn_epoch_end(self, epoch: int) -> None:\n        pass\n\n    def on_learn_batch_start(self) -> None:\n        pass\n\n    def on_learn_batch_end(self, metrics: dict, experience: Experience) -> None:\n        pass\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: b0ce5a10\n- Author: Fazzie-Maqianli (55798671+Fazziekey@users.noreply.github.com)\n- Date: 2023-03-28 20:25:36\n- Message: [Coati] first commit (#3283)\n- Changes:\n```diff\n@@ -0,0 +1,39 @@\n+from abc import ABC\n+\n+from coati.experience_maker import Experience\n+\n+\n+class Callback(ABC):\n+    \"\"\"\n+        Base callback class. It defines the interface for callbacks.\n+    \"\"\"\n+\n+    def on_fit_start(self) -> None:\n+        pass\n+\n+    def on_fit_end(self) -> None:\n+        pass\n+\n+    def on_episode_start(self, episode: int) -> None:\n+        pass\n+\n+    def on_episode_end(self, episode: int) -> None:\n+        pass\n+\n+    def on_make_experience_start(self) -> None:\n+   ...\n```",
+      "metadata": {
+        "chunk_index": 0,
+        "commit_count": 1,
+        "total_chunks": 1,
+        "strategy": "enhanced",
+        "file_path": "applications/Chat/coati/trainer/callbacks/base.py",
+        "language": "python"
+      },
+      "similarity_score": 1.1195124387741089
+    },
+    {
+      "content": "# File: applications/Chat/examples/train_dummy.py (python)\n\n## Code Content:\n```python\nimport argparse\nfrom copy import deepcopy\n\nimport torch\nfrom coati.models.base import RewardModel\nfrom coati.models.bloom import BLOOMActor, BLOOMCritic\nfrom coati.models.gpt import GPTActor, GPTCritic\nfrom coati.models.opt import OPTActor, OPTCritic\nfrom coati.models.roberta import RoBERTaActor, RoBERTaCritic\nfrom coati.trainer import PPOTrainer\nfrom coati.trainer.callbacks import SaveCheckpoint\nfrom coati.trainer.strategies import ColossalAIStrategy, DDPStrategy, NaiveStrategy\nfrom torch.optim import Adam\nfrom transformers import AutoTokenizer, BloomTokenizerFast, RobertaTokenizer\nfrom transformers.models.gpt2.tokenization_gpt2 import GPT2Tokenizer\n\nfrom colossalai.nn.optimizer import HybridAdam\n\n\ndef preprocess_batch(samples):\n    input_ids = torch.stack(samples)\n    attention_mask = torch.ones_like(input_ids, dtype=torch.long)\n    return {'input_ids': input_ids, 'attention_mask': attention_mask}\n\n\ndef main(args):\n    # configure strategy\n    if args.strategy == 'naive':\n        strategy = NaiveStrategy()\n    elif args.strategy == 'ddp':\n        strategy = DDPStrategy()\n    elif args.strategy == 'colossalai_gemini':\n        strategy = ColossalAIStrategy(stage=3, placement_policy='cuda', initial_scale=2**5)\n    elif args.strategy == 'colossalai_zero2':\n        strategy = ColossalAIStrategy(stage=2, placement_policy='cuda')\n    else:\n        raise ValueError(f'Unsupported strategy \"{args.strategy}\"')",
+      "metadata": {
+        "language": "python",
+        "strategy": "enhanced",
+        "total_chunks": 7,
+        "file_path": "applications/Chat/examples/train_dummy.py",
+        "chunk_index": 0,
+        "commit_count": 3
+      },
+      "similarity_score": 1.11976158618927
+    },
+    {
+      "content": "# File: applications/Chat/examples/train_reward_model.py (python)\n\n## Code Content:\n```python\nimport argparse\nfrom random import randint\n\nimport loralib as lora\nimport torch\nimport torch.distributed as dist\nfrom coati.dataset import HhRlhfDataset, RmStaticDataset\nfrom coati.models import LogExpLoss, LogSigLoss\nfrom coati.models.base import RewardModel\nfrom coati.models.bloom import BLOOMRM\nfrom coati.models.deberta import DebertaRM\nfrom coati.models.gpt import GPTRM\nfrom coati.models.llama import LlamaRM\nfrom coati.models.opt import OPTRM\nfrom coati.models.roberta import RoBERTaRM\nfrom coati.trainer import RewardModelTrainer\nfrom coati.trainer.strategies import ColossalAIStrategy, DDPStrategy, NaiveStrategy\nfrom coati.utils import prepare_llama_tokenizer_and_embedding\nfrom datasets import load_dataset\nfrom torch.optim import Adam\nfrom torch.utils.data import DataLoader\nfrom torch.utils.data.distributed import DistributedSampler\nfrom transformers import AutoTokenizer, BloomTokenizerFast, DebertaV2Tokenizer, LlamaTokenizer, RobertaTokenizer\nfrom transformers.models.gpt2.tokenization_gpt2 import GPT2Tokenizer\n\nfrom colossalai.nn.optimizer import HybridAdam\n\n\ndef train(args):\n    # configure strategy\n    if args.strategy == 'naive':\n        strategy = NaiveStrategy()\n    elif args.strategy == 'ddp':\n        strategy = DDPStrategy()\n    elif args.strategy == 'colossalai_gemini':\n        strategy = ColossalAIStrategy(stage=3, placement_policy='cuda')\n    elif args.strategy == 'colossalai_zero2':\n        strategy = ColossalAIStrategy(stage=2, placement_policy='cuda')\n    else:\n        raise ValueError(f'Unsupported strategy \"{args.strategy}\"')",
+      "metadata": {
+        "strategy": "enhanced",
+        "commit_count": 3,
+        "chunk_index": 0,
+        "file_path": "applications/Chat/examples/train_reward_model.py",
+        "total_chunks": 7,
+        "language": "python"
+      },
+      "similarity_score": 1.1289756298065186
+    },
+    {
+      "content": "Update run_chatgpt_unit_tests.yml\n\nupdate test ci\n\nupdate\n\nupdate\n\nupdate\n\nupdate\n\nUpdate test_ci.sh\n\nupdate\n\nUpdate test_ci.sh\n\nUpdate test_ci.sh\n\nUpdate run_chatgpt_examples.yml\n\nUpdate run_chatgpt_examples.yml\n- Changes:\n```diff\n@@ -23,7 +23,8 @@ class GPTActor(Actor):\n                  config: Optional[GPT2Config] = None,\n                  checkpoint: bool = False,\n                  lora_rank: int = 0,\n-                 lora_train_bias: str = 'none') -> None:\n+                 lora_train_bias: str = 'none',\n+                 **kwargs) -> None:\n         if pretrained is not None:\n             model = GPT2LMHeadModel.from_pretrained(pretrained)\n         elif config is not None:\n@@ -32,4 +33,4 @@ class GPTActor(Actor):\n  ...\n```\n\n### Commit 2\n- ID: b0ce5a10\n- Author: Fazzie-Maqianli (55798671+Fazziekey@users.noreply.github.com)\n- Date: 2023-03-28 20:25:36\n- Message: [Coati] first commit (#3283)\n- Changes:\n```diff\n@@ -0,0 +1,35 @@\n+from typing import Optional\n+\n+from transformers.models.gpt2.configuration_gpt2 import GPT2Config\n+from transformers.models.gpt2.modeling_gpt2 import GPT2LMHeadModel\n+\n+from ..base import Actor\n+\n+\n+class GPTActor(Actor):\n+    \"\"\"\n+    GPT Actor model.\n+\n+    Args:\n+        pretrained (str): Pretrained model name or path.\n+        config (GPT2Config): Model config.\n+        checkpoint (bool): Enable gradient checkpointing.\n+        lora_rank (int): Rank of the LoRa layer.\n+    ...\n```",
+      "metadata": {
+        "commit_count": 2,
+        "total_chunks": 3,
+        "strategy": "enhanced",
+        "chunk_index": 2,
+        "file_path": "applications/Chat/coati/models/gpt/gpt_actor.py",
+        "language": "python"
+      },
+      "similarity_score": 1.139215350151062
+    },
+    {
+      "content": "return example\n\n\nclass PromptDataset(Dataset):\n    \"A simple dataset to prepare the prompts to generate class images on multiple GPUs.\"\n\n    def __init__(self, prompt, num_samples):\n        self.prompt = prompt\n        self.num_samples = num_samples\n\n    def __len__(self):\n        return self.num_samples\n\n    def __getitem__(self, index):\n        example = {}\n        example[\"prompt\"] = self.prompt\n        example[\"index\"] = index\n        return example\n\n\ndef get_full_repo_name(model_id: str, organization: Optional[str] = None, token: Optional[str] = None):\n    if token is None:\n        token = HfFolder.get_token()\n    if organization is None:\n        username = whoami(token)[\"name\"]\n        return f\"{username}/{model_id}\"\n    else:\n        return f\"{organization}/{model_id}\"\n\n\n# Gemini + ZeRO DDP\ndef gemini_zero_dpp(model: torch.nn.Module, placememt_policy: str = \"auto\"):\n    from colossalai.nn.parallel import GeminiDDP\n\n    model = GeminiDDP(model,\n                      device=get_current_device(),\n                      placement_policy=placememt_policy,\n                      pin_memory=True,\n                      search_range_mb=64)\n    return model\n\n\ndef main(args):\n    if args.seed is None:\n        colossalai.launch_from_torch(config={})\n    else:\n        colossalai.launch_from_torch(config={}, seed=args.seed)\n\n    local_rank = gpc.get_local_rank(ParallelMode.DATA)\n    world_size = gpc.get_world_size(ParallelMode.DATA)\n\n    if args.with_prior_preservation:\n        class_images_dir = Path(args.class_data_dir)\n        if not class_images_dir.exists():\n            class_images_dir.mkdir(parents=True)\n        cur_class_images = len(list(class_images_dir.iterdir()))",
+      "metadata": {
+        "chunk_index": 7,
+        "language": "python",
+        "total_chunks": 17,
+        "commit_count": 2,
+        "file_path": "examples/images/dreambooth/train_dreambooth_colossalai_lora.py",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.148937702178955
+    },
+    {
+      "content": "return example\n\n\nclass PromptDataset(Dataset):\n    \"A simple dataset to prepare the prompts to generate class images on multiple GPUs.\"\n\n    def __init__(self, prompt, num_samples):\n        self.prompt = prompt\n        self.num_samples = num_samples\n\n    def __len__(self):\n        return self.num_samples\n\n    def __getitem__(self, index):\n        example = {}\n        example[\"prompt\"] = self.prompt\n        example[\"index\"] = index\n        return example\n\n\ndef get_full_repo_name(model_id: str, organization: Optional[str] = None, token: Optional[str] = None):\n    if token is None:\n        token = HfFolder.get_token()\n    if organization is None:\n        username = whoami(token)[\"name\"]\n        return f\"{username}/{model_id}\"\n    else:\n        return f\"{organization}/{model_id}\"\n\n\n# Gemini + ZeRO DDP\ndef gemini_zero_dpp(model: torch.nn.Module, placememt_policy: str = \"auto\"):\n    from colossalai.nn.parallel import GeminiDDP\n\n    model = GeminiDDP(model,\n                      device=get_current_device(),\n                      placement_policy=placememt_policy,\n                      pin_memory=True,\n                      search_range_mb=64)\n    return model\n\n\ndef main(args):\n    if args.seed is None:\n        colossalai.launch_from_torch(config={})\n    else:\n        colossalai.launch_from_torch(config={}, seed=args.seed)\n\n    local_rank = gpc.get_local_rank(ParallelMode.DATA)\n    world_size = gpc.get_world_size(ParallelMode.DATA)\n\n    if args.with_prior_preservation:\n        class_images_dir = Path(args.class_data_dir)\n        if not class_images_dir.exists():\n            class_images_dir.mkdir(parents=True)\n        cur_class_images = len(list(class_images_dir.iterdir()))",
+      "metadata": {
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "total_chunks": 19,
+        "file_path": "examples/images/dreambooth/train_dreambooth_colossalai.py",
+        "chunk_index": 7,
+        "language": "python"
+      },
+      "similarity_score": 1.148937702178955
+    },
+    {
+      "content": "# File: applications/Chat/coati/experience_maker/naive.py (python)\n\n## Code Content:\n```python\nimport torch\nfrom coati.models.utils import compute_reward, normalize\n\nfrom .base import Experience, ExperienceMaker\n\n\nclass NaiveExperienceMaker(ExperienceMaker):\n    \"\"\"\n    Naive experience maker.\n    \"\"\"\n\n    @torch.no_grad()\n    def make_experience(self, input_ids: torch.Tensor, **generate_kwargs) -> Experience:\n        self.actor.eval()\n        self.critic.eval()\n        self.initial_model.eval()\n        self.reward_model.eval()\n\n        sequences, attention_mask, action_mask = self.actor.generate(input_ids,\n                                                                     return_action_mask=True,\n                                                                     **generate_kwargs)\n        num_actions = action_mask.size(1)\n\n        action_log_probs = self.actor(sequences, num_actions, attention_mask)\n        base_action_log_probs = self.initial_model(sequences, num_actions, attention_mask)\n        value = self.critic(sequences, action_mask, attention_mask)\n        r = self.reward_model(sequences, attention_mask)\n        reward = compute_reward(r, self.kl_coef, action_log_probs, base_action_log_probs, action_mask=action_mask)\n\n        advantage = reward - value\n        # TODO(ver217): maybe normalize adv\n        if advantage.ndim == 1:\n            advantage = advantage.unsqueeze(-1)\n\n        return Experience(sequences, action_log_probs, value, reward, advantage, attention_mask, action_mask)\n```\n\n## Git Commit History",
+      "metadata": {
+        "strategy": "enhanced",
+        "language": "python",
+        "total_chunks": 2,
+        "commit_count": 1,
+        "file_path": "applications/Chat/coati/experience_maker/naive.py",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.1545403003692627
+    }
+  ],
+  "compressed": [
+    {
+      "content": "# File: applications/Chat/examples/train_prompts.sh (bash)\n\n## Key Code Elements:\n    export CUDA_VISIBLE_DEVICES=$(echo $FIRST_N_GPU_IDS | sed 's/ /,/g')\n\n## Recent Changes:\n- e3551443 by csric (59389055+CsRic@users.noreply.github.com): [chatgpt] Detached PPO Training (#3195)\n\n* run the base\n\n* working on dist ppo\n\n* sync\n\n* detached t...\n- 891b8e7f by binmakeswell (binmakeswell@gmail.com): [chat] fix stage3 PPO sample sh command (#3477)...\n- b0ce5a10 by Fazzie-Maqianli (55798671+Fazziekey@users.noreply.github.com): [Coati] first commit (#3283)...",
+      "metadata": {
+        "total_chunks": 1,
+        "language": "bash",
+        "chunk_index": 0,
+        "file_path": "applications/Chat/examples/train_prompts.sh",
+        "commit_count": 3,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.8355655074119568
+    },
+    {
+      "content": "# File: applications/Chat/inference/tests/test_chat_prompt.py (python)\n\n## Key Code Elements:\nimport os\nfrom transformers import AutoTokenizer\nfrom utils import ChatPromptProcessor, Dialogue\ndef test_chat_prompt_processor():\n    for history, max_new_tokens, result in samples:\nif __name__ == '__main__':\n\n## Recent Changes:\n- b0ce5a10 by Fazzie-Maqianli (55798671+Fazziekey@users.noreply.github.com): [Coati] first commit (#3283)...",
+      "metadata": {
+        "total_chunks": 1,
+        "commit_count": 1,
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "file_path": "applications/Chat/inference/tests/test_chat_prompt.py",
+        "language": "python"
+      },
+      "similarity_score": 0.9401255249977112
+    },
+    {
+      "content": "# File: applications/Chat/coati/trainer/base.py (python)\n\n## Key Code Elements:\nfrom abc import ABC, abstractmethod\nfrom typing import Any, Callable, Dict, List, Optional, Union\nimport torch\nfrom coati.experience_maker import Experience\nfrom .callbacks import Callback\nfrom .strategies import Strategy\nclass Trainer(ABC):\n    Args:\n    def __init__(self,\n                 **generate_kwargs) -> None:\n    # TODO(ver217): maybe simplify these code using context\n    def _on_fit_start(self) -> None:\n        for callback in self.callbacks:\n    def _on_fit_end(self) -> None:\n        for callback in self.callbacks:\n\n## Recent Changes:\n- 1ec0d386 by Yuanchen (70520919+chengeharrison@users.noreply.github.com): reconstruct chat trainer and fix training script (#3588)\n\nCo-authored-by: Yuanchen Xu <yuanchen.xu00...\n- b0ce5a10 by Fazzie-Maqianli (55798671+Fazziekey@users.noreply.github.com): [Coati] first commit (#3283)...",
+      "metadata": {
+        "chunk_index": 0,
+        "commit_count": 2,
+        "file_path": "applications/Chat/coati/trainer/base.py",
+        "total_chunks": 1,
+        "language": "python",
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.9512729048728943
+    },
+    {
+      "content": "# File: applications/Chat/examples/train_reward_model.py (python)\n\n## Key Code Elements:\nimport argparse\nfrom random import randint\nimport loralib as lora\nimport torch\nimport torch.distributed as dist\nfrom coati.dataset import HhRlhfDataset, RmStaticDataset\nfrom coati.models import LogExpLoss, LogSigLoss\nfrom coati.models.base import RewardModel\nfrom coati.models.bloom import BLOOMRM\nfrom coati.models.deberta import DebertaRM\nfrom coati.models.gpt import GPTRM\nfrom coati.models.llama import LlamaRM\nfrom coati.models.opt import OPTRM\nfrom coati.models.roberta import RoBERTaRM\nfrom coati.trainer import RewardModelTrainer\n\n## Recent Changes:\n- 1ec0d386 by Yuanchen (70520919+chengeharrison@users.noreply.github.com): reconstruct chat trainer and fix training script (#3588)\n\nCo-authored-by: Yuanchen Xu <yuanchen.xu00...\n- 30412866 by Camille Zhong (44392324+Camille7777@users.noreply.github.com): [chatgpt] add pre-trained model RoBERTa for RLHF stage 2 & 3  (#3223)\n\n* Add RoBERTa for RLHF Stage ...\n- b0ce5a10 by Fazzie-Maqianli (55798671+Fazziekey@users.noreply.github.com): [Coati] first commit (#3283)...",
+      "metadata": {
+        "commit_count": 3,
+        "language": "python",
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "file_path": "applications/Chat/examples/train_reward_model.py"
+      },
+      "similarity_score": 0.9954209923744202
+    },
+    {
+      "content": "# File: applications/Chat/coati/trainer/__init__.py (python)\n\n## Key Code Elements:\nfrom .base import Trainer\nfrom .ppo import PPOTrainer\nfrom .rm import RewardModelTrainer\nfrom .sft import SFTTrainer\n\n## Recent Changes:\n- b0ce5a10 by Fazzie-Maqianli (55798671+Fazziekey@users.noreply.github.com): [Coati] first commit (#3283)...",
+      "metadata": {
+        "commit_count": 1,
+        "language": "python",
+        "total_chunks": 1,
+        "file_path": "applications/Chat/coati/trainer/__init__.py",
+        "strategy": "compressed",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.9959961175918579
+    },
+    {
+      "content": "# File: applications/Chat/coati/trainer/rm.py (python)\n\n## Key Code Elements:\nfrom datetime import datetime\nfrom typing import Optional, List\nimport pandas as pd\nimport torch\nimport torch.distributed as dist\nfrom torch.optim import Optimizer, lr_scheduler\nfrom torch.utils.data import DataLoader, Dataset, DistributedSampler\nfrom tqdm import tqdm\nfrom transformers.tokenization_utils_base import PreTrainedTokenizerBase\nfrom .callbacks import Callback\nfrom .base import Trainer\nfrom .strategies import Strategy\nfrom .utils import is_rank_0\nclass RewardModelTrainer(Trainer):\n    Args:\n\n## Recent Changes:\n- 1ec0d386 by Yuanchen (70520919+chengeharrison@users.noreply.github.com): reconstruct chat trainer and fix training script (#3588)\n\nCo-authored-by: Yuanchen Xu <yuanchen.xu00...\n- b0ce5a10 by Fazzie-Maqianli (55798671+Fazziekey@users.noreply.github.com): [Coati] first commit (#3283)...",
+      "metadata": {
+        "file_path": "applications/Chat/coati/trainer/rm.py",
+        "commit_count": 2,
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "language": "python"
+      },
+      "similarity_score": 1.0033222436904907
+    },
+    {
+      "content": "# File: applications/Chat/coati/ray/__init__.py (python)\n\n## Key Code Elements:\nfrom .src.detached_replay_buffer import DetachedReplayBuffer\nfrom .src.detached_trainer_ppo import DetachedPPOTrainer\n\n## Recent Changes:\n- e3551443 by csric (59389055+CsRic@users.noreply.github.com): [chatgpt] Detached PPO Training (#3195)\n\n* run the base\n\n* working on dist ppo\n\n* sync\n\n* detached t...",
+      "metadata": {
+        "language": "python",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "commit_count": 1,
+        "file_path": "applications/Chat/coati/ray/__init__.py",
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.0136971473693848
+    },
+    {
+      "content": "# File: applications/Chat/examples/train_rm.sh (bash)\n\n## Key Code Elements:\n    export CUDA_VISIBLE_DEVICES=$(echo $FIRST_N_GPU_IDS | sed 's/ /,/g')\n\n## Recent Changes:\n- cc1eec2f by binmakeswell (binmakeswell@gmail.com): [chat] update reward model sh (#3578)...\n- b0ce5a10 by Fazzie-Maqianli (55798671+Fazziekey@users.noreply.github.com): [Coati] first commit (#3283)...",
+      "metadata": {
+        "file_path": "applications/Chat/examples/train_rm.sh",
+        "commit_count": 2,
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "language": "bash",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.030651569366455
+    },
+    {
+      "content": "# File: applications/Chat/examples/test_ci.sh (bash)\n\n## Key Code Elements:\nexport OMP_NUM_THREADS=8\n\n## Recent Changes:\n- 36a519b4 by Camille Zhong (44392324+Camille7777@users.noreply.github.com): Update test_ci.sh\n\nupdate\n\nUpdate test_ci.sh\n\nUpdate test_ci.sh\n\nUpdate test_ci.sh\n\nUpdate test_ci.s...\n- 30412866 by Camille Zhong (44392324+Camille7777@users.noreply.github.com): [chatgpt] add pre-trained model RoBERTa for RLHF stage 2 & 3  (#3223)\n\n* Add RoBERTa for RLHF Stage ...\n- b0ce5a10 by Fazzie-Maqianli (55798671+Fazziekey@users.noreply.github.com): [Coati] first commit (#3283)...",
+      "metadata": {
+        "language": "bash",
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "file_path": "applications/Chat/examples/test_ci.sh",
+        "chunk_index": 0,
+        "commit_count": 3
+      },
+      "similarity_score": 1.0399739742279053
+    },
+    {
+      "content": "# File: .github/workflows/run_chatgpt_unit_tests.yml (yaml)\n\n## Key Code Elements:\non:\n  pull_request:\n    paths:\njobs:\n  tests:\n    container:\n    defaults:\n      run:\n    steps:\n        env:\n\n## Recent Changes:\n- 169ed4d2 by Frank Lee (somerlee.9@gmail.com): [workflow] purged extension cache before GPT test (#3128)...\n- 9c0943ec by ver217 (lhx0217@gmail.com): [chatgpt] optimize generation kwargs (#2717)\n\n* [chatgpt] ppo trainer use default generate args\n\n* [...\n- f6b4ca4e by ver217 (lhx0217@gmail.com): [devops] add chatgpt ci (#2713)...",
+      "metadata": {
+        "file_path": ".github/workflows/run_chatgpt_unit_tests.yml",
+        "strategy": "compressed",
+        "language": "yaml",
+        "chunk_index": 0,
+        "commit_count": 3,
+        "total_chunks": 1
+      },
+      "similarity_score": 1.0408105850219727
+    },
+    {
+      "content": "# File: applications/Chat/examples/train_prompts.py (python)\n\n## Key Code Elements:\nimport argparse\nimport pandas as pd\nimport torch\nimport torch.distributed as dist\nfrom coati.dataset import DataCollatorForSupervisedDataset, PromptDataset, SupervisedDataset\nfrom coati.models.bloom import BLOOMRM, BLOOMActor, BLOOMCritic\nfrom coati.models.gpt import GPTRM, GPTActor, GPTCritic\nfrom coati.models.llama import LlamaActor, LlamaCritic, LlamaRM\nfrom coati.models.opt import OPTRM, OPTActor, OPTCritic\nfrom coati.models.roberta import RoBERTaRM, RoBERTaActor, RoBERTaCritic\nfrom coati.trainer import PPOTrainer\nfrom coati.trainer.strategies import ColossalAIStrategy, DDPStrategy, NaiveStrategy\nfrom coati.utils import prepare_llama_tokenizer_and_embedding\nfrom torch.optim import Adam\nfrom torch.utils.data import DataLoader\n\n## Recent Changes:\n- 30412866 by Camille Zhong (44392324+Camille7777@users.noreply.github.com): [chatgpt] add pre-trained model RoBERTa for RLHF stage 2 & 3  (#3223)\n\n* Add RoBERTa for RLHF Stage ...\n- cb413ccf by github-actions[bot] (41898282+github-actions[bot]@users.noreply.github.com): [format] applied code formatting on changed files in pull request 3300 (#3302)\n\nCo-authored-by: gith...\n- 8257e105 by BlueRum (70618399+ht-zhou@users.noreply.github.com): [chat]polish prompts training (#3300)\n\n* polish train_prompts\n\n* polish readme...",
+      "metadata": {
+        "chunk_index": 0,
+        "commit_count": 4,
+        "file_path": "applications/Chat/examples/train_prompts.py",
+        "language": "python",
+        "total_chunks": 1,
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.058040976524353
+    },
+    {
+      "content": "# File: applications/Chat/examples/train_sft.sh (bash)\n\n## Recent Changes:\n- b0ce5a10 by Fazzie-Maqianli (55798671+Fazziekey@users.noreply.github.com): [Coati] first commit (#3283)...",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "bash",
+        "file_path": "applications/Chat/examples/train_sft.sh",
+        "strategy": "compressed",
+        "commit_count": 1,
+        "total_chunks": 1
+      },
+      "similarity_score": 1.061486840248108
+    },
+    {
+      "content": "# File: examples/community/roberta/pretraining/run_pretrain.sh (bash)\n\n## Key Code Elements:\nexport PYTHONPATH=$PWD\n\n## Recent Changes:\n- f1b3d60c by binmakeswell (binmakeswell@gmail.com): [example] reorganize for community examples (#3557)...",
+      "metadata": {
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "commit_count": 1,
+        "file_path": "examples/community/roberta/pretraining/run_pretrain.sh",
+        "strategy": "compressed",
+        "language": "bash"
+      },
+      "similarity_score": 1.0640528202056885
+    },
+    {
+      "content": "# File: applications/Chat/examples/community/ray/train_prompts_on_ray.py (python)\n\n## Key Code Elements:\nimport argparse\nimport logging\nimport os\nimport socket\nfrom copy import deepcopy\nfrom typing import Type\nimport ray\nimport torch\nfrom coati.experience_maker.base import Experience\nfrom coati.models.base import RewardModel\nfrom coati.models.bloom import BLOOMActor, BLOOMCritic\nfrom coati.models.gpt import GPTActor, GPTCritic\nfrom coati.models.lora import LoRAModule\nfrom coati.models.loss import PolicyLoss, ValueLoss\nfrom coati.models.opt import OPTActor, OPTCritic\n\n## Recent Changes:\n- 1a809edd by MisterLin1995 (16671583+MisterLin1995@users.noreply.github.com): [chat] ChatGPT train prompts on ray example (#3309)\n\n* [feat][chatgpt]train prompts on ray example\n\n...",
+      "metadata": {
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "commit_count": 1,
+        "file_path": "applications/Chat/examples/community/ray/train_prompts_on_ray.py",
+        "total_chunks": 1,
+        "language": "python"
+      },
+      "similarity_score": 1.0695929527282715
+    },
+    {
+      "content": "# File: applications/Chat/coati/experience_maker/__init__.py (python)\n\n## Key Code Elements:\nfrom .base import Experience, ExperienceMaker\nfrom .naive import NaiveExperienceMaker\n\n## Recent Changes:\n- b0ce5a10 by Fazzie-Maqianli (55798671+Fazziekey@users.noreply.github.com): [Coati] first commit (#3283)...",
+      "metadata": {
+        "file_path": "applications/Chat/coati/experience_maker/__init__.py",
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "language": "python",
+        "total_chunks": 1,
+        "commit_count": 1
+      },
+      "similarity_score": 1.0909676551818848
+    },
+    {
+      "content": "# File: .github/workflows/run_chatgpt_examples.yml (yaml)\n\n## Key Code Elements:\non:\n  pull_request:\n    paths:\njobs:\n  tests:\n    container:\n    defaults:\n      run:\n    steps:\n        env:\n\n## Recent Changes:\n- 36a519b4 by Camille Zhong (44392324+Camille7777@users.noreply.github.com): Update test_ci.sh\n\nupdate\n\nUpdate test_ci.sh\n\nUpdate test_ci.sh\n\nUpdate test_ci.sh\n\nUpdate test_ci.s...\n- 169ed4d2 by Frank Lee (somerlee.9@gmail.com): [workflow] purged extension cache before GPT test (#3128)...\n- 9c0943ec by ver217 (lhx0217@gmail.com): [chatgpt] optimize generation kwargs (#2717)\n\n* [chatgpt] ppo trainer use default generate args\n\n* [...",
+      "metadata": {
+        "strategy": "compressed",
+        "commit_count": 4,
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "language": "yaml",
+        "file_path": ".github/workflows/run_chatgpt_examples.yml"
+      },
+      "similarity_score": 1.1037460565567017
+    },
+    {
+      "content": "# File: applications/Chat/examples/train_dummy.py (python)\n\n## Key Code Elements:\nimport argparse\nfrom copy import deepcopy\nimport torch\nfrom coati.models.base import RewardModel\nfrom coati.models.bloom import BLOOMActor, BLOOMCritic\nfrom coati.models.gpt import GPTActor, GPTCritic\nfrom coati.models.opt import OPTActor, OPTCritic\nfrom coati.models.roberta import RoBERTaActor, RoBERTaCritic\nfrom coati.trainer import PPOTrainer\nfrom coati.trainer.callbacks import SaveCheckpoint\nfrom coati.trainer.strategies import ColossalAIStrategy, DDPStrategy, NaiveStrategy\nfrom torch.optim import Adam\nfrom transformers import AutoTokenizer, BloomTokenizerFast, RobertaTokenizer\nfrom transformers.models.gpt2.tokenization_gpt2 import GPT2Tokenizer\nfrom colossalai.nn.optimizer import HybridAdam\n\n## Recent Changes:\n- 1ec0d386 by Yuanchen (70520919+chengeharrison@users.noreply.github.com): reconstruct chat trainer and fix training script (#3588)\n\nCo-authored-by: Yuanchen Xu <yuanchen.xu00...\n- 30412866 by Camille Zhong (44392324+Camille7777@users.noreply.github.com): [chatgpt] add pre-trained model RoBERTa for RLHF stage 2 & 3  (#3223)\n\n* Add RoBERTa for RLHF Stage ...\n- b0ce5a10 by Fazzie-Maqianli (55798671+Fazziekey@users.noreply.github.com): [Coati] first commit (#3283)...",
+      "metadata": {
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "commit_count": 3,
+        "language": "python",
+        "total_chunks": 1,
+        "file_path": "applications/Chat/examples/train_dummy.py"
+      },
+      "similarity_score": 1.1093775033950806
+    },
+    {
+      "content": "# File: applications/Chat/coati/trainer/strategies/base.py (python)\n\n## Key Code Elements:\nfrom abc import ABC, abstractmethod\nfrom contextlib import nullcontext\nfrom typing import Any, List, Optional, Tuple, Union\nimport numpy as np\nimport torch\nimport torch.nn as nn\nfrom coati.models.base import LM, Actor, Critic, RewardModel\nfrom coati.replay_buffer import ReplayBuffer\nfrom torch.optim import Optimizer\nfrom torch.utils.data import DataLoader\nfrom transformers.tokenization_utils_base import PreTrainedTokenizerBase\nfrom .sampler import DistributedSampler\nclass Strategy(ABC):\n    def __init__(self) -> None:\n    @abstractmethod\n\n## Recent Changes:\n- b0ce5a10 by Fazzie-Maqianli (55798671+Fazziekey@users.noreply.github.com): [Coati] first commit (#3283)...",
+      "metadata": {
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "commit_count": 1,
+        "file_path": "applications/Chat/coati/trainer/strategies/base.py",
+        "language": "python"
+      },
+      "similarity_score": 1.1103802919387817
+    },
+    {
+      "content": "# File: applications/Chat/coati/trainer/callbacks/__init__.py (python)\n\n## Key Code Elements:\nfrom .base import Callback\nfrom .performance_evaluator import PerformanceEvaluator\nfrom .save_checkpoint import SaveCheckpoint\n\n## Recent Changes:\n- b0ce5a10 by Fazzie-Maqianli (55798671+Fazziekey@users.noreply.github.com): [Coati] first commit (#3283)...",
+      "metadata": {
+        "total_chunks": 1,
+        "language": "python",
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "commit_count": 1,
+        "file_path": "applications/Chat/coati/trainer/callbacks/__init__.py"
+      },
+      "similarity_score": 1.1108741760253906
+    },
+    {
+      "content": "# File: applications/Chat/coati/dataset/prompt_dataset.py (python)\n\n## Key Code Elements:\nimport copy\nimport random\nfrom dataclasses import dataclass, field\nfrom typing import Callable, Dict, Sequence\nimport torch\nimport torch.distributed as dist\nimport transformers\nfrom torch.utils.data import Dataset\nfrom tqdm import tqdm\nfrom colossalai.logging import get_dist_logger\nfrom .utils import is_rank_0, jload\nclass PromptDataset(Dataset):\n    def __init__(self, data_path: str, tokenizer: transformers.PreTrainedTokenizer, max_datasets_size: int = None):\n        if max_datasets_size is not None:\n        for data_dict in list_data_dict:\n\n## Recent Changes:\n- b0ce5a10 by Fazzie-Maqianli (55798671+Fazziekey@users.noreply.github.com): [Coati] first commit (#3283)...",
+      "metadata": {
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "commit_count": 1,
+        "file_path": "applications/Chat/coati/dataset/prompt_dataset.py",
+        "chunk_index": 0,
+        "language": "python"
+      },
+      "similarity_score": 1.1221027374267578
+    }
+  ]
+}

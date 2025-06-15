@@ -1,0 +1,8 @@
+{
+  "reason": "The issue is that mitmproxy's SSLKEYLOGFILE implementation does not include TLSv1.3 secrets (CLIENT_HANDSHAKE_TRAFFIC_SECRET, CLIENT_TRAFFIC_SECRET_0, EXPORTER_SECRET) which are required for Wireshark to decrypt TLSv1.3 traffic. The current implementation only logs CLIENT_RANDOM values which are insufficient for TLSv1.3 decryption.",
+  "location": [
+    "mitmproxy/net/tls.py",
+    "mitmproxy/proxy/protocol/tls.py"
+  ],
+  "fix": "Update the key logging functionality in tls.py to include TLSv1.3 secrets. The fix should modify the key logging callback to handle TLSv1.3 key logging formats (CLIENT_HANDSHAKE_TRAFFIC_SECRET, SERVER_HANDSHAKE_TRAFFIC_SECRET, CLIENT_TRAFFIC_SECRET_0, SERVER_TRAFFIC_SECRET_0, EXPORTER_SECRET) in addition to the existing CLIENT_RANDOM logging for older TLS versions."
+}

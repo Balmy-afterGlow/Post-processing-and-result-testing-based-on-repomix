@@ -2,11 +2,11 @@
   "repo_name": "apktool",
   "source_file": "../repomix_md/repository-apktool/repomix-output-apktool-with-git.md",
   "file_size_mb": 1.6332502365112305,
-  "build_time": "2025-06-15T09:57:44.525761",
+  "build_time": "2025-06-15T10:58:22.101156",
   "processing_time": {
-    "parse_time_seconds": 0.175143,
-    "index_time_seconds": 39.94107,
-    "total_time_seconds": 40.116213
+    "parse_time_seconds": 0.158324,
+    "index_time_seconds": 40.590485,
+    "total_time_seconds": 40.748809
   },
   "code_blocks_count": 208,
   "original_documents_count": {

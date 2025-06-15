@@ -1,0 +1,7 @@
+{
+  "reason": "The issue occurs due to improper management of MySQL connections during concurrent queries, leading to NullPointerException and SQLException when ResultSet is accessed after being closed. This indicates a defect in the BackendConnection status management.",
+  "location": [
+    "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/connection/BackendConnection.java"
+  ],
+  "fix": "Implement proper synchronization mechanisms in BackendConnection to ensure thread-safe access to connections and ResultSets. Add checks to prevent operations on closed ResultSets and manage connection lifecycle more carefully during concurrent operations."
+}

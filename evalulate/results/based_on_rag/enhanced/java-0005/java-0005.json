@@ -1,0 +1,7 @@
+{
+  "reason": "The `equals` method in `JsonPrimitive` does not properly handle `BigDecimal` comparisons, leading to incorrect equality checks between different `BigDecimal` values.",
+  "location": [
+    "com/google/gson/JsonPrimitive.java"
+  ],
+  "fix": "Modify the `equals` method in `JsonPrimitive` to include a specific check for `BigDecimal` values, ensuring they are compared using `BigDecimal.compareTo` for accurate equality checks. The fix should look something like this:\n\n```java\n@Override\npublic boolean equals(Object obj) {\n    if (this == obj) {\n        return true;\n    }\n    if (obj == null || getClass() != obj.getClass()) {\n        return false;\n    }\n    JsonPrimitive other = (JsonPrimitive) obj;\n    if (value == null) {\n        return other.value == null;\n    }\n    if (value instanceof BigDecimal && other.value instanceof BigDecimal) {\n        return ((BigDecimal) value).compareTo((BigDecimal) other.value) == 0;\n    }\n    return value.equals(other.value);\n}\n```"
+}

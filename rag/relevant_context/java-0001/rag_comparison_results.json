@@ -1,0 +1,708 @@
+{
+  "basic": [
+    {
+      "content": "/**\n * Generic table foreign key configurator\n */\npublic class GenericTableForeignKeyConfigurator implements DBEObjectConfigurator<GenericTableForeignKey> {\n    @Override\n    public GenericTableForeignKey configureObject(DBRProgressMonitor monitor, Object table, GenericTableForeignKey foreignKey) {\n        return new UITask<GenericTableForeignKey>() {\n            @Override\n            protected GenericTableForeignKey runTask() {\n                EditForeignKeyPage editPage = new EditForeignKeyPage(\n                    \"Create foreign key\",\n                    foreignKey,\n                    new DBSForeignKeyModifyRule[] {\n                        DBSForeignKeyModifyRule.NO_ACTION,\n                        DBSForeignKeyModifyRule.CASCADE, DBSForeignKeyModifyRule.RESTRICT,\n                        DBSForeignKeyModifyRule.SET_NULL,\n                        DBSForeignKeyModifyRule.SET_DEFAULT });\n                if (!editPage.edit()) {\n                    return null;\n                }\n\n                foreignKey.setDeleteRule(editPage.getOnDeleteRule());\n                foreignKey.setUpdateRule(editPage.getOnUpdateRule());\n                foreignKey.setReferencedKey((DBSEntityReferrer) editPage.getUniqueConstraint());\n                foreignKey.setDeferability(DBSForeignKeyDeferability.NOT_DEFERRABLE);\n\n                int colIndex = 1;\n                for (EditForeignKeyPage.FKColumnInfo tableColumn : editPage.getColumns()) {\n                    foreignKey.addColumn(\n                        new GenericTableForeignKeyColumnTable(\n                            foreignKey,\n                            (GenericTableColumn) tableColumn.getOwnColumn(),\n                            colIndex++,\n                            (GenericTableColumn) tableColumn.getRefColumn()));\n                }\n                return foreignKey;\n            }\n        }.execute();\n    }\n\n}\n```",
+      "metadata": {
+        "language": "java",
+        "chunk_index": 1,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.generic.ui/src/org/jkiss/dbeaver/ext/generic/views/GenericTableForeignKeyConfigurator.java",
+        "strategy": "basic",
+        "total_chunks": 2
+      },
+      "similarity_score": 0.9840314388275146
+    },
+    {
+      "content": "/**\n * SQL Server foreign key manager\n */\npublic class SQLServerForeignKeyConfigurator implements DBEObjectConfigurator<SQLServerTableForeignKey> {\n\n    @Override\n    public SQLServerTableForeignKey configureObject(DBRProgressMonitor monitor, Object container, SQLServerTableForeignKey foreignKey) {\n        return new UITask<SQLServerTableForeignKey>() {\n            @Override\n            protected SQLServerTableForeignKey runTask() {\n                EditForeignKeyPage editPage = new EditForeignKeyPage(\n                    \"Create foreign key\",\n                    foreignKey,\n                    new DBSForeignKeyModifyRule[] {\n                        DBSForeignKeyModifyRule.NO_ACTION,\n                        DBSForeignKeyModifyRule.CASCADE, DBSForeignKeyModifyRule.RESTRICT,\n                        DBSForeignKeyModifyRule.SET_NULL,\n                        DBSForeignKeyModifyRule.SET_DEFAULT });\n                if (!editPage.edit()) {\n                    return null;\n                }\n\n                foreignKey.setReferencedKey(editPage.getUniqueConstraint());\n                //foreignKey.setName(getNewConstraintName(monitor, foreignKey));\n                foreignKey.setDeleteRule(editPage.getOnDeleteRule());\n                foreignKey.setUpdateRule(editPage.getOnUpdateRule());\n                int colIndex = 1;\n                for (EditForeignKeyPage.FKColumnInfo tableColumn : editPage.getColumns()) {\n                    foreignKey.addColumn(\n                        new SQLServerTableForeignKeyColumn(\n                            foreignKey,\n                            (SQLServerTableColumn) tableColumn.getOwnColumn(),\n                            colIndex++,\n                            (SQLServerTableColumn) tableColumn.getRefColumn()));\n                }\n                return foreignKey;\n            }\n        }.execute();\n    }\n\n}\n```",
+      "metadata": {
+        "total_chunks": 2,
+        "strategy": "basic",
+        "file_path": "plugins/org.jkiss.dbeaver.ext.mssql.ui/src/org/jkiss/dbeaver/ext/mssql/ui/config/SQLServerForeignKeyConfigurator.java",
+        "language": "java",
+        "chunk_index": 1
+      },
+      "similarity_score": 0.996856153011322
+    },
+    {
+      "content": "/**\n * Oracle foreign key manager\n */\npublic class OracleForeignKeyConfigurator implements DBEObjectConfigurator<OracleTableForeignKey> {\n\n    @Override\n    public OracleTableForeignKey configureObject(DBRProgressMonitor monitor, Object table, OracleTableForeignKey foreignKey) {\n        return UITask.run(() -> {\n            EditForeignKeyPage editPage = new EditForeignKeyPage(\n                OracleUIMessages.edit_oracle_foreign_key_manager_dialog_title,\n                foreignKey,\n                new DBSForeignKeyModifyRule[]{\n                    DBSForeignKeyModifyRule.NO_ACTION,\n                    DBSForeignKeyModifyRule.CASCADE, DBSForeignKeyModifyRule.RESTRICT,\n                    DBSForeignKeyModifyRule.SET_NULL,\n                    DBSForeignKeyModifyRule.SET_DEFAULT});\n            editPage.setSupportsCustomName(true);\n            if (!editPage.edit()) {\n                return null;\n            }\n\n            foreignKey.setReferencedConstraint((OracleTableConstraint) editPage.getUniqueConstraint());\n            foreignKey.setName(editPage.getName());\n            foreignKey.setDeleteRule(editPage.getOnDeleteRule());\n            int colIndex = 1;\n            for (EditForeignKeyPage.FKColumnInfo tableColumn : editPage.getColumns()) {\n                foreignKey.addColumn(\n                    new OracleTableForeignKeyColumn(\n                        foreignKey,\n                        (OracleTableColumn) tableColumn.getOwnColumn(),\n                        colIndex++));\n            }\n            return foreignKey;\n        });\n    }\n\n}\n```",
+      "metadata": {
+        "total_chunks": 2,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.oracle.ui/src/org/jkiss/dbeaver/ext/oracle/ui/config/OracleForeignKeyConfigurator.java",
+        "chunk_index": 1,
+        "strategy": "basic",
+        "language": "java"
+      },
+      "similarity_score": 1.001231074333191
+    },
+    {
+      "content": "import org.jkiss.code.NotNull;\nimport org.jkiss.dbeaver.DBException;\nimport org.jkiss.dbeaver.ext.db2.DB2Constants;\nimport org.jkiss.dbeaver.ext.db2.DB2Messages;\nimport org.jkiss.dbeaver.ext.db2.editors.DB2SourceObject;\nimport org.jkiss.dbeaver.ext.db2.model.DB2Schema;\nimport org.jkiss.dbeaver.ext.db2.model.DB2TableBase;\nimport org.jkiss.dbeaver.ext.db2.model.DB2TableColumn;\nimport org.jkiss.dbeaver.ext.db2.model.dict.DB2TableAccessMode;\nimport org.jkiss.dbeaver.ext.db2.model.dict.DB2TablePartitionMode;\nimport org.jkiss.dbeaver.ext.db2.model.dict.DB2TableStatus;\nimport org.jkiss.dbeaver.ext.db2.model.dict.DB2YesNo;\nimport org.jkiss.dbeaver.model.DBConstants;\nimport org.jkiss.dbeaver.model.DBPNamedObject2;\nimport org.jkiss.dbeaver.model.DBPRefreshableObject;\nimport org.jkiss.dbeaver.model.exec.DBCException;\nimport org.jkiss.dbeaver.model.impl.DBObjectNameCaseTransformer;\nimport org.jkiss.dbeaver.model.impl.jdbc.JDBCUtils;\nimport org.jkiss.dbeaver.model.impl.jdbc.cache.JDBCStructLookupCache;\nimport org.jkiss.dbeaver.model.meta.Property;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport org.jkiss.dbeaver.model.struct.DBSObject;\nimport org.jkiss.dbeaver.model.struct.DBSObjectState;\nimport org.jkiss.utils.CommonUtils;\n\nimport java.sql.ResultSet;\nimport java.sql.Timestamp;\nimport java.util.Map;\n\n/**\n * DB2 Federated Nickname\n * \n * @author Denis Forveille\n */\npublic class DB2Nickname extends DB2TableBase implements DBPNamedObject2, DBPRefreshableObject, DB2SourceObject {\n\n    private DB2TableStatus        status;\n\n    private String                dataCapture;\n    private String                constChecked;\n    private DB2TablePartitionMode partitionMode;\n    private DB2TableAccessMode    accessMode;\n\n    private Timestamp             statsTime;\n    private Long                  card;\n    private Long                  nPages;\n    private Long                  fPages;\n    private Long                  overFLow;",
+      "metadata": {
+        "chunk_index": 1,
+        "total_chunks": 6,
+        "strategy": "basic",
+        "file_path": "plugins/org.jkiss.dbeaver.ext.db2/src/org/jkiss/dbeaver/ext/db2/model/fed/DB2Nickname.java",
+        "language": "java"
+      },
+      "similarity_score": 1.0208362340927124
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.db2.ui/src/org/jkiss/dbeaver/ext/db2/ui/config/DB2SequenceConfigurator.java (java)\n\n## Code Content:\n```java\npackage org.jkiss.dbeaver.ext.db2.ui.config;\n\nimport org.jkiss.dbeaver.ext.db2.model.DB2Schema;\nimport org.jkiss.dbeaver.ext.db2.model.DB2Sequence;\nimport org.jkiss.dbeaver.model.edit.DBEObjectConfigurator;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport org.jkiss.dbeaver.model.struct.DBSEntityType;\nimport org.jkiss.dbeaver.ui.UITask;\nimport org.jkiss.dbeaver.ui.editors.object.struct.EntityEditPage;\n\npublic class DB2SequenceConfigurator implements DBEObjectConfigurator<DB2Sequence> {\n\n    @Override\n    public DB2Sequence configureObject(DBRProgressMonitor monitor, Object container, DB2Sequence sequence) {\n    \tDB2Schema schema = (DB2Schema) container;\n        return new UITask<DB2Sequence>() {\n            @Override\n            protected DB2Sequence runTask() {\n                EntityEditPage page = new EntityEditPage(schema.getDataSource(), DBSEntityType.SEQUENCE);\n                if (!page.edit()) {\n                    return null;\n                }\n                sequence.setName(page.getEntityName());\n                return sequence;\n            }\n        }.execute();\n    }\n\n}\n```",
+      "metadata": {
+        "file_path": "plugins/org.jkiss.dbeaver.ext.db2.ui/src/org/jkiss/dbeaver/ext/db2/ui/config/DB2SequenceConfigurator.java",
+        "strategy": "basic",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "language": "java"
+      },
+      "similarity_score": 1.0251988172531128
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.mssql.ui/src/org/jkiss/dbeaver/ext/mssql/ui/config/SQLServerDatabaseConfigurator.java (java)\n\n## Code Content:\n```java\npackage org.jkiss.dbeaver.ext.mssql.ui.config;\n\nimport org.eclipse.jface.dialogs.IDialogConstants;\nimport org.jkiss.dbeaver.ext.mssql.model.SQLServerDatabase;\nimport org.jkiss.dbeaver.ext.mssql.ui.SQLServerCreateDatabaseDialog;\nimport org.jkiss.dbeaver.model.edit.DBEObjectConfigurator;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport org.jkiss.dbeaver.ui.UITask;\nimport org.jkiss.dbeaver.ui.UIUtils;\n\npublic class SQLServerDatabaseConfigurator implements DBEObjectConfigurator<SQLServerDatabase> {\n\n    @Override\n    public SQLServerDatabase configureObject(DBRProgressMonitor monitor, Object container, SQLServerDatabase database) {\n        return UITask.run(() -> {\n            SQLServerCreateDatabaseDialog dialog = new SQLServerCreateDatabaseDialog(UIUtils.getActiveWorkbenchShell(), database.getDataSource());\n\n            if (dialog.open() != IDialogConstants.OK_ID) {\n                return null;\n            }\n\n            database.setName(dialog.getName());\n            return database;\n        });\n    }\n}\n```",
+      "metadata": {
+        "language": "java",
+        "file_path": "plugins/org.jkiss.dbeaver.ext.mssql.ui/src/org/jkiss/dbeaver/ext/mssql/ui/config/SQLServerDatabaseConfigurator.java",
+        "total_chunks": 1,
+        "strategy": "basic",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.0309809446334839
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.exasol.ui/src/org/jkiss/dbeaver/ext/exasol/ui/config/ExasolForeignKeyConfigurator.java (java)\n\n## Code Content:\n```java\npackage org.jkiss.dbeaver.ext.exasol.ui.config;\n\nimport org.jkiss.dbeaver.DBException;\nimport org.jkiss.dbeaver.Log;\nimport org.jkiss.dbeaver.ext.exasol.model.ExasolTable;\nimport org.jkiss.dbeaver.ext.exasol.model.ExasolTableForeignKey;\nimport org.jkiss.dbeaver.ext.exasol.model.ExasolTableForeignKeyColumn;\nimport org.jkiss.dbeaver.ext.exasol.model.ExasolTableUniqueKey;\nimport org.jkiss.dbeaver.model.edit.DBEObjectConfigurator;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport org.jkiss.dbeaver.ui.UITask;\n\nimport java.util.ArrayList;\nimport java.util.List;\n\npublic class ExasolForeignKeyConfigurator implements DBEObjectConfigurator<ExasolTableForeignKey> {\n    protected static final Log log = Log.getLog(ExasolForeignKeyConfigurator.class);\n\n    @Override\n    public ExasolTableForeignKey configureObject(DBRProgressMonitor monitor, Object container, ExasolTableForeignKey foreignKey) {\n        ExasolTable table = (ExasolTable) container;\n        return new UITask<ExasolTableForeignKey>() {\n            @Override\n            protected ExasolTableForeignKey runTask() {\n                ExasolCreateForeignKeyDialog editPage = new ExasolCreateForeignKeyDialog(\"Create Foreign Key\", foreignKey);\n\n                if (!editPage.edit()) {\n                    return null;\n                }\n                foreignKey.setName(editPage.getName());\n                foreignKey.setReferencedConstraint((ExasolTableUniqueKey)editPage.getUniqueConstraint());\n                foreignKey.setEnabled(editPage.isEnabled());",
+      "metadata": {
+        "file_path": "plugins/org.jkiss.dbeaver.ext.exasol.ui/src/org/jkiss/dbeaver/ext/exasol/ui/config/ExasolForeignKeyConfigurator.java",
+        "strategy": "basic",
+        "total_chunks": 2,
+        "language": "java",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.037049651145935
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.exasol.ui/src/org/jkiss/dbeaver/ext/exasol/ui/config/ExasolPrimaryKeyConfigurator.java (java)\n\n## Code Content:\n```java\npackage org.jkiss.dbeaver.ext.exasol.ui.config;\n\nimport org.jkiss.dbeaver.DBException;\nimport org.jkiss.dbeaver.Log;\nimport org.jkiss.dbeaver.ext.exasol.ui.internal.ExasolMessages;\nimport org.jkiss.dbeaver.ext.exasol.model.ExasolTableKeyColumn;\nimport org.jkiss.dbeaver.ext.exasol.model.ExasolTableUniqueKey;\nimport org.jkiss.dbeaver.model.DBPEvaluationContext;\nimport org.jkiss.dbeaver.model.edit.DBEObjectConfigurator;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport org.jkiss.dbeaver.model.struct.DBSEntityAttribute;\nimport org.jkiss.dbeaver.model.struct.DBSEntityConstraintType;\nimport org.jkiss.dbeaver.ui.UITask;\nimport org.jkiss.dbeaver.ui.editors.object.struct.EditConstraintPage;\n\nimport java.util.ArrayList;\nimport java.util.List;\n\npublic class ExasolPrimaryKeyConfigurator implements DBEObjectConfigurator<ExasolTableUniqueKey> {\n    protected static final Log log = Log.getLog(ExasolPrimaryKeyConfigurator.class);\n\n    @Override\n    public ExasolTableUniqueKey configureObject(DBRProgressMonitor monitor, Object container, ExasolTableUniqueKey constraint) {\n        return new UITask<ExasolTableUniqueKey>() {\n            @Override\n            protected ExasolTableUniqueKey runTask()\n            {\n                EditConstraintPage editPage = new EditConstraintPage(\n                        ExasolMessages.edit_exasol_constraint_manager_dialog_title,\n                        constraint,\n                        new DBSEntityConstraintType[] {DBSEntityConstraintType.PRIMARY_KEY });\n                if (!editPage.edit()) {\n                    return null;\n                }\n\n                constraint.setConstraintType(editPage.getConstraintType());\n                constraint.setEnabled(editPage.isEnableConstraint());\n                constraint.setName(editPage.getConstraintName());",
+      "metadata": {
+        "language": "java",
+        "total_chunks": 2,
+        "strategy": "basic",
+        "chunk_index": 0,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.exasol.ui/src/org/jkiss/dbeaver/ext/exasol/ui/config/ExasolPrimaryKeyConfigurator.java"
+      },
+      "similarity_score": 1.0385581254959106
+    },
+    {
+      "content": "/**\n * MySQL index configurator\n */\npublic class MySQLForeignKeyConfigurator implements DBEObjectConfigurator<MySQLTableForeignKey> {\n\n\n    @Override\n    public MySQLTableForeignKey configureObject(DBRProgressMonitor monitor, Object table, MySQLTableForeignKey foreignKey) {\n        return UITask.run(() -> {\n            EditForeignKeyPage editPage = new EditForeignKeyPage(\n                MySQLUIMessages.edit_foreign_key_manager_title,\n                foreignKey,\n                new DBSForeignKeyModifyRule[] {\n                    DBSForeignKeyModifyRule.NO_ACTION,\n                    DBSForeignKeyModifyRule.CASCADE, DBSForeignKeyModifyRule.RESTRICT,\n                    DBSForeignKeyModifyRule.SET_NULL,\n                    DBSForeignKeyModifyRule.SET_DEFAULT });\n            if (!editPage.edit()) {\n                return null;\n            }\n\n            foreignKey.setReferencedKey((MySQLTableConstraint) editPage.getUniqueConstraint());\n            foreignKey.setDeleteRule(editPage.getOnDeleteRule());\n            foreignKey.setUpdateRule(editPage.getOnUpdateRule());\n            int colIndex = 1;\n            for (EditForeignKeyPage.FKColumnInfo tableColumn : editPage.getColumns()) {\n                foreignKey.addColumn(\n                    new MySQLTableForeignKeyColumn(\n                        foreignKey,\n                        (MySQLTableColumn) tableColumn.getOwnColumn(),\n                        colIndex++,\n                        (MySQLTableColumn) tableColumn.getRefColumn()));\n            }\n            return foreignKey;\n        });\n    }\n\n}\n```",
+      "metadata": {
+        "file_path": "plugins/org.jkiss.dbeaver.ext.mysql.ui/src/org/jkiss/dbeaver/ext/mysql/ui/config/MySQLForeignKeyConfigurator.java",
+        "strategy": "basic",
+        "total_chunks": 2,
+        "language": "java",
+        "chunk_index": 1
+      },
+      "similarity_score": 1.0392179489135742
+    },
+    {
+      "content": "// Check already configured FDW\n\n        // Done\n        availableDataSources = new ArrayList<>(dataSources);\n        proposedEntities = new ArrayList<>(entities);\n    }\n\n    private void collectAvailableDataSources(DBRProgressMonitor monitor, DBVContainer vContainer, Set<DBPDataSourceContainer> dataSources, Set<DBSEntity> entities) {\n        for (DBVContainer childContainer : vContainer.getContainers()) {\n            collectAvailableDataSources(monitor, childContainer, dataSources, entities);\n        }\n        for (DBVEntity vEntity : vContainer.getEntities()) {\n            for (DBVEntityForeignKey fk : vEntity.getForeignKeys()) {\n                DBPDataSourceContainer dataSource = fk.getAssociatedDataSource();\n                if (dataSource != database.getDataSource().getContainer()) {\n                    dataSources.add(dataSource);\n                    try {\n                        entities.add(fk.getAssociatedEntity(monitor));\n                    } catch (DBException e) {\n                        log.debug(\"Error getting referenced entity\", e);\n                    }\n                }\n            }\n        }\n    }\n\n    @Override\n    public boolean performFinish() {\n        try {\n            getRunnableContext().run(true, true, monitor -> {\n                try {\n                    installFDW(monitor);\n                } catch (Exception e) {\n                    throw new InvocationTargetException(e);\n                }\n            });\n        } catch (InvocationTargetException e) {\n            DBWorkbench.getPlatformUI().showError(\"Error generating FDW\", \"Error during FDW script execution\", e.getTargetException());\n                return false;\n        } catch (InterruptedException e) {\n            return false;\n        }\n\n        return true;\n    }",
+      "metadata": {
+        "file_path": "plugins/org.jkiss.dbeaver.ext.postgresql.ui/src/org/jkiss/dbeaver/ext/postgresql/tools/fdw/PostgreFDWConfigWizard.java",
+        "chunk_index": 6,
+        "language": "java",
+        "total_chunks": 11,
+        "strategy": "basic"
+      },
+      "similarity_score": 1.0450901985168457
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ui.editors.connection/schema/org.jkiss.dbeaver.ui.propertyConfigurator.exsd (text)\n\n## Code Content:\n```text\n<?xml version='1.0' encoding='UTF-8'?>\n<!-- Schema file written by PDE -->\n<schema targetNamespace=\"org.jkiss.dbeaver.core\" xmlns=\"http://www.w3.org/2001/XMLSchema\">\n<annotation>\n      <appInfo>\n         <meta.schema plugin=\"org.jkiss.dbeaver.core\" id=\"org.jkiss.dbeaver.networkHandler\" name=\"Network Handlers\"/>\n      </appInfo>\n      <documentation>\n         [Enter description of this extension point.]\n      </documentation>\n   </annotation>\n\n   <element name=\"extension\">\n      <annotation>\n         <appInfo>\n            <meta.element />\n         </appInfo>\n      </annotation>\n      <complexType>\n         <sequence>\n            <element ref=\"propertyConfigurator\" minOccurs=\"0\" maxOccurs=\"unbounded\"/>\n         </sequence>\n      </complexType>\n   </element>\n\n   <element name=\"propertyConfigurator\">\n      <complexType>\n         <attribute name=\"class\" type=\"string\">\n            <annotation>\n               <documentation>\n                  \n               </documentation>\n            </annotation>\n         </attribute>\n         <attribute name=\"uiClass\" type=\"string\">\n            <annotation>\n               <documentation>\n                  \n               </documentation>\n               <appInfo>\n                  <meta.attribute kind=\"java\" basedOn=\":org.jkiss.dbeaver.ui.IObjectPropertyConfigurator\"/>\n               </appInfo>\n            </annotation>\n         </attribute>\n      </complexType>\n   </element>\n\n   <annotation>\n      <appInfo>\n         <meta.section type=\"since\"/>\n      </appInfo>\n      <documentation>\n         [Enter the first release in which this extension point appears.]\n      </documentation>\n   </annotation>",
+      "metadata": {
+        "file_path": "plugins/org.jkiss.dbeaver.ui.editors.connection/schema/org.jkiss.dbeaver.ui.propertyConfigurator.exsd",
+        "strategy": "basic",
+        "language": "text",
+        "total_chunks": 2,
+        "chunk_index": 0
+      },
+      "similarity_score": 1.0589090585708618
+    },
+    {
+      "content": "public void removeAvailableDataSource(DBPDataSourceContainer dataSource) {\n        availableDataSources.remove(dataSource);\n    }\n\n    void collectAvailableDataSources(DBRProgressMonitor monitor) {\n        if (availableDataSources != null) {\n            return;\n        }\n        Set<DBPDataSourceContainer> dataSources = new LinkedHashSet<>();\n        Set<DBSEntity> entities = new LinkedHashSet<>();\n\n        DBPDataSourceContainer curDataSource = database.getDataSource().getContainer();\n\n        // Find all virtual connections\n        DBVModel vModel = curDataSource.getVirtualModel();\n        monitor.beginTask(\"Check virtual foreign keys\", 1);\n        collectAvailableDataSources(monitor, vModel, dataSources, entities);\n        monitor.done();\n\n        DBNModel navModel = DBWorkbench.getPlatform().getNavigatorModel();",
+      "metadata": {
+        "chunk_index": 4,
+        "strategy": "basic",
+        "total_chunks": 11,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.postgresql.ui/src/org/jkiss/dbeaver/ext/postgresql/tools/fdw/PostgreFDWConfigWizard.java",
+        "language": "java"
+      },
+      "similarity_score": 1.0676801204681396
+    },
+    {
+      "content": "import org.jkiss.code.NotNull;\nimport org.jkiss.code.Nullable;\nimport org.jkiss.dbeaver.DBException;\nimport org.jkiss.dbeaver.ext.db2.DB2Constants;\nimport org.jkiss.dbeaver.ext.db2.editors.DB2StatefulObject;\nimport org.jkiss.dbeaver.ext.db2.model.cache.DB2TableIndexCache;\nimport org.jkiss.dbeaver.ext.db2.model.dict.DB2OwnerType;\nimport org.jkiss.dbeaver.ext.db2.model.fed.DB2Nickname;\nimport org.jkiss.dbeaver.model.DBPEvaluationContext;\nimport org.jkiss.dbeaver.model.DBPObjectStatistics;\nimport org.jkiss.dbeaver.model.DBPRefreshableObject;\nimport org.jkiss.dbeaver.model.DBUtils;\nimport org.jkiss.dbeaver.model.exec.DBCException;\nimport org.jkiss.dbeaver.model.impl.DBObjectNameCaseTransformer;\nimport org.jkiss.dbeaver.model.impl.jdbc.JDBCUtils;\nimport org.jkiss.dbeaver.model.impl.jdbc.struct.JDBCTable;\nimport org.jkiss.dbeaver.model.meta.Association;\nimport org.jkiss.dbeaver.model.meta.Property;\nimport org.jkiss.dbeaver.model.meta.PropertyLength;\nimport org.jkiss.dbeaver.model.preferences.DBPPropertySource;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport org.jkiss.dbeaver.model.struct.DBSObject;\nimport org.jkiss.utils.CommonUtils;\n\nimport java.sql.ResultSet;\nimport java.sql.Timestamp;\nimport java.util.ArrayList;\nimport java.util.Collection;\nimport java.util.Collections;\nimport java.util.List;\n\n/**\n * Super class for DB2 Tables, Views, Nicknames\n * \n * @author Denis Forveille\n */\npublic abstract class DB2TableBase extends JDBCTable<DB2DataSource, DB2Schema>\n    implements DBPRefreshableObject, DB2StatefulObject, DBPObjectStatistics {\n\n    private DB2TableIndexCache tableIndexCache = new DB2TableIndexCache();\n\n    private String owner;\n    private DB2OwnerType ownerType;\n\n    private Integer tableId;\n\n    private Timestamp createTime;\n\n    private String remarks;\n    private volatile Long tableTotalSize;",
+      "metadata": {
+        "language": "java",
+        "total_chunks": 7,
+        "strategy": "basic",
+        "chunk_index": 1,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.db2/src/org/jkiss/dbeaver/ext/db2/model/DB2TableBase.java"
+      },
+      "similarity_score": 1.0679841041564941
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.mssql/src/org/jkiss/dbeaver/ext/mssql/edit/SQLServerDataTypeManager.java (java)\n\n## Code Content:\n```java\npackage org.jkiss.dbeaver.ext.mssql.edit;\n\nimport org.jkiss.code.Nullable;\nimport org.jkiss.dbeaver.DBException;\nimport org.jkiss.dbeaver.ext.mssql.model.SQLServerDataType;\nimport org.jkiss.dbeaver.ext.mssql.model.SQLServerSchema;\nimport org.jkiss.dbeaver.model.DBPDataSource;\nimport org.jkiss.dbeaver.model.DBPEvaluationContext;\nimport org.jkiss.dbeaver.model.edit.DBECommandContext;\nimport org.jkiss.dbeaver.model.edit.DBEPersistAction;\nimport org.jkiss.dbeaver.model.exec.DBCExecutionContext;\nimport org.jkiss.dbeaver.model.impl.edit.SQLDatabasePersistAction;\nimport org.jkiss.dbeaver.model.impl.sql.edit.SQLObjectEditor;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport org.jkiss.dbeaver.model.struct.DBSObject;\nimport org.jkiss.dbeaver.model.struct.cache.DBSObjectCache;\n\nimport java.util.List;\nimport java.util.Map;\n\npublic class SQLServerDataTypeManager extends SQLObjectEditor<SQLServerDataType, SQLServerSchema> {\n\n    @Override\n    public boolean canEditObject(SQLServerDataType object) {\n        return false;\n    }\n\n    @Override\n    public boolean canCreateObject(Object container) {\n        return false;\n    }\n\n    @Override\n    public boolean canDeleteObject(SQLServerDataType object) {\n        return object.isUserType();\n    }\n\n    @Override\n    protected SQLServerDataType createDatabaseObject(DBRProgressMonitor monitor, DBECommandContext context, Object container, Object copyFrom, Map<String, Object> options) throws DBException {\n        throw new IllegalStateException(\"Not implemented\");\n    }\n\n    @Override\n    protected void addObjectCreateActions(DBRProgressMonitor monitor, DBCExecutionContext executionContext, List<DBEPersistAction> actions, ObjectCreateCommand command, Map<String, Object> options) throws DBException {\n        throw new IllegalStateException(\"Not implemented\");\n    }",
+      "metadata": {
+        "total_chunks": 2,
+        "chunk_index": 0,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.mssql/src/org/jkiss/dbeaver/ext/mssql/edit/SQLServerDataTypeManager.java",
+        "strategy": "basic",
+        "language": "java"
+      },
+      "similarity_score": 1.0719716548919678
+    },
+    {
+      "content": "DBNModel navModel = DBWorkbench.getPlatform().getNavigatorModel();\n\n        // Check global FK references cache\n        Map<String, List<DBVEntityForeignKey>> grCache = DBVModel.getGlobalReferenceCache();\n        monitor.beginTask(\"Check external references\", grCache.size());\n        for (Map.Entry<String, List<DBVEntityForeignKey>> grEntry : grCache.entrySet()) {\n            DBNDataSource refDataSource = navModel.getDataSourceByPath(\n                database.getDataSource().getContainer().getProject(),\n                grEntry.getKey());\n            if (refDataSource != null && refDataSource.getDataSourceContainer() == curDataSource) {\n                try {\n                    for (DBVEntityForeignKey rfk : grEntry.getValue()) {\n                        monitor.subTask(\"Check \" + rfk.getEntity().getFullyQualifiedName(DBPEvaluationContext.UI));\n                        DBSEntity refEntity = rfk.getEntity().getRealEntity(monitor);\n                        if (refEntity != null) {\n                            dataSources.add(refEntity.getDataSource().getContainer());\n                            entities.add(refEntity);\n                        }\n                    }\n                } catch (DBException e) {\n                    log.debug(\"Error getting referenced entity\", e);\n                }\n            }\n            monitor.worked(1);\n        }\n        monitor.done();\n\n        // Check already configured FDW\n\n        // Done\n        availableDataSources = new ArrayList<>(dataSources);\n        proposedEntities = new ArrayList<>(entities);\n    }",
+      "metadata": {
+        "file_path": "plugins/org.jkiss.dbeaver.ext.postgresql.ui/src/org/jkiss/dbeaver/ext/postgresql/tools/fdw/PostgreFDWConfigWizard.java",
+        "language": "java",
+        "chunk_index": 5,
+        "total_chunks": 11,
+        "strategy": "basic"
+      },
+      "similarity_score": 1.0735442638397217
+    },
+    {
+      "content": "import java.util.ArrayList;\nimport java.util.List;\n\n/**\n * DB2 foreign key configurator\n */\npublic class DB2ForeignKeyConfigurator implements DBEObjectConfigurator<DB2TableForeignKey> {\n\tprivate static final DBSForeignKeyModifyRule[] FK_RULES;\n\t\n\tstatic {\n        List<DBSForeignKeyModifyRule> rules = new ArrayList<>(DB2DeleteUpdateRule.values().length);\n        for (DB2DeleteUpdateRule db2DeleteUpdateRule : DB2DeleteUpdateRule.values()) {\n            rules.add(db2DeleteUpdateRule.getRule());\n        }\n        FK_RULES = rules.toArray(new DBSForeignKeyModifyRule[] {});\n    }\n\n    @Override\n    public DB2TableForeignKey configureObject(DBRProgressMonitor monitor, Object container, DB2TableForeignKey foreignKey) {\n        return new UITask<DB2TableForeignKey>() {\n            @Override\n            protected DB2TableForeignKey runTask() {\n            \tEditForeignKeyPage editDialog = new EditForeignKeyPage(\n                        DB2Messages.edit_db2_foreign_key_manager_dialog_title, foreignKey, FK_RULES);\n                    if (!editDialog.edit()) {\n                        return null;\n                    }\n\n                    DBSForeignKeyModifyRule deleteRule = editDialog.getOnDeleteRule();\n                    DBSForeignKeyModifyRule updateRule = editDialog.getOnUpdateRule();\n                    DB2TableUniqueKey ukConstraint = (DB2TableUniqueKey) editDialog.getUniqueConstraint();\n\n                    foreignKey.setReferencedConstraint(ukConstraint);\n                    foreignKey.setDb2DeleteRule(DB2DeleteUpdateRule.getDB2RuleFromDBSRule(deleteRule));\n                    foreignKey.setDb2UpdateRule(DB2DeleteUpdateRule.getDB2RuleFromDBSRule(updateRule));",
+      "metadata": {
+        "strategy": "basic",
+        "language": "java",
+        "file_path": "plugins/org.jkiss.dbeaver.ext.db2.ui/src/org/jkiss/dbeaver/ext/db2/ui/config/DB2ForeignKeyConfigurator.java",
+        "chunk_index": 1,
+        "total_chunks": 3
+      },
+      "similarity_score": 1.0769060850143433
+    },
+    {
+      "content": "import org.jkiss.dbeaver.DBException;\nimport org.jkiss.dbeaver.Log;\nimport org.jkiss.dbeaver.ext.db2.info.DB2Parameter;\nimport org.jkiss.dbeaver.ext.db2.info.DB2XMLString;\nimport org.jkiss.dbeaver.ext.db2.model.*;\nimport org.jkiss.dbeaver.ext.db2.model.app.DB2ServerApplication;\nimport org.jkiss.dbeaver.ext.db2.model.dict.DB2TablespaceDataType;\nimport org.jkiss.dbeaver.ext.db2.model.fed.DB2Nickname;\nimport org.jkiss.dbeaver.ext.db2.model.module.DB2Module;\nimport org.jkiss.dbeaver.model.DBPEvaluationContext;\nimport org.jkiss.dbeaver.model.DBUtils;\nimport org.jkiss.dbeaver.model.exec.DBCException;\nimport org.jkiss.dbeaver.model.exec.jdbc.JDBCCallableStatement;\nimport org.jkiss.dbeaver.model.exec.jdbc.JDBCPreparedStatement;\nimport org.jkiss.dbeaver.model.exec.jdbc.JDBCResultSet;\nimport org.jkiss.dbeaver.model.exec.jdbc.JDBCSession;\nimport org.jkiss.dbeaver.model.impl.jdbc.JDBCUtils;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport org.jkiss.dbeaver.model.runtime.VoidProgressMonitor;\nimport org.jkiss.dbeaver.model.sql.SQLConstants;\nimport org.jkiss.dbeaver.model.sql.format.SQLFormatUtils;\nimport org.jkiss.utils.CommonUtils;\n\nimport java.sql.Clob;\nimport java.sql.SQLException;\nimport java.util.ArrayList;\nimport java.util.List;\n\n/**\n * DB2 Utils\n * \n * @author Denis Forveille\n */\npublic class DB2Utils {\n\n    private static final Log    LOG                  = Log.getLog(DB2Utils.class);\n\n    private static final String LINE_SEP             = \";\\n\";\n\n    // TODO DF: many things in this class could probably be factorized or generic-field",
+      "metadata": {
+        "strategy": "basic",
+        "language": "java",
+        "file_path": "plugins/org.jkiss.dbeaver.ext.db2/src/org/jkiss/dbeaver/ext/db2/DB2Utils.java",
+        "total_chunks": 17,
+        "chunk_index": 1
+      },
+      "similarity_score": 1.0775376558303833
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.exasol/src/org/jkiss/dbeaver/ext/exasol/model/ExasolPriority.java (java)\n\n## Code Content:\n```java\npackage org.jkiss.dbeaver.ext.exasol.model;\n\nimport org.jkiss.code.NotNull;\nimport org.jkiss.dbeaver.DBException;\nimport org.jkiss.dbeaver.model.DBPNamedObject2;\nimport org.jkiss.dbeaver.model.DBPRefreshableObject;\nimport org.jkiss.dbeaver.model.DBPSaveableObject;\nimport org.jkiss.dbeaver.model.meta.Property;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport org.jkiss.dbeaver.model.struct.DBSObject;\n\nimport java.math.BigDecimal;\nimport java.sql.Date;\n\npublic class ExasolPriority implements DBPRefreshableObject, DBPNamedObject2, DBPSaveableObject {\n\n\tprivate ExasolDataSource dataSource;\n\tprivate String groupName;\n\tprivate Date created;\n\tprivate String comment=\"\";\n\tprivate Boolean persisted;\n\tprivate BigDecimal groupId = new BigDecimal(-1);\n\t\n\tpublic ExasolPriority(ExasolDataSource dataSource, String name, String comment ) {\n\t\tthis.groupName = name;\n\t\tthis.comment = comment;\n\t    this.persisted = false;\n\t    this.dataSource = dataSource;\n\t}\n\t\n\t@Override\n\tpublic DBSObject getParentObject()\n\t{\n\t\treturn this.dataSource.getContainer();\n\t}\n\n\t@Override\n\tpublic ExasolDataSource getDataSource()\n\t{\n\t\treturn this.dataSource;\n\t}\n\n\t@Override\n\tpublic boolean isPersisted()\n\t{\n\t\treturn this.persisted;\n\t}\n\n\t@Override\n\tpublic void setPersisted(boolean persisted)\n\t{\n\t\tthis.persisted = persisted;\n\n\t}\n\n\t@Override\n\tpublic DBSObject refreshObject(@NotNull DBRProgressMonitor monitor)\n\t\t\tthrows DBException\n\t{\n        ((ExasolDataSource) getDataSource()).refreshObject(monitor);\n\t\treturn this;\n\t}\n\n\tpublic void setName(String groupName) {\n\t\tthis.groupName = groupName;\n\t}\n\t\n\tpublic void setDescription(String description)\n\t{\n\t\tthis.comment = description;\n\t}\n\n\t@Override\n    @Property(viewable = true, editable= true, updatable=true, order = 30)\n\tpublic String getDescription() {\n\t\treturn comment;\n\t}",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.exasol/src/org/jkiss/dbeaver/ext/exasol/model/ExasolPriority.java",
+        "total_chunks": 2,
+        "strategy": "basic",
+        "language": "java"
+      },
+      "similarity_score": 1.077967882156372
+    },
+    {
+      "content": "package org.jkiss.dbeaver.tools.transfer.database;\n\nimport org.eclipse.core.runtime.IAdaptable;\nimport org.jkiss.code.NotNull;\nimport org.jkiss.code.Nullable;\nimport org.jkiss.dbeaver.DBException;\nimport org.jkiss.dbeaver.Log;\nimport org.jkiss.dbeaver.model.*;\nimport org.jkiss.dbeaver.model.app.DBPProject;\nimport org.jkiss.dbeaver.model.data.DBDDataFilter;\nimport org.jkiss.dbeaver.model.exec.*;\nimport org.jkiss.dbeaver.model.impl.AbstractExecutionSource;\nimport org.jkiss.dbeaver.model.impl.DataSourceContextProvider;\nimport org.jkiss.dbeaver.model.meta.DBSerializable;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport org.jkiss.dbeaver.model.runtime.DBRRunnableContext;\nimport org.jkiss.dbeaver.model.sql.SQLQuery;\nimport org.jkiss.dbeaver.model.sql.SQLQueryContainer;\nimport org.jkiss.dbeaver.model.sql.SQLScriptContext;\nimport org.jkiss.dbeaver.model.sql.SQLScriptElement;\nimport org.jkiss.dbeaver.model.sql.data.SQLQueryDataContainer;\nimport org.jkiss.dbeaver.model.struct.DBSDataContainer;\nimport org.jkiss.dbeaver.model.struct.DBSEntity;\nimport org.jkiss.dbeaver.model.task.DBTTask;\nimport org.jkiss.dbeaver.model.task.DBTaskUtils;\nimport org.jkiss.dbeaver.runtime.DBWorkbench;\nimport org.jkiss.dbeaver.runtime.serialize.DBPObjectSerializer;\nimport org.jkiss.dbeaver.tools.transfer.IDataTransferConsumer;\nimport org.jkiss.dbeaver.tools.transfer.IDataTransferNodePrimary;\nimport org.jkiss.dbeaver.tools.transfer.IDataTransferProcessor;\nimport org.jkiss.dbeaver.tools.transfer.IDataTransferProducer;\nimport org.jkiss.dbeaver.tools.transfer.internal.DTMessages;\nimport org.jkiss.utils.CommonUtils;\n\nimport java.io.PrintWriter;\nimport java.lang.reflect.InvocationTargetException;\nimport java.util.LinkedHashMap;\nimport java.util.Map;\n\n/**\n * Data container transfer producer\n */\n@DBSerializable(\"databaseTransferProducer\")\npublic class DatabaseTransferProducer implements IDataTransferProducer<DatabaseProducerSettings>, IDataTransferNodePrimary {",
+      "metadata": {
+        "total_chunks": 15,
+        "language": "java",
+        "file_path": "plugins/org.jkiss.dbeaver.data.transfer/src/org/jkiss/dbeaver/tools/transfer/database/DatabaseTransferProducer.java",
+        "chunk_index": 1,
+        "strategy": "basic"
+      },
+      "similarity_score": 1.0785049200057983
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.exasol/src/org/jkiss/dbeaver/ext/exasol/manager/ExasolForeignKeyManager.java (java)\n\n## Code Content:\n```java\npackage org.jkiss.dbeaver.ext.exasol.manager;\n\nimport org.jkiss.code.NotNull;\nimport org.jkiss.dbeaver.DBException;\nimport org.jkiss.dbeaver.ext.exasol.model.ExasolTable;\nimport org.jkiss.dbeaver.ext.exasol.model.ExasolTableForeignKey;\nimport org.jkiss.dbeaver.ext.exasol.tools.ExasolUtils;\nimport org.jkiss.dbeaver.model.DBConstants;\nimport org.jkiss.dbeaver.model.DBPEvaluationContext;\nimport org.jkiss.dbeaver.model.DBUtils;\nimport org.jkiss.dbeaver.model.edit.DBECommandContext;\nimport org.jkiss.dbeaver.model.edit.DBEObjectRenamer;\nimport org.jkiss.dbeaver.model.edit.DBEPersistAction;\nimport org.jkiss.dbeaver.model.exec.DBCExecutionContext;\nimport org.jkiss.dbeaver.model.impl.edit.SQLDatabasePersistAction;\nimport org.jkiss.dbeaver.model.impl.sql.edit.struct.SQLForeignKeyManager;\nimport org.jkiss.dbeaver.model.messages.ModelMessages;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport org.jkiss.dbeaver.model.struct.DBSObject;\nimport org.jkiss.dbeaver.model.struct.cache.DBSObjectCache;\n\nimport java.util.List;\nimport java.util.Map;\n\npublic class ExasolForeignKeyManager\n    extends SQLForeignKeyManager<ExasolTableForeignKey, ExasolTable> implements DBEObjectRenamer<ExasolTableForeignKey> {\n\n    @Override\n    public DBSObjectCache<? extends DBSObject, ExasolTableForeignKey> getObjectsCache(\n        ExasolTableForeignKey object) {\n        final ExasolTable parent = object.getParentObject();\n        return parent.getContainer().getAssociationCache();\n    }\n\n    @Override\n    protected ExasolTableForeignKey createDatabaseObject(\n        DBRProgressMonitor monitor, DBECommandContext context,\n        Object container, Object copyFrom, Map<String, Object> options) throws DBException {",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "basic",
+        "file_path": "plugins/org.jkiss.dbeaver.ext.exasol/src/org/jkiss/dbeaver/ext/exasol/manager/ExasolForeignKeyManager.java",
+        "total_chunks": 3,
+        "language": "java"
+      },
+      "similarity_score": 1.0788938999176025
+    }
+  ],
+  "enhanced": [
+    {
+      "content": "### Commit 2\n- ID: f7f7e6b8\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2021-02-09 04:04:12\n- Message: Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf\n- Changes:\n```diff\n@@ -1,6 +1,6 @@\n /*\n  * DBeaver - Universal Database Manager\n- * Copyright (C) 2010-2020 DBeaver Corp and others\n+ * Copyright (C) 2010-2021 DBeaver Corp and others\n  * Copyright (C) 2019 Karl Griesser (fullref@gmail.com)\n  *\n  * Licensed under the Apache License, Version 2.0 (the \"License\");\n@@ -26,8 +26,8 @@ import org.eclipse.swt.layout.GridLayout;\n import org.eclipse.swt.widgets.Composite;\n import org.eclipse.swt.widgets.Shell;\n import org.eclipse.swt.widgets.Text;\n-import org.jkiss.dbeaver....\n```\n\n### Commit 3\n- ID: 22b5efbe\n- Author: Anastasiya Volkova (anvolka@yandex.ru)\n- Date: 2020-05-12 06:08:28\n- Message: #8638 Connection, Consumer/Priority Group, Foreign/Primary key, SchemaRole, User configurators to ext.exasol.ui added\n\n\nFormer-commit-id: fedfc7399f87cc15352b96ab039de33b794d86ea\n- Changes:\n```diff\n@@ -26,7 +26,7 @@ import org.eclipse.swt.layout.GridLayout;\n import org.eclipse.swt.widgets.Composite;\n import org.eclipse.swt.widgets.Shell;\n import org.eclipse.swt.widgets.Text;\n-import org.jkiss.dbeaver.ext.exasol.ExasolMessages;\n+import org.jkiss.dbeaver.ext.exasol.ui.internal.ExasolMessages;\n import org.jkiss.dbeaver.ext.exasol.model.ExasolConsumerGroup;\n import org.jkiss.dbeaver.ui.UIUtils;\n import org.jkiss.dbeaver.ui.dialogs.BaseDialog;...\n```\n\n### Commit 4\n- ID: fddbcf41\n- Author: Anastasiya Volkova (anvolka@yandex.ru)\n- Date: 2020-05-09 04:53:38\n- Message: #8638 exasol dialogs moved from ext.exasol to ext/exasol.ui, configurators-part moved from managers in ext.exasol",
+      "metadata": {
+        "total_chunks": 7,
+        "chunk_index": 5,
+        "commit_count": 4,
+        "language": "java",
+        "file_path": "plugins/org.jkiss.dbeaver.ext.exasol.ui/src/org/jkiss/dbeaver/ext/exasol/ui/config/ExasolConsumerGroupDialog.java",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.7949866652488708
+    },
+    {
+      "content": "## Git Commit History\n\n### Commit 1\n- ID: f7f7e6b8\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2021-02-09 04:04:12\n- Message: Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf\n- Changes:\n```diff\n@@ -1,6 +1,6 @@\n /*\n  * DBeaver - Universal Database Manager\n- * Copyright (C) 2010-2020 DBeaver Corp and others\n+ * Copyright (C) 2010-2021 DBeaver Corp and others\n  * Copyright (C) 2011-2012 Eugene Fradkin (eugene.fradkin@gmail.com)\n  *\n  * Licensed under the Apache License, Version 2.0 (the \"License\");\n@@ -18,26 +18,16 @@\n package org.jkiss.dbeaver.ext.oracle.ui.tools.maintenance;\n \n import org.eclipse.jface.viewers.StructuredSelection;\n-import org.eclipse.swt.layout.GridData;\n-import org.ecl...\n```\n\n### Commit 2\n- ID: b961dbad\n- Author: LonwoLonwo (anvolka@yandex.ru)\n- Date: 2020-06-10 20:29:38\n- Message: #8920 Oracle tools to tasks\n\n\nFormer-commit-id: f11cd5e5fe20ad004fb21c4cd8cbf34b8c8e52f3\n- Changes:\n```diff\n@@ -17,6 +17,7 @@\n  */\n package org.jkiss.dbeaver.ext.oracle.ui.tools.maintenance;\n \n+import org.eclipse.jface.viewers.StructuredSelection;\n import org.eclipse.swt.layout.GridData;\n import org.eclipse.swt.widgets.Button;\n import org.eclipse.swt.widgets.Composite;\n@@ -26,9 +27,12 @@ import org.eclipse.ui.IWorkbenchPartSite;\n import org.eclipse.ui.IWorkbenchWindow;\n import org.jkiss.dbeaver.DBException;\n import org.jkiss.dbeaver.ext.oracle.model.OracleTable;\n+import org.jkiss.dbeaver.ext.oracle.ta...\n```\n\n### Commit 3\n- ID: 13db808b\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2020-04-09 04:18:05\n- Message: Imports optimization",
+      "metadata": {
+        "strategy": "enhanced",
+        "language": "java",
+        "total_chunks": 3,
+        "commit_count": 5,
+        "chunk_index": 1,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.oracle.ui/src/org/jkiss/dbeaver/ext/oracle/ui/tools/maintenance/OracleToolValidateStructure.java"
+      },
+      "similarity_score": 0.8437580466270447
+    },
+    {
+      "content": "### Commit 2\n- ID: cb519b0a\n- Author: Anastasiya Volkova (anvolka@yandex.ru)\n- Date: 2020-04-29 21:26:07\n- Message: #8562 part (Configurators) of ui-part from plugins/org.jkiss.dbeaver.ext.db2 moved in org.jkiss.dbeaver.ext.db2.ui\n\n\nFormer-commit-id: c8f001d9fb1c7dc14bd2112a8abcf08d4fee17c1\n- Changes:\n```diff\n@@ -0,0 +1,29 @@\n+package org.jkiss.dbeaver.ext.db2.ui.config;\n+\n+import org.jkiss.dbeaver.ext.db2.model.DB2Schema;\n+import org.jkiss.dbeaver.ext.db2.model.DB2Sequence;\n+import org.jkiss.dbeaver.model.edit.DBEObjectConfigurator;\n+import org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\n+import org.jkiss.dbeaver.model.struct.DBSEntityType;\n+import org.jkiss.dbeaver.ui.UITask;\n+import org.jkiss.dbeaver.ui.editors.object.struct.EntityEditPage;\n+\n+public class DB2SequenceConfigurator implements DB...\n```",
+      "metadata": {
+        "commit_count": 2,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.db2.ui/src/org/jkiss/dbeaver/ext/db2/ui/config/DB2SequenceConfigurator.java",
+        "language": "java",
+        "chunk_index": 1,
+        "strategy": "enhanced",
+        "total_chunks": 2
+      },
+      "similarity_score": 0.8745850920677185
+    },
+    {
+      "content": "### Commit 3\n- ID: f7f7e6b8\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2021-02-09 04:04:12\n- Message: Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf\n- Changes:\n```diff\n@@ -1,6 +1,6 @@\n /*\n  * DBeaver - Universal Database Manager\n- * Copyright (C) 2010-2020 DBeaver Corp and others\n+ * Copyright (C) 2010-2021 DBeaver Corp and others\n  *\n  * Licensed under the Apache License, Version 2.0 (the \"License\");\n  * you may not use this file except in compliance with the License.\n@@ -16,7 +16,9 @@\n  */\n package org.jkiss.dbeaver.ui.gis.registry;\n \n-import org.eclipse.core.runtime.*;\n+import org.eclipse.core.runtime.IConfigurationElement;\n+import org.eclipse.core.runtime....\n```\n\n### Commit 4\n- ID: 988a66b0\n- Author: Nikita Akilov (nikita.n.akilov@gmail.com)\n- Date: 2021-02-05 00:30:38\n- Message: #10573 try to auto assign tiles when updating tiles in registry and default tiles aren't set\n\n\nFormer-commit-id: 23954bb03677171243f55921896d8e4f5e2d0289\n- Changes:\n```diff\n@@ -199,7 +199,7 @@ public class GeometryViewerRegistry {\n             predefinedTiles.addAll(predefinedDescriptors);\n             userDefinedTiles.clear();\n             userDefinedTiles.addAll(userDefinedDescriptors);\n-            if (!predefinedTiles.contains(defaultLeafletTiles) && !userDefinedTiles.contains(defaultLeafletTiles)) {\n+            if (defaultLeafletTiles == null || (!predefinedTiles.contains(defaultLeafletTiles) && !userDefinedTiles.contains(defaultLeafletTiles))) {\n            ...\n```\n\n### Commit 5\n- ID: 9ad7cc0b\n- Author: Nikita Akilov (nikita.n.akilov@gmail.com)\n- Date: 2021-02-03 20:02:48\n- Message: #778 fix codestyle issues",
+      "metadata": {
+        "total_chunks": 11,
+        "strategy": "enhanced",
+        "chunk_index": 9,
+        "language": "java",
+        "commit_count": 5,
+        "file_path": "plugins/org.jkiss.dbeaver.data.gis.view/src/org/jkiss/dbeaver/ui/gis/registry/GeometryViewerRegistry.java"
+      },
+      "similarity_score": 0.8793306946754456
+    },
+    {
+      "content": "### Commit 2\n- ID: f7f7e6b8\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2021-02-09 04:04:12\n- Message: Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf\n- Changes:\n```diff\n@@ -1,6 +1,6 @@\n /*\n  * DBeaver - Universal Database Manager\n- * Copyright (C) 2010-2020 DBeaver Corp and others\n+ * Copyright (C) 2010-2021 DBeaver Corp and others\n  *\n  * Licensed under the Apache License, Version 2.0 (the \"License\");\n  * you may not use this file except in compliance with the License.\n@@ -33,8 +33,10 @@ import org.jkiss.dbeaver.ui.gis.internal.GISMessages;\n import org.jkiss.dbeaver.ui.gis.registry.GeometryViewerRegistry;\n import org.jkiss.dbeaver.ui.gis.registry.LeafletTilesD...\n```\n\n### Commit 3\n- ID: e17725a0\n- Author: Nikita Akilov (nikita.n.akilov@gmail.com)\n- Date: 2021-02-06 22:49:56\n- Message: #10573 fix usage of the word tile (in singular form)\n\n\nFormer-commit-id: 4e6a77f1760e97cf3aeb405f2a312a19518191ca\n- Changes:\n```diff\n@@ -299,12 +299,12 @@ class TilesManagementDialog extends BaseDialog {\n         if (!predefinedTiles.isEmpty()) {\n             predefinedTilesRootItem = new TreeItem(tree, SWT.NONE);\n             predefinedTilesRootItem.setText(GISMessages.panel_select_tiles_action_manage_dialog_predefined_tiles);\n-            for (LeafletTilesDescriptor tile: predefinedTiles) {\n+            for (LeafletTilesDescriptor descriptor: predefinedTiles) {\n                 TreeItem item = new TreeItem(predefinedTilesRo...\n```\n\n### Commit 4\n- ID: 1db653e0\n- Author: Nikita Akilov (nikita.n.akilov@gmail.com)\n- Date: 2021-02-05 22:33:56\n- Message: #10573 track changes to current tile layer and select it after editing is complete",
+      "metadata": {
+        "chunk_index": 15,
+        "file_path": "plugins/org.jkiss.dbeaver.data.gis.view/src/org/jkiss/dbeaver/ui/gis/panel/TilesManagementDialog.java",
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "language": "java",
+        "total_chunks": 17
+      },
+      "similarity_score": 0.8840730786323547
+    },
+    {
+      "content": "### Commit 2\n- ID: 481f3f1f\n- Author: Serge Rider (serge@jkiss.org)\n- Date: 2020-07-05 17:01:34\n- Message: Properties model refactoring\n\n\nFormer-commit-id: 992fb16cbac4e982186b1bac236df4fa699d42c8\n- Changes:\n```diff\n@@ -24,12 +24,8 @@ import org.jkiss.dbeaver.model.DBPDataSourceContainer;\n import org.jkiss.dbeaver.model.impl.AbstractDescriptor;\n import org.jkiss.dbeaver.model.impl.PropertyDescriptor;\n import org.jkiss.dbeaver.model.preferences.DBPPropertyDescriptor;\n-import org.jkiss.utils.ArrayUtils;\n import org.jkiss.utils.CommonUtils;\n \n-import java.util.ArrayList;\n-import java.util.List;\n-\n /**\n  * FDWConfigDescriptor\n  */\n@@ -44,7 +40,7 @@ public class FDWConfigDescriptor extends AbstractDescriptor\n   ...\n```\n\n### Commit 3\n- ID: 3269fca3\n- Author: Serge Rider (serge@jkiss.org)\n- Date: 2020-02-29 01:48:04\n- Message: Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23\n- Changes:\n```diff\n@@ -1,6 +1,6 @@\n /*\n  * DBeaver - Universal Database Manager\n- * Copyright (C) 2010-2019 Serge Rider (serge@jkiss.org)\n+ * Copyright (C) 2010-2020 DBeaver Corp and others\n  *\n  * Licensed under the Apache License, Version 2.0 (the \"License\");\n  * you may not use this file except in compliance with the License....\n```\n\n### Commit 4\n- ID: 34660646\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2019-09-16 01:58:40\n- Message: #6745 FDW output page. FDW registry.",
+      "metadata": {
+        "strategy": "enhanced",
+        "chunk_index": 2,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.postgresql/src/org/jkiss/dbeaver/ext/postgresql/model/fdw/FDWConfigDescriptor.java",
+        "commit_count": 4,
+        "language": "java",
+        "total_chunks": 4
+      },
+      "similarity_score": 0.9213885068893433
+    },
+    {
+      "content": "### Commit 3\n- ID: 13db808b\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2020-04-09 04:18:05\n- Message: Imports optimization\n\n\nFormer-commit-id: 9416282382df3ba69fb5f9729c9b1aec65c5f259\n- Changes:\n```diff\n@@ -26,8 +26,8 @@ import org.jkiss.dbeaver.ModelPreferences;\n import org.jkiss.dbeaver.model.DBPIdentifierCase;\n import org.jkiss.dbeaver.model.preferences.DBPPreferenceStore;\n import org.jkiss.dbeaver.ui.UIUtils;\n-import org.jkiss.dbeaver.ui.editors.sql.preferences.format.BaseFormatterConfigurationPage;\n import org.jkiss.dbeaver.ui.editors.sql.internal.SQLEditorMessages;\n+import org.jkiss.dbeaver.ui.editors.sql.preferences.format.BaseFormatterConfigurationPage;\n import org.jkiss.utils.CommonUti...\n```\n\n### Commit 4\n- ID: 3269fca3\n- Author: Serge Rider (serge@jkiss.org)\n- Date: 2020-02-29 01:48:04\n- Message: Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23\n- Changes:\n```diff\n@@ -1,6 +1,6 @@\n /*\n  * DBeaver - Universal Database Manager\n- * Copyright (C) 2010-2019 Serge Rider (serge@jkiss.org)\n+ * Copyright (C) 2010-2020 DBeaver Corp and others\n  *\n  * Licensed under the Apache License, Version 2.0 (the \"License\");\n  * you may not use this file except in compliance with the License....\n```\n\n### Commit 5\n- ID: dd15372b\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2019-05-26 06:24:23\n- Message: Refactoring: model.sql bundle extraction\n\nFormer-commit-id: 427266a339b30fd0469d58aa384d4208dd82852a\n- Changes:\n```diff\n@@ -0,0 +1,140 @@\n+/*\n+ * DBeaver - Universal Database Manager\n+ * Copyright (C) 2010-2019 Serge Rider (serge@jkiss.org)\n+ *\n+ * Licensed under the Apache License, Version 2.0 (the \"License\");\n+ * you may not use this file except in compliance with the License.\n+ * You may obtain a copy of the License at\n+ *\n+ *     http://www.apache.org/licenses/LICENSE-2.0\n+ *\n+ * Unless required by applicable law or agreed to in writing, software\n+ * distributed under the License is distributed on an \"AS IS\" ...\n```",
+      "metadata": {
+        "total_chunks": 7,
+        "chunk_index": 6,
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "file_path": "plugins/org.jkiss.dbeaver.ui.editors.sql/src/org/jkiss/dbeaver/ui/editors/sql/preferences/format/tokenized/SQLTokenizedFormatterConfigurationPage.java",
+        "language": "java"
+      },
+      "similarity_score": 0.9262528419494629
+    },
+    {
+      "content": "Former-commit-id: fedfc7399f87cc15352b96ab039de33b794d86ea\n- Changes:\n```diff\n@@ -0,0 +1,59 @@\n+package org.jkiss.dbeaver.ext.exasol.ui.config;\n+\n+import org.jkiss.dbeaver.DBException;\n+import org.jkiss.dbeaver.Log;\n+import org.jkiss.dbeaver.ext.exasol.ui.internal.ExasolMessages;\n+import org.jkiss.dbeaver.ext.exasol.model.ExasolTable;\n+import org.jkiss.dbeaver.ext.exasol.model.ExasolTableKeyColumn;\n+import org.jkiss.dbeaver.ext.exasol.model.ExasolTableUniqueKey;\n+import org.jkiss.dbeaver.model.DBPEvaluationContext;\n+import org.jkiss.dbeaver.model.edit.DBEObjectConfigurato...\n```",
+      "metadata": {
+        "chunk_index": 2,
+        "commit_count": 2,
+        "total_chunks": 3,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.exasol.ui/src/org/jkiss/dbeaver/ext/exasol/ui/config/ExasolPrimaryKeyConfigurator.java",
+        "strategy": "enhanced",
+        "language": "java"
+      },
+      "similarity_score": 0.9265325665473938
+    },
+    {
+      "content": "### Commit 2\n- ID: 3269fca3\n- Author: Serge Rider (serge@jkiss.org)\n- Date: 2020-02-29 01:48:04\n- Message: Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23\n- Changes:\n```diff\n@@ -1,6 +1,6 @@\n /*\n  * DBeaver - Universal Database Manager\n- * Copyright (C) 2010-2019 Serge Rider (serge@jkiss.org)\n+ * Copyright (C) 2010-2020 DBeaver Corp and others\n  *\n  * Licensed under the Apache License, Version 2.0 (the \"License\");\n  * you may not use this file except in compliance with the License....\n```\n\n### Commit 3\n- ID: 4af4312b\n- Author: Serge Rider (serge@jkiss.org)\n- Date: 2020-01-21 19:58:07\n- Message: #7707 Modeless connection wizards.\n\n\nFormer-commit-id: e9dd1229d71f22b50a806ba48dc776988c576bcd\n- Changes:\n```diff\n@@ -26,8 +26,7 @@ import org.jkiss.dbeaver.model.connection.DBPDriver;\n import org.jkiss.dbeaver.registry.driver.DriverUtils;\n import org.jkiss.dbeaver.ui.DBeaverIcons;\n import org.jkiss.dbeaver.ui.UIUtils;\n-import org.jkiss.dbeaver.ui.dialogs.connection.CreateConnectionDialog;\n-import org.jkiss.dbeaver.ui.dialogs.connection.NewConnectionWizard;\n+import org.jkiss.dbeaver.ui.dialogs.connection.NewConnectionDialog;\n \n import java.util.List;\n \n@@ -71,10 +70,7 @@ public class NewConnectionDriverSele...\n```\n\n### Commit 4\n- ID: c7af9421\n- Author: Serge Rider (serge@jkiss.org)\n- Date: 2019-08-06 22:13:04\n- Message: #6323 Connection wizard: set default project according to cur selection/part.",
+      "metadata": {
+        "file_path": "plugins/org.jkiss.dbeaver.core/src/org/jkiss/dbeaver/ui/actions/datasource/NewConnectionDriverSelectorContributor.java",
+        "total_chunks": 4,
+        "language": "java",
+        "strategy": "enhanced",
+        "chunk_index": 2,
+        "commit_count": 5
+      },
+      "similarity_score": 0.9305448532104492
+    },
+    {
+      "content": "}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: f7f7e6b8\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2021-02-09 04:04:12\n- Message: Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf\n- Changes:\n```diff\n@@ -1,6 +1,6 @@\n /*\n  * DBeaver - Universal Database Manager\n- * Copyright (C) 2010-2020 DBeaver Corp and others\n+ * Copyright (C) 2010-2021 DBeaver Corp and others\n  *\n  * Licensed under the Apache License, Version 2.0 (the \"License\");\n  * you may not use this file except in compliance with the License.\n@@ -18,7 +18,6 @@ package org.jkiss.dbeaver.tasks.ui.wizard;\n \n import org.eclipse.osgi.util.NLS;\n import org.eclipse.swt.SWT;\n-\n import org.eclipse.swt.layout.FillLayout;\n import org.eclipse.sw...\n```\n\n### Commit 2\n- ID: 5acabefe\n- Author: SA357 (ivanzadov2000@gmail.com)\n- Date: 2020-06-22 23:03:10\n- Message: dbeaver-corp/dbeaver-i18n#171\nTranslated all \"showError\"s in data.transfer, data.transfer.ui, tasks.ui plugins\n\n\nFormer-commit-id: bd4dcc17bcc8da24675e3a137239d66f8a586c83\n- Changes:\n```diff\n@@ -63,7 +63,7 @@ class TaskConfigurationWizardPageSettings extends ActiveWizardPage<TaskConfigura\n             if (errorMessage != null) {\n                 setErrorMessage(errorMessage);\n             } else {\n-                setErrorMessage(\"Fill task '\" + curTaskType.getName() + \"' parameters\");\n+                setErrorMessage(NLS.bind(TaskUIMessages.task_configuration_wizard_page_settings_fill_parameters, curTaskType.getName()));\n             }\n             return false;\n         }...\n```\n\n### Commit 3\n- ID: 91d1c738\n- Author: Anastasiya Volkova (anvolka@yandex.ru)\n- Date: 2020-04-09 18:55:06\n- Message: dbeaver-corp/dbeaver-i18n#166 partially localization of bundle_*.properties, NLS.bind with param adding int TaskConfigurationWizardPageSettings",
+      "metadata": {
+        "total_chunks": 7,
+        "strategy": "enhanced",
+        "file_path": "plugins/org.jkiss.dbeaver.tasks.ui/src/org/jkiss/dbeaver/tasks/ui/wizard/TaskConfigurationWizardPageSettings.java",
+        "commit_count": 5,
+        "language": "java",
+        "chunk_index": 4
+      },
+      "similarity_score": 0.931105375289917
+    },
+    {
+      "content": "### Commit 4\n- ID: 3269fca3\n- Author: Serge Rider (serge@jkiss.org)\n- Date: 2020-02-29 01:48:04\n- Message: Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23\n- Changes:\n```diff\n@@ -1,6 +1,6 @@\n /*\n  * DBeaver - Universal Database Manager\n- * Copyright (C) 2010-2019 Serge Rider (serge@jkiss.org)\n+ * Copyright (C) 2010-2020 DBeaver Corp and others\n  * Copyright (C) 2011-2012 Eugene Fradkin (eugene.fradkin@gmail.com)\n  *\n  * Licensed under the Apache License, Version 2.0 (the \"License\");...\n```\n\n### Commit 5\n- ID: 5b19a3e3\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2019-05-01 17:49:38\n- Message: Menus and tools refactoring. Dashboards tool.\n\n\nFormer-commit-id: a27ff773b4a75203bf51c67d3b9c74760df3fb14\n- Changes:\n```diff\n@@ -25,7 +25,7 @@ import org.jkiss.dbeaver.DBException;\n import org.jkiss.dbeaver.ext.mysql.model.MySQLTable;\n import org.jkiss.dbeaver.model.DBPEvaluationContext;\n import org.jkiss.dbeaver.model.struct.DBSObject;\n-import org.jkiss.dbeaver.tools.IExternalTool;\n+import org.jkiss.dbeaver.ui.tools.IUserInterfaceTool;\n import org.jkiss.utils.CommonUtils;\n \n import java.util.Collection;\n@@ -34,7 +34,7 @@ import java.util.List;\n /**\n  * Table truncate\n  */\n-public class MySQLToolAnalyse implements IEx...\n```",
+      "metadata": {
+        "chunk_index": 2,
+        "commit_count": 5,
+        "language": "java",
+        "total_chunks": 3,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.mysql.ui/src/org/jkiss/dbeaver/ext/mysql/tools/maintenance/MySQLToolAnalyse.java",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.9345583319664001
+    },
+    {
+      "content": "### Commit 4\n- ID: 3269fca3\n- Author: Serge Rider (serge@jkiss.org)\n- Date: 2020-02-29 01:48:04\n- Message: Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23\n- Changes:\n```diff\n@@ -1,6 +1,6 @@\n /*\n  * DBeaver - Universal Database Manager\n- * Copyright (C) 2010-2019 Serge Rider (serge@jkiss.org)\n+ * Copyright (C) 2010-2020 DBeaver Corp and others\n  * Copyright (C) 2011-2012 Eugene Fradkin (eugene.fradkin@gmail.com)\n  *\n  * Licensed under the Apache License, Version 2.0 (the \"License\");...\n```\n\n### Commit 5\n- ID: 5b19a3e3\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2019-05-01 17:49:38\n- Message: Menus and tools refactoring. Dashboards tool.\n\n\nFormer-commit-id: a27ff773b4a75203bf51c67d3b9c74760df3fb14\n- Changes:\n```diff\n@@ -25,7 +25,7 @@ import org.jkiss.dbeaver.DBException;\n import org.jkiss.dbeaver.ext.mysql.model.MySQLTable;\n import org.jkiss.dbeaver.model.DBPEvaluationContext;\n import org.jkiss.dbeaver.model.struct.DBSObject;\n-import org.jkiss.dbeaver.tools.IExternalTool;\n+import org.jkiss.dbeaver.ui.tools.IUserInterfaceTool;\n import org.jkiss.utils.CommonUtils;\n \n import java.util.Collection;\n@@ -34,7 +34,7 @@ import java.util.List;\n /**\n  * Table optimize\n  */\n-public class MySQLToolOptimize implements IE...\n```",
+      "metadata": {
+        "commit_count": 5,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.mysql.ui/src/org/jkiss/dbeaver/ext/mysql/tools/maintenance/MySQLToolOptimize.java",
+        "language": "java",
+        "strategy": "enhanced",
+        "total_chunks": 3,
+        "chunk_index": 2
+      },
+      "similarity_score": 0.9345583319664001
+    },
+    {
+      "content": "### Commit 2\n- ID: 3269fca3\n- Author: Serge Rider (serge@jkiss.org)\n- Date: 2020-02-29 01:48:04\n- Message: Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23\n- Changes:\n```diff\n@@ -1,6 +1,6 @@\n /*\n  * DBeaver - Universal Database Manager\n- * Copyright (C) 2010-2019 Serge Rider (serge@jkiss.org)\n+ * Copyright (C) 2010-2020 DBeaver Corp and others\n  * Copyright (C) 2011-2012 Eugene Fradkin (eugene.fradkin@gmail.com)\n  *\n  * Licensed under the Apache License, Version 2.0 (the \"License\");...\n```\n\n### Commit 3\n- ID: 5b9b4feb\n- Author: Serge Rider (serge@jkiss.org)\n- Date: 2019-09-29 21:57:07\n- Message: #6675 Preferences: ms (milliseconds) note added to timeouts options\n\n\nFormer-commit-id: e530d29a8448778de7b57df4baf583dedb8611ef\n- Changes:\n```diff\n@@ -24,6 +24,7 @@ import org.jkiss.dbeaver.core.CoreMessages;\n import org.jkiss.dbeaver.model.DBPDataSourceContainer;\n import org.jkiss.dbeaver.model.preferences.DBPPreferenceStore;\n import org.jkiss.dbeaver.ui.UIUtils;\n+import org.jkiss.dbeaver.ui.internal.UIMessages;\n import org.jkiss.dbeaver.utils.PrefUtils;\n \n /**\n@@ -80,9 +81,9 @@ public class PrefPageErrorHandle extends TargetPrefPage\n         {\n             Group timeoutsGroup = UIUtils.createControlGroup(composite, CoreMessages.pref_page...\n```\n\n### Commit 4\n- ID: 83e3b1fe\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2019-01-11 02:56:55\n- Message: License header update (2019)\n\n\nFormer-commit-id: b5121d4a6e8f3f21079920180b0fb14ada6d3349\n- Changes:\n```diff\n@@ -1,6 +1,6 @@\n /*\n  * DBeaver - Universal Database Manager\n- * Copyright (C) 2010-2017 Serge Rider (serge@jkiss.org)\n+ * Copyright (C) 2010-2019 Serge Rider (serge@jkiss.org)\n  * Copyright (C) 2011-2012 Eugene Fradkin (eugene.fradkin@gmail.com)\n  *\n  * Licensed under the Apache License, Version 2.0 (the \"License\");...\n```",
+      "metadata": {
+        "chunk_index": 5,
+        "total_chunks": 7,
+        "file_path": "plugins/org.jkiss.dbeaver.core/src/org/jkiss/dbeaver/ui/preferences/PrefPageErrorHandle.java",
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "language": "java"
+      },
+      "similarity_score": 0.9352815747261047
+    },
+    {
+      "content": "### Commit 4\n- ID: 35c8a5c8\n- Author: serge@jkiss.org (serge@jkiss.org)\n- Date: 2019-07-02 19:55:19\n- Message: Generic model refactoring (split tables and views)\n\n\nFormer-commit-id: f967aa59fa19129394816550531b85ccb2ea7b73\n- Changes:\n```diff\n@@ -18,6 +18,7 @@ package org.jkiss.dbeaver.ext.mssql.model.generic;\n \n import org.jkiss.code.NotNull;\n import org.jkiss.dbeaver.ext.generic.model.GenericTable;\n+import org.jkiss.dbeaver.ext.generic.model.GenericTableBase;\n import org.jkiss.dbeaver.ext.generic.model.GenericTableIndex;\n import org.jkiss.dbeaver.model.DBPEvaluationContext;\n import org.jkiss.dbeaver.model.DBUtils;\n@@ -28,7 +29,7 @@ import org.jkiss.dbeaver.model.struct.rdb.DBSIndexType;\n */\n public class SQLServerGenericIndex exten...\n```\n\n### Commit 5\n- ID: 83e3b1fe\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2019-01-11 02:56:55\n- Message: License header update (2019)\n\n\nFormer-commit-id: b5121d4a6e8f3f21079920180b0fb14ada6d3349\n- Changes:\n```diff\n@@ -1,6 +1,6 @@\n /*\n  * DBeaver - Universal Database Manager\n- * Copyright (C) 2010-2017 Serge Rider (serge@jkiss.org)\n+ * Copyright (C) 2010-2019 Serge Rider (serge@jkiss.org)\n  *\n  * Licensed under the Apache License, Version 2.0 (the \"License\");\n  * you may not use this file except in compliance with the License....\n```",
+      "metadata": {
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "file_path": "plugins/org.jkiss.dbeaver.ext.mssql/src/org/jkiss/dbeaver/ext/mssql/model/generic/SQLServerGenericIndex.java",
+        "total_chunks": 3,
+        "chunk_index": 2,
+        "language": "java"
+      },
+      "similarity_score": 0.94266676902771
+    },
+    {
+      "content": "### Commit 2\n- ID: 2e93f6a8\n- Author: Anastasiya Volkova (anvolka@yandex.ru)\n- Date: 2021-03-16 01:20:53\n- Message: #11007 DDL for Informix foreign keys changed\n\n\nFormer-commit-id: 24e712fc5129da451ae9ae3479607f213f8e93c4\n- Changes:\n```diff\n@@ -29,6 +29,7 @@ import org.jkiss.dbeaver.model.struct.DBSObject;\n import org.jkiss.dbeaver.model.struct.cache.DBSObjectCache;\n import org.jkiss.dbeaver.model.struct.rdb.DBSForeignKeyDeferability;\n import org.jkiss.dbeaver.model.struct.rdb.DBSForeignKeyModifyRule;\n+import org.jkiss.utils.CommonUtils;\n \n import java.util.Map;\n \n@@ -84,4 +85,22 @@ public class GenericForeignKeyManager extends SQLForeignKeyManager<GenericTableF\n     protected boolean isLegacyForeignKeySyntax(GenericTableBase owner...\n```\n\n### Commit 3\n- ID: ce5744ce\n- Author: Anastasiya Volkova (anvolka@yandex.ru)\n- Date: 2021-03-12 03:14:22\n- Message: #11007 move FK from nested declaration in table DDL in special cases (like Informix)\n\n\nFormer-commit-id: 683d19876e92910270d106c6294f9309221e9f5a\n- Changes:\n```diff\n@@ -22,6 +22,7 @@ import org.jkiss.dbeaver.ext.generic.model.GenericTableBase;\n import org.jkiss.dbeaver.ext.generic.model.GenericTableForeignKey;\n import org.jkiss.dbeaver.ext.generic.model.GenericUtils;\n import org.jkiss.dbeaver.model.edit.DBECommandContext;\n+import org.jkiss.dbeaver.model.impl.edit.DBECommandAbstract;\n import org.jkiss.dbeaver.model.impl.sql.edit.struct.SQLForeignKeyManager;\n import org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\n import org.jkiss.dbeaver.model.struct.DBS...\n```\n\n### Commit 4\n- ID: f7f7e6b8\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2021-02-09 04:04:12\n- Message: Copyright update (2021)",
+      "metadata": {
+        "total_chunks": 5,
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.generic/src/org/jkiss/dbeaver/ext/generic/edit/GenericForeignKeyManager.java",
+        "language": "java",
+        "chunk_index": 3
+      },
+      "similarity_score": 0.943924069404602
+    },
+    {
+      "content": "### Commit 3\n- ID: 2e93f6a8\n- Author: Anastasiya Volkova (anvolka@yandex.ru)\n- Date: 2021-03-16 01:20:53\n- Message: #11007 DDL for Informix foreign keys changed\n\n\nFormer-commit-id: 24e712fc5129da451ae9ae3479607f213f8e93c4\n- Changes:\n```diff\n@@ -33,6 +33,7 @@ import org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\n import org.jkiss.dbeaver.model.runtime.VoidProgressMonitor;\n import org.jkiss.dbeaver.model.struct.*;\n import org.jkiss.dbeaver.model.struct.cache.DBSObjectCache;\n+import org.jkiss.dbeaver.model.struct.rdb.DBSForeignKeyModifyRule;\n import org.jkiss.dbeaver.model.struct.rdb.DBSTableForeignKey;\n import org.jkiss.utils.CommonUtils;\n \n@@ -86,12 +87,13 @@ public abstract class SQLForeignKeyManager<OBJECT_TYPE extends JDBCTa...\n```\n\n### Commit 4\n- ID: ce5744ce\n- Author: Anastasiya Volkova (anvolka@yandex.ru)\n- Date: 2021-03-12 03:14:22\n- Message: #11007 move FK from nested declaration in table DDL in special cases (like Informix)\n\n\nFormer-commit-id: 683d19876e92910270d106c6294f9309221e9f5a\n- Changes:\n```diff\n@@ -61,7 +61,7 @@ public abstract class SQLForeignKeyManager<OBJECT_TYPE extends JDBCTableConstrai\n         actions.add(\n             new SQLDatabasePersistAction(\n                 ModelMessages.model_jdbc_create_new_foreign_key,\n-                \"ALTER TABLE \" + table.getFullyQualifiedName(DBPEvaluationContext.DDL) + \" ADD \" + getNestedDeclaration(monitor, table, command, options)) //$NON-NLS-1$ //$NON-NLS-2$\n+                \"ALTER TABLE \" + table.getFullyQualifiedName(DBPEvaluationContext.DDL...\n```\n\n### Commit 5\n- ID: f7f7e6b8\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2021-02-09 04:04:12\n- Message: Copyright update (2021)",
+      "metadata": {
+        "chunk_index": 8,
+        "strategy": "enhanced",
+        "total_chunks": 10,
+        "language": "java",
+        "file_path": "plugins/org.jkiss.dbeaver.model/src/org/jkiss/dbeaver/model/impl/sql/edit/struct/SQLForeignKeyManager.java",
+        "commit_count": 5
+      },
+      "similarity_score": 0.9465818405151367
+    },
+    {
+      "content": "### Commit 2\n- ID: f7f7e6b8\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2021-02-09 04:04:12\n- Message: Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf\n- Changes:\n```diff\n@@ -1,6 +1,6 @@\n /*\n  * DBeaver - Universal Database Manager\n- * Copyright (C) 2010-2020 DBeaver Corp and others\n+ * Copyright (C) 2010-2021 DBeaver Corp and others\n  * Copyright (C) 2011-2012 Eugene Fradkin (eugene.fradkin@gmail.com)\n  *\n  * Licensed under the Apache License, Version 2.0 (the \"License\");...\n```\n\n### Commit 3\n- ID: 3269fca3\n- Author: Serge Rider (serge@jkiss.org)\n- Date: 2020-02-29 01:48:04\n- Message: Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23\n- Changes:\n```diff\n@@ -1,6 +1,6 @@\n /*\n  * DBeaver - Universal Database Manager\n- * Copyright (C) 2010-2019 Serge Rider (serge@jkiss.org)\n+ * Copyright (C) 2010-2020 DBeaver Corp and others\n  * Copyright (C) 2011-2012 Eugene Fradkin (eugene.fradkin@gmail.com)\n  *\n  * Licensed under the Apache License, Version 2.0 (the \"License\");...\n```\n\n### Commit 4\n- ID: afccf25d\n- Author: Serge Rider (serge@jkiss.org)\n- Date: 2019-11-27 17:00:10\n- Message: #6041 SQL model refactoring. Export from query process flow redesign.\n\n\nFormer-commit-id: acf41858ab0f7db9b724d5fa4f3d64adee399da7\n- Changes:\n```diff\n@@ -24,8 +24,8 @@ import org.jkiss.dbeaver.Log;\n import org.jkiss.dbeaver.ModelPreferences;\n import org.jkiss.dbeaver.model.DBPDataSourceContainer;\n import org.jkiss.dbeaver.model.preferences.DBPPreferenceStore;\n-import org.jkiss.dbeaver.runtime.sql.SQLScriptCommitType;\n-import org.jkiss.dbeaver.runtime.sql.SQLScriptErrorHandling;\n+import org.jkiss.dbeaver.model.sql.SQLScriptCommitType;\n+import org.jkiss.dbeaver.model.sql.SQLScriptErrorHandling;\n import org.jkiss.dbeaver.ui.UIUtils;\n import org....\n```\n\n### Commit 5\n- ID: c486d741\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2019-11-22 04:00:47\n- Message: #7258 SQL editor layout prefs save/load fix",
+      "metadata": {
+        "total_chunks": 14,
+        "chunk_index": 12,
+        "commit_count": 5,
+        "file_path": "plugins/org.jkiss.dbeaver.ui.editors.sql/src/org/jkiss/dbeaver/ui/editors/sql/preferences/PrefPageSQLExecute.java",
+        "language": "java",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.9500571489334106
+    },
+    {
+      "content": "}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: f7f7e6b8\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2021-02-09 04:04:12\n- Message: Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf\n- Changes:\n```diff\n@@ -1,6 +1,6 @@\n /*\n  * DBeaver - Universal Database Manager\n- * Copyright (C) 2010-2020 DBeaver Corp and others\n+ * Copyright (C) 2010-2021 DBeaver Corp and others\n  *\n  * Licensed under the Apache License, Version 2.0 (the \"License\");\n  * you may not use this file except in compliance with the License.\n@@ -16,13 +16,13 @@\n  */\n package org.jkiss.dbeaver.ext.db2.ui.config;\n \n-import org.jkiss.dbeaver.ext.db2.ui.internal.DB2Messages;\n import org.jkiss.dbeaver.ext.db2.model.DB2Index;\n import org....\n```\n\n### Commit 2\n- ID: cb519b0a\n- Author: Anastasiya Volkova (anvolka@yandex.ru)\n- Date: 2020-04-29 21:26:07\n- Message: #8562 part (Configurators) of ui-part from plugins/org.jkiss.dbeaver.ext.db2 moved in org.jkiss.dbeaver.ext.db2.ui\n\n\nFormer-commit-id: c8f001d9fb1c7dc14bd2112a8abcf08d4fee17c1\n- Changes:\n```diff\n@@ -0,0 +1,87 @@\n+/*\n+ * DBeaver - Universal Database Manager\n+ * Copyright (C) 2010-2020 DBeaver Corp and others\n+ *\n+ * Licensed under the Apache License, Version 2.0 (the \"License\");\n+ * you may not use this file except in compliance with the License.\n+ * You may obtain a copy of the License at\n+ *\n+ *     http://www.apache.org/licenses/LICENSE-2.0\n+ *\n+ * Unless required by applicable law or agreed to in writing, software\n+ * distributed under the License is distributed on an \"AS IS\" BASIS,\n...\n```",
+      "metadata": {
+        "strategy": "enhanced",
+        "total_chunks": 3,
+        "chunk_index": 2,
+        "commit_count": 2,
+        "language": "java",
+        "file_path": "plugins/org.jkiss.dbeaver.ext.db2.ui/src/org/jkiss/dbeaver/ext/db2/ui/config/DB2IndexConfigurator.java"
+      },
+      "similarity_score": 0.9502487182617188
+    },
+    {
+      "content": "### Commit 3\n- ID: 3269fca3\n- Author: Serge Rider (serge@jkiss.org)\n- Date: 2020-02-29 01:48:04\n- Message: Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23\n- Changes:\n```diff\n@@ -1,6 +1,6 @@\n /*\n  * DBeaver - Universal Database Manager\n- * Copyright (C) 2010-2019 Serge Rider (serge@jkiss.org)\n+ * Copyright (C) 2010-2020 DBeaver Corp and others\n  * Copyright (C) 2011-2012 Eugene Fradkin (eugene.fradkin@gmail.com)\n  *\n  * Licensed under the Apache License, Version 2.0 (the \"License\");...\n```\n\n### Commit 4\n- ID: b7f9c87c\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2019-02-17 04:10:29\n- Message: #5243 Query manager: ref page hint added. Log file folder create (if not exists)\n\n\nFormer-commit-id: ac10d24d7b38d7d6ab5f25fb77c318dd48c262a2\n- Changes:\n```diff\n@@ -19,6 +19,7 @@ package org.jkiss.dbeaver.ui.preferences;\n \n import org.eclipse.core.runtime.IAdaptable;\n import org.eclipse.swt.SWT;\n+import org.eclipse.swt.custom.CLabel;\n import org.eclipse.swt.events.SelectionAdapter;\n import org.eclipse.swt.events.SelectionEvent;\n import org.eclipse.swt.layout.GridData;\n@@ -111,6 +112,9 @@ public class PrefPageQueryManager extends AbstractPrefPage implements IWorkbench\n             textOutputFolder = DialogUtils.createOutputFolderChooser(storageSettings, ...\n```\n\n### Commit 5\n- ID: 83e3b1fe\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2019-01-11 02:56:55\n- Message: License header update (2019)\n\n\nFormer-commit-id: b5121d4a6e8f3f21079920180b0fb14ada6d3349\n- Changes:\n```diff\n@@ -1,6 +1,6 @@\n /*\n  * DBeaver - Universal Database Manager\n- * Copyright (C) 2010-2017 Serge Rider (serge@jkiss.org)\n+ * Copyright (C) 2010-2019 Serge Rider (serge@jkiss.org)\n  * Copyright (C) 2011-2012 Eugene Fradkin (eugene.fradkin@gmail.com)\n  *\n  * Licensed under the Apache License, Version 2.0 (the \"License\");...\n```",
+      "metadata": {
+        "chunk_index": 7,
+        "language": "java",
+        "file_path": "plugins/org.jkiss.dbeaver.core/src/org/jkiss/dbeaver/ui/preferences/PrefPageQueryManager.java",
+        "total_chunks": 8,
+        "commit_count": 5,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.9520070552825928
+    },
+    {
+      "content": "### Commit 2\n- ID: 3269fca3\n- Author: Serge Rider (serge@jkiss.org)\n- Date: 2020-02-29 01:48:04\n- Message: Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23\n- Changes:\n```diff\n@@ -1,6 +1,6 @@\n /*\n  * DBeaver - Universal Database Manager\n- * Copyright (C) 2010-2019 Serge Rider (serge@jkiss.org)\n+ * Copyright (C) 2010-2020 DBeaver Corp and others\n  *\n  * Licensed under the Apache License, Version 2.0 (the \"License\");\n  * you may not use this file except in compliance with the License....\n```\n\n### Commit 3\n- ID: 53ee7264\n- Author: Serge Rider (serge@jkiss.org)\n- Date: 2020-02-18 23:46:02\n- Message: Task management UI refactoirng (move to UI plugin)\n\n\nFormer-commit-id: f52b26918ade66d976625cc901c5616f39f0af51\n- Changes:\n```diff\n@@ -17,7 +17,6 @@\n \n package org.jkiss.dbeaver.ext.postgresql.tools;\n \n-import org.eclipse.jface.wizard.IWizard;\n import org.jkiss.code.NotNull;\n import org.jkiss.dbeaver.Log;\n import org.jkiss.dbeaver.ext.postgresql.PostgreDataSourceProvider;\n@@ -25,9 +24,10 @@ import org.jkiss.dbeaver.ext.postgresql.model.PostgreDatabase;\n import org.jkiss.dbeaver.ext.postgresql.tasks.PostgreSQLTasks;\n import org.jkiss.dbeaver.model.runtime.DBRRunnableContext;\n import org.jkiss.dbeaver.model.task.DBTTask;\n-imp...\n```\n\n### Commit 4\n- ID: 4969ad56\n- Author: Serge Rider (serge@jkiss.org)\n- Date: 2019-12-23 19:56:55\n- Message: #7444 Oracle SQL*Plus",
+      "metadata": {
+        "total_chunks": 4,
+        "language": "java",
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "chunk_index": 2,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.postgresql.ui/src/org/jkiss/dbeaver/ext/postgresql/tools/PostgreTaskConfigurator.java"
+      },
+      "similarity_score": 0.9575679898262024
+    }
+  ],
+  "compressed": [
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.mssql/src/org/jkiss/dbeaver/ext/mssql/model/SQLServerTableForeignKeyColumn.java (java)\n\n## Key Code Elements:\nimport org.jkiss.dbeaver.model.meta.Property;\nimport org.jkiss.dbeaver.model.struct.rdb.DBSTableForeignKeyColumn;\n    @Override\n    @Property(id = \"reference\", viewable = true, order = 4)\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 3269fca3 by Serge Rider (serge@jkiss.org): Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23...\n- 83e3b1fe by serge-rider (serge@jkiss.org): License header update (2019)\n\n\nFormer-commit-id: b5121d4a6e8f3f21079920180b0fb14ada6d3349...",
+      "metadata": {
+        "total_chunks": 1,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.mssql/src/org/jkiss/dbeaver/ext/mssql/model/SQLServerTableForeignKeyColumn.java",
+        "chunk_index": 0,
+        "commit_count": 5,
+        "language": "java",
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.8885648846626282
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.exasol/src/org/jkiss/dbeaver/ext/exasol/model/ExasolTableForeignKeyColumn.java (java)\n\n## Key Code Elements:\nimport org.jkiss.dbeaver.model.struct.DBSEntityAttribute;\nimport org.jkiss.dbeaver.model.struct.rdb.DBSTableForeignKeyColumn;\n    @Override\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 919dad20 by Serge Rider (serge@jkiss.org): #8226 Exasol: FK model enhancement (read ref columns)\n\n\nFormer-commit-id: f9ddcc72824ad32cf5a5f97dfc...",
+      "metadata": {
+        "commit_count": 2,
+        "language": "java",
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "file_path": "plugins/org.jkiss.dbeaver.ext.exasol/src/org/jkiss/dbeaver/ext/exasol/model/ExasolTableForeignKeyColumn.java",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.8899102210998535
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.db2.ui/src/org/jkiss/dbeaver/ext/db2/ui/config/DB2UniqueKeyConfigurator.java (java)\n\n## Key Code Elements:\nimport org.jkiss.dbeaver.ext.db2.model.DB2TableColumn;\nimport org.jkiss.dbeaver.ext.db2.model.DB2TableKeyColumn;\nimport org.jkiss.dbeaver.ext.db2.model.DB2TableUniqueKey;\nimport org.jkiss.dbeaver.ext.db2.ui.internal.DB2Messages;\nimport org.jkiss.dbeaver.model.edit.DBEObjectConfigurator;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport org.jkiss.dbeaver.model.struct.DBSEntityAttribute;\nimport org.jkiss.dbeaver.model.struct.DBSEntityConstraintType;\nimport org.jkiss.dbeaver.ui.UITask;\nimport org.jkiss.dbeaver.ui.editors.object.struct.EditConstraintPage;\nimport java.util.ArrayList;\nimport java.util.List;\n    @Override\n            @Override\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 8f8ea989 by Anastasiya Volkova (anvolka@yandex.ru): #8562 db2 export-package complete, configurators fixed\n\n\nFormer-commit-id: ab1088d6613929ca3b285bc54...\n- cb519b0a by Anastasiya Volkova (anvolka@yandex.ru): #8562 part (Configurators) of ui-part from plugins/org.jkiss.dbeaver.ext.db2 moved in org.jkiss.dbea...",
+      "metadata": {
+        "file_path": "plugins/org.jkiss.dbeaver.ext.db2.ui/src/org/jkiss/dbeaver/ext/db2/ui/config/DB2UniqueKeyConfigurator.java",
+        "language": "java",
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "commit_count": 3,
+        "chunk_index": 0
+      },
+      "similarity_score": 0.8992933630943298
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.db2.i/src/org/jkiss/dbeaver/ext/db2/i/model/DB2IDataSource.java (java)\n\n## Key Code Elements:\nimport org.jkiss.dbeaver.DBException;\nimport org.jkiss.dbeaver.Log;\nimport org.jkiss.dbeaver.ext.generic.model.GenericDataSource;\nimport org.jkiss.dbeaver.ext.generic.model.meta.GenericMetaModel;\nimport org.jkiss.dbeaver.model.DBPDataSourceContainer;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 3269fca3 by Serge Rider (serge@jkiss.org): Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23...\n- 924e9ae6 by serge@jkiss.org (serge@jkiss.org): #1857 DB2i extension\n\n\nFormer-commit-id: efb944af49cca2c5bcd471c3ba9e691eff7732a0...",
+      "metadata": {
+        "strategy": "compressed",
+        "language": "java",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "commit_count": 3,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.db2.i/src/org/jkiss/dbeaver/ext/db2/i/model/DB2IDataSource.java"
+      },
+      "similarity_score": 0.9118900895118713
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.generic.ui/src/org/jkiss/dbeaver/ext/generic/views/GenericTablePrimaryKeyConfigurator.java (java)\n\n## Key Code Elements:\nimport org.jkiss.dbeaver.ext.generic.model.GenericTableColumn;\nimport org.jkiss.dbeaver.ext.generic.model.GenericTableConstraintColumn;\nimport org.jkiss.dbeaver.ext.generic.model.GenericUniqueKey;\nimport org.jkiss.dbeaver.model.edit.DBEObjectConfigurator;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport org.jkiss.dbeaver.model.struct.DBSEntityAttribute;\nimport org.jkiss.dbeaver.model.struct.DBSEntityConstraintType;\nimport org.jkiss.dbeaver.model.struct.rdb.DBSTableCheckConstraint;\nimport org.jkiss.dbeaver.ui.UITask;\nimport org.jkiss.dbeaver.ui.editors.object.struct.EditConstraintPage;\n    @Override\n            @Override\n                            new DBSEntityConstraintType[] {DBSEntityConstraintType.PRIMARY_KEY, DBSEntityConstraintType.UNIQUE_KEY, DBSEntityConstraintType.CHECK} :\n\n## Recent Changes:\n- a731d19c by LonwoLonwo (anvolka@yandex.ru): #11495 method renamed\n\n\nFormer-commit-id: 99b05a00d43e976dd632c9d2fa707a4d53865655...\n- f38e3916 by LonwoLonwo (anvolka@yandex.ru): #11495 check constraint model refactoring\n\n\nFormer-commit-id: cfa850ecaa533dfd80fe177eda8da188b92f19...\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...",
+      "metadata": {
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.generic.ui/src/org/jkiss/dbeaver/ext/generic/views/GenericTablePrimaryKeyConfigurator.java",
+        "language": "java",
+        "commit_count": 5
+      },
+      "similarity_score": 0.9196611642837524
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.mssql/src/org/jkiss/dbeaver/ext/mssql/model/generic/SQLServerGenericView.java (java)\n\n## Key Code Elements:\nimport org.jkiss.dbeaver.ext.generic.model.GenericStructContainer;\nimport org.jkiss.dbeaver.ext.generic.model.GenericView;\nimport org.jkiss.dbeaver.model.exec.jdbc.JDBCResultSet;\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 3269fca3 by Serge Rider (serge@jkiss.org): Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23...\n- 35c8a5c8 by serge@jkiss.org (serge@jkiss.org): Generic model refactoring (split tables and views)\n\n\nFormer-commit-id: f967aa59fa19129394816550531b8...",
+      "metadata": {
+        "file_path": "plugins/org.jkiss.dbeaver.ext.mssql/src/org/jkiss/dbeaver/ext/mssql/model/generic/SQLServerGenericView.java",
+        "strategy": "compressed",
+        "commit_count": 3,
+        "total_chunks": 1,
+        "language": "java",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.9239145517349243
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.model/src/org/jkiss/dbeaver/model/struct/rdb/DBSTableIndex.java (java)\n\n## Key Code Elements:\nimport org.jkiss.dbeaver.DBException;\nimport org.jkiss.dbeaver.model.DBPQualifiedObject;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport org.jkiss.dbeaver.model.struct.DBSEntity;\nimport org.jkiss.dbeaver.model.struct.DBSEntityConstraint;\nimport org.jkiss.dbeaver.model.struct.DBSEntityReferrer;\nimport org.jkiss.dbeaver.model.struct.DBSObject;\nimport java.util.List;\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 3269fca3 by Serge Rider (serge@jkiss.org): Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23...\n- 96c942e4 by serge-rider (serge@jkiss.org): Model additions\n\n\nFormer-commit-id: fd96ec9b6a126bf16aeb47250b5caf3d5e328fc8...",
+      "metadata": {
+        "strategy": "compressed",
+        "commit_count": 5,
+        "total_chunks": 1,
+        "language": "java",
+        "chunk_index": 0,
+        "file_path": "plugins/org.jkiss.dbeaver.model/src/org/jkiss/dbeaver/model/struct/rdb/DBSTableIndex.java"
+      },
+      "similarity_score": 0.9312398433685303
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.generic.ui/src/org/jkiss/dbeaver/ext/generic/views/GenericTableForeignKeyConfigurator.java (java)\n\n## Key Code Elements:\nimport org.jkiss.dbeaver.ext.generic.model.GenericTableColumn;\nimport org.jkiss.dbeaver.ext.generic.model.GenericTableForeignKey;\nimport org.jkiss.dbeaver.ext.generic.model.GenericTableForeignKeyColumnTable;\nimport org.jkiss.dbeaver.model.edit.DBEObjectConfigurator;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport org.jkiss.dbeaver.model.struct.DBSEntityReferrer;\nimport org.jkiss.dbeaver.model.struct.rdb.DBSForeignKeyDeferability;\nimport org.jkiss.dbeaver.model.struct.rdb.DBSForeignKeyModifyRule;\nimport org.jkiss.dbeaver.ui.UITask;\nimport org.jkiss.dbeaver.ui.editors.object.struct.EditForeignKeyPage;\n    @Override\n            @Override\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 3269fca3 by Serge Rider (serge@jkiss.org): Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23...\n- 3a2a0944 by Serge Rider (serge@jkiss.org): UI configurator API refactoring\n\n\nFormer-commit-id: 351c30ba148c4536a158074308bcea13284c496b...",
+      "metadata": {
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.generic.ui/src/org/jkiss/dbeaver/ext/generic/views/GenericTableForeignKeyConfigurator.java",
+        "total_chunks": 1,
+        "commit_count": 5,
+        "language": "java"
+      },
+      "similarity_score": 0.9344751834869385
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.generic/src/org/jkiss/dbeaver/ext/generic/model/GenericTableForeignKeyColumnTable.java (java)\n\n## Key Code Elements:\nimport org.jkiss.dbeaver.model.meta.Property;\nimport org.jkiss.dbeaver.model.struct.rdb.DBSTableForeignKeyColumn;\n    @Override\n    @Property(id = \"reference\", viewable = true, order = 4)\n    @Override\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 3269fca3 by Serge Rider (serge@jkiss.org): Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23...\n- 83e3b1fe by serge-rider (serge@jkiss.org): License header update (2019)\n\n\nFormer-commit-id: b5121d4a6e8f3f21079920180b0fb14ada6d3349...",
+      "metadata": {
+        "file_path": "plugins/org.jkiss.dbeaver.ext.generic/src/org/jkiss/dbeaver/ext/generic/model/GenericTableForeignKeyColumnTable.java",
+        "chunk_index": 0,
+        "language": "java",
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "commit_count": 5
+      },
+      "similarity_score": 0.938579797744751
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.db2/src/org/jkiss/dbeaver/ext/db2/model/DB2ViewBaseDep.java (java)\n\n## Key Code Elements:\nimport org.jkiss.code.NotNull;\nimport org.jkiss.dbeaver.DBException;\nimport org.jkiss.dbeaver.ext.db2.editors.DB2ObjectType;\nimport org.jkiss.dbeaver.ext.db2.model.dict.DB2TableDepType;\nimport org.jkiss.dbeaver.model.impl.jdbc.JDBCUtils;\nimport org.jkiss.dbeaver.model.meta.Property;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport org.jkiss.dbeaver.model.struct.DBSObject;\nimport org.jkiss.utils.CommonUtils;\nimport java.sql.ResultSet;\n        // TODO DF: Bad should be BTYPE+BSCHEMA+BNAME\n    @NotNull\n    @Override\n    @Property(viewable = true, editable = false, id = \"Name\", order = 1)\n    @Property(viewable = true, editable = false, order = 2)\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 3269fca3 by Serge Rider (serge@jkiss.org): Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23...\n- 83e3b1fe by serge-rider (serge@jkiss.org): License header update (2019)\n\n\nFormer-commit-id: b5121d4a6e8f3f21079920180b0fb14ada6d3349...",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.db2/src/org/jkiss/dbeaver/ext/db2/model/DB2ViewBaseDep.java",
+        "strategy": "compressed",
+        "commit_count": 5,
+        "total_chunks": 1,
+        "language": "java"
+      },
+      "similarity_score": 0.9466065168380737
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.db2/src/org/jkiss/dbeaver/ext/db2/model/DB2PlanConfig.java (java)\n\n## Key Code Elements:\nimport org.jkiss.dbeaver.model.DBPObject;\n\n## Recent Changes:\n- e89899e6 by Anastasiya Volkova (anvolka@yandex.ru): #8562 PlanConfig fixed, messages for DB2TableChooser moved from ext.db2 to ext.db2.ui\n\n\nFormer-commi...\n- 3fba0b21 by Anastasiya Volkova (anvolka@yandex.ru): #8562 DB2PlanSchemaConfigurator with logic from DB2DataSource in org.jkiss.dbeaver.ext.db2.ui added,...",
+      "metadata": {
+        "total_chunks": 1,
+        "language": "java",
+        "chunk_index": 0,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.db2/src/org/jkiss/dbeaver/ext/db2/model/DB2PlanConfig.java",
+        "strategy": "compressed",
+        "commit_count": 2
+      },
+      "similarity_score": 0.9466916918754578
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.clickhouse/src/org/jkiss/dbeaver/ext/clickhouse/model/ClickhouseView.java (java)\n\n## Key Code Elements:\nimport org.jkiss.code.Nullable;\nimport org.jkiss.dbeaver.Log;\nimport org.jkiss.dbeaver.ext.generic.model.GenericStructContainer;\nimport org.jkiss.dbeaver.ext.generic.model.GenericView;\nimport org.jkiss.dbeaver.model.exec.jdbc.JDBCResultSet;\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- dadbb092 by Serge Rider (serge@jkiss.org): #9291 Clickhouse: view drop + table + view manager\n\n\nFormer-commit-id: 9109fc05671e8b3df077d1fe56403...",
+      "metadata": {
+        "commit_count": 2,
+        "chunk_index": 0,
+        "language": "java",
+        "file_path": "plugins/org.jkiss.dbeaver.ext.clickhouse/src/org/jkiss/dbeaver/ext/clickhouse/model/ClickhouseView.java",
+        "strategy": "compressed",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.947956919670105
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.model/src/org/jkiss/dbeaver/model/impl/struct/AbstractTableIndex.java (java)\n\n## Key Code Elements:\nimport org.jkiss.code.NotNull;\nimport org.jkiss.dbeaver.model.struct.DBSEntityConstraintType;\nimport org.jkiss.dbeaver.model.struct.rdb.DBSTableIndex;\n    @Override\n    @NotNull\n    @Override\n    @Override\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 3269fca3 by Serge Rider (serge@jkiss.org): Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23...\n- 83e3b1fe by serge-rider (serge@jkiss.org): License header update (2019)\n\n\nFormer-commit-id: b5121d4a6e8f3f21079920180b0fb14ada6d3349...",
+      "metadata": {
+        "file_path": "plugins/org.jkiss.dbeaver.model/src/org/jkiss/dbeaver/model/impl/struct/AbstractTableIndex.java",
+        "chunk_index": 0,
+        "language": "java",
+        "strategy": "compressed",
+        "commit_count": 5,
+        "total_chunks": 1
+      },
+      "similarity_score": 0.9480196237564087
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.generic.ui/src/org/jkiss/dbeaver/ext/generic/views/GenericTableIndexConfigurator.java (java)\n\n## Key Code Elements:\nimport org.jkiss.dbeaver.ext.generic.model.GenericTableBase;\nimport org.jkiss.dbeaver.ext.generic.model.GenericTableColumn;\nimport org.jkiss.dbeaver.ext.generic.model.GenericTableIndex;\nimport org.jkiss.dbeaver.ext.generic.model.GenericTableIndexColumn;\nimport org.jkiss.dbeaver.model.edit.DBEObjectConfigurator;\nimport org.jkiss.dbeaver.model.impl.DBObjectNameCaseTransformer;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport org.jkiss.dbeaver.model.struct.DBSEntityAttribute;\nimport org.jkiss.dbeaver.model.struct.rdb.DBSIndexType;\nimport org.jkiss.dbeaver.ui.UITask;\nimport org.jkiss.dbeaver.ui.editors.object.struct.EditIndexPage;\nimport org.jkiss.utils.CommonUtils;\nimport java.util.Collection;\n    @Override\n            @Override\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 05cf8a34 by Anastasiya Volkova (anvolka@yandex.ru): #7530 create index dialog changed, icon for Hive index table changed\n\n\nFormer-commit-id: cbb8bd237d8...\n- 53bc8b45 by Serge Rider (serge@jkiss.org): #8236 Generic driver: unique index create fix\n\n\nFormer-commit-id: bc3b3137be6e85ae8b3797c636f681093c...",
+      "metadata": {
+        "file_path": "plugins/org.jkiss.dbeaver.ext.generic.ui/src/org/jkiss/dbeaver/ext/generic/views/GenericTableIndexConfigurator.java",
+        "language": "java",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "commit_count": 5
+      },
+      "similarity_score": 0.9517387747764587
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.db2/src/org/jkiss/dbeaver/ext/db2/model/DB2Bufferpool.java (java)\n\n## Key Code Elements:\nimport org.jkiss.code.NotNull;\nimport org.jkiss.dbeaver.model.impl.jdbc.JDBCUtils;\nimport org.jkiss.dbeaver.model.meta.Property;\nimport java.sql.ResultSet;\n    @NotNull\n    @Override\n    @Property(viewable = true, editable = false, order = 1)\n    @Property(viewable = true, editable = false, order = 2)\n    @Property(viewable = true, editable = false, order = 3)\n    @Property(viewable = true, editable = false, order = 4)\n    @Property(viewable = true, editable = false, order = 5)\n    @Property(viewable = true, editable = false, order = 7)\n    @Property(viewable = true, editable = false, order = 8)\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 3269fca3 by Serge Rider (serge@jkiss.org): Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23...\n- 83e3b1fe by serge-rider (serge@jkiss.org): License header update (2019)\n\n\nFormer-commit-id: b5121d4a6e8f3f21079920180b0fb14ada6d3349...",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "java",
+        "commit_count": 5,
+        "strategy": "compressed",
+        "file_path": "plugins/org.jkiss.dbeaver.ext.db2/src/org/jkiss/dbeaver/ext/db2/model/DB2Bufferpool.java",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.9530923962593079
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.db2/src/org/jkiss/dbeaver/ext/db2/model/security/DB2AuthIndex.java (java)\n\n## Key Code Elements:\nimport org.jkiss.dbeaver.DBException;\nimport org.jkiss.dbeaver.ext.db2.DB2Constants;\nimport org.jkiss.dbeaver.ext.db2.model.DB2Index;\nimport org.jkiss.dbeaver.ext.db2.model.DB2Schema;\nimport org.jkiss.dbeaver.model.impl.jdbc.JDBCUtils;\nimport org.jkiss.dbeaver.model.meta.Property;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport org.jkiss.dbeaver.model.struct.DBSObject;\nimport org.jkiss.utils.CommonUtils;\nimport java.sql.ResultSet;\n    @Property(viewable = true, order = 1)\n    @Property(viewable = true, order = 2)\n    @Property(viewable = true, order = 20, category = DB2Constants.CAT_AUTH)\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 3269fca3 by Serge Rider (serge@jkiss.org): Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23...\n- 83e3b1fe by serge-rider (serge@jkiss.org): License header update (2019)\n\n\nFormer-commit-id: b5121d4a6e8f3f21079920180b0fb14ada6d3349...",
+      "metadata": {
+        "language": "java",
+        "strategy": "compressed",
+        "commit_count": 5,
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.db2/src/org/jkiss/dbeaver/ext/db2/model/security/DB2AuthIndex.java"
+      },
+      "similarity_score": 0.9558279514312744
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.db2/src/org/jkiss/dbeaver/ext/db2/model/app/DB2ServerApplication.java (java)\n\n## Key Code Elements:\nimport org.jkiss.dbeaver.ext.db2.DB2Constants;\nimport org.jkiss.dbeaver.model.admin.sessions.AbstractServerSession;\nimport org.jkiss.dbeaver.model.impl.jdbc.JDBCUtils;\nimport org.jkiss.dbeaver.model.meta.Property;\nimport java.sql.ResultSet;\nimport java.util.Objects;\n    @Override\n    @Override\n    @Property(viewable = true, editable = false, order = 1)\n    @Property(viewable = true, editable = false, order = 2)\n    @Property(viewable = true, editable = false, order = 3)\n    @Property(viewable = true, editable = false, order = 4)\n    @Property(viewable = true, editable = false, order = 5)\n    @Property(viewable = true, editable = false, order = 6)\n    @Property(viewable = true, editable = false, order = 7, category = DB2Constants.CAT_CLIENT)\n\n## Recent Changes:\n- 2b614a83 by Nikita Akilov (nikita.n.akilov@gmail.com): #11839 select previously selected sessions when refreshing session manager...\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 13db808b by serge-rider (serge@jkiss.org): Imports optimization\n\n\nFormer-commit-id: 9416282382df3ba69fb5f9729c9b1aec65c5f259...",
+      "metadata": {
+        "strategy": "compressed",
+        "language": "java",
+        "commit_count": 5,
+        "chunk_index": 0,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.db2/src/org/jkiss/dbeaver/ext/db2/model/app/DB2ServerApplication.java",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.956717312335968
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.db2/src/org/jkiss/dbeaver/ext/db2/model/DB2TableKeyColumn.java (java)\n\n## Key Code Elements:\nimport org.jkiss.code.NotNull;\nimport org.jkiss.code.Nullable;\nimport org.jkiss.dbeaver.model.impl.struct.AbstractTableConstraint;\nimport org.jkiss.dbeaver.model.impl.struct.AbstractTableConstraintColumn;\nimport org.jkiss.dbeaver.model.meta.Property;\n    @Override\n    @NotNull\n    @Override\n    @NotNull\n    @Override\n    @NotNull\n    @Override\n    @Property(id = \"name\", viewable = true, order = 1)\n    @Override\n    @Property(viewable = true, editable = false, order = 3)\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 3269fca3 by Serge Rider (serge@jkiss.org): Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23...\n- 83e3b1fe by serge-rider (serge@jkiss.org): License header update (2019)\n\n\nFormer-commit-id: b5121d4a6e8f3f21079920180b0fb14ada6d3349...",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.db2/src/org/jkiss/dbeaver/ext/db2/model/DB2TableKeyColumn.java",
+        "total_chunks": 1,
+        "language": "java",
+        "commit_count": 5,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.9572351574897766
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.oracle.ui/src/org/jkiss/dbeaver/ext/oracle/ui/config/OracleDataTypeConfigurator.java (java)\n\n## Key Code Elements:\nimport org.jkiss.dbeaver.ext.oracle.model.OracleDataType;\nimport org.jkiss.dbeaver.model.edit.DBEObjectConfigurator;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport org.jkiss.dbeaver.model.struct.DBSEntityType;\nimport org.jkiss.dbeaver.ui.UITask;\nimport org.jkiss.dbeaver.ui.editors.object.struct.EntityEditPage;\n    @Override\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 3269fca3 by Serge Rider (serge@jkiss.org): Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23...\n- a40555bd by Serge Rider (serge@jkiss.org): Oracle UI bundle refactoring\n\n\nFormer-commit-id: 0305bf438edca88ab69e37987ff03a16930ee30a...",
+      "metadata": {
+        "commit_count": 3,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.oracle.ui/src/org/jkiss/dbeaver/ext/oracle/ui/config/OracleDataTypeConfigurator.java",
+        "strategy": "compressed",
+        "language": "java",
+        "chunk_index": 0,
+        "total_chunks": 1
+      },
+      "similarity_score": 0.9581080079078674
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.exasol.ui/src/org/jkiss/dbeaver/ext/exasol/ui/config/ExasolConsumerGroupConfigurator.java (java)\n\n## Key Code Elements:\nimport org.eclipse.jface.dialogs.IDialogConstants;\nimport org.jkiss.dbeaver.ext.exasol.model.ExasolConsumerGroup;\nimport org.jkiss.dbeaver.model.edit.DBEObjectConfigurator;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport org.jkiss.dbeaver.ui.UITask;\nimport org.jkiss.dbeaver.ui.UIUtils;\n    @Override\n            @Override\n\n## Recent Changes:\n- 22b5efbe by Anastasiya Volkova (anvolka@yandex.ru): #8638 Connection, Consumer/Priority Group, Foreign/Primary key, SchemaRole, User configurators to ex...",
+      "metadata": {
+        "language": "java",
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "commit_count": 1,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.exasol.ui/src/org/jkiss/dbeaver/ext/exasol/ui/config/ExasolConsumerGroupConfigurator.java",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.9601304531097412
+    }
+  ]
+}

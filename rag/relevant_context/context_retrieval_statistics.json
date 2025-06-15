@@ -1,0 +1,106 @@
+{
+  "total_issues": 29,
+  "total_repos": 24,
+  "processed_issues": 25,
+  "failed_issues": 0,
+  "processing_errors": [],
+  "repo_results": {
+    "okhttp": {
+      "processed": 1,
+      "failed": 0
+    },
+    "dbeaver": {
+      "processed": 2,
+      "failed": 0
+    },
+    "leakcanary": {
+      "processed": 2,
+      "failed": 0
+    },
+    "spring-cloud-alibaba": {
+      "processed": 1,
+      "failed": 0
+    },
+    "gson": {
+      "processed": 1,
+      "failed": 0
+    },
+    "libgdx": {
+      "processed": 1,
+      "failed": 0
+    },
+    "shardingsphere": {
+      "processed": 2,
+      "failed": 0
+    },
+    "apktool": {
+      "processed": 1,
+      "failed": 0
+    },
+    "python": {
+      "processed": 1,
+      "failed": 0
+    },
+    "keras": {
+      "processed": 1,
+      "failed": 0
+    },
+    "serverless": {
+      "processed": 1,
+      "failed": 0
+    },
+    "rich": {
+      "processed": 1,
+      "failed": 0
+    },
+    "mitmproxy": {
+      "processed": 1,
+      "failed": 0
+    },
+    "colossalai": {
+      "processed": 1,
+      "failed": 0
+    },
+    "compose": {
+      "processed": 1,
+      "failed": 0
+    },
+    "deepspeed": {
+      "processed": 0,
+      "failed": 1
+    },
+    "streamlit": {
+      "processed": 0,
+      "failed": 1
+    },
+    "lottie-android": {
+      "processed": 0,
+      "failed": 1
+    },
+    "compose-samples": {
+      "processed": 1,
+      "failed": 0
+    },
+    "nowinandroid": {
+      "processed": 2,
+      "failed": 0
+    },
+    "kotlinx.coroutines": {
+      "processed": 2,
+      "failed": 0
+    },
+    "quarkus": {
+      "processed": 0,
+      "failed": 1
+    },
+    "ktor": {
+      "processed": 1,
+      "failed": 0
+    },
+    "moshi": {
+      "processed": 1,
+      "failed": 0
+    }
+  },
+  "completion_time": "2025-06-15T12:38:41.585589"
+}

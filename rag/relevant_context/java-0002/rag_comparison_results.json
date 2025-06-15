@@ -1,0 +1,708 @@
+{
+  "basic": [
+    {
+      "content": "/**\n * SSH tunnel configuration\n */\npublic class SSHTunnelConfiguratorUI implements IObjectPropertyConfigurator<DBWHandlerConfiguration> {\n\n    private DBWHandlerConfiguration savedConfiguration;\n\n    private Text hostText;\n    private Text portText;\n    private Text userNameText;\n    private Combo authMethodCombo;\n    private TextWithOpen privateKeyText;\n    private Label pwdLabel;\n    private Text passwordText;\n    private Button savePasswordCheckbox;\n    private Label privateKeyLabel;\n    private Combo tunnelImplCombo;\n\n    private Text localHostText;\n    private Text localPortSpinner;\n    private Text remoteHostText;\n    private Text remotePortSpinner;\n\n    private Text keepAliveText;\n    private Text tunnelTimeout;\n    private VariablesHintLabel variablesHintLabel;\n\n    @Override\n    public void createControl(Composite parent, Runnable propertyChangeListener)\n    {\n        final Composite composite = new Composite(parent, SWT.NONE);\n        //gd.minimumHeight = 200;\n        composite.setLayoutData(new GridData(GridData.FILL_BOTH));\n        composite.setLayout(new GridLayout(1, false));\n\n        {\n            Group settingsGroup = UIUtils.createControlGroup(composite, SSHUIMessages.model_ssh_configurator_group_settings, 2, GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_BEGINNING, SWT.DEFAULT);\n\n            UIUtils.createControlLabel(settingsGroup, SSHUIMessages.model_ssh_configurator_label_host_ip);\n            Composite hostPortComp = UIUtils.createComposite(settingsGroup, 3);\n            hostPortComp.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));\n            hostText = new Text(hostPortComp, SWT.BORDER); //$NON-NLS-2$\n            hostText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));\n            portText = UIUtils.createLabelText(hostPortComp, SSHUIMessages.model_ssh_configurator_label_port, String.valueOf(SSHConstants.DEFAULT_SSH_PORT));\n            setNumberEditStyles(portText);",
+      "metadata": {
+        "file_path": "plugins/org.jkiss.dbeaver.net.ssh.ui/src/org/jkiss/dbeaver/ui/net/ssh/SSHTunnelConfiguratorUI.java",
+        "total_chunks": 13,
+        "language": "java",
+        "strategy": "basic",
+        "chunk_index": 2
+      },
+      "similarity_score": 1.0124424695968628
+    },
+    {
+      "content": "@Override\n    public void saveSettings(DBWHandlerConfiguration configuration)\n    {\n        configuration.setProperty(DBWHandlerConfiguration.PROP_HOST, hostText.getText().trim());\n        configuration.setProperty(DBWHandlerConfiguration.PROP_PORT, CommonUtils.toInt(portText.getText().trim()));\n        switch (authMethodCombo.getSelectionIndex()) {\n            case 0: configuration.setProperty(SSHConstants.PROP_AUTH_TYPE, SSHConstants.AuthType.PASSWORD.name()); break;\n            case 1: configuration.setProperty(SSHConstants.PROP_AUTH_TYPE, SSHConstants.AuthType.PUBLIC_KEY.name()); break;\n            case 2: configuration.setProperty(SSHConstants.PROP_AUTH_TYPE, SSHConstants.AuthType.AGENT.name()); break;\n        }\n        configuration.setProperty(SSHConstants.PROP_KEY_PATH, privateKeyText.getText().trim());\n        configuration.setUserName(userNameText.getText().trim());\n        configuration.setPassword(passwordText.getText());\n        configuration.setSavePassword(savePasswordCheckbox.getSelection());\n\n        String implLabel = tunnelImplCombo.getText();\n        for (SSHImplementationDescriptor it : SSHImplementationRegistry.getInstance().getDescriptors()) {\n            if (it.getLabel().equals(implLabel)) {\n                configuration.setProperty(SSHConstants.PROP_IMPLEMENTATION, it.getId());\n                break;\n            }\n        }\n\n        configuration.setProperty(SSHConstants.PROP_LOCAL_HOST, localHostText.getText().trim());\n        int localPort = CommonUtils.toInt(localPortSpinner.getText());\n        if (localPort <= 0) {\n            configuration.setProperty(SSHConstants.PROP_LOCAL_PORT, null);\n        } else {\n            configuration.setProperty(SSHConstants.PROP_LOCAL_PORT, localPort);\n        }",
+      "metadata": {
+        "total_chunks": 13,
+        "language": "java",
+        "file_path": "plugins/org.jkiss.dbeaver.net.ssh.ui/src/org/jkiss/dbeaver/ui/net/ssh/SSHTunnelConfiguratorUI.java",
+        "strategy": "basic",
+        "chunk_index": 10
+      },
+      "similarity_score": 1.0802313089370728
+    },
+    {
+      "content": "@Override\n    public void loadSettings(DBWHandlerConfiguration configuration)\n    {\n        hostText.setText(CommonUtils.notEmpty(configuration.getStringProperty(DBWHandlerConfiguration.PROP_HOST)));\n        int portString = configuration.getIntProperty(DBWHandlerConfiguration.PROP_PORT);\n        if (portString != 0) {\n            portText.setText(String.valueOf(portString));\n        } else {\n            portText.setText(String.valueOf(SSHConstants.DEFAULT_SSH_PORT));\n        }\n        userNameText.setText(CommonUtils.notEmpty(configuration.getUserName()));\n        SSHConstants.AuthType authType = SSHConstants.AuthType.PASSWORD;\n        String authTypeName = configuration.getStringProperty(SSHConstants.PROP_AUTH_TYPE);\n        if (!CommonUtils.isEmpty(authTypeName)) {\n            authType = SSHConstants.AuthType.valueOf(authTypeName);\n        }\n        if (SSHConstants.AuthType.PASSWORD.equals(authType)) {\n            authMethodCombo.select(0);\n        } else if (SSHConstants.AuthType.PUBLIC_KEY.equals(authType)) {\n            authMethodCombo.select(1);\n        } else {\n            authMethodCombo.select(2);\n        }\n        privateKeyText.setText(CommonUtils.notEmpty(configuration.getStringProperty(SSHConstants.PROP_KEY_PATH)));\n        passwordText.setText(CommonUtils.notEmpty(configuration.getPassword()));\n        savePasswordCheckbox.setSelection(configuration.isSavePassword());\n\n        String implType = configuration.getStringProperty(SSHConstants.PROP_IMPLEMENTATION);\n        if (CommonUtils.isEmpty(implType)) {\n            tunnelImplCombo.select(0);\n        } else {\n            SSHImplementationDescriptor desc = SSHImplementationRegistry.getInstance().getDescriptor(implType);\n            if (desc != null) {\n                tunnelImplCombo.setText(desc.getLabel());\n            } else {\n                tunnelImplCombo.select(0);\n            }\n        }",
+      "metadata": {
+        "strategy": "basic",
+        "chunk_index": 8,
+        "total_chunks": 13,
+        "file_path": "plugins/org.jkiss.dbeaver.net.ssh.ui/src/org/jkiss/dbeaver/ui/net/ssh/SSHTunnelConfiguratorUI.java",
+        "language": "java"
+      },
+      "similarity_score": 1.0845751762390137
+    },
+    {
+      "content": "@Override\n    public void loadSettings(DBWHandlerConfiguration configuration) {\n        super.loadSettings(configuration);\n\n        if (CommonUtils.isEmpty(configuration.getStringProperty(SSLHandlerTrustStoreImpl.PROP_SSL_METHOD))) {\n            // Backward compatibility\n            keyStorePath.setText(CommonUtils.notEmpty(configuration.getStringProperty(SQLServerConstants.PROP_SSL_KEYSTORE)));\n            keyStorePassword.setText(CommonUtils.notEmpty(configuration.getStringProperty(SQLServerConstants.PROP_SSL_KEYSTORE_PASSWORD)));\n        }\n\n        keystoreHostname.setText(CommonUtils.notEmpty(configuration.getStringProperty(SQLServerConstants.PROP_SSL_KEYSTORE_HOSTNAME)));\n        trustServerCertificate.setSelection(configuration.getBooleanProperty(SQLServerConstants.PROP_SSL_TRUST_SERVER_CERTIFICATE));\n    }\n\n    @Override\n    public void saveSettings(DBWHandlerConfiguration configuration) {\n        super.saveSettings(configuration);\n\n        configuration.setProperty(SQLServerConstants.PROP_SSL_KEYSTORE_HOSTNAME, keystoreHostname.getText().trim());\n        configuration.setProperty(SQLServerConstants.PROP_SSL_TRUST_SERVER_CERTIFICATE, trustServerCertificate.getSelection());\n    }\n}\n```",
+      "metadata": {
+        "strategy": "basic",
+        "total_chunks": 3,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.mssql.ui/src/org/jkiss/dbeaver/ext/mssql/ui/views/SQLServerSSLConfigurator.java",
+        "language": "java",
+        "chunk_index": 2
+      },
+      "similarity_score": 1.1264246702194214
+    },
+    {
+      "content": "public DBPConnectionConfiguration(@NotNull DBPConnectionConfiguration info) {\n        this.hostName = info.hostName;\n        this.hostPort = info.hostPort;\n        this.serverName = info.serverName;\n        this.databaseName = info.databaseName;\n        this.userName = info.userName;\n        this.userPassword = info.userPassword;\n        this.url = info.url;\n        this.clientHomeId = info.clientHomeId;\n        this.configProfileName = info.configProfileName;\n        this.authModelId = info.authModelId;\n        this.authProperties = info.authProperties == null ? null : new LinkedHashMap<>(info.authProperties);\n        this.connectionType = info.connectionType;\n        this.properties = new LinkedHashMap<>(info.properties);\n        this.providerProperties = new LinkedHashMap<>(info.providerProperties);\n        this.runtimeAttributes = new HashMap<>(info.runtimeAttributes);\n        this.events = new LinkedHashMap<>(info.events.size());\n        for (Map.Entry<DBPConnectionEventType, DBRShellCommand> entry : info.events.entrySet()) {\n            this.events.put(entry.getKey(), new DBRShellCommand(entry.getValue()));\n        }\n        this.handlers = new ArrayList<>(info.handlers.size());\n        for (DBWHandlerConfiguration handler : info.handlers) {\n            this.handlers.add(new DBWHandlerConfiguration(handler));\n        }\n        this.bootstrap = new DBPConnectionBootstrap(info.bootstrap);\n        this.connectionColor = info.connectionColor;\n        this.keepAliveInterval = info.keepAliveInterval;\n    }\n\n    public String getClientHomeId() {\n        return clientHomeId;\n    }\n\n    public void setClientHomeId(String clientHomeId) {\n        this.clientHomeId = clientHomeId;\n    }\n\n    public String getHostName() {\n        return hostName;\n    }\n\n    public void setHostName(String hostName) {\n        this.hostName = hostName;\n    }\n\n    public String getHostPort() {\n        return hostPort;\n    }",
+      "metadata": {
+        "chunk_index": 3,
+        "strategy": "basic",
+        "total_chunks": 11,
+        "language": "java",
+        "file_path": "plugins/org.jkiss.dbeaver.model/src/org/jkiss/dbeaver/model/connection/DBPConnectionConfiguration.java"
+      },
+      "similarity_score": 1.1608712673187256
+    },
+    {
+      "content": "userNameText = UIUtils.createLabelText(settingsGroup, SSHUIMessages.model_ssh_configurator_label_user_name, null, SWT.BORDER, new GridData(GridData.FILL_HORIZONTAL)); //$NON-NLS-2$\n\n            authMethodCombo = UIUtils.createLabelCombo(settingsGroup, SSHUIMessages.model_ssh_configurator_combo_auth_method, SWT.DROP_DOWN | SWT.READ_ONLY);\n            authMethodCombo.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));\n            authMethodCombo.add(SSHUIMessages.model_ssh_configurator_combo_password);\n            authMethodCombo.add(SSHUIMessages.model_ssh_configurator_combo_pub_key);\n            authMethodCombo.add(SSHUIMessages.model_ssh_configurator_combo_agent);\n\n            privateKeyLabel = UIUtils.createControlLabel(settingsGroup, SSHUIMessages.model_ssh_configurator_label_private_key);\n            privateKeyLabel.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));\n\n            privateKeyText = new TextWithOpenFile(\n                settingsGroup,\n                SSHUIMessages.model_ssh_configurator_dialog_choose_private_key,\n                new String[]{\"*\", \"*.ssh\", \"*.pem\", \"*.*\"});\n            privateKeyText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));\n\n            {\n                pwdLabel = UIUtils.createControlLabel(settingsGroup, SSHUIMessages.model_ssh_configurator_label_password);\n                Composite passComp = UIUtils.createComposite(settingsGroup, 2);\n                passComp.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));\n\n                passwordText = new Text(passComp, SWT.BORDER | SWT.PASSWORD);\n                passwordText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));\n\n                savePasswordCheckbox = UIUtils.createCheckbox(passComp, SSHUIMessages.model_ssh_configurator_checkbox_save_pass, false);\n                savePasswordCheckbox.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));\n            }\n        }",
+      "metadata": {
+        "chunk_index": 3,
+        "strategy": "basic",
+        "total_chunks": 13,
+        "file_path": "plugins/org.jkiss.dbeaver.net.ssh.ui/src/org/jkiss/dbeaver/ui/net/ssh/SSHTunnelConfiguratorUI.java",
+        "language": "java"
+      },
+      "similarity_score": 1.1724399328231812
+    },
+    {
+      "content": "final SSLConfigurationMethod method;\n\n        if (isCertificatesSupported() && isKeystoreSupported()) {\n            method = CommonUtils.valueOf(\n                SSLConfigurationMethod.class,\n                configuration.getStringProperty(SSLHandlerTrustStoreImpl.PROP_SSL_METHOD),\n                SSLConfigurationMethod.CERTIFICATES);\n\n            if (method == SSLConfigurationMethod.CERTIFICATES) {\n                certRadioButton.setSelection(true);\n            } else {\n                keyStoreRadioButton.setSelection(true);\n            }\n        } else {\n            method = isCertificatesSupported()\n                ? SSLConfigurationMethod.CERTIFICATES\n                : SSLConfigurationMethod.KEYSTORE;\n        }\n\n        showMethodControls(method);\n    }\n\n    @Override\n    public void saveSettings(DBWHandlerConfiguration configuration) {\n        if (isCertificatesSupported()) {\n            if (caCertPath != null) {\n                configuration.setProperty(SSLHandlerTrustStoreImpl.PROP_SSL_CA_CERT, caCertPath.getText().trim());\n            }\n            configuration.setProperty(SSLHandlerTrustStoreImpl.PROP_SSL_CLIENT_CERT, clientCertPath.getText().trim());\n            configuration.setProperty(SSLHandlerTrustStoreImpl.PROP_SSL_CLIENT_KEY, clientKeyPath.getText().trim());\n        }\n\n        if (isKeystoreSupported()) {\n            configuration.setProperty(SSLHandlerTrustStoreImpl.PROP_SSL_KEYSTORE, keyStorePath.getText().trim());\n\n            final String password = keyStorePassword.getText().trim();\n            if (!CommonUtils.isEmptyTrimmed(password)) {\n                configuration.setPassword(password);\n                configuration.setSavePassword(true);\n            }\n        }\n\n        configuration.setProperty(SSLHandlerTrustStoreImpl.PROP_SSL_METHOD, method.name());\n    }\n}\n```",
+      "metadata": {
+        "strategy": "basic",
+        "language": "java",
+        "chunk_index": 4,
+        "total_chunks": 5,
+        "file_path": "plugins/org.jkiss.dbeaver.ui.editors.connection/src/org/jkiss/dbeaver/ui/dialogs/net/SSLConfiguratorTrustStoreUI.java"
+      },
+      "similarity_score": 1.1930110454559326
+    },
+    {
+      "content": "private String authModelId;\n    private Map<String, String> authProperties;\n\n    public DBPConnectionConfiguration() {\n        this.connectionType = DBPConnectionType.DEFAULT_TYPE;\n        this.properties = new LinkedHashMap<>();\n        this.providerProperties = new LinkedHashMap<>();\n        this.events = new LinkedHashMap<>();\n        this.runtimeAttributes = new HashMap<>();\n        this.handlers = new ArrayList<>();\n        this.bootstrap = new DBPConnectionBootstrap();\n        this.keepAliveInterval = 0;\n    }",
+      "metadata": {
+        "language": "java",
+        "strategy": "basic",
+        "chunk_index": 2,
+        "file_path": "plugins/org.jkiss.dbeaver.model/src/org/jkiss/dbeaver/model/connection/DBPConnectionConfiguration.java",
+        "total_chunks": 11
+      },
+      "similarity_score": 1.1993522644042969
+    },
+    {
+      "content": "@Override\n    public void loadSettings(DBWHandlerConfiguration configuration) {\n        super.loadSettings(configuration);\n\n        if (CommonUtils.isEmpty(configuration.getStringProperty(SSLHandlerTrustStoreImpl.PROP_SSL_METHOD))) {\n            // Backward compatibility\n            caCertPath.setText(CommonUtils.notEmpty(configuration.getStringProperty(MySQLConstants.PROP_SSL_CA_CERT)));\n            clientCertPath.setText(CommonUtils.notEmpty(configuration.getStringProperty(MySQLConstants.PROP_SSL_CLIENT_CERT)));\n            clientKeyPath.setText(CommonUtils.notEmpty(configuration.getStringProperty(MySQLConstants.PROP_SSL_CLIENT_KEY)));\n        }\n\n        requireSSQL.setSelection(configuration.getBooleanProperty(MySQLConstants.PROP_REQUIRE_SSL, false));\n        veryServerCert.setSelection(configuration.getBooleanProperty(MySQLConstants.PROP_VERIFY_SERVER_SERT, true));\n        allowPublicKeyRetrieval.setSelection(configuration.getBooleanProperty(MySQLConstants.PROP_SSL_PUBLIC_KEY_RETRIEVE, false));\n\n        cipherSuitesText.setText(CommonUtils.notEmpty(configuration.getStringProperty(MySQLConstants.PROP_SSL_CIPHER_SUITES)));\n    }\n\n    @Override\n    public void saveSettings(DBWHandlerConfiguration configuration) {\n        super.saveSettings(configuration);\n\n        configuration.setProperty(MySQLConstants.PROP_REQUIRE_SSL, String.valueOf(requireSSQL.getSelection()));\n        configuration.setProperty(MySQLConstants.PROP_VERIFY_SERVER_SERT, String.valueOf(veryServerCert.getSelection()));\n        configuration.setProperty(MySQLConstants.PROP_SSL_PUBLIC_KEY_RETRIEVE, String.valueOf(allowPublicKeyRetrieval.getSelection()));\n        configuration.setProperty(MySQLConstants.PROP_SSL_CIPHER_SUITES, cipherSuitesText.getText());\n    }\n}\n```",
+      "metadata": {
+        "language": "java",
+        "total_chunks": 3,
+        "chunk_index": 2,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.mysql.ui/src/org/jkiss/dbeaver/ext/mysql/ui/views/MySQLSSLConfigurator.java",
+        "strategy": "basic"
+      },
+      "similarity_score": 1.2376137971878052
+    },
+    {
+      "content": "if (CommonUtils.isEmpty(name)) {\n            return;\n        }\n        importData.addConnection(new ImportConnectionInfo(\n            driver, \n            name, \n            name, \n            \"\",\n            conProps.get(\"Host\"), \n            conProps.get(\"Port\"), \n            conProps.get(\"Database\"), \n            conProps.get(\"UserName\"), \n            password\n         ));\n    }\n    \n    /**\n     * Decrypts password chiper-text\n     * \n     * @param encryptedPassword\n     * @return Plain-text of password or empty string if unable to decrypt\n     */\n    private String decryptPassword(String encryptedPassword)\n    {\n        try {\n            return decryptor.decrypt(encryptedPassword);\n        } catch (Exception e) {\n            return \"\";\n        }\n    }\n\n}\n```",
+      "metadata": {
+        "file_path": "plugins/org.jkiss.dbeaver.ext.import_config/src/org/jkiss/dbeaver/ext/import_config/wizards/navicat/ConfigImportWizardPageNavicatConnections.java",
+        "language": "java",
+        "chunk_index": 2,
+        "total_chunks": 3,
+        "strategy": "basic"
+      },
+      "similarity_score": 1.2482608556747437
+    },
+    {
+      "content": "@Override\n    protected boolean useCACertificate() {\n        return true;\n    }\n\n    @Override\n    public void loadSettings(final DBWHandlerConfiguration configuration) {\n        super.loadSettings(configuration);\n\n        if (CommonUtils.isEmpty(configuration.getStringProperty(SSLHandlerTrustStoreImpl.PROP_SSL_METHOD))) {\n            // Backward compatibility\n            caCertPath.setText(CommonUtils.notEmpty(configuration.getStringProperty(PostgreConstants.PROP_SSL_ROOT_CERT)));\n            clientCertPath.setText(CommonUtils.notEmpty(configuration.getStringProperty(PostgreConstants.PROP_SSL_CLIENT_CERT)));\n            clientKeyPath.setText(CommonUtils.notEmpty(configuration.getStringProperty(PostgreConstants.PROP_SSL_CLIENT_KEY)));\n        }\n\n        UIUtils.setComboSelection(sslModeCombo, CommonUtils.notEmpty(configuration.getStringProperty(PostgreConstants.PROP_SSL_MODE)));\n        if (ENABLE_PROXY) {\n            useProxyService.setSelection(configuration.getBooleanProperty(PostgreConstants.PROP_SSL_PROXY));\n        }\n\n        if (!sslClassesResolved) {\n            sslClassesResolved = true;\n            final Job resolveJob = new Job(\"Find factories\") {\n                {\n                    setUser(true);\n                }",
+      "metadata": {
+        "strategy": "basic",
+        "file_path": "plugins/org.jkiss.dbeaver.ext.postgresql.ui/src/org/jkiss/dbeaver/ext/postgresql/ui/PostgreSSLConfigurator.java",
+        "language": "java",
+        "total_chunks": 4,
+        "chunk_index": 2
+      },
+      "similarity_score": 1.2482887506484985
+    },
+    {
+      "content": "import java.util.Locale;\nimport java.util.Map.Entry;\n\n/*\n *  when edition==GENERIC, don't show/touch any driver properties for\n *  - compatibility with previous configuration\n *  - full control over all driver properties\n *  \n *  since JDBC 2.6 client the 'encrypt' property is automatically set for connections to port 443 (e.g. HANA Cloud) \n *  https://help.sap.com/viewer/79ae9d3916b84356a89744c65793b924/2.6/en-US/22485d2937c4427fbbedefe3cc158571.html\n *  so we do not have to add checkboxes here.\n *  \n */\npublic class HANAConnectionPage extends ConnectionPageWithAuth implements IDialogPageProvider {\n\n    final static String PROP_DATABASE_NAME = \"databaseName\";\n    final static String PROV_PROP_INSTANCE_NUMBER = \"instanceNumber\";\n    final static String PROV_PROP_EDITION = \"edition\";\n\n    private Combo editionCombo;\n    private Text hostText;\n    private Text portText;\n    private Label instanceLabel;\n    private Text instanceText;\n    private Label databaseLabel;\n    private Text databaseText;\n    private boolean created;\n\n    private HANAEdition edition;\n    \n    // saved custom value while Text is read-only\n    private String portValue; \n    private String instanceValue;\n    private String databaseValue;\n\n    private final Image logoImage;\n\n    public HANAConnectionPage() {\n        logoImage = createImage(\"icons/sap_hana_logo.png\"); //$NON-NLS-1$\n    }\n\n    @Override\n    public void dispose() {\n        super.dispose();\n        UIUtils.dispose(logoImage);\n    }\n\n    @Override\n    public Image getImage() {\n        return logoImage;\n    }\n\n    @Override\n    public void createControl(Composite composite) {\n        Composite settingsGroup = new Composite(composite, SWT.NONE);\n        settingsGroup.setLayout(new GridLayout(1, false));\n        settingsGroup.setLayoutData(new GridData(GridData.FILL_BOTH));",
+      "metadata": {
+        "chunk_index": 1,
+        "language": "java",
+        "file_path": "plugins/org.jkiss.dbeaver.ext.hana.ui/src/org/jkiss/dbeaver/ext/hana/ui/views/HANAConnectionPage.java",
+        "strategy": "basic",
+        "total_chunks": 9
+      },
+      "similarity_score": 1.2512059211730957
+    },
+    {
+      "content": "import javax.net.ssl.SSLSocketFactory;\n\n/**\n * PostgreSSLConfigurator\n */\npublic class PostgreSSLConfigurator extends SSLConfiguratorTrustStoreUI {\n    private static final boolean ENABLE_PROXY = false;\n\n    public static final String[] SSL_MODES = {\"\",\"disable\",\"allow\",\"prefer\",\"require\",\"verify-ca\",\"verify-full\"};\n\n    private Combo sslModeCombo;\n    private Combo sslFactoryCombo;\n    private Button useProxyService;\n    private boolean sslClassesResolved;\n\n    @Override\n    public void createControl(Composite parent, Runnable propertyChangeListener) {\n        final Composite composite = new Composite(parent, SWT.NONE);\n        composite.setLayout(new GridLayout(1, false));\n        GridData gd = new GridData(GridData.FILL_BOTH);\n        gd.minimumHeight = 200;\n        composite.setLayoutData(gd);\n\n        createSSLConfigHint(composite, true, 1);\n        createTrustStoreConfigGroup(composite);\n\n        {\n            Group advGroup = UIUtils.createControlGroup(composite, PostgreMessages.dialog_connection_network_postgres_ssl_advanced, 2, GridData.FILL_HORIZONTAL, -1);\n            sslModeCombo = UIUtils.createLabelCombo(advGroup, PostgreMessages.dialog_connection_network_postgres_ssl_advanced_ssl_mode, SWT.READ_ONLY | SWT.DROP_DOWN);\n            sslModeCombo.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));\n            for (String mode : SSL_MODES) {\n                sslModeCombo.add(mode);\n            }\n            sslFactoryCombo = UIUtils.createLabelCombo(advGroup, PostgreMessages.dialog_connection_network_postgres_ssl_advanced_ssl_factory, SWT.DROP_DOWN);\n            if (ENABLE_PROXY) {\n                useProxyService = UIUtils.createCheckbox(\n                    advGroup,\n                    PostgreMessages.dialog_connection_network_postgres_ssl_advanced_use_proxy,\n                    PostgreMessages.dialog_connection_network_postgres_ssl_advanced_use_proxy_tip,\n                    false, 2);\n            }\n        }\n    }",
+      "metadata": {
+        "strategy": "basic",
+        "chunk_index": 1,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.postgresql.ui/src/org/jkiss/dbeaver/ext/postgresql/ui/PostgreSSLConfigurator.java",
+        "language": "java",
+        "total_chunks": 4
+      },
+      "similarity_score": 1.2577753067016602
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.model/src/org/jkiss/dbeaver/model/impl/net/SSLConfigurationMethod.java (java)\n\n## Code Content:\n```java\n/*\n * DBeaver - Universal Database Manager\n * Copyright (C) 2010-2021 DBeaver Corp and others\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obtain a copy of the License at\n *\n *     http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\npackage org.jkiss.dbeaver.model.impl.net;\n\npublic enum SSLConfigurationMethod {\n    CERTIFICATES,\n    KEYSTORE\n}\n```",
+      "metadata": {
+        "file_path": "plugins/org.jkiss.dbeaver.model/src/org/jkiss/dbeaver/model/impl/net/SSLConfigurationMethod.java",
+        "language": "java",
+        "strategy": "basic",
+        "total_chunks": 1,
+        "chunk_index": 0
+      },
+      "similarity_score": 1.2772871255874634
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.net.ssh.ui/src/org/jkiss/dbeaver/ui/net/ssh/SSHTunnelConfiguratorUI.java (java)\n\n## Code Content:\n```java\n/*\n * DBeaver - Universal Database Manager\n * Copyright (C) 2010-2021 DBeaver Corp and others\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obtain a copy of the License at\n *\n *     http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\npackage org.jkiss.dbeaver.ui.net.ssh;",
+      "metadata": {
+        "language": "java",
+        "strategy": "basic",
+        "chunk_index": 0,
+        "file_path": "plugins/org.jkiss.dbeaver.net.ssh.ui/src/org/jkiss/dbeaver/ui/net/ssh/SSHTunnelConfiguratorUI.java",
+        "total_chunks": 13
+      },
+      "similarity_score": 1.2896885871887207
+    },
+    {
+      "content": "UIUtils.createControlLabel(sslKeyStoreComposite, UIConnectionMessages.dialog_setting_ssl_configurator_keystore_password_name);\n            keyStorePassword = new Text(sslKeyStoreComposite, SWT.BORDER | SWT.PASSWORD);\n            keyStorePassword.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));\n        }\n\n        return sslParameters;\n    }\n\n    private void showMethodControls(SSLConfigurationMethod configurationMethod) {\n        boolean keystore = configurationMethod == SSLConfigurationMethod.KEYSTORE;\n        showControl(sslCertComposite, !keystore);\n        showControl(sslKeyStoreComposite, keystore);\n        sslCertComposite.getParent().getParent().layout(true, true);\n        method = configurationMethod;\n    }\n\n    private void showControl(Control control, boolean flag) {\n        UIUtils.setControlVisible(control, flag);\n    }\n\n    protected boolean isCertificatesSupported() {\n        return true;\n    }\n\n    protected boolean isKeystoreSupported() {\n        return false;\n    }\n\n    protected boolean useCACertificate() {\n        return false;\n    }\n\n    @Override\n    public void loadSettings(DBWHandlerConfiguration configuration) {\n        if (isCertificatesSupported()) {\n            if (caCertPath != null) {\n                caCertPath.setText(CommonUtils.notEmpty(configuration.getStringProperty(SSLHandlerTrustStoreImpl.PROP_SSL_CA_CERT)));\n            }\n            clientCertPath.setText(CommonUtils.notEmpty(configuration.getStringProperty(SSLHandlerTrustStoreImpl.PROP_SSL_CLIENT_CERT)));\n            clientKeyPath.setText(CommonUtils.notEmpty(configuration.getStringProperty(SSLHandlerTrustStoreImpl.PROP_SSL_CLIENT_KEY)));\n        }\n\n        if (isKeystoreSupported()) {\n            keyStorePath.setText(CommonUtils.notEmpty(configuration.getStringProperty(SSLHandlerTrustStoreImpl.PROP_SSL_KEYSTORE)));\n            keyStorePassword.setText(CommonUtils.notEmpty(configuration.getPassword()));\n        }\n\n        final SSLConfigurationMethod method;",
+      "metadata": {
+        "total_chunks": 5,
+        "chunk_index": 3,
+        "file_path": "plugins/org.jkiss.dbeaver.ui.editors.connection/src/org/jkiss/dbeaver/ui/dialogs/net/SSLConfiguratorTrustStoreUI.java",
+        "language": "java",
+        "strategy": "basic"
+      },
+      "similarity_score": 1.2898913621902466
+    },
+    {
+      "content": "public class SQLServerSSLConfigurator extends SSLConfiguratorTrustStoreUI {\n    private Text keystoreHostname;\n    private Button trustServerCertificate;\n\n    @Override\n    public void createControl(Composite parent, Runnable propertyChangeListener) {\n        final Composite composite = new Composite(parent, SWT.NONE);\n        composite.setLayout(new GridLayout(1, false));\n        GridData gd = new GridData(GridData.FILL_BOTH);\n        gd.minimumHeight = 200;\n        composite.setLayoutData(gd);\n\n        createSSLConfigHint(composite, true, 1);\n        createTrustStoreConfigGroup(composite);\n\n        {\n            UIUtils.createControlLabel(sslKeyStoreComposite, SQLServerUIMessages.dialog_setting_ssl_advanced_hostname_label);\n            keystoreHostname = new Text(sslKeyStoreComposite, SWT.BORDER);\n            keystoreHostname.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));\n            keystoreHostname.setToolTipText(SQLServerUIMessages.dialog_setting_ssl_advanced_hostname_tip);\n        }\n\n        {\n            Group settingsGroup = UIUtils.createControlGroup(composite, \"Settings\", 1, GridData.FILL_HORIZONTAL, SWT.DEFAULT);\n\n            trustServerCertificate = UIUtils.createCheckbox(settingsGroup, SQLServerUIMessages.dialog_setting_trust_server_certificate, SQLServerUIMessages.dialog_setting_trust_server_certificate_tip, true, 2);\n        }\n    }\n\n    @Override\n    protected boolean isCertificatesSupported() {\n        return false;\n    }\n\n    @Override\n    protected boolean isKeystoreSupported() {\n        return true;\n    }\n\n    @Override\n    public void loadSettings(DBWHandlerConfiguration configuration) {\n        super.loadSettings(configuration);",
+      "metadata": {
+        "chunk_index": 1,
+        "total_chunks": 3,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.mssql.ui/src/org/jkiss/dbeaver/ext/mssql/ui/views/SQLServerSSLConfigurator.java",
+        "language": "java",
+        "strategy": "basic"
+      },
+      "similarity_score": 1.2945680618286133
+    },
+    {
+      "content": "{\n            Group advancedGroup = UIUtils.createControlGroup(composite, SSHUIMessages.model_ssh_configurator_group_advanced, 4, GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_BEGINNING, SWT.DEFAULT);\n\n            tunnelImplCombo = UIUtils.createLabelCombo(advancedGroup, SSHUIMessages.model_ssh_configurator_label_implementation, SWT.DROP_DOWN | SWT.READ_ONLY);\n            GridData gd = new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING);\n            gd.horizontalSpan = 3;\n            tunnelImplCombo.setLayoutData(gd);\n            for (SSHImplementationDescriptor it : SSHImplementationRegistry.getInstance().getDescriptors()) {\n                tunnelImplCombo.add(it.getLabel());\n            }\n\n            localHostText = UIUtils.createLabelText(advancedGroup, SSHUIMessages.model_ssh_configurator_label_local_host, null, SWT.BORDER, new GridData(GridData.FILL_HORIZONTAL));\n            localHostText.setToolTipText(SSHUIMessages.model_ssh_configurator_label_local_host_description);\n            localHostText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));\n            remoteHostText = UIUtils.createLabelText(advancedGroup, SSHUIMessages.model_ssh_configurator_label_remote_host, null, SWT.BORDER, new GridData(GridData.FILL_HORIZONTAL));\n            remoteHostText.setToolTipText(SSHUIMessages.model_ssh_configurator_label_remote_host_description);\n            remoteHostText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));\n            localPortSpinner = UIUtils.createLabelText(advancedGroup, SSHUIMessages.model_ssh_configurator_label_local_port, String.valueOf(0));\n            localPortSpinner.setToolTipText(SSHUIMessages.model_ssh_configurator_label_local_port_description);\n            setNumberEditStyles(localPortSpinner);",
+      "metadata": {
+        "chunk_index": 4,
+        "file_path": "plugins/org.jkiss.dbeaver.net.ssh.ui/src/org/jkiss/dbeaver/ui/net/ssh/SSHTunnelConfiguratorUI.java",
+        "strategy": "basic",
+        "language": "java",
+        "total_chunks": 13
+      },
+      "similarity_score": 1.3020076751708984
+    },
+    {
+      "content": "protected Composite sslCertComposite;\n    protected Composite sslKeyStoreComposite;\n\n    @Override\n    public void createControl(Composite parent, Runnable propertyChangeListener) {\n        final Composite composite = new Composite(parent, SWT.NONE);\n        composite.setLayout(new GridLayout(1, false));\n        GridData gd = new GridData(GridData.FILL_BOTH);\n        gd.minimumHeight = 200;\n        composite.setLayoutData(gd);\n\n        createTrustStoreConfigGroup(composite);\n    }\n\n    protected Group createTrustStoreConfigGroup(Composite composite) {\n        final boolean certificatesSupported = isCertificatesSupported();\n        final boolean keyStoreSupported = isKeystoreSupported();\n\n        assert certificatesSupported || keyStoreSupported;\n\n        Group sslParameters = UIUtils.createControlGroup(composite, UIConnectionMessages.dialog_setting_ssl_configurator_legend_parameters, 1, GridData.FILL_HORIZONTAL, SWT.DEFAULT);\n\n        if (certificatesSupported && keyStoreSupported) {\n            final SelectionAdapter methodSwitcher = new SelectionAdapter() {\n                @Override\n                public void widgetSelected(SelectionEvent e) {\n                    showMethodControls((SSLConfigurationMethod) e.widget.getData());\n                }\n            };\n\n            Composite sslMethodComposite = UIUtils.createComposite(sslParameters, 3);\n\n            UIUtils.createControlLabel(sslMethodComposite, UIConnectionMessages.dialog_setting_ssl_configurator_method);\n            certRadioButton = UIUtils.createRadioButton(sslMethodComposite, UIConnectionMessages.dialog_setting_ssl_configurator_method_certs, SSLConfigurationMethod.CERTIFICATES, methodSwitcher);\n            keyStoreRadioButton = UIUtils.createRadioButton(sslMethodComposite, UIConnectionMessages.dialog_setting_ssl_configurator_method_keystore, SSLConfigurationMethod.KEYSTORE, methodSwitcher);\n        }",
+      "metadata": {
+        "strategy": "basic",
+        "language": "java",
+        "chunk_index": 1,
+        "total_chunks": 5,
+        "file_path": "plugins/org.jkiss.dbeaver.ui.editors.connection/src/org/jkiss/dbeaver/ui/dialogs/net/SSLConfiguratorTrustStoreUI.java"
+      },
+      "similarity_score": 1.3209284543991089
+    },
+    {
+      "content": "@Override\n    public String toString() {\n        return \"ConnectionConfiguration: \" + (url == null ? databaseName : url);\n    }\n\n    @Override\n    public boolean equals(Object obj) {\n        if (!(obj instanceof DBPConnectionConfiguration)) {\n            return false;\n        }\n        DBPConnectionConfiguration source = (DBPConnectionConfiguration) obj;\n        return\n            CommonUtils.equalOrEmptyStrings(this.hostName, source.hostName) &&\n                CommonUtils.equalOrEmptyStrings(this.hostPort, source.hostPort) &&\n                CommonUtils.equalOrEmptyStrings(this.serverName, source.serverName) &&\n                CommonUtils.equalOrEmptyStrings(this.databaseName, source.databaseName) &&\n                CommonUtils.equalOrEmptyStrings(this.userName, source.userName) &&\n                CommonUtils.equalOrEmptyStrings(this.userPassword, source.userPassword) &&\n                CommonUtils.equalOrEmptyStrings(this.url, source.url) &&\n                CommonUtils.equalObjects(this.clientHomeId, source.clientHomeId) &&\n                CommonUtils.equalObjects(this.configProfileName, source.configProfileName) &&\n                CommonUtils.equalObjects(this.authModelId, source.authModelId) &&\n                CommonUtils.equalObjects(this.authProperties, source.authProperties) &&\n                CommonUtils.equalObjects(this.connectionType, source.connectionType) &&\n                CommonUtils.equalObjects(this.properties, source.properties) &&\n                CommonUtils.equalObjects(this.providerProperties, source.providerProperties) &&\n                CommonUtils.equalObjects(this.events, source.events) &&\n                CommonUtils.equalObjects(this.handlers, source.handlers) &&\n                CommonUtils.equalObjects(this.bootstrap, source.bootstrap) &&\n                this.keepAliveInterval == source.keepAliveInterval;\n    }",
+      "metadata": {
+        "chunk_index": 9,
+        "strategy": "basic",
+        "language": "java",
+        "total_chunks": 11,
+        "file_path": "plugins/org.jkiss.dbeaver.model/src/org/jkiss/dbeaver/model/connection/DBPConnectionConfiguration.java"
+      },
+      "similarity_score": 1.3372316360473633
+    }
+  ],
+  "enhanced": [
+    {
+      "content": "/**\n * SSH tunnel configuration\n */\npublic class SSHTunnelConfiguratorUI implements IObjectPropertyConfigurator<DBWHandlerConfiguration> {\n\n    private DBWHandlerConfiguration savedConfiguration;\n\n    private Text hostText;\n    private Text portText;\n    private Text userNameText;\n    private Combo authMethodCombo;\n    private TextWithOpen privateKeyText;\n    private Label pwdLabel;\n    private Text passwordText;\n    private Button savePasswordCheckbox;\n    private Label privateKeyLabel;\n    private Combo tunnelImplCombo;\n\n    private Text localHostText;\n    private Text localPortSpinner;\n    private Text remoteHostText;\n    private Text remotePortSpinner;\n\n    private Text keepAliveText;\n    private Text tunnelTimeout;\n    private VariablesHintLabel variablesHintLabel;\n\n    @Override\n    public void createControl(Composite parent, Runnable propertyChangeListener)\n    {\n        final Composite composite = new Composite(parent, SWT.NONE);\n        //gd.minimumHeight = 200;\n        composite.setLayoutData(new GridData(GridData.FILL_BOTH));\n        composite.setLayout(new GridLayout(1, false));\n\n        {\n            Group settingsGroup = UIUtils.createControlGroup(composite, SSHUIMessages.model_ssh_configurator_group_settings, 2, GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_BEGINNING, SWT.DEFAULT);\n\n            UIUtils.createControlLabel(settingsGroup, SSHUIMessages.model_ssh_configurator_label_host_ip);\n            Composite hostPortComp = UIUtils.createComposite(settingsGroup, 3);\n            hostPortComp.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));\n            hostText = new Text(hostPortComp, SWT.BORDER); //$NON-NLS-2$\n            hostText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));\n            portText = UIUtils.createLabelText(hostPortComp, SSHUIMessages.model_ssh_configurator_label_port, String.valueOf(SSHConstants.DEFAULT_SSH_PORT));\n            setNumberEditStyles(portText);",
+      "metadata": {
+        "chunk_index": 2,
+        "commit_count": 5,
+        "language": "java",
+        "total_chunks": 15,
+        "file_path": "plugins/org.jkiss.dbeaver.net.ssh.ui/src/org/jkiss/dbeaver/ui/net/ssh/SSHTunnelConfiguratorUI.java",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.0124424695968628
+    },
+    {
+      "content": "@Override\n    public void saveSettings(DBWHandlerConfiguration configuration)\n    {\n        configuration.setProperty(DBWHandlerConfiguration.PROP_HOST, hostText.getText().trim());\n        configuration.setProperty(DBWHandlerConfiguration.PROP_PORT, CommonUtils.toInt(portText.getText().trim()));\n        switch (authMethodCombo.getSelectionIndex()) {\n            case 0: configuration.setProperty(SSHConstants.PROP_AUTH_TYPE, SSHConstants.AuthType.PASSWORD.name()); break;\n            case 1: configuration.setProperty(SSHConstants.PROP_AUTH_TYPE, SSHConstants.AuthType.PUBLIC_KEY.name()); break;\n            case 2: configuration.setProperty(SSHConstants.PROP_AUTH_TYPE, SSHConstants.AuthType.AGENT.name()); break;\n        }\n        configuration.setProperty(SSHConstants.PROP_KEY_PATH, privateKeyText.getText().trim());\n        configuration.setUserName(userNameText.getText().trim());\n        configuration.setPassword(passwordText.getText());\n        configuration.setSavePassword(savePasswordCheckbox.getSelection());\n\n        String implLabel = tunnelImplCombo.getText();\n        for (SSHImplementationDescriptor it : SSHImplementationRegistry.getInstance().getDescriptors()) {\n            if (it.getLabel().equals(implLabel)) {\n                configuration.setProperty(SSHConstants.PROP_IMPLEMENTATION, it.getId());\n                break;\n            }\n        }\n\n        configuration.setProperty(SSHConstants.PROP_LOCAL_HOST, localHostText.getText().trim());\n        int localPort = CommonUtils.toInt(localPortSpinner.getText());\n        if (localPort <= 0) {\n            configuration.setProperty(SSHConstants.PROP_LOCAL_PORT, null);\n        } else {\n            configuration.setProperty(SSHConstants.PROP_LOCAL_PORT, localPort);\n        }",
+      "metadata": {
+        "total_chunks": 15,
+        "language": "java",
+        "commit_count": 5,
+        "file_path": "plugins/org.jkiss.dbeaver.net.ssh.ui/src/org/jkiss/dbeaver/ui/net/ssh/SSHTunnelConfiguratorUI.java",
+        "strategy": "enhanced",
+        "chunk_index": 10
+      },
+      "similarity_score": 1.0802313089370728
+    },
+    {
+      "content": "@Override\n    public void loadSettings(DBWHandlerConfiguration configuration)\n    {\n        hostText.setText(CommonUtils.notEmpty(configuration.getStringProperty(DBWHandlerConfiguration.PROP_HOST)));\n        int portString = configuration.getIntProperty(DBWHandlerConfiguration.PROP_PORT);\n        if (portString != 0) {\n            portText.setText(String.valueOf(portString));\n        } else {\n            portText.setText(String.valueOf(SSHConstants.DEFAULT_SSH_PORT));\n        }\n        userNameText.setText(CommonUtils.notEmpty(configuration.getUserName()));\n        SSHConstants.AuthType authType = SSHConstants.AuthType.PASSWORD;\n        String authTypeName = configuration.getStringProperty(SSHConstants.PROP_AUTH_TYPE);\n        if (!CommonUtils.isEmpty(authTypeName)) {\n            authType = SSHConstants.AuthType.valueOf(authTypeName);\n        }\n        if (SSHConstants.AuthType.PASSWORD.equals(authType)) {\n            authMethodCombo.select(0);\n        } else if (SSHConstants.AuthType.PUBLIC_KEY.equals(authType)) {\n            authMethodCombo.select(1);\n        } else {\n            authMethodCombo.select(2);\n        }\n        privateKeyText.setText(CommonUtils.notEmpty(configuration.getStringProperty(SSHConstants.PROP_KEY_PATH)));\n        passwordText.setText(CommonUtils.notEmpty(configuration.getPassword()));\n        savePasswordCheckbox.setSelection(configuration.isSavePassword());\n\n        String implType = configuration.getStringProperty(SSHConstants.PROP_IMPLEMENTATION);\n        if (CommonUtils.isEmpty(implType)) {\n            tunnelImplCombo.select(0);\n        } else {\n            SSHImplementationDescriptor desc = SSHImplementationRegistry.getInstance().getDescriptor(implType);\n            if (desc != null) {\n                tunnelImplCombo.setText(desc.getLabel());\n            } else {\n                tunnelImplCombo.select(0);\n            }\n        }",
+      "metadata": {
+        "strategy": "enhanced",
+        "file_path": "plugins/org.jkiss.dbeaver.net.ssh.ui/src/org/jkiss/dbeaver/ui/net/ssh/SSHTunnelConfiguratorUI.java",
+        "commit_count": 5,
+        "language": "java",
+        "total_chunks": 15,
+        "chunk_index": 8
+      },
+      "similarity_score": 1.0845751762390137
+    },
+    {
+      "content": "@Override\n    public void loadSettings(DBWHandlerConfiguration configuration) {\n        super.loadSettings(configuration);\n\n        if (CommonUtils.isEmpty(configuration.getStringProperty(SSLHandlerTrustStoreImpl.PROP_SSL_METHOD))) {\n            // Backward compatibility\n            keyStorePath.setText(CommonUtils.notEmpty(configuration.getStringProperty(SQLServerConstants.PROP_SSL_KEYSTORE)));\n            keyStorePassword.setText(CommonUtils.notEmpty(configuration.getStringProperty(SQLServerConstants.PROP_SSL_KEYSTORE_PASSWORD)));\n        }\n\n        keystoreHostname.setText(CommonUtils.notEmpty(configuration.getStringProperty(SQLServerConstants.PROP_SSL_KEYSTORE_HOSTNAME)));\n        trustServerCertificate.setSelection(configuration.getBooleanProperty(SQLServerConstants.PROP_SSL_TRUST_SERVER_CERTIFICATE));\n    }\n\n    @Override\n    public void saveSettings(DBWHandlerConfiguration configuration) {\n        super.saveSettings(configuration);\n\n        configuration.setProperty(SQLServerConstants.PROP_SSL_KEYSTORE_HOSTNAME, keystoreHostname.getText().trim());\n        configuration.setProperty(SQLServerConstants.PROP_SSL_TRUST_SERVER_CERTIFICATE, trustServerCertificate.getSelection());\n    }\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: f7f7e6b8\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2021-02-09 04:04:12\n- Message: Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf\n- Changes:\n```diff\n@@ -1,6 +1,6 @@\n /*\n  * DBeaver - Universal Database Manager\n- * Copyright (C) 2010-2020 DBeaver Corp and others\n+ * Copyright (C) 2010-2021 DBeaver Corp and others\n  *\n  * Licensed under the Apache License, Version 2.0 (the \"License\");\n  * you may not use this file except in compliance with the License....\n```\n\n### Commit 2\n- ID: 7aa76108\n- Author: ShadelessFox (yanuari.channel@gmail.com)\n- Date: 2020-12-16 22:18:55\n- Message: #9912 Refactor SSL configuration dialogs",
+      "metadata": {
+        "commit_count": 5,
+        "chunk_index": 2,
+        "strategy": "enhanced",
+        "file_path": "plugins/org.jkiss.dbeaver.ext.mssql.ui/src/org/jkiss/dbeaver/ext/mssql/ui/views/SQLServerSSLConfigurator.java",
+        "total_chunks": 5,
+        "language": "java"
+      },
+      "similarity_score": 1.1264246702194214
+    },
+    {
+      "content": "public DBPConnectionConfiguration(@NotNull DBPConnectionConfiguration info) {\n        this.hostName = info.hostName;\n        this.hostPort = info.hostPort;\n        this.serverName = info.serverName;\n        this.databaseName = info.databaseName;\n        this.userName = info.userName;\n        this.userPassword = info.userPassword;\n        this.url = info.url;\n        this.clientHomeId = info.clientHomeId;\n        this.configProfileName = info.configProfileName;\n        this.authModelId = info.authModelId;\n        this.authProperties = info.authProperties == null ? null : new LinkedHashMap<>(info.authProperties);\n        this.connectionType = info.connectionType;\n        this.properties = new LinkedHashMap<>(info.properties);\n        this.providerProperties = new LinkedHashMap<>(info.providerProperties);\n        this.runtimeAttributes = new HashMap<>(info.runtimeAttributes);\n        this.events = new LinkedHashMap<>(info.events.size());\n        for (Map.Entry<DBPConnectionEventType, DBRShellCommand> entry : info.events.entrySet()) {\n            this.events.put(entry.getKey(), new DBRShellCommand(entry.getValue()));\n        }\n        this.handlers = new ArrayList<>(info.handlers.size());\n        for (DBWHandlerConfiguration handler : info.handlers) {\n            this.handlers.add(new DBWHandlerConfiguration(handler));\n        }\n        this.bootstrap = new DBPConnectionBootstrap(info.bootstrap);\n        this.connectionColor = info.connectionColor;\n        this.keepAliveInterval = info.keepAliveInterval;\n    }\n\n    public String getClientHomeId() {\n        return clientHomeId;\n    }\n\n    public void setClientHomeId(String clientHomeId) {\n        this.clientHomeId = clientHomeId;\n    }\n\n    public String getHostName() {\n        return hostName;\n    }\n\n    public void setHostName(String hostName) {\n        this.hostName = hostName;\n    }\n\n    public String getHostPort() {\n        return hostPort;\n    }",
+      "metadata": {
+        "strategy": "enhanced",
+        "file_path": "plugins/org.jkiss.dbeaver.model/src/org/jkiss/dbeaver/model/connection/DBPConnectionConfiguration.java",
+        "total_chunks": 13,
+        "chunk_index": 3,
+        "commit_count": 5,
+        "language": "java"
+      },
+      "similarity_score": 1.1608712673187256
+    },
+    {
+      "content": "userNameText = UIUtils.createLabelText(settingsGroup, SSHUIMessages.model_ssh_configurator_label_user_name, null, SWT.BORDER, new GridData(GridData.FILL_HORIZONTAL)); //$NON-NLS-2$\n\n            authMethodCombo = UIUtils.createLabelCombo(settingsGroup, SSHUIMessages.model_ssh_configurator_combo_auth_method, SWT.DROP_DOWN | SWT.READ_ONLY);\n            authMethodCombo.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));\n            authMethodCombo.add(SSHUIMessages.model_ssh_configurator_combo_password);\n            authMethodCombo.add(SSHUIMessages.model_ssh_configurator_combo_pub_key);\n            authMethodCombo.add(SSHUIMessages.model_ssh_configurator_combo_agent);\n\n            privateKeyLabel = UIUtils.createControlLabel(settingsGroup, SSHUIMessages.model_ssh_configurator_label_private_key);\n            privateKeyLabel.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));\n\n            privateKeyText = new TextWithOpenFile(\n                settingsGroup,\n                SSHUIMessages.model_ssh_configurator_dialog_choose_private_key,\n                new String[]{\"*\", \"*.ssh\", \"*.pem\", \"*.*\"});\n            privateKeyText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));\n\n            {\n                pwdLabel = UIUtils.createControlLabel(settingsGroup, SSHUIMessages.model_ssh_configurator_label_password);\n                Composite passComp = UIUtils.createComposite(settingsGroup, 2);\n                passComp.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));\n\n                passwordText = new Text(passComp, SWT.BORDER | SWT.PASSWORD);\n                passwordText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));\n\n                savePasswordCheckbox = UIUtils.createCheckbox(passComp, SSHUIMessages.model_ssh_configurator_checkbox_save_pass, false);\n                savePasswordCheckbox.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));\n            }\n        }",
+      "metadata": {
+        "total_chunks": 15,
+        "chunk_index": 3,
+        "file_path": "plugins/org.jkiss.dbeaver.net.ssh.ui/src/org/jkiss/dbeaver/ui/net/ssh/SSHTunnelConfiguratorUI.java",
+        "language": "java",
+        "strategy": "enhanced",
+        "commit_count": 5
+      },
+      "similarity_score": 1.1724399328231812
+    },
+    {
+      "content": "final SSLConfigurationMethod method;\n\n        if (isCertificatesSupported() && isKeystoreSupported()) {\n            method = CommonUtils.valueOf(\n                SSLConfigurationMethod.class,\n                configuration.getStringProperty(SSLHandlerTrustStoreImpl.PROP_SSL_METHOD),\n                SSLConfigurationMethod.CERTIFICATES);\n\n            if (method == SSLConfigurationMethod.CERTIFICATES) {\n                certRadioButton.setSelection(true);\n            } else {\n                keyStoreRadioButton.setSelection(true);\n            }\n        } else {\n            method = isCertificatesSupported()\n                ? SSLConfigurationMethod.CERTIFICATES\n                : SSLConfigurationMethod.KEYSTORE;\n        }\n\n        showMethodControls(method);\n    }\n\n    @Override\n    public void saveSettings(DBWHandlerConfiguration configuration) {\n        if (isCertificatesSupported()) {\n            if (caCertPath != null) {\n                configuration.setProperty(SSLHandlerTrustStoreImpl.PROP_SSL_CA_CERT, caCertPath.getText().trim());\n            }\n            configuration.setProperty(SSLHandlerTrustStoreImpl.PROP_SSL_CLIENT_CERT, clientCertPath.getText().trim());\n            configuration.setProperty(SSLHandlerTrustStoreImpl.PROP_SSL_CLIENT_KEY, clientKeyPath.getText().trim());\n        }\n\n        if (isKeystoreSupported()) {\n            configuration.setProperty(SSLHandlerTrustStoreImpl.PROP_SSL_KEYSTORE, keyStorePath.getText().trim());\n\n            final String password = keyStorePassword.getText().trim();\n            if (!CommonUtils.isEmptyTrimmed(password)) {\n                configuration.setPassword(password);\n                configuration.setSavePassword(true);\n            }\n        }\n\n        configuration.setProperty(SSLHandlerTrustStoreImpl.PROP_SSL_METHOD, method.name());\n    }\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: f7f7e6b8\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2021-02-09 04:04:12\n- Message: Copyright update (2021)",
+      "metadata": {
+        "strategy": "enhanced",
+        "file_path": "plugins/org.jkiss.dbeaver.ui.editors.connection/src/org/jkiss/dbeaver/ui/dialogs/net/SSLConfiguratorTrustStoreUI.java",
+        "chunk_index": 4,
+        "commit_count": 5,
+        "language": "java",
+        "total_chunks": 7
+      },
+      "similarity_score": 1.1930110454559326
+    },
+    {
+      "content": "private String authModelId;\n    private Map<String, String> authProperties;\n\n    public DBPConnectionConfiguration() {\n        this.connectionType = DBPConnectionType.DEFAULT_TYPE;\n        this.properties = new LinkedHashMap<>();\n        this.providerProperties = new LinkedHashMap<>();\n        this.events = new LinkedHashMap<>();\n        this.runtimeAttributes = new HashMap<>();\n        this.handlers = new ArrayList<>();\n        this.bootstrap = new DBPConnectionBootstrap();\n        this.keepAliveInterval = 0;\n    }",
+      "metadata": {
+        "language": "java",
+        "chunk_index": 2,
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "total_chunks": 13,
+        "file_path": "plugins/org.jkiss.dbeaver.model/src/org/jkiss/dbeaver/model/connection/DBPConnectionConfiguration.java"
+      },
+      "similarity_score": 1.1993522644042969
+    },
+    {
+      "content": "### Commit 2\n- ID: 4d0ad2cf\n- Author: Serge Rider (serge@jkiss.org)\n- Date: 2021-01-27 17:40:38\n- Message: SSH configuration UI fixes (get rid of ugly spinners)\n\n\nFormer-commit-id: 547b2909f201aef24e7b095592297edd7973845a\n- Changes:\n```diff\n@@ -43,10 +43,10 @@ import org.jkiss.dbeaver.ui.controls.VariablesHintLabel;\n import org.jkiss.dbeaver.utils.GeneralUtils;\n import org.jkiss.dbeaver.utils.SystemVariablesResolver;\n import org.jkiss.utils.CommonUtils;\n-import org.jkiss.utils.StandardConstants;\n \n import java.lang.reflect.InvocationTargetException;\n import java.util.Collections;\n+import java.util.Locale;\n \n /**\n  * SSH tunnel configuration\n@@ -56,7 +56,7 @@ public class SSHTunnelConfiguratorUI implements IObjectPropertyConfigurato...\n```\n\n### Commit 3\n- ID: 4584f500\n- Author: ShadelessFox (yanuari.channel@gmail.com)\n- Date: 2020-10-14 21:08:03\n- Message: #9134 Clone configuration to avoid overriding data\n\n\nFormer-commit-id: 3b40aefe38fe6a27983f37277750c227f1d60093\n- Changes:\n```diff\n@@ -41,6 +41,7 @@ import org.jkiss.dbeaver.ui.controls.TextWithOpen;\n import org.jkiss.dbeaver.ui.controls.TextWithOpenFile;\n import org.jkiss.dbeaver.ui.controls.VariablesHintLabel;\n import org.jkiss.dbeaver.utils.GeneralUtils;\n+import org.jkiss.dbeaver.utils.SystemVariablesResolver;\n import org.jkiss.utils.CommonUtils;\n import org.jkiss.utils.StandardConstants;\n \n@@ -190,7 +191,9 @@ public class SSHTunnelConfiguratorUI implements IObjectPropertyConfigurator<DBWH\n             configuration.reso...\n```\n\n### Commit 4\n- ID: efc965d8\n- Author: ShadelessFox (yanuari.channel@gmail.com)\n- Date: 2020-10-14 21:05:48\n- Message: #9134 Revert \"Use unresolved properties in UI\"",
+      "metadata": {
+        "file_path": "plugins/org.jkiss.dbeaver.net.ssh.ui/src/org/jkiss/dbeaver/ui/net/ssh/SSHTunnelConfiguratorUI.java",
+        "language": "java",
+        "total_chunks": 15,
+        "chunk_index": 13,
+        "strategy": "enhanced",
+        "commit_count": 5
+      },
+      "similarity_score": 1.2204883098602295
+    },
+    {
+      "content": "@Override\n    public void loadSettings(DBWHandlerConfiguration configuration) {\n        super.loadSettings(configuration);\n\n        if (CommonUtils.isEmpty(configuration.getStringProperty(SSLHandlerTrustStoreImpl.PROP_SSL_METHOD))) {\n            // Backward compatibility\n            caCertPath.setText(CommonUtils.notEmpty(configuration.getStringProperty(MySQLConstants.PROP_SSL_CA_CERT)));\n            clientCertPath.setText(CommonUtils.notEmpty(configuration.getStringProperty(MySQLConstants.PROP_SSL_CLIENT_CERT)));\n            clientKeyPath.setText(CommonUtils.notEmpty(configuration.getStringProperty(MySQLConstants.PROP_SSL_CLIENT_KEY)));\n        }\n\n        requireSSQL.setSelection(configuration.getBooleanProperty(MySQLConstants.PROP_REQUIRE_SSL, false));\n        veryServerCert.setSelection(configuration.getBooleanProperty(MySQLConstants.PROP_VERIFY_SERVER_SERT, true));\n        allowPublicKeyRetrieval.setSelection(configuration.getBooleanProperty(MySQLConstants.PROP_SSL_PUBLIC_KEY_RETRIEVE, false));\n\n        cipherSuitesText.setText(CommonUtils.notEmpty(configuration.getStringProperty(MySQLConstants.PROP_SSL_CIPHER_SUITES)));\n    }\n\n    @Override\n    public void saveSettings(DBWHandlerConfiguration configuration) {\n        super.saveSettings(configuration);\n\n        configuration.setProperty(MySQLConstants.PROP_REQUIRE_SSL, String.valueOf(requireSSQL.getSelection()));\n        configuration.setProperty(MySQLConstants.PROP_VERIFY_SERVER_SERT, String.valueOf(veryServerCert.getSelection()));\n        configuration.setProperty(MySQLConstants.PROP_SSL_PUBLIC_KEY_RETRIEVE, String.valueOf(allowPublicKeyRetrieval.getSelection()));\n        configuration.setProperty(MySQLConstants.PROP_SSL_CIPHER_SUITES, cipherSuitesText.getText());\n    }\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: f7f7e6b8\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2021-02-09 04:04:12\n- Message: Copyright update (2021)",
+      "metadata": {
+        "total_chunks": 6,
+        "chunk_index": 2,
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "language": "java",
+        "file_path": "plugins/org.jkiss.dbeaver.ext.mysql.ui/src/org/jkiss/dbeaver/ext/mysql/ui/views/MySQLSSLConfigurator.java"
+      },
+      "similarity_score": 1.2376137971878052
+    },
+    {
+      "content": "@Override\n    protected boolean useCACertificate() {\n        return true;\n    }\n\n    @Override\n    public void loadSettings(final DBWHandlerConfiguration configuration) {\n        super.loadSettings(configuration);\n\n        if (CommonUtils.isEmpty(configuration.getStringProperty(SSLHandlerTrustStoreImpl.PROP_SSL_METHOD))) {\n            // Backward compatibility\n            caCertPath.setText(CommonUtils.notEmpty(configuration.getStringProperty(PostgreConstants.PROP_SSL_ROOT_CERT)));\n            clientCertPath.setText(CommonUtils.notEmpty(configuration.getStringProperty(PostgreConstants.PROP_SSL_CLIENT_CERT)));\n            clientKeyPath.setText(CommonUtils.notEmpty(configuration.getStringProperty(PostgreConstants.PROP_SSL_CLIENT_KEY)));\n        }\n\n        UIUtils.setComboSelection(sslModeCombo, CommonUtils.notEmpty(configuration.getStringProperty(PostgreConstants.PROP_SSL_MODE)));\n        if (ENABLE_PROXY) {\n            useProxyService.setSelection(configuration.getBooleanProperty(PostgreConstants.PROP_SSL_PROXY));\n        }\n\n        if (!sslClassesResolved) {\n            sslClassesResolved = true;\n            final Job resolveJob = new Job(\"Find factories\") {\n                {\n                    setUser(true);\n                }",
+      "metadata": {
+        "total_chunks": 7,
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "chunk_index": 2,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.postgresql.ui/src/org/jkiss/dbeaver/ext/postgresql/ui/PostgreSSLConfigurator.java",
+        "language": "java"
+      },
+      "similarity_score": 1.2482887506484985
+    },
+    {
+      "content": "import javax.net.ssl.SSLSocketFactory;\n\n/**\n * PostgreSSLConfigurator\n */\npublic class PostgreSSLConfigurator extends SSLConfiguratorTrustStoreUI {\n    private static final boolean ENABLE_PROXY = false;\n\n    public static final String[] SSL_MODES = {\"\",\"disable\",\"allow\",\"prefer\",\"require\",\"verify-ca\",\"verify-full\"};\n\n    private Combo sslModeCombo;\n    private Combo sslFactoryCombo;\n    private Button useProxyService;\n    private boolean sslClassesResolved;\n\n    @Override\n    public void createControl(Composite parent, Runnable propertyChangeListener) {\n        final Composite composite = new Composite(parent, SWT.NONE);\n        composite.setLayout(new GridLayout(1, false));\n        GridData gd = new GridData(GridData.FILL_BOTH);\n        gd.minimumHeight = 200;\n        composite.setLayoutData(gd);\n\n        createSSLConfigHint(composite, true, 1);\n        createTrustStoreConfigGroup(composite);\n\n        {\n            Group advGroup = UIUtils.createControlGroup(composite, PostgreMessages.dialog_connection_network_postgres_ssl_advanced, 2, GridData.FILL_HORIZONTAL, -1);\n            sslModeCombo = UIUtils.createLabelCombo(advGroup, PostgreMessages.dialog_connection_network_postgres_ssl_advanced_ssl_mode, SWT.READ_ONLY | SWT.DROP_DOWN);\n            sslModeCombo.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));\n            for (String mode : SSL_MODES) {\n                sslModeCombo.add(mode);\n            }\n            sslFactoryCombo = UIUtils.createLabelCombo(advGroup, PostgreMessages.dialog_connection_network_postgres_ssl_advanced_ssl_factory, SWT.DROP_DOWN);\n            if (ENABLE_PROXY) {\n                useProxyService = UIUtils.createCheckbox(\n                    advGroup,\n                    PostgreMessages.dialog_connection_network_postgres_ssl_advanced_use_proxy,\n                    PostgreMessages.dialog_connection_network_postgres_ssl_advanced_use_proxy_tip,\n                    false, 2);\n            }\n        }\n    }",
+      "metadata": {
+        "chunk_index": 1,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.postgresql.ui/src/org/jkiss/dbeaver/ext/postgresql/ui/PostgreSSLConfigurator.java",
+        "strategy": "enhanced",
+        "total_chunks": 7,
+        "commit_count": 5,
+        "language": "java"
+      },
+      "similarity_score": 1.2577753067016602
+    },
+    {
+      "content": "### Commit 4\n- ID: 405b861c\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2021-05-04 13:59:51\n- Message: dbeaver/dbeaver-ee#953 Auth model refactoring\n\n\nFormer-commit-id: 539f650f1efa306303ecc205cc68b07943727b69\n- Changes:\n```diff\n@@ -781,14 +781,14 @@ public class DataSourceDescriptor\n         // 1. Get credentials from origin\n         DBPDataSourceOrigin dsOrigin = getOrigin();\n         if (dsOrigin instanceof DBAAuthCredentialsProvider) {\n-            ((DBAAuthCredentialsProvider) dsOrigin).provideAuthParameters(this, resolvedConnectionInfo);\n+            ((DBAAuthCredentialsProvider) dsOrigin).provideAuthParameters(monitor, this, resolvedConnectionInfo);\n         }\n \n         // 2. Get credentials from global provider...\n```\n\n### Commit 5\n- ID: f46accfc\n- Author: Serge Rider (serge@jkiss.org)\n- Date: 2021-04-27 18:07:17\n- Message: Property length introduced\n\n\nFormer-commit-id: 59287e633d51b3421b86a6aa79c4a8e470c44f39\n- Changes:\n```diff\n@@ -43,6 +43,7 @@ import org.jkiss.dbeaver.model.exec.DBExecUtils;\n import org.jkiss.dbeaver.model.impl.SimpleExclusiveLock;\n import org.jkiss.dbeaver.model.impl.data.DefaultValueHandler;\n import org.jkiss.dbeaver.model.meta.Property;\n+import org.jkiss.dbeaver.model.meta.PropertyLength;\n import org.jkiss.dbeaver.model.navigator.DBNBrowseSettings;\n import org.jkiss.dbeaver.model.net.*;\n import org.jkiss.dbeaver.model.preferences.DBPPropertySource;\n@@ -347,7 +348,7 @@ public class DataSourceDescri...\n```",
+      "metadata": {
+        "file_path": "plugins/org.jkiss.dbeaver.registry/src/org/jkiss/dbeaver/registry/DataSourceDescriptor.java",
+        "total_chunks": 37,
+        "commit_count": 5,
+        "language": "java",
+        "chunk_index": 36,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.2658202648162842
+    },
+    {
+      "content": "if (CommonUtils.isEmpty(name)) {\n            return;\n        }\n        importData.addConnection(new ImportConnectionInfo(\n            driver, \n            name, \n            name, \n            \"\",\n            conProps.get(\"Host\"), \n            conProps.get(\"Port\"), \n            conProps.get(\"Database\"), \n            conProps.get(\"UserName\"), \n            password\n         ));\n    }\n    \n    /**\n     * Decrypts password chiper-text\n     * \n     * @param encryptedPassword\n     * @return Plain-text of password or empty string if unable to decrypt\n     */\n    private String decryptPassword(String encryptedPassword)\n    {\n        try {\n            return decryptor.decrypt(encryptedPassword);\n        } catch (Exception e) {\n            return \"\";\n        }\n    }\n\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: f7f7e6b8\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2021-02-09 04:04:12\n- Message: Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf\n- Changes:\n```diff\n@@ -1,6 +1,6 @@\n /*\n  * DBeaver - Universal Database Manager\n- * Copyright (C) 2010-2020 DBeaver Corp and others\n+ * Copyright (C) 2010-2021 DBeaver Corp and others\n  *\n  * Licensed under the Apache License, Version 2.0 (the \"License\");\n  * you may not use this file except in compliance with the License....\n```\n\n### Commit 2\n- ID: 13db808b\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2020-04-09 04:18:05\n- Message: Imports optimization",
+      "metadata": {
+        "commit_count": 5,
+        "language": "java",
+        "strategy": "enhanced",
+        "file_path": "plugins/org.jkiss.dbeaver.ext.import_config/src/org/jkiss/dbeaver/ext/import_config/wizards/navicat/ConfigImportWizardPageNavicatConnections.java",
+        "total_chunks": 5,
+        "chunk_index": 2
+      },
+      "similarity_score": 1.2678518295288086
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.net.ssh.ui/src/org/jkiss/dbeaver/ui/net/ssh/SSHTunnelConfiguratorUI.java (java)\n\n## Code Content:\n```java\n/*\n * DBeaver - Universal Database Manager\n * Copyright (C) 2010-2021 DBeaver Corp and others\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obtain a copy of the License at\n *\n *     http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\npackage org.jkiss.dbeaver.ui.net.ssh;",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "plugins/org.jkiss.dbeaver.net.ssh.ui/src/org/jkiss/dbeaver/ui/net/ssh/SSHTunnelConfiguratorUI.java",
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "total_chunks": 15,
+        "language": "java"
+      },
+      "similarity_score": 1.2896885871887207
+    },
+    {
+      "content": "UIUtils.createControlLabel(sslKeyStoreComposite, UIConnectionMessages.dialog_setting_ssl_configurator_keystore_password_name);\n            keyStorePassword = new Text(sslKeyStoreComposite, SWT.BORDER | SWT.PASSWORD);\n            keyStorePassword.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));\n        }\n\n        return sslParameters;\n    }\n\n    private void showMethodControls(SSLConfigurationMethod configurationMethod) {\n        boolean keystore = configurationMethod == SSLConfigurationMethod.KEYSTORE;\n        showControl(sslCertComposite, !keystore);\n        showControl(sslKeyStoreComposite, keystore);\n        sslCertComposite.getParent().getParent().layout(true, true);\n        method = configurationMethod;\n    }\n\n    private void showControl(Control control, boolean flag) {\n        UIUtils.setControlVisible(control, flag);\n    }\n\n    protected boolean isCertificatesSupported() {\n        return true;\n    }\n\n    protected boolean isKeystoreSupported() {\n        return false;\n    }\n\n    protected boolean useCACertificate() {\n        return false;\n    }\n\n    @Override\n    public void loadSettings(DBWHandlerConfiguration configuration) {\n        if (isCertificatesSupported()) {\n            if (caCertPath != null) {\n                caCertPath.setText(CommonUtils.notEmpty(configuration.getStringProperty(SSLHandlerTrustStoreImpl.PROP_SSL_CA_CERT)));\n            }\n            clientCertPath.setText(CommonUtils.notEmpty(configuration.getStringProperty(SSLHandlerTrustStoreImpl.PROP_SSL_CLIENT_CERT)));\n            clientKeyPath.setText(CommonUtils.notEmpty(configuration.getStringProperty(SSLHandlerTrustStoreImpl.PROP_SSL_CLIENT_KEY)));\n        }\n\n        if (isKeystoreSupported()) {\n            keyStorePath.setText(CommonUtils.notEmpty(configuration.getStringProperty(SSLHandlerTrustStoreImpl.PROP_SSL_KEYSTORE)));\n            keyStorePassword.setText(CommonUtils.notEmpty(configuration.getPassword()));\n        }\n\n        final SSLConfigurationMethod method;",
+      "metadata": {
+        "chunk_index": 3,
+        "file_path": "plugins/org.jkiss.dbeaver.ui.editors.connection/src/org/jkiss/dbeaver/ui/dialogs/net/SSLConfiguratorTrustStoreUI.java",
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "language": "java",
+        "total_chunks": 7
+      },
+      "similarity_score": 1.2898913621902466
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.model/src/org/jkiss/dbeaver/model/impl/net/SSLConfigurationMethod.java (java)\n\n## Code Content:\n```java\n/*\n * DBeaver - Universal Database Manager\n * Copyright (C) 2010-2021 DBeaver Corp and others\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obtain a copy of the License at\n *\n *     http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\npackage org.jkiss.dbeaver.model.impl.net;\n\npublic enum SSLConfigurationMethod {\n    CERTIFICATES,\n    KEYSTORE\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: f7f7e6b8\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2021-02-09 04:04:12\n- Message: Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf\n- Changes:\n```diff\n@@ -1,6 +1,6 @@\n /*\n  * DBeaver - Universal Database Manager\n- * Copyright (C) 2010-2020 DBeaver Corp and others\n+ * Copyright (C) 2010-2021 DBeaver Corp and others\n  *\n  * Licensed under the Apache License, Version 2.0 (the \"License\");\n  * you may not use this file except in compliance with the License....\n```\n\n### Commit 2\n- ID: 7aa76108\n- Author: ShadelessFox (yanuari.channel@gmail.com)\n- Date: 2020-12-16 22:18:55\n- Message: #9912 Refactor SSL configuration dialogs",
+      "metadata": {
+        "language": "java",
+        "commit_count": 2,
+        "chunk_index": 0,
+        "strategy": "enhanced",
+        "file_path": "plugins/org.jkiss.dbeaver.model/src/org/jkiss/dbeaver/model/impl/net/SSLConfigurationMethod.java",
+        "total_chunks": 2
+      },
+      "similarity_score": 1.2908505201339722
+    },
+    {
+      "content": "public class SQLServerSSLConfigurator extends SSLConfiguratorTrustStoreUI {\n    private Text keystoreHostname;\n    private Button trustServerCertificate;\n\n    @Override\n    public void createControl(Composite parent, Runnable propertyChangeListener) {\n        final Composite composite = new Composite(parent, SWT.NONE);\n        composite.setLayout(new GridLayout(1, false));\n        GridData gd = new GridData(GridData.FILL_BOTH);\n        gd.minimumHeight = 200;\n        composite.setLayoutData(gd);\n\n        createSSLConfigHint(composite, true, 1);\n        createTrustStoreConfigGroup(composite);\n\n        {\n            UIUtils.createControlLabel(sslKeyStoreComposite, SQLServerUIMessages.dialog_setting_ssl_advanced_hostname_label);\n            keystoreHostname = new Text(sslKeyStoreComposite, SWT.BORDER);\n            keystoreHostname.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));\n            keystoreHostname.setToolTipText(SQLServerUIMessages.dialog_setting_ssl_advanced_hostname_tip);\n        }\n\n        {\n            Group settingsGroup = UIUtils.createControlGroup(composite, \"Settings\", 1, GridData.FILL_HORIZONTAL, SWT.DEFAULT);\n\n            trustServerCertificate = UIUtils.createCheckbox(settingsGroup, SQLServerUIMessages.dialog_setting_trust_server_certificate, SQLServerUIMessages.dialog_setting_trust_server_certificate_tip, true, 2);\n        }\n    }\n\n    @Override\n    protected boolean isCertificatesSupported() {\n        return false;\n    }\n\n    @Override\n    protected boolean isKeystoreSupported() {\n        return true;\n    }\n\n    @Override\n    public void loadSettings(DBWHandlerConfiguration configuration) {\n        super.loadSettings(configuration);",
+      "metadata": {
+        "chunk_index": 1,
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "file_path": "plugins/org.jkiss.dbeaver.ext.mssql.ui/src/org/jkiss/dbeaver/ext/mssql/ui/views/SQLServerSSLConfigurator.java",
+        "language": "java",
+        "total_chunks": 5
+      },
+      "similarity_score": 1.2945680618286133
+    },
+    {
+      "content": "{\n            Group advancedGroup = UIUtils.createControlGroup(composite, SSHUIMessages.model_ssh_configurator_group_advanced, 4, GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_BEGINNING, SWT.DEFAULT);\n\n            tunnelImplCombo = UIUtils.createLabelCombo(advancedGroup, SSHUIMessages.model_ssh_configurator_label_implementation, SWT.DROP_DOWN | SWT.READ_ONLY);\n            GridData gd = new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING);\n            gd.horizontalSpan = 3;\n            tunnelImplCombo.setLayoutData(gd);\n            for (SSHImplementationDescriptor it : SSHImplementationRegistry.getInstance().getDescriptors()) {\n                tunnelImplCombo.add(it.getLabel());\n            }\n\n            localHostText = UIUtils.createLabelText(advancedGroup, SSHUIMessages.model_ssh_configurator_label_local_host, null, SWT.BORDER, new GridData(GridData.FILL_HORIZONTAL));\n            localHostText.setToolTipText(SSHUIMessages.model_ssh_configurator_label_local_host_description);\n            localHostText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));\n            remoteHostText = UIUtils.createLabelText(advancedGroup, SSHUIMessages.model_ssh_configurator_label_remote_host, null, SWT.BORDER, new GridData(GridData.FILL_HORIZONTAL));\n            remoteHostText.setToolTipText(SSHUIMessages.model_ssh_configurator_label_remote_host_description);\n            remoteHostText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));\n            localPortSpinner = UIUtils.createLabelText(advancedGroup, SSHUIMessages.model_ssh_configurator_label_local_port, String.valueOf(0));\n            localPortSpinner.setToolTipText(SSHUIMessages.model_ssh_configurator_label_local_port_description);\n            setNumberEditStyles(localPortSpinner);",
+      "metadata": {
+        "chunk_index": 4,
+        "commit_count": 5,
+        "file_path": "plugins/org.jkiss.dbeaver.net.ssh.ui/src/org/jkiss/dbeaver/ui/net/ssh/SSHTunnelConfiguratorUI.java",
+        "strategy": "enhanced",
+        "language": "java",
+        "total_chunks": 15
+      },
+      "similarity_score": 1.3020076751708984
+    },
+    {
+      "content": "DBPConnectionConfiguration connectionInfo = new DBPConnectionConfiguration();\n        connectionInfo.setDatabaseName(dbFile.getAbsolutePath());\n        connectionInfo.setConnectionType(DBPConnectionType.DEV);\n        connectionInfo.setUrl(genericDSProvider.getInstance(sqliteDriver).getConnectionURL(sqliteDriver, connectionInfo));\n        dataSource = new DataSourceDescriptor(dsRegistry, SAMPLE_DB1_ID, sqliteDriver, connectionInfo);\n        dataSource.setSavePassword(true);\n        dataSource.getNavigatorSettings().setShowSystemObjects(true);\n        dataSource.setName(\"DBeaver Sample Database (SQLite)\");\n        dsRegistry.addDataSource(dataSource);\n    }\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: f7f7e6b8\n- Author: serge-rider (serge@jkiss.org)\n- Date: 2021-02-09 04:04:12\n- Message: Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf\n- Changes:\n```diff\n@@ -1,6 +1,6 @@\n /*\n  * DBeaver - Universal Database Manager\n- * Copyright (C) 2010-2020 DBeaver Corp and others\n+ * Copyright (C) 2010-2021 DBeaver Corp and others\n  *\n  * Licensed under the Apache License, Version 2.0 (the \"License\");\n  * you may not use this file except in compliance with the License....\n```\n\n### Commit 2\n- ID: 0977a214\n- Author: ShadelessFox (yanuari.channel@gmail.com)\n- Date: 2020-10-19 22:36:10\n- Message: #10052 Allow to create sample database from menu\n\n\nFormer-commit-id: 8ea3b1423f4a3055a80e5aeb190e9f131aaf8940\n- Changes:\n```diff\n@@ -16,6 +16,8 @@\n  */\n package org.jkiss.dbeaver.ext.sample.database;\n \n+import org.eclipse.osgi.util.NLS;\n+import org.eclipse.swt.widgets.Shell;\n import org.eclipse.ui.IWorkbenchWindow;\n import org.jkiss.dbeaver.Log;\n import org.jkiss.dbeaver.model.app.DBPDataSourceRegistry;\n@@ -61,23 +63,31 @@ public class WorkbenchInitializerCreateSampleDatabase implements IWorkbenchWindo\n             // No active project\n             return;\n         }\n-        if (activeProject.getDataSourceRegistry().getD...\n```",
+      "metadata": {
+        "commit_count": 5,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.sample.database/src/org/jkiss/dbeaver/ext/sample/database/WorkbenchInitializerCreateSampleDatabase.java",
+        "total_chunks": 7,
+        "chunk_index": 4,
+        "language": "java",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.3044228553771973
+    }
+  ],
+  "compressed": [
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.mssql/src/org/jkiss/dbeaver/ext/mssql/model/SQLServerSSLHandlerImpl.java (java)\n\n## Key Code Elements:\nimport org.jkiss.dbeaver.model.impl.net.SSLHandlerImpl;\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 1daa5bb7 by ShadelessFox (yanuari.channel@gmail.com): #9573 Add SSL configuration UI\n\n\nFormer-commit-id: 94e70050ba352d5c35eb4bde1cd00f7aef8ce832...",
+      "metadata": {
+        "strategy": "compressed",
+        "file_path": "plugins/org.jkiss.dbeaver.ext.mssql/src/org/jkiss/dbeaver/ext/mssql/model/SQLServerSSLHandlerImpl.java",
+        "language": "java",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "commit_count": 2
+      },
+      "similarity_score": 1.1507208347320557
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.model/src/org/jkiss/dbeaver/model/impl/net/SSLConfigurationMethod.java (java)\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 7aa76108 by ShadelessFox (yanuari.channel@gmail.com): #9912 Refactor SSL configuration dialogs\n\n\nFormer-commit-id: d3ec41239c73fddf8deecdb22db2587e583f969...",
+      "metadata": {
+        "total_chunks": 1,
+        "commit_count": 2,
+        "strategy": "compressed",
+        "file_path": "plugins/org.jkiss.dbeaver.model/src/org/jkiss/dbeaver/model/impl/net/SSLConfigurationMethod.java",
+        "chunk_index": 0,
+        "language": "java"
+      },
+      "similarity_score": 1.2168703079223633
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.model/src/org/jkiss/dbeaver/model/connection/DBPConnectionConfiguration.java (java)\n\n## Key Code Elements:\nimport org.jkiss.code.NotNull;\nimport org.jkiss.code.Nullable;\nimport org.jkiss.dbeaver.Log;\nimport org.jkiss.dbeaver.model.DBPObject;\nimport org.jkiss.dbeaver.model.auth.DBAAuthModel;\nimport org.jkiss.dbeaver.model.impl.auth.AuthModelDatabaseNative;\nimport org.jkiss.dbeaver.model.net.DBWHandlerConfiguration;\nimport org.jkiss.dbeaver.model.net.DBWNetworkProfile;\nimport org.jkiss.dbeaver.model.runtime.DBRShellCommand;\nimport org.jkiss.dbeaver.runtime.DBWorkbench;\nimport org.jkiss.dbeaver.runtime.IVariableResolver;\nimport org.jkiss.dbeaver.utils.GeneralUtils;\nimport org.jkiss.utils.CommonUtils;\nimport java.util.*;\n    @NotNull\n\n## Recent Changes:\n- 129444bf by serge-rider (serge@jkiss.org): Runtime attributes in connection settings\n\n\nFormer-commit-id: 71fb0d019e7d775da58e3ea5a7e32af5ff6fcd...\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- da27deab by Serge Rider (serge@jkiss.org): Merge pull request #10819 from kai-morich/hana_connection_page\n\nHANA specific connection page\n\nForme...",
+      "metadata": {
+        "commit_count": 5,
+        "chunk_index": 0,
+        "file_path": "plugins/org.jkiss.dbeaver.model/src/org/jkiss/dbeaver/model/connection/DBPConnectionConfiguration.java",
+        "strategy": "compressed",
+        "language": "java",
+        "total_chunks": 1
+      },
+      "similarity_score": 1.3124451637268066
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.postgresql/src/org/jkiss/dbeaver/ext/postgresql/model/PostgreServerExtension.java (java)\n\n## Key Code Elements:\nimport org.jkiss.dbeaver.DBException;\nimport org.jkiss.dbeaver.model.connection.DBPConnectionConfiguration;\nimport org.jkiss.dbeaver.model.exec.jdbc.JDBCResultSet;\nimport org.jkiss.dbeaver.model.impl.jdbc.cache.JDBCObjectLookupCache;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport java.util.List;\nimport java.util.Map;\n\n## Recent Changes:\n- 89ae9d0f by LonwoLonwo (anvolka@yandex.ru): #10554 save changed password in config; ability to change password in PostgreSQL; localization...\n- 6bfa849d by Anastasiya Volkova (anvolka@yandex.ru): #7563 support for rename keys and indexes added\n\n\nFormer-commit-id: b6b3c4bc5ff7925e79696c72fa9cfc29...\n- 4918a06b by Anastasiya Volkova (anvolka@yandex.ru): #7861 DDL for generated columns changed, generated value for Columns tab added\n\n\nFormer-commit-id: f...",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "language": "java",
+        "file_path": "plugins/org.jkiss.dbeaver.ext.postgresql/src/org/jkiss/dbeaver/ext/postgresql/model/PostgreServerExtension.java",
+        "commit_count": 5,
+        "total_chunks": 1
+      },
+      "similarity_score": 1.3133487701416016
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.core/src/org/jkiss/dbeaver/ui/dialogs/connection/ConnectionWizardPage.java (java)\n\n## Key Code Elements:\nimport org.jkiss.dbeaver.model.DBPDataSourceContainer;\nimport org.jkiss.dbeaver.ui.dialogs.ActiveWizardPage;\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 3269fca3 by Serge Rider (serge@jkiss.org): Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23...\n- 9ba48799 by Serge Rider (serge@jkiss.org): Connection network settings save fix\n\n\nFormer-commit-id: 0e6f39672554dde9017c124559c5802cea1fa1d3...",
+      "metadata": {
+        "language": "java",
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "commit_count": 5,
+        "file_path": "plugins/org.jkiss.dbeaver.core/src/org/jkiss/dbeaver/ui/dialogs/connection/ConnectionWizardPage.java",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.3230047225952148
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.oracle/src/org/jkiss/dbeaver/ext/oracle/model/auth/OracleAuthModelDatabaseNative.java (java)\n\n## Key Code Elements:\nimport org.jkiss.code.NotNull;\nimport org.jkiss.dbeaver.DBException;\nimport org.jkiss.dbeaver.ext.oracle.model.OracleConstants;\nimport org.jkiss.dbeaver.model.DBPDataSource;\nimport org.jkiss.dbeaver.model.DBPDataSourceContainer;\nimport org.jkiss.dbeaver.model.connection.DBPConnectionConfiguration;\nimport org.jkiss.dbeaver.model.impl.auth.AuthModelDatabaseNative;\nimport org.jkiss.dbeaver.model.impl.auth.AuthModelDatabaseNativeCredentials;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport org.jkiss.utils.CommonUtils;\nimport java.util.Properties;\n    @Override\n    @Override\n\n## Recent Changes:\n- 35df47a0 by serge-rider (serge@jkiss.org): Oracle native auth model config fix\n\n\nFormer-commit-id: 6b9deff9e38dba3e21ccdcd4a003033212f9b384...\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- daf2dccd by Serge Rider (serge@jkiss.org): Default auth model API\n\n\nFormer-commit-id: bad60804ad68cf8c6dec1c23e4b576336e0de5db...",
+      "metadata": {
+        "strategy": "compressed",
+        "language": "java",
+        "total_chunks": 1,
+        "commit_count": 5,
+        "chunk_index": 0,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.oracle/src/org/jkiss/dbeaver/ext/oracle/model/auth/OracleAuthModelDatabaseNative.java"
+      },
+      "similarity_score": 1.3231165409088135
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.mssql/src/org/jkiss/dbeaver/ext/mssql/model/SQLServerAuthentication.java (java)\n\n## Key Code Elements:\nimport org.jkiss.dbeaver.ext.mssql.SQLServerConstants;\nimport org.jkiss.dbeaver.ext.mssql.SQLServerGSS;\nimport org.jkiss.dbeaver.ext.mssql.SQLServerMessages;\nimport org.jkiss.dbeaver.model.DBConstants;\nimport org.jkiss.dbeaver.model.connection.DBPConnectionConfiguration;\nimport org.jkiss.dbeaver.model.exec.DBCException;\nimport org.jkiss.utils.CommonUtils;\nimport java.util.Properties;\n\n## Recent Changes:\n- 99f805ca by Serge Rider (serge@jkiss.org): #5754 SQL Server: MFA authentication support\n\n\nFormer-commit-id: 5b03a8505674ab632e0d4f5d0417cee097d...\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 3269fca3 by Serge Rider (serge@jkiss.org): Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23...",
+      "metadata": {
+        "language": "java",
+        "file_path": "plugins/org.jkiss.dbeaver.ext.mssql/src/org/jkiss/dbeaver/ext/mssql/model/SQLServerAuthentication.java",
+        "commit_count": 5,
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.3365607261657715
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.postgresql/src/org/jkiss/dbeaver/ext/postgresql/model/AuthModelPgPass.java (java)\n\n## Key Code Elements:\nimport org.jkiss.code.NotNull;\nimport org.jkiss.code.Nullable;\nimport org.jkiss.dbeaver.DBException;\nimport org.jkiss.dbeaver.Log;\nimport org.jkiss.dbeaver.model.DBPDataSource;\nimport org.jkiss.dbeaver.model.DBPDataSourceContainer;\nimport org.jkiss.dbeaver.model.connection.DBPConnectionConfiguration;\nimport org.jkiss.dbeaver.model.exec.DBCException;\nimport org.jkiss.dbeaver.model.impl.auth.AuthModelDatabaseNative;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport org.jkiss.dbeaver.utils.GeneralUtils;\nimport org.jkiss.dbeaver.utils.RuntimeUtils;\nimport org.jkiss.utils.CommonUtils;\nimport org.jkiss.utils.IOUtils;\nimport java.io.*;\n\n## Recent Changes:\n- dcda114c by serge-rider (serge@jkiss.org): #12381 PgPass auth model improvements\n\n\nFormer-commit-id: 8df9ac749688514002c9f95807d95153145674b4...\n- 66f5e8a7 by Nikita Akilov (nikita.n.akilov@gmail.com): move all os family checking code to RuntimeUtils\n\n\nFormer-commit-id: e62426f9fc0ab5786b7c556519287f0...\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...",
+      "metadata": {
+        "total_chunks": 1,
+        "language": "java",
+        "commit_count": 5,
+        "chunk_index": 0,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.postgresql/src/org/jkiss/dbeaver/ext/postgresql/model/AuthModelPgPass.java",
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.3368960618972778
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.net.ssh/src/org/jkiss/dbeaver/model/net/ssh/SSHUtils.java (java)\n\n## Key Code Elements:\nimport com.jcraft.jsch.Identity;\nimport com.jcraft.jsch.IdentityRepository;\nimport com.jcraft.jsch.JSch;\nimport com.jcraft.jsch.JSchException;\nimport org.jkiss.dbeaver.Log;\nimport org.jkiss.dbeaver.ModelPreferences;\nimport org.jkiss.dbeaver.model.app.DBPPlatform;\nimport org.jkiss.dbeaver.model.preferences.DBPPreferenceStore;\nimport org.jkiss.utils.IOUtils;\nimport java.util.List;\nclass SSHUtils {\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 13db808b by serge-rider (serge@jkiss.org): Imports optimization\n\n\nFormer-commit-id: 9416282382df3ba69fb5f9729c9b1aec65c5f259...\n- 3269fca3 by Serge Rider (serge@jkiss.org): Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23...",
+      "metadata": {
+        "strategy": "compressed",
+        "file_path": "plugins/org.jkiss.dbeaver.net.ssh/src/org/jkiss/dbeaver/model/net/ssh/SSHUtils.java",
+        "language": "java",
+        "chunk_index": 0,
+        "commit_count": 5,
+        "total_chunks": 1
+      },
+      "similarity_score": 1.339369773864746
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.oracle/src/org/jkiss/dbeaver/ext/oracle/model/auth/OracleAuthOS.java (java)\n\n## Key Code Elements:\nimport org.jkiss.code.NotNull;\nimport org.jkiss.dbeaver.DBException;\nimport org.jkiss.dbeaver.model.DBPDataSource;\nimport org.jkiss.dbeaver.model.DBPDataSourceContainer;\nimport org.jkiss.dbeaver.model.connection.DBPConnectionConfiguration;\nimport org.jkiss.dbeaver.model.impl.auth.AuthModelDatabaseNative;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport org.jkiss.utils.StandardConstants;\nimport java.util.Properties;\n    @NotNull\n    @Override\n    @NotNull\n    @Override\n    @Override\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 586e7350 by Serge Rider (serge@jkiss.org): Auth model refactoring\n\n\nFormer-commit-id: acae4d1a04276043c42b4ac385330d9dd77aa2cb...\n- 0346ba20 by Serge Rider (serge@jkiss.org): Auth model credentials API\n\n\nFormer-commit-id: 43ba58251cdf4ca3316f51fce58bdf602127e657...",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.oracle/src/org/jkiss/dbeaver/ext/oracle/model/auth/OracleAuthOS.java",
+        "commit_count": 5,
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "language": "java"
+      },
+      "similarity_score": 1.341261625289917
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.oracle/src/org/jkiss/dbeaver/ext/oracle/model/auth/OracleAuthOSCredentials.java (java)\n\n## Key Code Elements:\nimport org.jkiss.dbeaver.model.impl.auth.AuthModelDatabaseNativeCredentials;\n    @Override\n    @Override\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 96d949c9 by Serge Rider (serge@jkiss.org): Auth model credentials model refactoring\n\n\nFormer-commit-id: b412aa3fd16fa8a20f3f00270bbd288ed257c42...",
+      "metadata": {
+        "language": "java",
+        "total_chunks": 1,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.oracle/src/org/jkiss/dbeaver/ext/oracle/model/auth/OracleAuthOSCredentials.java",
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "commit_count": 2
+      },
+      "similarity_score": 1.351825475692749
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.net.ssh.ui/src/org/jkiss/dbeaver/ui/net/ssh/SSHTunnelConfiguratorUI.java (java)\n\n## Key Code Elements:\nimport org.eclipse.jface.dialogs.MessageDialog;\nimport org.eclipse.swt.SWT;\nimport org.eclipse.swt.events.SelectionAdapter;\nimport org.eclipse.swt.events.SelectionEvent;\nimport org.eclipse.swt.layout.GridData;\nimport org.eclipse.swt.layout.GridLayout;\nimport org.eclipse.swt.widgets.*;\nimport org.jkiss.dbeaver.core.CoreMessages;\nimport org.jkiss.dbeaver.model.DBPDataSourceContainer;\nimport org.jkiss.dbeaver.model.connection.DBPConnectionConfiguration;\nimport org.jkiss.dbeaver.model.connection.DataSourceVariableResolver;\nimport org.jkiss.dbeaver.model.messages.ModelMessages;\nimport org.jkiss.dbeaver.model.net.DBWHandlerConfiguration;\nimport org.jkiss.dbeaver.model.net.ssh.SSHConstants;\nimport org.jkiss.dbeaver.model.net.ssh.SSHTunnelImpl;\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 4d0ad2cf by Serge Rider (serge@jkiss.org): SSH configuration UI fixes (get rid of ugly spinners)\n\n\nFormer-commit-id: 547b2909f201aef24e7b095592...\n- 4584f500 by ShadelessFox (yanuari.channel@gmail.com): #9134 Clone configuration to avoid overriding data\n\n\nFormer-commit-id: 3b40aefe38fe6a27983f37277750c...",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "java",
+        "commit_count": 5,
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "file_path": "plugins/org.jkiss.dbeaver.net.ssh.ui/src/org/jkiss/dbeaver/ui/net/ssh/SSHTunnelConfiguratorUI.java"
+      },
+      "similarity_score": 1.3549318313598633
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.db2/src/org/jkiss/dbeaver/ext/db2/model/security/DB2AuthTableBase.java (java)\n\n## Key Code Elements:\nimport org.jkiss.dbeaver.DBException;\nimport org.jkiss.dbeaver.ext.db2.DB2Constants;\nimport org.jkiss.dbeaver.ext.db2.model.DB2TableBase;\nimport org.jkiss.dbeaver.model.impl.jdbc.JDBCUtils;\nimport org.jkiss.dbeaver.model.meta.Property;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport org.jkiss.utils.CommonUtils;\nimport java.sql.ResultSet;\n    @Property(viewable = true, order = 20, category = DB2Constants.CAT_AUTH)\n    @Property(viewable = true, order = 21, category = DB2Constants.CAT_AUTH)\n    @Property(viewable = true, order = 22, category = DB2Constants.CAT_AUTH)\n    @Property(viewable = true, order = 23, category = DB2Constants.CAT_AUTH)\n    @Property(viewable = true, order = 24, category = DB2Constants.CAT_AUTH)\n    @Property(viewable = true, order = 25, category = DB2Constants.CAT_AUTH)\n    @Property(viewable = true, order = 26, category = DB2Constants.CAT_AUTH)\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 3269fca3 by Serge Rider (serge@jkiss.org): Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23...\n- 83e3b1fe by serge-rider (serge@jkiss.org): License header update (2019)\n\n\nFormer-commit-id: b5121d4a6e8f3f21079920180b0fb14ada6d3349...",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "java",
+        "file_path": "plugins/org.jkiss.dbeaver.ext.db2/src/org/jkiss/dbeaver/ext/db2/model/security/DB2AuthTableBase.java",
+        "commit_count": 5,
+        "strategy": "compressed",
+        "total_chunks": 1
+      },
+      "similarity_score": 1.3795098066329956
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.db2/src/org/jkiss/dbeaver/ext/db2/model/security/DB2DatabaseAuth.java (java)\n\n## Key Code Elements:\nimport org.jkiss.code.NotNull;\nimport org.jkiss.dbeaver.DBException;\nimport org.jkiss.dbeaver.ext.db2.DB2Constants;\nimport org.jkiss.dbeaver.ext.db2.model.DB2DataSource;\nimport org.jkiss.dbeaver.ext.db2.model.DB2GlobalObject;\nimport org.jkiss.dbeaver.ext.db2.model.dict.DB2YesNo;\nimport org.jkiss.dbeaver.model.access.DBAPrivilege;\nimport org.jkiss.dbeaver.model.impl.jdbc.JDBCUtils;\nimport org.jkiss.dbeaver.model.meta.Property;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport org.jkiss.dbeaver.model.struct.DBSObject;\nimport org.jkiss.utils.CommonUtils;\nimport java.sql.ResultSet;\n        case U:\n        case G:\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 3269fca3 by Serge Rider (serge@jkiss.org): Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23...\n- 83e3b1fe by serge-rider (serge@jkiss.org): License header update (2019)\n\n\nFormer-commit-id: b5121d4a6e8f3f21079920180b0fb14ada6d3349...",
+      "metadata": {
+        "commit_count": 5,
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "language": "java",
+        "file_path": "plugins/org.jkiss.dbeaver.ext.db2/src/org/jkiss/dbeaver/ext/db2/model/security/DB2DatabaseAuth.java",
+        "total_chunks": 1
+      },
+      "similarity_score": 1.3885525465011597
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.postgresql/src/org/jkiss/dbeaver/ext/postgresql/model/impls/PostgreServerPostgreSQL.java (java)\n\n## Key Code Elements:\nimport org.jkiss.dbeaver.ext.postgresql.PostgreConstants;\nimport org.jkiss.dbeaver.ext.postgresql.model.PostgreDataSource;\nimport org.jkiss.dbeaver.ext.postgresql.model.PostgreSetting;\n    @Override\n    @Override\n    @Override\n    @Override\n    @Override\n    @Override\n    @Override\n    @Override\n    @Override\n    @Override\n\n## Recent Changes:\n- 89ae9d0f by LonwoLonwo (anvolka@yandex.ru): #10554 save changed password in config; ability to change password in PostgreSQL; localization...\n- 6bfa849d by Anastasiya Volkova (anvolka@yandex.ru): #7563 support for rename keys and indexes added\n\n\nFormer-commit-id: b6b3c4bc5ff7925e79696c72fa9cfc29...\n- 4918a06b by Anastasiya Volkova (anvolka@yandex.ru): #7861 DDL for generated columns changed, generated value for Columns tab added\n\n\nFormer-commit-id: f...",
+      "metadata": {
+        "strategy": "compressed",
+        "commit_count": 5,
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.postgresql/src/org/jkiss/dbeaver/ext/postgresql/model/impls/PostgreServerPostgreSQL.java",
+        "language": "java"
+      },
+      "similarity_score": 1.3937344551086426
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.model/src/org/jkiss/dbeaver/model/impl/jdbc/JDBCConnectionConfigurer.java (java)\n\n## Key Code Elements:\nimport org.jkiss.dbeaver.model.connection.DBPConnectionConfiguration;\nimport org.jkiss.dbeaver.model.exec.DBCException;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport java.sql.Connection;\nimport java.util.Properties;\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 3269fca3 by Serge Rider (serge@jkiss.org): Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23...\n- 7156b029 by Serge Rider (serge@jkiss.org): Connection init model refactoring\n\n\nFormer-commit-id: b352d6fde0094daa7fd7cedc470b7fc6c8e18990...",
+      "metadata": {
+        "commit_count": 5,
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "language": "java",
+        "file_path": "plugins/org.jkiss.dbeaver.model/src/org/jkiss/dbeaver/model/impl/jdbc/JDBCConnectionConfigurer.java"
+      },
+      "similarity_score": 1.4024821519851685
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.postgresql/src/org/jkiss/dbeaver/ext/postgresql/model/AuthModelPgPassCredentials.java (java)\n\n## Key Code Elements:\nimport org.jkiss.dbeaver.model.impl.auth.AuthModelDatabaseNativeCredentials;\n    @Override\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- a087682d by Serge Rider (serge@jkiss.org): Auth model credentials model refactoring\n\n\nFormer-commit-id: e729e2687175861c6df6f881d0fc48dc0c2fabc...",
+      "metadata": {
+        "strategy": "compressed",
+        "file_path": "plugins/org.jkiss.dbeaver.ext.postgresql/src/org/jkiss/dbeaver/ext/postgresql/model/AuthModelPgPassCredentials.java",
+        "total_chunks": 1,
+        "commit_count": 2,
+        "chunk_index": 0,
+        "language": "java"
+      },
+      "similarity_score": 1.4063007831573486
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.db2/src/org/jkiss/dbeaver/ext/db2/model/security/DB2AuthTablespace.java (java)\n\n## Key Code Elements:\nimport org.jkiss.dbeaver.DBException;\nimport org.jkiss.dbeaver.ext.db2.DB2Constants;\nimport org.jkiss.dbeaver.ext.db2.model.DB2Schema;\nimport org.jkiss.dbeaver.ext.db2.model.DB2Tablespace;\nimport org.jkiss.dbeaver.model.impl.jdbc.JDBCUtils;\nimport org.jkiss.dbeaver.model.meta.Property;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport org.jkiss.dbeaver.model.struct.DBSObject;\nimport org.jkiss.utils.CommonUtils;\nimport java.sql.ResultSet;\n    @Property(viewable = true, order = 2)\n    @Override\n    @Property(hidden = true)\n    @Property(viewable = true, order = 20, category = DB2Constants.CAT_AUTH)\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 3269fca3 by Serge Rider (serge@jkiss.org): Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23...\n- 83e3b1fe by serge-rider (serge@jkiss.org): License header update (2019)\n\n\nFormer-commit-id: b5121d4a6e8f3f21079920180b0fb14ada6d3349...",
+      "metadata": {
+        "strategy": "compressed",
+        "commit_count": 5,
+        "total_chunks": 1,
+        "language": "java",
+        "chunk_index": 0,
+        "file_path": "plugins/org.jkiss.dbeaver.ext.db2/src/org/jkiss/dbeaver/ext/db2/model/security/DB2AuthTablespace.java"
+      },
+      "similarity_score": 1.4093819856643677
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.ext.db2/src/org/jkiss/dbeaver/ext/db2/model/security/DB2AuthUDF.java (java)\n\n## Key Code Elements:\nimport org.jkiss.dbeaver.DBException;\nimport org.jkiss.dbeaver.ext.db2.DB2Constants;\nimport org.jkiss.dbeaver.ext.db2.model.DB2Routine;\nimport org.jkiss.dbeaver.ext.db2.model.DB2Schema;\nimport org.jkiss.dbeaver.model.impl.jdbc.JDBCUtils;\nimport org.jkiss.dbeaver.model.meta.Property;\nimport org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;\nimport org.jkiss.dbeaver.model.struct.DBSObject;\nimport org.jkiss.utils.CommonUtils;\nimport java.sql.ResultSet;\n    @Property(viewable = true, order = 2)\n    @Property(viewable = true, order = 1)\n    @Property(viewable = true, order = 22, category = DB2Constants.CAT_AUTH)\n\n## Recent Changes:\n- f7f7e6b8 by serge-rider (serge@jkiss.org): Copyright update (2021)\n\n\nFormer-commit-id: 1a0db595356ac0ed1a64a90b3029724018341cbf...\n- 3269fca3 by Serge Rider (serge@jkiss.org): Sources copyright header update (2020)\n\n\nFormer-commit-id: d69a75e63bf0a00e37f6b4ab9c9aa4fcaa0ded23...\n- 83e3b1fe by serge-rider (serge@jkiss.org): License header update (2019)\n\n\nFormer-commit-id: b5121d4a6e8f3f21079920180b0fb14ada6d3349...",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "language": "java",
+        "file_path": "plugins/org.jkiss.dbeaver.ext.db2/src/org/jkiss/dbeaver/ext/db2/model/security/DB2AuthUDF.java",
+        "total_chunks": 1,
+        "commit_count": 5
+      },
+      "similarity_score": 1.4109946489334106
+    },
+    {
+      "content": "# File: plugins/org.jkiss.dbeaver.core/src/org/jkiss/dbeaver/ui/dialogs/connection/NavigatorSettingsStorage.java (java)\n\n## Key Code Elements:\nimport org.jkiss.dbeaver.model.navigator.DBNBrowseSettings;\n\n## Recent Changes:\n- da9c7445 by Serge Rider (serge@jkiss.org): dbeaver/dbeaver-ee#808 Connection type and navigator settings defaults + pref page\n\n\nFormer-commit-i...",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "file_path": "plugins/org.jkiss.dbeaver.core/src/org/jkiss/dbeaver/ui/dialogs/connection/NavigatorSettingsStorage.java",
+        "commit_count": 1,
+        "language": "java"
+      },
+      "similarity_score": 1.4124770164489746
+    }
+  ]
+}

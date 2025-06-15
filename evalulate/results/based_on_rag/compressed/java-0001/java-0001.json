@@ -1,0 +1,8 @@
+{
+  "reason": "The issue occurs because the SQL Server foreign key (FK) between tables in different schemas is not being properly displayed in the UI, despite being correctly created in the database. This suggests a problem with the FK metadata retrieval or UI rendering logic for cross-schema FKs in SQL Server.",
+  "location": [
+    "plugins/org.jkiss.dbeaver.ext.mssql/src/org/jkiss/dbeaver/ext/mssql/model/SQLServerTableForeignKey.java",
+    "plugins/org.jkiss.dbeaver.ext.mssql/src/org/jkiss/dbeaver/ext/mssql/model/SQLServerTableForeignKeyColumn.java"
+  ],
+  "fix": "The fix should ensure proper handling of schema-qualified table names when retrieving and displaying foreign key information. The SQLServerTableForeignKey class should be modified to properly handle schema names in both the referenced and referencing tables, and the UI components should be updated to display schema-qualified names where appropriate."
+}

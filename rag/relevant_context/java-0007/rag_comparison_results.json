@@ -1,0 +1,708 @@
+{
+  "basic": [
+    {
+      "content": "package org.apache.shardingsphere.shardingproxy.backend.text.admin;\n\nimport lombok.RequiredArgsConstructor;\nimport org.apache.shardingsphere.core.parse.old.parser.dialect.mysql.statement.UseStatement;\nimport org.apache.shardingsphere.core.parse.util.SQLUtil;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.connection.BackendConnection;\nimport org.apache.shardingsphere.shardingproxy.backend.exception.UnknownDatabaseException;\nimport org.apache.shardingsphere.shardingproxy.backend.response.BackendResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.response.error.ErrorResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.response.query.QueryData;\nimport org.apache.shardingsphere.shardingproxy.backend.response.update.UpdateResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.LogicSchemas;\nimport org.apache.shardingsphere.shardingproxy.backend.text.TextProtocolBackendHandler;\nimport org.apache.shardingsphere.shardingproxy.context.ShardingProxyContext;\n\nimport java.util.Collection;",
+      "metadata": {
+        "chunk_index": 1,
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/text/admin/UseDatabaseBackendHandler.java",
+        "language": "java",
+        "total_chunks": 3,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.5450236797332764
+    },
+    {
+      "content": "package org.apache.shardingsphere.shardingproxy.backend.text.sctl.show;\n\nimport com.google.common.base.Optional;\nimport org.apache.shardingsphere.core.merge.MergedResult;\nimport org.apache.shardingsphere.core.merge.dal.show.ShowShardingCTLMergedResult;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.connection.BackendConnection;\nimport org.apache.shardingsphere.shardingproxy.backend.response.BackendResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.response.error.ErrorResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.response.query.QueryData;\nimport org.apache.shardingsphere.shardingproxy.backend.response.query.QueryHeader;\nimport org.apache.shardingsphere.shardingproxy.backend.response.query.QueryResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.text.TextProtocolBackendHandler;\nimport org.apache.shardingsphere.shardingproxy.backend.text.sctl.exception.InvalidShardingCTLFormatException;\nimport org.apache.shardingsphere.shardingproxy.backend.text.sctl.exception.UnsupportedShardingCTLTypeException;\n\nimport java.sql.SQLException;\nimport java.sql.Types;\nimport java.util.Arrays;\nimport java.util.Collections;",
+      "metadata": {
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/text/sctl/show/ShardingCTLShowBackendHandler.java",
+        "chunk_index": 1,
+        "language": "java",
+        "total_chunks": 3,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.5512343645095825
+    },
+    {
+      "content": "package org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.execute.callback;\n\nimport org.apache.shardingsphere.core.constant.ConnectionMode;\nimport org.apache.shardingsphere.core.execute.sql.execute.SQLExecuteCallback;\nimport org.apache.shardingsphere.core.execute.sql.execute.result.MemoryQueryResult;\nimport org.apache.shardingsphere.core.execute.sql.execute.result.QueryResult;\nimport org.apache.shardingsphere.core.execute.sql.execute.result.StreamQueryResult;\nimport org.apache.shardingsphere.core.route.RouteUnit;\nimport org.apache.shardingsphere.core.rule.ShardingRule;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.connection.BackendConnection;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.execute.response.ExecuteQueryResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.execute.response.ExecuteResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.execute.response.ExecuteUpdateResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.wrapper.JDBCExecutorWrapper;\nimport org.apache.shardingsphere.shardingproxy.backend.response.query.QueryHeader;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.LogicSchema;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.LogicSchemas;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.MasterSlaveSchema;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.ShardingSchema;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.TransparentSchema;\n\nimport java.sql.ResultSet;\nimport java.sql.ResultSetMetaData;\nimport java.sql.SQLException;\nimport java.sql.Statement;\nimport java.util.LinkedList;\nimport java.util.List;",
+      "metadata": {
+        "total_chunks": 4,
+        "chunk_index": 1,
+        "language": "java",
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/execute/callback/ProxySQLExecuteCallback.java",
+        "strategy": "basic"
+      },
+      "similarity_score": 0.5590004324913025
+    },
+    {
+      "content": "package org.apache.shardingsphere.shardingproxy.frontend.mysql.command.query.text.fieldlist;\n\nimport org.apache.shardingsphere.shardingproxy.backend.communication.DatabaseCommunicationEngine;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.DatabaseCommunicationEngineFactory;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.connection.BackendConnection;\nimport org.apache.shardingsphere.shardingproxy.backend.response.BackendResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.response.error.ErrorResponse;\nimport org.apache.shardingsphere.shardingproxy.frontend.api.CommandExecutor;\nimport org.apache.shardingsphere.shardingproxy.frontend.mysql.MySQLErrPacketFactory;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.constant.MySQLColumnType;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.query.MySQLColumnDefinition41Packet;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.query.text.fieldlist.MySQLComFieldListPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.generic.MySQLEofPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.packet.DatabasePacket;\n\nimport java.sql.SQLException;\nimport java.util.Collection;\nimport java.util.Collections;\nimport java.util.LinkedList;",
+      "metadata": {
+        "chunk_index": 1,
+        "language": "java",
+        "strategy": "basic",
+        "file_path": "sharding-proxy/sharding-proxy-frontend/sharding-proxy-frontend-mysql/src/main/java/org/apache/shardingsphere/shardingproxy/frontend/mysql/command/query/text/fieldlist/MySQLComFieldListPacketExecutor.java",
+        "total_chunks": 4
+      },
+      "similarity_score": 0.5612625479698181
+    },
+    {
+      "content": "package org.apache.shardingsphere.shardingproxy.backend.schema;\n\nimport com.google.common.eventbus.Subscribe;\nimport lombok.Getter;\nimport org.apache.shardingsphere.api.config.sharding.ShardingRuleConfiguration;\nimport org.apache.shardingsphere.core.metadata.ShardingMetaData;\nimport org.apache.shardingsphere.core.metadata.datasource.ShardingDataSourceMetaData;\nimport org.apache.shardingsphere.core.metadata.table.ShardingTableMetaData;\nimport org.apache.shardingsphere.core.parse.antlr.sql.statement.SQLStatement;\nimport org.apache.shardingsphere.core.parse.antlr.sql.statement.ddl.AlterTableStatement;\nimport org.apache.shardingsphere.core.parse.antlr.sql.statement.ddl.CreateTableStatement;\nimport org.apache.shardingsphere.core.parse.antlr.sql.statement.ddl.DropTableStatement;\nimport org.apache.shardingsphere.core.rule.MasterSlaveRule;\nimport org.apache.shardingsphere.core.rule.ShardingRule;\nimport org.apache.shardingsphere.orchestration.internal.registry.config.event.ShardingRuleChangedEvent;\nimport org.apache.shardingsphere.orchestration.internal.registry.state.event.DisabledStateChangedEvent;\nimport org.apache.shardingsphere.orchestration.internal.registry.state.schema.OrchestrationShardingSchema;\nimport org.apache.shardingsphere.orchestration.internal.rule.OrchestrationMasterSlaveRule;\nimport org.apache.shardingsphere.orchestration.internal.rule.OrchestrationShardingRule;\nimport org.apache.shardingsphere.shardingproxy.config.yaml.YamlDataSourceParameter;\n\nimport java.util.Collection;\nimport java.util.Map;",
+      "metadata": {
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/schema/ShardingSchema.java",
+        "strategy": "basic",
+        "chunk_index": 1,
+        "language": "java",
+        "total_chunks": 5
+      },
+      "similarity_score": 0.5652366280555725
+    },
+    {
+      "content": "package org.apache.shardingsphere.shardingproxy.frontend.mysql.command;\n\nimport io.netty.channel.ChannelHandlerContext;\nimport org.apache.shardingsphere.core.constant.properties.ShardingPropertiesConstant;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.connection.BackendConnection;\nimport org.apache.shardingsphere.shardingproxy.context.ShardingProxyContext;\nimport org.apache.shardingsphere.shardingproxy.frontend.api.CommandExecutor;\nimport org.apache.shardingsphere.shardingproxy.frontend.api.QueryCommandExecutor;\nimport org.apache.shardingsphere.shardingproxy.frontend.engine.CommandExecuteEngine;\nimport org.apache.shardingsphere.shardingproxy.frontend.mysql.MySQLErrPacketFactory;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.MySQLCommandPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.MySQLCommandPacketFactory;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.MySQLCommandPacketType;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.MySQLCommandPacketTypeLoader;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.generic.MySQLEofPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.payload.MySQLPacketPayload;\nimport org.apache.shardingsphere.shardingproxy.transport.packet.CommandPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.packet.CommandPacketType;\nimport org.apache.shardingsphere.shardingproxy.transport.packet.DatabasePacket;\nimport org.apache.shardingsphere.shardingproxy.transport.payload.PacketPayload;\n\nimport java.sql.SQLException;",
+      "metadata": {
+        "language": "java",
+        "file_path": "sharding-proxy/sharding-proxy-frontend/sharding-proxy-frontend-mysql/src/main/java/org/apache/shardingsphere/shardingproxy/frontend/mysql/command/MySQLCommandExecuteEngine.java",
+        "total_chunks": 4,
+        "strategy": "basic",
+        "chunk_index": 1
+      },
+      "similarity_score": 0.5716464519500732
+    },
+    {
+      "content": "package org.apache.shardingsphere.shardingproxy.backend.text.sctl.explain;\n\nimport com.google.common.base.Optional;\nimport lombok.RequiredArgsConstructor;\nimport org.apache.shardingsphere.core.route.RouteUnit;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.connection.BackendConnection;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.wrapper.StatementExecutorWrapper;\nimport org.apache.shardingsphere.shardingproxy.backend.response.BackendResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.response.error.ErrorResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.response.query.QueryData;\nimport org.apache.shardingsphere.shardingproxy.backend.response.query.QueryHeader;\nimport org.apache.shardingsphere.shardingproxy.backend.response.query.QueryResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.LogicSchemas;\nimport org.apache.shardingsphere.shardingproxy.backend.text.TextProtocolBackendHandler;\nimport org.apache.shardingsphere.shardingproxy.backend.text.sctl.exception.InvalidShardingCTLFormatException;\n\nimport java.sql.Types;\nimport java.util.ArrayList;\nimport java.util.Iterator;\nimport java.util.List;",
+      "metadata": {
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/text/sctl/explain/ShardingCTLExplainBackendHandler.java",
+        "total_chunks": 3,
+        "language": "java",
+        "strategy": "basic",
+        "chunk_index": 1
+      },
+      "similarity_score": 0.5752925872802734
+    },
+    {
+      "content": "package org.apache.shardingsphere.shardingproxy.frontend.postgresql.command.query.binary.parse;\n\nimport org.apache.shardingsphere.core.constant.DatabaseType;\nimport org.apache.shardingsphere.core.parse.SQLParsingEngine;\nimport org.apache.shardingsphere.core.parse.antlr.sql.statement.SQLStatement;\nimport org.apache.shardingsphere.core.rule.ShardingRule;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.connection.BackendConnection;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.LogicSchema;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.MasterSlaveSchema;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.ShardingSchema;\nimport org.apache.shardingsphere.shardingproxy.frontend.api.CommandExecutor;\nimport org.apache.shardingsphere.shardingproxy.transport.packet.DatabasePacket;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.command.query.binary.BinaryStatementRegistry;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.command.query.binary.ConnectionScopeBinaryStatementRegistry;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.command.query.binary.parse.PostgreSQLComParsePacket;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.command.query.binary.parse.PostgreSQLParseCompletePacket;\n\nimport java.util.Collection;\nimport java.util.Collections;",
+      "metadata": {
+        "chunk_index": 1,
+        "file_path": "sharding-proxy/sharding-proxy-frontend/sharding-proxy-frontend-postgresql/src/main/java/org/apache/shardingsphere/shardingproxy/frontend/postgresql/command/query/binary/parse/PostgreSQLComParseExecutor.java",
+        "language": "java",
+        "total_chunks": 3,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.5773830413818359
+    },
+    {
+      "content": "import com.google.common.base.Optional;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.DatabaseCommunicationEngine;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.DatabaseCommunicationEngineFactory;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.connection.BackendConnection;\nimport org.apache.shardingsphere.shardingproxy.backend.response.BackendResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.response.error.ErrorResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.response.query.QueryData;\nimport org.apache.shardingsphere.shardingproxy.backend.response.query.QueryHeader;\nimport org.apache.shardingsphere.shardingproxy.backend.response.query.QueryResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.response.update.UpdateResponse;\nimport org.apache.shardingsphere.shardingproxy.context.ShardingProxyContext;\nimport org.apache.shardingsphere.shardingproxy.frontend.api.QueryCommandExecutor;\nimport org.apache.shardingsphere.shardingproxy.transport.packet.DatabasePacket;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.constant.PostgreSQLColumnType;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.PostgreSQLPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.command.query.PostgreSQLColumnDescription;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.command.query.PostgreSQLRowDescriptionPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.command.query.binary.bind.PostgreSQLBinaryResultSetRowPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.command.query.binary.bind.PostgreSQLBindCompletePacket;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.command.query.binary.bind.PostgreSQLComBindPacket;",
+      "metadata": {
+        "file_path": "sharding-proxy/sharding-proxy-frontend/sharding-proxy-frontend-postgresql/src/main/java/org/apache/shardingsphere/shardingproxy/frontend/postgresql/command/query/binary/bind/PostgreSQLComBindExecutor.java",
+        "total_chunks": 7,
+        "chunk_index": 1,
+        "language": "java",
+        "strategy": "basic"
+      },
+      "similarity_score": 0.579961359500885
+    },
+    {
+      "content": "package org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.wrapper;\n\nimport lombok.RequiredArgsConstructor;\nimport org.apache.shardingsphere.core.SimpleQueryShardingEngine;\nimport org.apache.shardingsphere.core.constant.DatabaseType;\nimport org.apache.shardingsphere.core.constant.properties.ShardingPropertiesConstant;\nimport org.apache.shardingsphere.core.parse.SQLJudgeEngine;\nimport org.apache.shardingsphere.core.parse.antlr.sql.statement.SQLStatement;\nimport org.apache.shardingsphere.core.rewrite.MasterSlaveSQLRewriteEngine;\nimport org.apache.shardingsphere.core.route.RouteUnit;\nimport org.apache.shardingsphere.core.route.SQLRouteResult;\nimport org.apache.shardingsphere.core.route.SQLUnit;\nimport org.apache.shardingsphere.core.route.router.masterslave.MasterSlaveRouter;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.LogicSchema;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.MasterSlaveSchema;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.ShardingSchema;\nimport org.apache.shardingsphere.shardingproxy.context.ShardingProxyContext;\n\nimport java.sql.Connection;\nimport java.sql.SQLException;\nimport java.sql.Statement;\nimport java.util.Collections;",
+      "metadata": {
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/wrapper/StatementExecutorWrapper.java",
+        "chunk_index": 1,
+        "strategy": "basic",
+        "language": "java",
+        "total_chunks": 4
+      },
+      "similarity_score": 0.5823013186454773
+    },
+    {
+      "content": "package org.apache.shardingsphere.shardingproxy.frontend.postgresql.command.query.text;\n\nimport com.google.common.base.Optional;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.connection.BackendConnection;\nimport org.apache.shardingsphere.shardingproxy.backend.response.BackendResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.response.error.ErrorResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.response.query.QueryHeader;\nimport org.apache.shardingsphere.shardingproxy.backend.response.query.QueryResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.response.update.UpdateResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.text.TextProtocolBackendHandler;\nimport org.apache.shardingsphere.shardingproxy.backend.text.TextProtocolBackendHandlerFactory;\nimport org.apache.shardingsphere.shardingproxy.context.ShardingProxyContext;\nimport org.apache.shardingsphere.shardingproxy.frontend.api.QueryCommandExecutor;\nimport org.apache.shardingsphere.shardingproxy.transport.packet.DatabasePacket;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.PostgreSQLPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.command.query.PostgreSQLColumnDescription;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.command.query.PostgreSQLRowDescriptionPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.command.query.text.PostgreSQLComQueryPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.command.query.text.PostgreSQLDataRowPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.generic.PostgreSQLCommandCompletePacket;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.generic.PostgreSQLErrorResponsePacket;",
+      "metadata": {
+        "chunk_index": 1,
+        "language": "java",
+        "total_chunks": 5,
+        "file_path": "sharding-proxy/sharding-proxy-frontend/sharding-proxy-frontend-postgresql/src/main/java/org/apache/shardingsphere/shardingproxy/frontend/postgresql/command/query/text/PostgreSQLComQueryExecutor.java",
+        "strategy": "basic"
+      },
+      "similarity_score": 0.584911584854126
+    },
+    {
+      "content": "import org.apache.shardingsphere.shardingproxy.backend.communication.DatabaseCommunicationEngine;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.DatabaseCommunicationEngineFactory;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.connection.BackendConnection;\nimport org.apache.shardingsphere.shardingproxy.backend.response.BackendResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.response.error.ErrorResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.response.query.QueryData;\nimport org.apache.shardingsphere.shardingproxy.backend.response.query.QueryHeader;\nimport org.apache.shardingsphere.shardingproxy.backend.response.query.QueryResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.response.update.UpdateResponse;\nimport org.apache.shardingsphere.shardingproxy.context.ShardingProxyContext;\nimport org.apache.shardingsphere.shardingproxy.error.CommonErrorCode;\nimport org.apache.shardingsphere.shardingproxy.frontend.api.QueryCommandExecutor;\nimport org.apache.shardingsphere.shardingproxy.frontend.mysql.MySQLErrPacketFactory;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.constant.MySQLColumnType;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.MySQLPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.query.MySQLColumnDefinition41Packet;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.query.MySQLFieldCountPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.query.binary.execute.MySQLBinaryResultSetRowPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.query.binary.execute.MySQLComStmtExecutePacket;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.generic.MySQLEofPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.generic.MySQLErrPacket;",
+      "metadata": {
+        "language": "java",
+        "strategy": "basic",
+        "total_chunks": 6,
+        "chunk_index": 1,
+        "file_path": "sharding-proxy/sharding-proxy-frontend/sharding-proxy-frontend-mysql/src/main/java/org/apache/shardingsphere/shardingproxy/frontend/mysql/command/query/binary/execute/MySQLComStmtExecuteExecutor.java"
+      },
+      "similarity_score": 0.5849617123603821
+    },
+    {
+      "content": "package org.apache.shardingsphere.shardingproxy.frontend.postgresql.command;\n\nimport io.netty.channel.ChannelHandlerContext;\nimport org.apache.shardingsphere.core.constant.properties.ShardingPropertiesConstant;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.connection.BackendConnection;\nimport org.apache.shardingsphere.shardingproxy.context.ShardingProxyContext;\nimport org.apache.shardingsphere.shardingproxy.frontend.api.CommandExecutor;\nimport org.apache.shardingsphere.shardingproxy.frontend.api.QueryCommandExecutor;\nimport org.apache.shardingsphere.shardingproxy.frontend.engine.CommandExecuteEngine;\nimport org.apache.shardingsphere.shardingproxy.transport.packet.CommandPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.packet.CommandPacketType;\nimport org.apache.shardingsphere.shardingproxy.transport.packet.DatabasePacket;\nimport org.apache.shardingsphere.shardingproxy.transport.payload.PacketPayload;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.command.PostgreSQLCommandPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.command.PostgreSQLCommandPacketFactory;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.command.PostgreSQLCommandPacketType;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.command.PostgreSQLCommandPacketTypeLoader;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.generic.PostgreSQLCommandCompletePacket;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.generic.PostgreSQLErrorResponsePacket;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.generic.PostgreSQLReadyForQueryPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.payload.PostgreSQLPacketPayload;\n\nimport java.sql.SQLException;",
+      "metadata": {
+        "total_chunks": 4,
+        "language": "java",
+        "file_path": "sharding-proxy/sharding-proxy-frontend/sharding-proxy-frontend-postgresql/src/main/java/org/apache/shardingsphere/shardingproxy/frontend/postgresql/command/PostgreSQLCommandExecuteEngine.java",
+        "chunk_index": 1,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.5899561643600464
+    },
+    {
+      "content": "package org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.execute;\n\nimport lombok.Getter;\nimport org.apache.shardingsphere.core.constant.properties.ShardingPropertiesConstant;\nimport org.apache.shardingsphere.core.execute.ShardingExecuteGroup;\nimport org.apache.shardingsphere.core.execute.StatementExecuteUnit;\nimport org.apache.shardingsphere.core.execute.sql.execute.SQLExecuteTemplate;\nimport org.apache.shardingsphere.core.execute.sql.execute.threadlocal.ExecutorExceptionHandler;\nimport org.apache.shardingsphere.core.execute.sql.prepare.SQLExecutePrepareTemplate;\nimport org.apache.shardingsphere.core.parse.antlr.sql.statement.dml.InsertStatement;\nimport org.apache.shardingsphere.core.route.SQLRouteResult;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.connection.BackendConnection;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.execute.callback.ProxyJDBCExecutePrepareCallback;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.execute.callback.ProxySQLExecuteCallback;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.execute.response.ExecuteQueryResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.execute.response.ExecuteResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.wrapper.JDBCExecutorWrapper;\nimport org.apache.shardingsphere.shardingproxy.backend.executor.BackendExecutorContext;\nimport org.apache.shardingsphere.shardingproxy.backend.response.BackendResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.response.query.QueryHeader;\nimport org.apache.shardingsphere.shardingproxy.backend.response.query.QueryResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.response.update.UpdateResponse;\nimport org.apache.shardingsphere.shardingproxy.context.ShardingProxyContext;\n\nimport java.sql.SQLException;\nimport java.util.Collection;\nimport java.util.List;",
+      "metadata": {
+        "strategy": "basic",
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/execute/JDBCExecuteEngine.java",
+        "language": "java",
+        "total_chunks": 4,
+        "chunk_index": 1
+      },
+      "similarity_score": 0.5914239883422852
+    },
+    {
+      "content": "package org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.wrapper;\n\nimport lombok.RequiredArgsConstructor;\nimport org.apache.shardingsphere.core.PreparedQueryShardingEngine;\nimport org.apache.shardingsphere.core.constant.DatabaseType;\nimport org.apache.shardingsphere.core.constant.properties.ShardingPropertiesConstant;\nimport org.apache.shardingsphere.core.parse.SQLJudgeEngine;\nimport org.apache.shardingsphere.core.parse.antlr.sql.statement.SQLStatement;\nimport org.apache.shardingsphere.core.rewrite.MasterSlaveSQLRewriteEngine;\nimport org.apache.shardingsphere.core.route.RouteUnit;\nimport org.apache.shardingsphere.core.route.SQLRouteResult;\nimport org.apache.shardingsphere.core.route.SQLUnit;\nimport org.apache.shardingsphere.core.route.router.masterslave.MasterSlaveRouter;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.LogicSchema;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.MasterSlaveSchema;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.ShardingSchema;\nimport org.apache.shardingsphere.shardingproxy.context.ShardingProxyContext;\n\nimport java.sql.Connection;\nimport java.sql.PreparedStatement;\nimport java.sql.SQLException;\nimport java.sql.Statement;\nimport java.util.List;",
+      "metadata": {
+        "strategy": "basic",
+        "chunk_index": 1,
+        "language": "java",
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/wrapper/PreparedStatementExecutorWrapper.java",
+        "total_chunks": 4
+      },
+      "similarity_score": 0.5926164984703064
+    },
+    {
+      "content": "import org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.command.query.binary.bind.PostgreSQLComBindPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.command.query.text.PostgreSQLDataRowPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.generic.PostgreSQLCommandCompletePacket;\nimport org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.generic.PostgreSQLErrorResponsePacket;",
+      "metadata": {
+        "file_path": "sharding-proxy/sharding-proxy-frontend/sharding-proxy-frontend-postgresql/src/main/java/org/apache/shardingsphere/shardingproxy/frontend/postgresql/command/query/binary/bind/PostgreSQLComBindExecutor.java",
+        "strategy": "basic",
+        "language": "java",
+        "chunk_index": 2,
+        "total_chunks": 7
+      },
+      "similarity_score": 0.592889666557312
+    },
+    {
+      "content": "import org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.connection.BackendConnection;\nimport org.apache.shardingsphere.shardingproxy.backend.response.BackendResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.response.error.ErrorResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.response.query.QueryHeader;\nimport org.apache.shardingsphere.shardingproxy.backend.response.query.QueryResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.response.update.UpdateResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.text.TextProtocolBackendHandler;\nimport org.apache.shardingsphere.shardingproxy.backend.text.TextProtocolBackendHandlerFactory;\nimport org.apache.shardingsphere.shardingproxy.context.ShardingProxyContext;\nimport org.apache.shardingsphere.shardingproxy.error.CommonErrorCode;\nimport org.apache.shardingsphere.shardingproxy.frontend.api.QueryCommandExecutor;\nimport org.apache.shardingsphere.shardingproxy.frontend.mysql.MySQLErrPacketFactory;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.constant.MySQLColumnType;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.MySQLPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.query.MySQLColumnDefinition41Packet;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.query.MySQLFieldCountPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.query.text.MySQLTextResultSetRowPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.query.text.query.MySQLComQueryPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.generic.MySQLEofPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.generic.MySQLErrPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.generic.MySQLOKPacket;",
+      "metadata": {
+        "file_path": "sharding-proxy/sharding-proxy-frontend/sharding-proxy-frontend-mysql/src/main/java/org/apache/shardingsphere/shardingproxy/frontend/mysql/command/query/text/query/MySQLComQueryPacketExecutor.java",
+        "chunk_index": 1,
+        "total_chunks": 6,
+        "strategy": "basic",
+        "language": "java"
+      },
+      "similarity_score": 0.6031309366226196
+    },
+    {
+      "content": "package org.apache.shardingsphere.shardingproxy.frontend.mysql.command.query.binary.prepare;\n\nimport org.apache.shardingsphere.core.parse.SQLParsingEngine;\nimport org.apache.shardingsphere.core.parse.antlr.sql.statement.SQLStatement;\nimport org.apache.shardingsphere.core.parse.antlr.sql.statement.dml.InsertStatement;\nimport org.apache.shardingsphere.core.parse.antlr.sql.statement.dml.SelectStatement;\nimport org.apache.shardingsphere.core.rule.ShardingRule;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.connection.BackendConnection;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.LogicSchema;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.LogicSchemas;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.MasterSlaveSchema;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.ShardingSchema;\nimport org.apache.shardingsphere.shardingproxy.frontend.api.CommandExecutor;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.constant.MySQLColumnType;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.query.MySQLColumnDefinition41Packet;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.query.binary.MySQLBinaryStatementRegistry;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.query.binary.prepare.MySQLComStmtPrepareOKPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.query.binary.prepare.MySQLComStmtPreparePacket;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.generic.MySQLEofPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.packet.DatabasePacket;\n\nimport java.util.Collection;\nimport java.util.LinkedList;",
+      "metadata": {
+        "file_path": "sharding-proxy/sharding-proxy-frontend/sharding-proxy-frontend-mysql/src/main/java/org/apache/shardingsphere/shardingproxy/frontend/mysql/command/query/binary/prepare/MySQLComStmtPrepareExecutor.java",
+        "chunk_index": 1,
+        "total_chunks": 4,
+        "language": "java",
+        "strategy": "basic"
+      },
+      "similarity_score": 0.6052292585372925
+    },
+    {
+      "content": "package org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.query.binary.execute;\n\nimport com.google.common.base.Preconditions;\nimport lombok.Getter;\nimport lombok.ToString;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.constant.MySQLColumnType;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.constant.MySQLNewParametersBoundFlag;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.MySQLCommandPacket;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.MySQLCommandPacketType;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.query.binary.MySQLBinaryStatement;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.query.binary.MySQLBinaryStatementParameterType;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.query.binary.MySQLBinaryStatementRegistry;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.query.binary.execute.protocol.MySQLBinaryProtocolValue;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.query.binary.execute.protocol.MySQLBinaryProtocolValueFactory;\nimport org.apache.shardingsphere.shardingproxy.transport.mysql.payload.MySQLPacketPayload;\n\nimport java.sql.SQLException;\nimport java.util.ArrayList;\nimport java.util.List;",
+      "metadata": {
+        "strategy": "basic",
+        "total_chunks": 5,
+        "language": "java",
+        "file_path": "sharding-proxy/sharding-proxy-transport/sharding-proxy-transport-mysql/src/main/java/org/apache/shardingsphere/shardingproxy/transport/mysql/packet/command/query/binary/execute/MySQLComStmtExecutePacket.java",
+        "chunk_index": 1
+      },
+      "similarity_score": 0.6060199737548828
+    },
+    {
+      "content": "package org.apache.shardingsphere.core.route.router.sharding;\n\nimport lombok.AccessLevel;\nimport lombok.NoArgsConstructor;\nimport org.apache.shardingsphere.core.constant.SQLType;\nimport org.apache.shardingsphere.core.metadata.datasource.ShardingDataSourceMetaData;\nimport org.apache.shardingsphere.core.optimize.result.OptimizeResult;\nimport org.apache.shardingsphere.core.parse.antlr.sql.statement.SQLStatement;\nimport org.apache.shardingsphere.core.parse.antlr.sql.statement.dcl.DCLStatement;\nimport org.apache.shardingsphere.core.parse.old.parser.dialect.mysql.statement.ShowDatabasesStatement;\nimport org.apache.shardingsphere.core.parse.old.parser.dialect.mysql.statement.UseStatement;\nimport org.apache.shardingsphere.core.parse.old.parser.dialect.postgresql.statement.ResetParamStatement;\nimport org.apache.shardingsphere.core.parse.old.parser.dialect.postgresql.statement.SetParamStatement;\nimport org.apache.shardingsphere.core.route.type.RoutingEngine;\nimport org.apache.shardingsphere.core.route.type.broadcast.DatabaseBroadcastRoutingEngine;\nimport org.apache.shardingsphere.core.route.type.broadcast.InstanceBroadcastRoutingEngine;\nimport org.apache.shardingsphere.core.route.type.broadcast.TableBroadcastRoutingEngine;\nimport org.apache.shardingsphere.core.route.type.complex.ComplexRoutingEngine;\nimport org.apache.shardingsphere.core.route.type.defaultdb.DefaultDatabaseRoutingEngine;\nimport org.apache.shardingsphere.core.route.type.ignore.IgnoreRoutingEngine;\nimport org.apache.shardingsphere.core.route.type.standard.StandardRoutingEngine;\nimport org.apache.shardingsphere.core.route.type.unicast.UnicastRoutingEngine;\nimport org.apache.shardingsphere.core.rule.ShardingRule;\n\nimport java.util.Collection;",
+      "metadata": {
+        "chunk_index": 1,
+        "strategy": "basic",
+        "language": "java",
+        "file_path": "sharding-core/sharding-core-route/src/main/java/org/apache/shardingsphere/core/route/router/sharding/RoutingEngineFactory.java",
+        "total_chunks": 5
+      },
+      "similarity_score": 0.6077223420143127
+    }
+  ],
+  "enhanced": [
+    {
+      "content": "### Commit 3\n- ID: 9494940d\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-03-07 12:30:50\n- Message: for #1941, remove sharding-proxy-backend dependency for sharding-proxy-transport-mysql\n- Changes:\n```diff\n@@ -29,6 +29,7 @@ import org.apache.shardingsphere.shardingproxy.context.GlobalContext;\n import org.apache.shardingsphere.shardingproxy.error.CommonErrorCode;\n import org.apache.shardingsphere.shardingproxy.frontend.api.QueryCommandExecutor;\n import org.apache.shardingsphere.shardingproxy.frontend.mysql.MySQLErrPacketFactory;\n+import org.apache.shardingsphere.shardingproxy.transport.mysql.constant.MySQLColumnType;\n import org.apache.shardingsphere.shardingproxy.transport.mysql.packet.MySQLPacket...\n```\n\n### Commit 4\n- ID: a334a0c5\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-03-07 02:13:24\n- Message: for #1941, move MySQLErrPacketFactory from transport-mysql to frontend-mysql\n- Changes:\n```diff\n@@ -28,6 +28,7 @@ import org.apache.shardingsphere.shardingproxy.backend.text.TextProtocolBackendH\n import org.apache.shardingsphere.shardingproxy.context.GlobalContext;\n import org.apache.shardingsphere.shardingproxy.error.CommonErrorCode;\n import org.apache.shardingsphere.shardingproxy.frontend.api.QueryCommandExecutor;\n+import org.apache.shardingsphere.shardingproxy.frontend.mysql.MySQLErrPacketFactory;\n import org.apache.shardingsphere.shardingproxy.transport.mysql.packet.MySQLPacket;\n impor...\n```",
+      "metadata": {
+        "language": "java",
+        "total_chunks": 9,
+        "file_path": "sharding-proxy/sharding-proxy-frontend/sharding-proxy-frontend-mysql/src/main/java/org/apache/shardingsphere/shardingproxy/frontend/mysql/command/query/text/query/MySQLComQueryPacketExecutor.java",
+        "commit_count": 5,
+        "chunk_index": 7,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.5072917342185974
+    },
+    {
+      "content": "### Commit 3\n- ID: 53ed8354\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-03-14 14:47:32\n- Message: for #1864, org.apache.shardingsphere.core.parsing => org.apache.shardingsphere.core.parse\n- Changes:\n```diff\n@@ -17,10 +17,10 @@\n \n package org.apache.shardingsphere.shardingproxy.frontend.mysql.command.query.binary.prepare;\n \n-import org.apache.shardingsphere.core.parsing.SQLParsingEngine;\n-import org.apache.shardingsphere.core.parsing.parser.sql.SQLStatement;\n-import org.apache.shardingsphere.core.parsing.parser.sql.dml.insert.InsertStatement;\n-import org.apache.shardingsphere.core.parsing.parser.sql.dql.select.SelectStatement;\n+import org.apache.shardingsphere.core.parse.SQLParsingEngine;\n+import or...\n```\n\n### Commit 4\n- ID: 7472df30\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-03-11 11:57:28\n- Message: for #1864, decouple ShardingRule & parser module, move ParsingResultCache from ShardingRule to ShardingContext & LogicSchema\n- Changes:\n```diff\n@@ -65,7 +65,7 @@ public final class MySQLComStmtPrepareExecutor implements CommandExecutor {\n     public Collection<DatabasePacket> execute() {\n         // TODO we should use none-sharding parsing engine in future.\n         SQLParsingEngine sqlParsingEngine = new SQLParsingEngine(\n-                LogicSchemas.getInstance().getDatabaseType(), packet.getSql(), getShardingRule(logicSchema), logicSchema.getMetaData().getTable());\n+                LogicSchemas.getInstance().getDatabaseType(), packe...\n```",
+      "metadata": {
+        "chunk_index": 5,
+        "total_chunks": 7,
+        "language": "java",
+        "file_path": "sharding-proxy/sharding-proxy-frontend/sharding-proxy-frontend-mysql/src/main/java/org/apache/shardingsphere/shardingproxy/frontend/mysql/command/query/binary/prepare/MySQLComStmtPrepareExecutor.java",
+        "strategy": "enhanced",
+        "commit_count": 5
+      },
+      "similarity_score": 0.5174949169158936
+    },
+    {
+      "content": "### Commit 5\n- ID: bb342032\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-03-12 18:56:28\n- Message: for #1864, decouple mata data & meta data loader\n- Changes:\n```diff\n@@ -28,7 +28,6 @@ import org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.dataso\n import org.apache.shardingsphere.shardingproxy.config.yaml.YamlDataSourceParameter;\n import org.apache.shardingsphere.shardingproxy.util.DataSourceConverter;\n \n-import java.sql.SQLException;\n import java.util.LinkedHashMap;\n import java.util.Map;\n import java.util.Map.Entry;\n@@ -93,8 +92,7 @@ public abstract class LogicSchema {\n      * Refresh table meta data.\n      * \n      * @param sqlStatement ...\n```",
+      "metadata": {
+        "commit_count": 5,
+        "chunk_index": 6,
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/schema/LogicSchema.java",
+        "strategy": "enhanced",
+        "total_chunks": 7,
+        "language": "java"
+      },
+      "similarity_score": 0.52607661485672
+    },
+    {
+      "content": "### Commit 2\n- ID: 53ed8354\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-03-14 14:47:32\n- Message: for #1864, org.apache.shardingsphere.core.parsing => org.apache.shardingsphere.core.parse\n- Changes:\n```diff\n@@ -20,8 +20,8 @@ package org.apache.shardingsphere.opentracing.hook;\n import io.opentracing.Span;\n import io.opentracing.tag.Tags;\n import org.apache.shardingsphere.core.metadata.table.ShardingTableMetaData;\n-import org.apache.shardingsphere.core.parsing.hook.ParsingHook;\n-import org.apache.shardingsphere.core.parsing.parser.sql.SQLStatement;\n+import org.apache.shardingsphere.core.parse.hook.ParsingHook;\n+import org.apache.shardingsphere.core.parse.parser.sql.SQLStatement;\n import org.apache.sh...\n```\n\n### Commit 3\n- ID: 1b9acede\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-03-09 22:10:04\n- Message: for #1864, move hook spi from api packages to internal related packages\n- Changes:\n```diff\n@@ -20,10 +20,10 @@ package org.apache.shardingsphere.opentracing.hook;\n import io.opentracing.Span;\n import io.opentracing.tag.Tags;\n import org.apache.shardingsphere.core.metadata.table.ShardingTableMetaData;\n+import org.apache.shardingsphere.core.parsing.hook.ParsingHook;\n import org.apache.shardingsphere.core.parsing.parser.sql.SQLStatement;\n import org.apache.shardingsphere.opentracing.ShardingTracer;\n import org.apache.shardingsphere.opentracing.constant.ShardingTags;\n-import org.apache.sh...\n```",
+      "metadata": {
+        "commit_count": 5,
+        "chunk_index": 2,
+        "total_chunks": 4,
+        "language": "java",
+        "file_path": "sharding-opentracing/src/main/java/org/apache/shardingsphere/opentracing/hook/OpenTracingParsingHook.java",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.55777907371521
+    },
+    {
+      "content": "### Commit 3\n- ID: 5160f97c\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-04-08 22:32:57\n- Message: for #2084, add ShardingTableMetaDataAwareFiller\n- Changes:\n```diff\n@@ -17,7 +17,6 @@\n \n package org.apache.shardingsphere.core.parse.antlr.filler.common.dal;\n \n-import org.apache.shardingsphere.core.metadata.table.ShardingTableMetaData;\n import org.apache.shardingsphere.core.parse.antlr.filler.SQLSegmentFiller;\n import org.apache.shardingsphere.core.parse.antlr.sql.statement.SQLStatement;\n import org.apache.shardingsphere.core.parse.antlr.sql.statement.dal.ShowParamSegment;\n@@ -31,7 +30,7 @@ import org.apache.shardingsphere.core.parse.parser.dialect.postgresql....\n```\n\n### Commit 4\n- ID: 00e23455\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-04-08 18:03:37\n- Message: for #2084, add EncryptRuleAware & ShardingRuleAware\n- Changes:\n```diff\n@@ -22,17 +22,16 @@ import org.apache.shardingsphere.core.parse.antlr.filler.SQLSegmentFiller;\n import org.apache.shardingsphere.core.parse.antlr.sql.statement.SQLStatement;\n import org.apache.shardingsphere.core.parse.antlr.sql.statement.dal.ShowParamSegment;\n import org.apache.shardingsphere.core.parse.parser.dialect.postgresql.statement.ShowStatement;\n-import org.apache.shardingsphere.core.rule.BaseRule;\n \n /**\n  * Show param filler.\n  *\n  * @author loxp\n  */\n-public final class ShowParamFill...\n```",
+      "metadata": {
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "total_chunks": 4,
+        "chunk_index": 2,
+        "language": "java",
+        "file_path": "sharding-core/sharding-core-parse/sharding-core-parse-common/src/main/java/org/apache/shardingsphere/core/parse/antlr/filler/common/dal/ShowParamFiller.java"
+      },
+      "similarity_score": 0.5700560212135315
+    },
+    {
+      "content": "### Commit 4\n- ID: f93b021c\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-04-06 22:34:15\n- Message: for #2084, refactor sql.statement package\n- Changes:\n```diff\n@@ -20,10 +20,10 @@ package org.apache.shardingsphere.core.parse;\n import com.google.common.base.Optional;\n import org.apache.shardingsphere.core.constant.DatabaseType;\n import org.apache.shardingsphere.core.metadata.table.ShardingTableMetaData;\n+import org.apache.shardingsphere.core.parse.antlr.sql.statement.SQLStatement;\n import org.apache.shardingsphere.core.parse.cache.ParsingResultCache;\n import org.apache.shardingsphere.core.parse.parser.sql.AbstractSQLStatement;\n import org.apache.shardin...\n```\n\n### Commit 5\n- ID: 53ed8354\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-03-14 14:47:32\n- Message: for #1864, org.apache.shardingsphere.core.parsing => org.apache.shardingsphere.core.parse\n- Changes:\n```diff\n@@ -0,0 +1,76 @@\n+/*\n+ * Licensed to the Apache Software Foundation (ASF) under one or more\n+ * contributor license agreements.  See the NOTICE file distributed with\n+ * this work for additional information regarding copyright ownership.\n+ * The ASF licenses this file to You under the Apache License, Version 2.0\n+ * (the \"License\"); you may not use this file except in compliance with\n+ * the License.  You may obtain a copy of the License at\n+ *\n+ *     http://www.apache.org/licenses/LICENSE-2.0\n...\n```",
+      "metadata": {
+        "total_chunks": 4,
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "language": "java",
+        "chunk_index": 3,
+        "file_path": "sharding-core/sharding-core-parse/sharding-core-parse-common/src/main/java/org/apache/shardingsphere/core/parse/EncryptSQLParsingEngine.java"
+      },
+      "similarity_score": 0.5713690519332886
+    },
+    {
+      "content": "## Git Commit History\n\n### Commit 1\n- ID: 1c2c2899\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-03-07 19:09:42\n- Message: fix #1995\n- Changes:\n```diff\n@@ -17,12 +17,12 @@\n \n package org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.datasource;\n \n+import lombok.Getter;\n import org.apache.shardingsphere.core.constant.ConnectionMode;\n import org.apache.shardingsphere.core.exception.ShardingException;\n import org.apache.shardingsphere.shardingproxy.backend.BackendDataSource;\n import org.apache.shardingsphere.shardingproxy.backend.schema.LogicSchemas;\n import org.apache.shardingsphere.shardingproxy.config.yaml.YamlDataSourceParamet...\n```\n\n### Commit 2\n- ID: 420badea\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-03-07 17:08:42\n- Message: remove useless constructor for JDBCBackendDataSource\n- Changes:\n```diff\n@@ -17,7 +17,6 @@\n \n package org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.datasource;\n \n-import lombok.NoArgsConstructor;\n import org.apache.shardingsphere.core.constant.ConnectionMode;\n import org.apache.shardingsphere.core.exception.ShardingException;\n import org.apache.shardingsphere.shardingproxy.backend.BackendDataSource;\n@@ -47,12 +46,11 @@ import java.util.Map.Entry;\n  * @author panjuan\n  * @author maxiaoguang\n  */\n-@NoArgsConstructor\n public final class JDBCBackendD...\n```",
+      "metadata": {
+        "strategy": "enhanced",
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/datasource/JDBCBackendDataSource.java",
+        "total_chunks": 7,
+        "chunk_index": 5,
+        "commit_count": 4,
+        "language": "java"
+      },
+      "similarity_score": 0.5725295543670654
+    },
+    {
+      "content": "### Commit 3\n- ID: 53ed8354\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-03-14 14:47:32\n- Message: for #1864, org.apache.shardingsphere.core.parsing => org.apache.shardingsphere.core.parse\n- Changes:\n```diff\n@@ -32,10 +32,10 @@ import org.apache.shardingsphere.core.executor.metadata.TableMetaDataInitializer\n import org.apache.shardingsphere.core.executor.sql.execute.SQLExecuteCallback;\n import org.apache.shardingsphere.core.executor.sql.execute.SQLExecuteTemplate;\n import org.apache.shardingsphere.core.executor.sql.prepare.SQLExecutePrepareTemplate;\n-import org.apache.shardingsphere.core.parsing.antlr.sql.statement.ddl.AlterTableStatement;\n-import org.apache.shardingsphere.core.parsing.antlr.sql.sta...\n```\n\n### Commit 4\n- ID: bb342032\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-03-12 18:56:28\n- Message: for #1864, decouple mata data & meta data loader\n- Changes:\n```diff\n@@ -23,10 +23,12 @@ import lombok.AccessLevel;\n import lombok.Getter;\n import lombok.Setter;\n import org.apache.shardingsphere.core.constant.DatabaseType;\n+import org.apache.shardingsphere.core.constant.properties.ShardingProperties;\n import org.apache.shardingsphere.core.constant.properties.ShardingPropertiesConstant;\n import org.apache.shardingsphere.core.executor.ShardingExecuteEngine;\n import org.apache.shardingsphere.core.executor.ShardingExecuteGroup;\n import org.apache.shardingsphere.core...\n```",
+      "metadata": {
+        "chunk_index": 7,
+        "strategy": "enhanced",
+        "total_chunks": 9,
+        "language": "java",
+        "file_path": "sharding-jdbc/sharding-jdbc-core/src/main/java/org/apache/shardingsphere/shardingjdbc/executor/AbstractStatementExecutor.java",
+        "commit_count": 5
+      },
+      "similarity_score": 0.5806432962417603
+    },
+    {
+      "content": "### Commit 5\n- ID: c5b77473\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-03-14 23:07:25\n- Message: for #1864, org.apache.shardingsphere.core.routing => org.apache.shardingsphere.core.route\n- Changes:\n```diff\n@@ -24,7 +24,7 @@ import org.apache.shardingsphere.core.optimize.result.OptimizeResult;\n import org.apache.shardingsphere.core.parse.parser.sql.SQLStatement;\n import org.apache.shardingsphere.core.rewrite.EncryptSQLRewriteEngine;\n import org.apache.shardingsphere.core.rewrite.SQLBuilder;\n-import org.apache.shardingsphere.core.routing.SQLUnit;\n+import org.apache.shardingsphere.core.route.SQLUnit;\n import org.apache.shardingsphere.shardingjdbc.jdbc.adapter.AbstractShardingPreparedStatementAdapter;...\n```",
+      "metadata": {
+        "strategy": "enhanced",
+        "total_chunks": 10,
+        "language": "java",
+        "chunk_index": 9,
+        "commit_count": 5,
+        "file_path": "sharding-jdbc/sharding-jdbc-core/src/main/java/org/apache/shardingsphere/shardingjdbc/jdbc/core/statement/EncryptPreparedStatement.java"
+      },
+      "similarity_score": 0.5811923742294312
+    },
+    {
+      "content": "## Git Commit History\n\n### Commit 1\n- ID: f93b021c\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-04-06 22:34:15\n- Message: for #2084, refactor sql.statement package\n- Changes:\n```diff\n@@ -24,8 +24,8 @@ import org.apache.shardingsphere.core.execute.sql.execute.result.QueryResult;\n import org.apache.shardingsphere.core.merge.dal.DALMergeEngine;\n import org.apache.shardingsphere.core.merge.dql.DQLMergeEngine;\n import org.apache.shardingsphere.core.metadata.table.ShardingTableMetaData;\n-import org.apache.shardingsphere.core.parse.parser.sql.dal.DALStatement;\n-import org.apache.shardingsphere.core.parse.parser.sql.dql.select.SelectStatement;\n+import org.apache.shardingsphere.core....\n```\n\n### Commit 2\n- ID: 35c1d0f5\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-04-04 15:00:30\n- Message: fix #2136\n- Changes:\n```diff\n@@ -24,9 +24,9 @@ import org.apache.shardingsphere.core.execute.sql.execute.result.QueryResult;\n import org.apache.shardingsphere.core.merge.dal.DALMergeEngine;\n import org.apache.shardingsphere.core.merge.dql.DQLMergeEngine;\n import org.apache.shardingsphere.core.metadata.table.ShardingTableMetaData;\n-import org.apache.shardingsphere.core.parse.parser.sql.SQLStatement;\n import org.apache.shardingsphere.core.parse.parser.sql.dal.DALStatement;\n import org.apache.shardingsphere.core.parse.parser.s...\n```",
+      "metadata": {
+        "commit_count": 3,
+        "total_chunks": 4,
+        "file_path": "sharding-core/sharding-core-merge/src/main/java/org/apache/shardingsphere/core/merge/MergeEngineFactory.java",
+        "chunk_index": 2,
+        "language": "java",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.5828203558921814
+    },
+    {
+      "content": "### Commit 3\n- ID: ce871510\n- Author: tristaZero (hannkenn@163.com)\n- Date: 2019-03-15 13:31:36\n- Message: delete org.apache.shardingsphere.core.merger.QueryResult;\n- Changes:\n```diff\n@@ -25,7 +25,7 @@ import org.apache.shardingsphere.core.executor.sql.execute.result.MemoryQueryRes\n import org.apache.shardingsphere.core.executor.sql.execute.result.StreamQueryResult;\n import org.apache.shardingsphere.core.executor.sql.execute.threadlocal.ExecutorExceptionHandler;\n import org.apache.shardingsphere.core.executor.sql.prepare.SQLExecutePrepareCallback;\n-import org.apache.shardingsphere.core.merger.QueryResult;\n+import org.apache.shardingsphere.core.executor.sql.execute.result.Quer...\n```\n\n### Commit 4\n- ID: c5b77473\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-03-14 23:07:25\n- Message: for #1864, org.apache.shardingsphere.core.routing => org.apache.shardingsphere.core.route\n- Changes:\n```diff\n@@ -26,8 +26,8 @@ import org.apache.shardingsphere.core.executor.sql.execute.result.StreamQueryRes\n import org.apache.shardingsphere.core.executor.sql.execute.threadlocal.ExecutorExceptionHandler;\n import org.apache.shardingsphere.core.executor.sql.prepare.SQLExecutePrepareCallback;\n import org.apache.shardingsphere.core.merger.QueryResult;\n-import org.apache.shardingsphere.core.routing.RouteUnit;\n-import org.apache.shardingsphere.core.routing.SQLRouteResult;\n+import org.apache.shardingsphere.co...\n```\n\n### Commit 5\n- ID: edda1f46\n- Author: tristaZero (hannkenn@163.com)\n- Date: 2019-02-26 19:12:00\n- Message: Revert \"renew import\"",
+      "metadata": {
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "file_path": "sharding-jdbc/sharding-jdbc-core/src/main/java/org/apache/shardingsphere/shardingjdbc/executor/StatementExecutor.java",
+        "language": "java",
+        "total_chunks": 11,
+        "chunk_index": 9
+      },
+      "similarity_score": 0.5865455269813538
+    },
+    {
+      "content": "### Commit 3\n- ID: 35c1d0f5\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-04-04 15:00:30\n- Message: fix #2136\n- Changes:\n```diff\n@@ -32,6 +32,8 @@ import org.apache.shardingsphere.core.parse.SQLParsingEngine;\n import org.apache.shardingsphere.core.parse.cache.ParsingResultCache;\n import org.apache.shardingsphere.core.parse.hook.ParsingHook;\n import org.apache.shardingsphere.core.parse.hook.SPIParsingHook;\n+import org.apache.shardingsphere.core.parse.parser.context.limit.Limit;\n+import org.apache.shardingsphere.core.parse.parser.context.limit.LimitValue;\n import org.apache.shardingsphere.core.parse.parser.sql.SQLStatement;...\n```\n\n### Commit 4\n- ID: d7c38a60\n- Author: tuohai666 (zhangyonglun@apache.org)\n- Date: 2019-03-26 16:11:30\n- Message: #2062, Wrong LIMIT rewrite while GROUP BY and ORDER BY on different items\n- Changes:\n```diff\n@@ -103,7 +103,7 @@ public final class ParsingSQLRouter implements ShardingRouter {\n         }\n         RoutingResult routingResult = RoutingEngineFactory.newInstance(shardingRule, shardingMetaData.getDataSource(), sqlStatement, optimizeResult).route();\n         if (sqlStatement instanceof SelectStatement && null != ((SelectStatement) sqlStatement).getLimit() && !routingResult.isSingleRouting()) {\n-            processLimit(parameters, (SelectStatement) sqlStatement, routingResult.isSingleRouting...\n```\n\n### Commit 5\n- ID: d2a56c59\n- Author: 吴宇 (scuwuyu@163.com)\n- Date: 2019-03-26 15:55:01\n- Message: fix SQL rewrite issue (#2086)",
+      "metadata": {
+        "commit_count": 5,
+        "file_path": "sharding-core/sharding-core-route/src/main/java/org/apache/shardingsphere/core/route/router/sharding/ParsingSQLRouter.java",
+        "language": "java",
+        "chunk_index": 8,
+        "strategy": "enhanced",
+        "total_chunks": 10
+      },
+      "similarity_score": 0.5865680575370789
+    },
+    {
+      "content": "### Commit 2\n- ID: 0383b6a3\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-02-02 11:36:19\n- Message: refactor api.config\n- Changes:\n```diff\n@@ -19,7 +19,7 @@ package org.apache.shardingsphere.shardingjdbc.api;\n \n import lombok.AccessLevel;\n import lombok.NoArgsConstructor;\n-import org.apache.shardingsphere.api.config.rule.MasterSlaveRuleConfiguration;\n+import org.apache.shardingsphere.api.config.masterslave.MasterSlaveRuleConfiguration;\n import org.apache.shardingsphere.shardingjdbc.jdbc.core.datasource.MasterSlaveDataSource;\n \n import javax.sql.DataSource;...\n```\n\n### Commit 3\n- ID: 8ca89258\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-01-17 15:21:02\n- Message: change package and maven groupId from io.shardingsphere to org.apache.shardingsphere\n- Changes:\n```diff\n@@ -0,0 +1,53 @@\n+/*\n+ * Licensed to the Apache Software Foundation (ASF) under one or more\n+ * contributor license agreements.  See the NOTICE file distributed with\n+ * this work for additional information regarding copyright ownership.\n+ * The ASF licenses this file to You under the Apache License, Version 2.0\n+ * (the \"License\"); you may not use this file except in compliance with\n+ * the License.  You may obtain a copy of the License at\n+ *\n+ *     http://www.apache.org/licenses/LICENSE-2.0\n...\n```",
+      "metadata": {
+        "language": "java",
+        "total_chunks": 3,
+        "chunk_index": 2,
+        "commit_count": 3,
+        "file_path": "sharding-jdbc/sharding-jdbc-core/src/main/java/org/apache/shardingsphere/shardingjdbc/api/MasterSlaveDataSourceFactory.java",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.5870664119720459
+    },
+    {
+      "content": "### Commit 2\n- ID: 97500798\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-03-07 01:05:12\n- Message: for #1941, remove sharding-proxy-transport-spi\n- Changes:\n```diff\n@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;\n import org.apache.shardingsphere.shardingproxy.backend.schema.LogicSchemas;\n import org.apache.shardingsphere.shardingproxy.frontend.DatabaseFrontendEngineFactory;\n import org.apache.shardingsphere.shardingproxy.frontend.spi.DatabaseFrontendEngine;\n-import org.apache.shardingsphere.shardingproxy.transport.common.codec.PacketCodec;\n+import org.apache.shardingsphere.shardingproxy.transport.codec.PacketCodec;\n \n /**\n  * Channel initializer....\n```\n\n### Commit 3\n- ID: 7854d6c1\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-03-07 00:36:16\n- Message: for #1941, refactor DatabasePacketCodecEngine from SPI to DatabaseFrontendEngineFactory.getCodecEngine()\n- Changes:\n```diff\n@@ -23,22 +23,23 @@ import io.netty.channel.socket.SocketChannel;\n import lombok.RequiredArgsConstructor;\n import org.apache.shardingsphere.shardingproxy.backend.schema.LogicSchemas;\n import org.apache.shardingsphere.shardingproxy.frontend.DatabaseFrontendEngineFactory;\n-import org.apache.shardingsphere.shardingproxy.transport.common.codec.DatabasePacketCodecEngineFactory;\n+import org.apache.shardingsphere.shardingproxy.frontend.spi.DatabaseFrontendEngine;\n import org.apache.shardingsphere.shard...\n```",
+      "metadata": {
+        "language": "java",
+        "commit_count": 4,
+        "strategy": "enhanced",
+        "total_chunks": 4,
+        "chunk_index": 2,
+        "file_path": "sharding-proxy/sharding-proxy-frontend/sharding-proxy-frontend-core/src/main/java/org/apache/shardingsphere/shardingproxy/frontend/netty/ServerHandlerInitializer.java"
+      },
+      "similarity_score": 0.5885568857192993
+    },
+    {
+      "content": "### Commit 3\n- ID: 2ae22c55\n- Author: cherrylzhao (zhaojunv3@126.com)\n- Date: 2019-04-17 19:11:46\n- Message: ShardingHook => Shard Hook.\n- Changes:\n```diff\n@@ -22,7 +22,7 @@ import org.apache.shardingsphere.api.hint.HintManager;\n import org.apache.shardingsphere.core.constant.DatabaseType;\n import org.apache.shardingsphere.core.constant.properties.ShardingProperties;\n import org.apache.shardingsphere.core.constant.properties.ShardingPropertiesConstant;\n-import org.apache.shardingsphere.core.hook.SPIShardingHook;\n+import org.apache.shardingsphere.core.hook.SPIShardHook;\n import org.apache.shardingsphere.core.metadata.ShardingMetaData;\n import org.ap...\n```\n\n### Commit 4\n- ID: d07827a3\n- Author: cherrylzhao (zhaojunv3@126.com)\n- Date: 2019-04-17 19:09:31\n- Message: add SPIShardingHook for BaseShardingEngine.\n- Changes:\n```diff\n@@ -22,6 +22,7 @@ import org.apache.shardingsphere.api.hint.HintManager;\n import org.apache.shardingsphere.core.constant.DatabaseType;\n import org.apache.shardingsphere.core.constant.properties.ShardingProperties;\n import org.apache.shardingsphere.core.constant.properties.ShardingPropertiesConstant;\n+import org.apache.shardingsphere.core.hook.SPIShardingHook;\n import org.apache.shardingsphere.core.metadata.ShardingMetaData;\n import org.apache.shardingsphere.core.rewrite.SQLBuilder;\n import org.a...\n```\n\n### Commit 5\n- ID: 35c1d0f5\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-04-04 15:00:30\n- Message: fix #2136\n- Changes:\n```diff\n@@ -83,7 +83,7 @@ public abstract class BaseShardingEngine {\n     }\n     \n     private Collection<RouteUnit> rewriteAndConvert(final String sql, final List<Object> parameters, final SQLRouteResult sqlRouteResult) {\n-        SQLRewriteEngine rewriteEngine = new SQLRewriteEngine(shardingRule, sql, databaseType, sqlRouteResult.getSqlStatement(), parameters, sqlRouteResult.getOptimizeResult());\n+        SQLRewriteEngine rewriteEngine = new SQLRewriteEngine(shardingRule, sql, databaseType, sqlRouteRe...\n```",
+      "metadata": {
+        "file_path": "sharding-core/sharding-core-entry/src/main/java/org/apache/shardingsphere/core/BaseShardingEngine.java",
+        "commit_count": 5,
+        "language": "java",
+        "strategy": "enhanced",
+        "chunk_index": 4,
+        "total_chunks": 5
+      },
+      "similarity_score": 0.5887854099273682
+    },
+    {
+      "content": "### Commit 2\n- ID: 8172b567\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-03-07 00:07:20\n- Message: for #1941, update javadoc\n- Changes:\n```diff\n@@ -23,7 +23,7 @@ import org.apache.shardingsphere.shardingproxy.backend.response.query.QueryHeade\n import org.apache.shardingsphere.shardingproxy.transport.postgresql.constant.PostgreSQLColumnType;\n \n /**\n- * PostgreSQL column description.\n+ * Column description for PostgreSQL.\n  *\n  * @author zhangyonglun\n  */...\n```\n\n### Commit 3\n- ID: 29ed068a\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-02-28 16:36:04\n- Message: for #1941, remove DataHeaderPacket\n- Changes:\n```diff\n@@ -19,7 +19,7 @@ package org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.comm\n \n import lombok.Getter;\n import lombok.RequiredArgsConstructor;\n-import org.apache.shardingsphere.shardingproxy.transport.common.packet.query.DataHeaderPacket;\n+import org.apache.shardingsphere.shardingproxy.backend.response.query.QueryHeader;\n import org.apache.shardingsphere.shardingproxy.transport.postgresql.constant.PostgreSQLColumnType;\n \n /**\n@@ -45,10 +45,10 @@ public final class PostgreSQL...\n```\n\n### Commit 4\n- ID: 5fd9c9df\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-02-28 12:47:44\n- Message: for #1941, move CommandResponsePackets\n- Changes:\n```diff\n@@ -19,7 +19,7 @@ package org.apache.shardingsphere.shardingproxy.transport.postgresql.packet.comm\n \n import lombok.Getter;\n import lombok.RequiredArgsConstructor;\n-import org.apache.shardingsphere.shardingproxy.transport.common.packet.command.query.DataHeaderPacket;\n+import org.apache.shardingsphere.shardingproxy.transport.common.packet.query.DataHeaderPacket;\n import org.apache.shardingsphere.shardingproxy.transport.postgresql.constant.PostgreSQLColumnType;\n \n /**...\n```",
+      "metadata": {
+        "commit_count": 5,
+        "language": "java",
+        "chunk_index": 2,
+        "file_path": "sharding-proxy/sharding-proxy-transport/sharding-proxy-transport-postgresql/src/main/java/org/apache/shardingsphere/shardingproxy/transport/postgresql/packet/command/query/PostgreSQLColumnDescription.java",
+        "strategy": "enhanced",
+        "total_chunks": 4
+      },
+      "similarity_score": 0.5902866125106812
+    },
+    {
+      "content": "### Commit 3\n- ID: f93b021c\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-04-06 22:34:15\n- Message: for #2084, refactor sql.statement package\n- Changes:\n```diff\n@@ -21,12 +21,12 @@ import com.google.common.base.Optional;\n import lombok.RequiredArgsConstructor;\n import org.apache.shardingsphere.core.constant.DatabaseType;\n import org.apache.shardingsphere.core.metadata.table.ShardingTableMetaData;\n+import org.apache.shardingsphere.core.parse.antlr.sql.statement.SQLStatement;\n import org.apache.shardingsphere.core.parse.cache.ParsingResultCache;\n import org.apache.shardingsphere.core.parse.lexer.LexerEngine;\n import org.apache.shardingsphere.core.parse.le...\n```\n\n### Commit 4\n- ID: 53ed8354\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-03-14 14:47:32\n- Message: for #1864, org.apache.shardingsphere.core.parsing => org.apache.shardingsphere.core.parse\n- Changes:\n```diff\n@@ -0,0 +1,75 @@\n+/*\n+ * Licensed to the Apache Software Foundation (ASF) under one or more\n+ * contributor license agreements.  See the NOTICE file distributed with\n+ * this work for additional information regarding copyright ownership.\n+ * The ASF licenses this file to You under the Apache License, Version 2.0\n+ * (the \"License\"); you may not use this file except in compliance with\n+ * the License.  You may obtain a copy of the License at\n+ *\n+ *     http://www.apache.org/licenses/LICENSE-2.0\n...\n```",
+      "metadata": {
+        "commit_count": 4,
+        "file_path": "sharding-core/sharding-core-parse/sharding-core-parse-common/src/main/java/org/apache/shardingsphere/core/parse/SQLParsingEngine.java",
+        "total_chunks": 4,
+        "strategy": "enhanced",
+        "chunk_index": 3,
+        "language": "java"
+      },
+      "similarity_score": 0.5963811278343201
+    },
+    {
+      "content": "### Commit 3\n- ID: 9fcdf6ef\n- Author: cherrylzhao (zhaojunv3@126.com)\n- Date: 2019-03-04 19:18:30\n- Message: resolve conflict.\n- Changes:\n```diff\n@@ -19,34 +19,27 @@ package org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.q\n \n import lombok.Getter;\n import org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.MySQLCommandPacket;\n+import org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.MySQLCommandPacketType;\n import org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.query.binary.MySQLBinaryStatementRegistry;\n import org.apache.shardingsphere.shardingproxy.tr...\n```\n\n### Commit 4\n- ID: 3e8ee618\n- Author: cherrylzhao (zhaojunv3@126.com)\n- Date: 2019-03-04 18:14:00\n- Message: for #1963 fix unit test error.\n- Changes:\n```diff\n@@ -40,11 +40,17 @@ public final class MySQLComStmtClosePacket implements MySQLCommandPacket {\n     \n     @Override\n     public void write(final MySQLPacketPayload payload) {\n-        MySQLBinaryStatementRegistry.getInstance().remove(statementId);\n     }\n     \n     @Override\n     public int getSequenceId() {\n         return 0;\n     }\n+    \n+    /**\n+     * Remove cached statement.\n+     */\n+    void removeCachedStatement() {\n+        MySQLBinaryStatementRegistry.getInstance().remove(statementId)...\n```\n\n### Commit 5\n- ID: 86c04995\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-03-04 18:45:22\n- Message: for #1941, refactor MySQLCommandPacket\n- Changes:\n```diff\n@@ -19,30 +19,23 @@ package org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.q\n \n import lombok.Getter;\n import org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.MySQLCommandPacket;\n+import org.apache.shardingsphere.shardingproxy.transport.mysql.packet.command.MySQLCommandPacketType;\n import org.apache.shardingsphere.shardingproxy.transport.mysql.payload.MySQLPacketPayload;\n \n /**\n- * MySQL COM_STMT_CLOSE command packet.\n+ * COM_STMT_CLOSE command packe...\n```",
+      "metadata": {
+        "strategy": "enhanced",
+        "file_path": "sharding-proxy/sharding-proxy-transport/sharding-proxy-transport-mysql/src/main/java/org/apache/shardingsphere/shardingproxy/transport/mysql/packet/command/query/binary/close/MySQLComStmtClosePacket.java",
+        "total_chunks": 3,
+        "language": "java",
+        "commit_count": 5,
+        "chunk_index": 2
+      },
+      "similarity_score": 0.5965701341629028
+    },
+    {
+      "content": "### Commit 3\n- ID: f93b021c\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-04-06 22:34:15\n- Message: for #2084, refactor sql.statement package\n- Changes:\n```diff\n@@ -22,9 +22,9 @@ import lombok.AccessLevel;\n import lombok.NoArgsConstructor;\n import org.apache.shardingsphere.core.constant.SQLType;\n import org.apache.shardingsphere.core.parse.SQLJudgeEngine;\n+import org.apache.shardingsphere.core.parse.antlr.sql.statement.SQLStatement;\n import org.apache.shardingsphere.core.parse.parser.dialect.mysql.statement.ShowDatabasesStatement;\n import org.apache.shardingsphere.core.parse.parser.dialect.mysql.statement.UseStatement;\n-import org.apache.shardingsphere....\n```\n\n### Commit 4\n- ID: 6ac43268\n- Author: cherrylzhao (zhaojunv3@126.com)\n- Date: 2019-03-28 15:53:43\n- Message: combine SET and SET NAMES => SET.\n- Changes:\n```diff\n@@ -49,7 +49,7 @@ public final class TextProtocolBackendHandlerFactory {\n     \n     private static final String SET_AUTOCOMMIT_1 = \"SET AUTOCOMMIT=1\";\n     \n-    private static final List<String> GUI_SQL = Arrays.asList(\"SET NAMES\", \"SET\", \"SHOW VARIABLES LIKE\", \"SHOW CHARACTER SET\", \"SHOW COLLATION\");\n+    private static final List<String> GUI_SQL = Arrays.asList(\"SET\", \"SHOW VARIABLES LIKE\", \"SHOW CHARACTER SET\", \"SHOW COLLATION\");\n     \n     /**\n      * Create new instance of text protocol ba...\n```",
+      "metadata": {
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/text/TextProtocolBackendHandlerFactory.java",
+        "strategy": "enhanced",
+        "language": "java",
+        "total_chunks": 8,
+        "chunk_index": 6,
+        "commit_count": 5
+      },
+      "similarity_score": 0.5973617434501648
+    },
+    {
+      "content": "### Commit 3\n- ID: 7b6ab319\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-04-02 18:09:40\n- Message: fix #2153, use unicast route for show tables\n- Changes:\n```diff\n@@ -24,8 +24,6 @@ import org.apache.shardingsphere.core.metadata.datasource.ShardingDataSourceMeta\n import org.apache.shardingsphere.core.optimize.result.OptimizeResult;\n import org.apache.shardingsphere.core.parse.antlr.sql.statement.dcl.DCLStatement;\n import org.apache.shardingsphere.core.parse.parser.dialect.mysql.statement.ShowDatabasesStatement;\n-import org.apache.shardingsphere.core.parse.parser.dialect.mysql.statement.ShowTableStatusStatement;\n-import org.apache.shardingsphere.core.parse....\n```\n\n### Commit 4\n- ID: c5b77473\n- Author: terrymanu (terrymanu@163.com)\n- Date: 2019-03-14 23:07:25\n- Message: for #1864, org.apache.shardingsphere.core.routing => org.apache.shardingsphere.core.route\n- Changes:\n```diff\n@@ -0,0 +1,110 @@\n+/*\n+ * Licensed to the Apache Software Foundation (ASF) under one or more\n+ * contributor license agreements.  See the NOTICE file distributed with\n+ * this work for additional information regarding copyright ownership.\n+ * The ASF licenses this file to You under the Apache License, Version 2.0\n+ * (the \"License\"); you may not use this file except in compliance with\n+ * the License.  You may obtain a copy of the License at\n+ *\n+ *     http://www.apache.org/licenses/LICENSE-2.0...\n```",
+      "metadata": {
+        "strategy": "enhanced",
+        "commit_count": 4,
+        "language": "java",
+        "file_path": "sharding-core/sharding-core-route/src/main/java/org/apache/shardingsphere/core/route/router/sharding/RoutingEngineFactory.java",
+        "chunk_index": 5,
+        "total_chunks": 6
+      },
+      "similarity_score": 0.5981001257896423
+    }
+  ],
+  "compressed": [
+    {
+      "content": "# File: sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/DatabaseCommunicationEngine.java (java)\n\n## Key Code Elements:\nimport org.apache.shardingsphere.shardingproxy.backend.response.BackendResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.response.query.QueryData;\nimport java.sql.SQLException;\n\n## Recent Changes:\n- ffcae87e by terrymanu (terrymanu@163.com): for #1898, add sharding-proxy-backend module...",
+      "metadata": {
+        "commit_count": 1,
+        "chunk_index": 0,
+        "language": "java",
+        "total_chunks": 1,
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/DatabaseCommunicationEngine.java",
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.4637177288532257
+    },
+    {
+      "content": "# File: sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/execute/response/ExecuteQueryResponse.java (java)\n\n## Key Code Elements:\nimport lombok.Getter;\nimport lombok.RequiredArgsConstructor;\nimport org.apache.shardingsphere.core.execute.sql.execute.result.QueryResult;\nimport org.apache.shardingsphere.shardingproxy.backend.response.query.QueryHeader;\nimport java.util.List;\n@RequiredArgsConstructor\n@Getter\n\n## Recent Changes:\n- 03cd341d by terrymanu (terrymanu@163.com): for #1864, org.apache.shardingsphere.core.executor => org.apache.shardingsphere.core.execute...\n- ac3d69f8 by tristaZero (hannkenn@163.com): new import...\n- ffcae87e by terrymanu (terrymanu@163.com): for #1898, add sharding-proxy-backend module...",
+      "metadata": {
+        "language": "java",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "commit_count": 3,
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/execute/response/ExecuteQueryResponse.java"
+      },
+      "similarity_score": 0.46783745288848877
+    },
+    {
+      "content": "# File: sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/execute/SQLExecuteEngine.java (java)\n\n## Key Code Elements:\nimport org.apache.shardingsphere.core.route.SQLRouteResult;\nimport org.apache.shardingsphere.shardingproxy.backend.response.BackendResponse;\nimport java.sql.SQLException;\n\n## Recent Changes:\n- c5b77473 by terrymanu (terrymanu@163.com): for #1864, org.apache.shardingsphere.core.routing => org.apache.shardingsphere.core.route...\n- ffcae87e by terrymanu (terrymanu@163.com): for #1898, add sharding-proxy-backend module...",
+      "metadata": {
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/execute/SQLExecuteEngine.java",
+        "total_chunks": 1,
+        "language": "java",
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "commit_count": 2
+      },
+      "similarity_score": 0.4714714288711548
+    },
+    {
+      "content": "# File: sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/wrapper/JDBCExecutorWrapper.java (java)\n\n## Key Code Elements:\nimport org.apache.shardingsphere.core.constant.DatabaseType;\nimport org.apache.shardingsphere.core.route.SQLRouteResult;\nimport org.apache.shardingsphere.core.route.SQLUnit;\nimport java.sql.Connection;\nimport java.sql.SQLException;\nimport java.sql.Statement;\n\n## Recent Changes:\n- c5b77473 by terrymanu (terrymanu@163.com): for #1864, org.apache.shardingsphere.core.routing => org.apache.shardingsphere.core.route...\n- ffcae87e by terrymanu (terrymanu@163.com): for #1898, add sharding-proxy-backend module...",
+      "metadata": {
+        "language": "java",
+        "commit_count": 2,
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/wrapper/JDBCExecutorWrapper.java",
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "total_chunks": 1
+      },
+      "similarity_score": 0.4735059440135956
+    },
+    {
+      "content": "# File: sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/schema/ProxyTableMetaDataConnectionManager.java (java)\n\n## Key Code Elements:\nimport lombok.RequiredArgsConstructor;\nimport org.apache.shardingsphere.core.execute.metadata.TableMetaDataConnectionManager;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.datasource.JDBCBackendDataSource;\nimport java.sql.Connection;\nimport java.sql.SQLException;\n@RequiredArgsConstructor\n    @Override\n\n## Recent Changes:\n- 03cd341d by terrymanu (terrymanu@163.com): for #1864, org.apache.shardingsphere.core.executor => org.apache.shardingsphere.core.execute...\n- 50f3343e by terrymanu (terrymanu@163.com): for #1864, move core.metadata.executor to core.executor package...\n- ffcae87e by terrymanu (terrymanu@163.com): for #1898, add sharding-proxy-backend module...",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "java",
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/schema/ProxyTableMetaDataConnectionManager.java",
+        "commit_count": 3,
+        "strategy": "compressed",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.4776577949523926
+    },
+    {
+      "content": "# File: sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/text/TextProtocolBackendHandlerFactory.java (java)\n\n## Key Code Elements:\nimport com.google.common.base.Optional;\nimport lombok.AccessLevel;\nimport lombok.NoArgsConstructor;\nimport org.apache.shardingsphere.core.constant.SQLType;\nimport org.apache.shardingsphere.core.parse.SQLJudgeEngine;\nimport org.apache.shardingsphere.core.parse.antlr.sql.statement.SQLStatement;\nimport org.apache.shardingsphere.core.parse.old.parser.dialect.mysql.statement.ShowDatabasesStatement;\nimport org.apache.shardingsphere.core.parse.old.parser.dialect.mysql.statement.UseStatement;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.connection.BackendConnection;\nimport org.apache.shardingsphere.shardingproxy.backend.text.admin.BroadcastBackendHandler;\nimport org.apache.shardingsphere.shardingproxy.backend.text.admin.ShowDatabasesBackendHandler;\nimport org.apache.shardingsphere.shardingproxy.backend.text.admin.UnicastBackendHandler;\nimport org.apache.shardingsphere.shardingproxy.backend.text.admin.UseDatabaseBackendHandler;\nimport org.apache.shardingsphere.shardingproxy.backend.text.query.QueryBackendHandler;\nimport org.apache.shardingsphere.shardingproxy.backend.text.sctl.ShardingCTLBackendHandlerFactory;\n\n## Recent Changes:\n- 50208610 by panjuan (hannkenn@163.com): ShardingProxy supports multiple users and authorizedSchemas  (#2237)\n\n* rename to UserChangedListene...\n- baf7a1c3 by terrymanu (terrymanu@163.com): for #2084, move 2nd parse engine to old package...\n- f93b021c by terrymanu (terrymanu@163.com): for #2084, refactor sql.statement package...",
+      "metadata": {
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/text/TextProtocolBackendHandlerFactory.java",
+        "language": "java",
+        "commit_count": 5,
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.49751871824264526
+    },
+    {
+      "content": "# File: sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/execute/callback/ProxySQLExecuteCallback.java (java)\n\n## Key Code Elements:\nimport org.apache.shardingsphere.core.constant.ConnectionMode;\nimport org.apache.shardingsphere.core.execute.sql.execute.SQLExecuteCallback;\nimport org.apache.shardingsphere.core.execute.sql.execute.result.MemoryQueryResult;\nimport org.apache.shardingsphere.core.execute.sql.execute.result.QueryResult;\nimport org.apache.shardingsphere.core.execute.sql.execute.result.StreamQueryResult;\nimport org.apache.shardingsphere.core.route.RouteUnit;\nimport org.apache.shardingsphere.core.rule.ShardingRule;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.connection.BackendConnection;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.execute.response.ExecuteQueryResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.execute.response.ExecuteResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.execute.response.ExecuteUpdateResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.wrapper.JDBCExecutorWrapper;\nimport org.apache.shardingsphere.shardingproxy.backend.response.query.QueryHeader;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.LogicSchema;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.LogicSchemas;\n\n## Recent Changes:\n- c1518cf0 by tuohai666 (zhangyonglun@apache.org): #2189, support transparent for sharding-proxy...\n- 3df920f3 by terrymanu (terrymanu@163.com): for #1844, performance improvement...\n- 03cd341d by terrymanu (terrymanu@163.com): for #1864, org.apache.shardingsphere.core.executor => org.apache.shardingsphere.core.execute...",
+      "metadata": {
+        "language": "java",
+        "commit_count": 5,
+        "total_chunks": 1,
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/execute/callback/ProxySQLExecuteCallback.java",
+        "chunk_index": 0,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.49976646900177
+    },
+    {
+      "content": "# File: sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/connection/BackendTransactionManager.java (java)\n\n## Key Code Elements:\nimport org.apache.shardingsphere.transaction.core.TransactionType;\nimport org.apache.shardingsphere.transaction.spi.ShardingTransactionManager;\nimport java.sql.SQLException;\n    @Override\n    @Override\n    @Override\n\n## Recent Changes:\n- 1c2c2899 by terrymanu (terrymanu@163.com): fix #1995...\n- e3ed3a61 by terrymanu (terrymanu@163.com): for #1898, runtime package => context package...\n- ffcae87e by terrymanu (terrymanu@163.com): for #1898, add sharding-proxy-backend module...",
+      "metadata": {
+        "commit_count": 3,
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "language": "java",
+        "chunk_index": 0,
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/connection/BackendTransactionManager.java"
+      },
+      "similarity_score": 0.5008629560470581
+    },
+    {
+      "content": "# File: sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/response/query/QueryResponse.java (java)\n\n## Key Code Elements:\nimport lombok.Getter;\nimport lombok.RequiredArgsConstructor;\nimport org.apache.shardingsphere.core.execute.sql.execute.result.QueryResult;\nimport org.apache.shardingsphere.shardingproxy.backend.response.BackendResponse;\nimport java.util.LinkedList;\nimport java.util.List;\n@RequiredArgsConstructor\n@Getter\n\n## Recent Changes:\n- 03cd341d by terrymanu (terrymanu@163.com): for #1864, org.apache.shardingsphere.core.executor => org.apache.shardingsphere.core.execute...\n- ce871510 by tristaZero (hannkenn@163.com): delete org.apache.shardingsphere.core.merger.QueryResult;...\n- ffcae87e by terrymanu (terrymanu@163.com): for #1898, add sharding-proxy-backend module...",
+      "metadata": {
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "commit_count": 3,
+        "language": "java",
+        "chunk_index": 0,
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/response/query/QueryResponse.java"
+      },
+      "similarity_score": 0.5022931694984436
+    },
+    {
+      "content": "# File: sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/schema/LogicSchema.java (java)\n\n## Key Code Elements:\nimport com.google.common.eventbus.Subscribe;\nimport lombok.Getter;\nimport org.apache.shardingsphere.core.constant.properties.ShardingProperties;\nimport org.apache.shardingsphere.core.constant.properties.ShardingPropertiesConstant;\nimport org.apache.shardingsphere.core.execute.metadata.TableMetaDataInitializer;\nimport org.apache.shardingsphere.core.metadata.ShardingMetaData;\nimport org.apache.shardingsphere.core.metadata.datasource.ShardingDataSourceMetaData;\nimport org.apache.shardingsphere.core.parse.antlr.sql.statement.SQLStatement;\nimport org.apache.shardingsphere.core.parse.cache.ParsingResultCache;\nimport org.apache.shardingsphere.orchestration.internal.eventbus.ShardingOrchestrationEventBus;\nimport org.apache.shardingsphere.orchestration.internal.registry.config.event.DataSourceChangedEvent;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.datasource.JDBCBackendDataSource;\nimport org.apache.shardingsphere.shardingproxy.backend.executor.BackendExecutorContext;\nimport org.apache.shardingsphere.shardingproxy.config.yaml.YamlDataSourceParameter;\nimport org.apache.shardingsphere.shardingproxy.context.ShardingProxyContext;\n\n## Recent Changes:\n- f93b021c by terrymanu (terrymanu@163.com): for #2084, refactor sql.statement package...\n- 03cd341d by terrymanu (terrymanu@163.com): for #1864, org.apache.shardingsphere.core.executor => org.apache.shardingsphere.core.execute...\n- 53ed8354 by terrymanu (terrymanu@163.com): for #1864, org.apache.shardingsphere.core.parsing => org.apache.shardingsphere.core.parse...",
+      "metadata": {
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/schema/LogicSchema.java",
+        "commit_count": 5,
+        "language": "java"
+      },
+      "similarity_score": 0.5066961646080017
+    },
+    {
+      "content": "# File: sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/response/query/QueryHeader.java (java)\n\n## Key Code Elements:\nimport lombok.Getter;\nimport lombok.RequiredArgsConstructor;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.LogicSchema;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.ShardingSchema;\nimport java.sql.ResultSetMetaData;\nimport java.sql.SQLException;\nimport java.util.Collection;\n@RequiredArgsConstructor\n@Getter\n\n## Recent Changes:\n- ffcae87e by terrymanu (terrymanu@163.com): for #1898, add sharding-proxy-backend module...",
+      "metadata": {
+        "language": "java",
+        "chunk_index": 0,
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/response/query/QueryHeader.java",
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "commit_count": 1
+      },
+      "similarity_score": 0.5123001933097839
+    },
+    {
+      "content": "# File: sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/text/TextProtocolBackendHandler.java (java)\n\n## Key Code Elements:\nimport org.apache.shardingsphere.shardingproxy.backend.response.BackendResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.response.query.QueryData;\nimport java.sql.SQLException;\n\n## Recent Changes:\n- ffcae87e by terrymanu (terrymanu@163.com): for #1898, add sharding-proxy-backend module...",
+      "metadata": {
+        "chunk_index": 0,
+        "commit_count": 1,
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/text/TextProtocolBackendHandler.java",
+        "language": "java"
+      },
+      "similarity_score": 0.513398289680481
+    },
+    {
+      "content": "# File: sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/execute/JDBCExecuteEngine.java (java)\n\n## Key Code Elements:\nimport lombok.Getter;\nimport org.apache.shardingsphere.core.constant.properties.ShardingPropertiesConstant;\nimport org.apache.shardingsphere.core.execute.ShardingExecuteGroup;\nimport org.apache.shardingsphere.core.execute.StatementExecuteUnit;\nimport org.apache.shardingsphere.core.execute.sql.execute.SQLExecuteTemplate;\nimport org.apache.shardingsphere.core.execute.sql.execute.threadlocal.ExecutorExceptionHandler;\nimport org.apache.shardingsphere.core.execute.sql.prepare.SQLExecutePrepareTemplate;\nimport org.apache.shardingsphere.core.parse.antlr.sql.statement.dml.InsertStatement;\nimport org.apache.shardingsphere.core.route.SQLRouteResult;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.connection.BackendConnection;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.execute.callback.ProxyJDBCExecutePrepareCallback;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.execute.callback.ProxySQLExecuteCallback;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.execute.response.ExecuteQueryResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.execute.response.ExecuteResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.wrapper.JDBCExecutorWrapper;\n\n## Recent Changes:\n- f93b021c by terrymanu (terrymanu@163.com): for #2084, refactor sql.statement package...\n- 03cd341d by terrymanu (terrymanu@163.com): for #1864, org.apache.shardingsphere.core.executor => org.apache.shardingsphere.core.execute...\n- c5b77473 by terrymanu (terrymanu@163.com): for #1864, org.apache.shardingsphere.core.routing => org.apache.shardingsphere.core.route...",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "java",
+        "total_chunks": 1,
+        "commit_count": 5,
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/execute/JDBCExecuteEngine.java",
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.5141223669052124
+    },
+    {
+      "content": "# File: sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/wrapper/StatementExecutorWrapper.java (java)\n\n## Key Code Elements:\nimport lombok.RequiredArgsConstructor;\nimport org.apache.shardingsphere.core.SimpleQueryShardingEngine;\nimport org.apache.shardingsphere.core.constant.DatabaseType;\nimport org.apache.shardingsphere.core.constant.properties.ShardingPropertiesConstant;\nimport org.apache.shardingsphere.core.parse.SQLJudgeEngine;\nimport org.apache.shardingsphere.core.parse.antlr.sql.statement.SQLStatement;\nimport org.apache.shardingsphere.core.rewrite.MasterSlaveSQLRewriteEngine;\nimport org.apache.shardingsphere.core.route.RouteUnit;\nimport org.apache.shardingsphere.core.route.SQLRouteResult;\nimport org.apache.shardingsphere.core.route.SQLUnit;\nimport org.apache.shardingsphere.core.route.router.masterslave.MasterSlaveRouter;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.LogicSchema;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.MasterSlaveSchema;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.ShardingSchema;\nimport org.apache.shardingsphere.shardingproxy.context.ShardingProxyContext;\n\n## Recent Changes:\n- c1518cf0 by tuohai666 (zhangyonglun@apache.org): #2189, support transparent for sharding-proxy...\n- f93b021c by terrymanu (terrymanu@163.com): for #2084, refactor sql.statement package...\n- 89403d0f by terrymanu (terrymanu@163.com): for #1864, add BaseShardingEngine...",
+      "metadata": {
+        "commit_count": 5,
+        "chunk_index": 0,
+        "language": "java",
+        "total_chunks": 1,
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/wrapper/StatementExecutorWrapper.java",
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.5152996778488159
+    },
+    {
+      "content": "# File: sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/text/admin/UseDatabaseBackendHandler.java (java)\n\n## Key Code Elements:\nimport lombok.RequiredArgsConstructor;\nimport org.apache.shardingsphere.core.parse.old.parser.dialect.mysql.statement.UseStatement;\nimport org.apache.shardingsphere.core.parse.util.SQLUtil;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.connection.BackendConnection;\nimport org.apache.shardingsphere.shardingproxy.backend.exception.UnknownDatabaseException;\nimport org.apache.shardingsphere.shardingproxy.backend.response.BackendResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.response.error.ErrorResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.response.query.QueryData;\nimport org.apache.shardingsphere.shardingproxy.backend.response.update.UpdateResponse;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.LogicSchemas;\nimport org.apache.shardingsphere.shardingproxy.backend.text.TextProtocolBackendHandler;\nimport org.apache.shardingsphere.shardingproxy.context.ShardingProxyContext;\nimport java.util.Collection;\n@RequiredArgsConstructor\n    @Override\n\n## Recent Changes:\n- 50208610 by panjuan (hannkenn@163.com): ShardingProxy supports multiple users and authorizedSchemas  (#2237)\n\n* rename to UserChangedListene...\n- baf7a1c3 by terrymanu (terrymanu@163.com): for #2084, move 2nd parse engine to old package...\n- 53ed8354 by terrymanu (terrymanu@163.com): for #1864, org.apache.shardingsphere.core.parsing => org.apache.shardingsphere.core.parse...",
+      "metadata": {
+        "chunk_index": 0,
+        "commit_count": 5,
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "language": "java",
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/text/admin/UseDatabaseBackendHandler.java"
+      },
+      "similarity_score": 0.5246462821960449
+    },
+    {
+      "content": "# File: sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/JDBCDatabaseCommunicationEngine.java (java)\n\n## Key Code Elements:\nimport lombok.RequiredArgsConstructor;\nimport org.apache.shardingsphere.core.constant.DatabaseType;\nimport org.apache.shardingsphere.core.constant.SQLType;\nimport org.apache.shardingsphere.core.merge.MergeEngineFactory;\nimport org.apache.shardingsphere.core.merge.MergedResult;\nimport org.apache.shardingsphere.core.merge.dal.show.ShowTablesMergedResult;\nimport org.apache.shardingsphere.core.parse.antlr.sql.statement.SQLStatement;\nimport org.apache.shardingsphere.core.parse.old.parser.constant.DerivedColumn;\nimport org.apache.shardingsphere.core.route.SQLRouteResult;\nimport org.apache.shardingsphere.core.rule.ShardingRule;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.DatabaseCommunicationEngine;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.connection.BackendConnection;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.connection.ConnectionStatus;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.execute.JDBCExecuteEngine;\nimport org.apache.shardingsphere.shardingproxy.backend.exception.TableModifyInTransactionException;\n\n## Recent Changes:\n- c1518cf0 by tuohai666 (zhangyonglun@apache.org): #2189, support transparent for sharding-proxy...\n- baf7a1c3 by terrymanu (terrymanu@163.com): for #2084, move 2nd parse engine to old package...\n- f93b021c by terrymanu (terrymanu@163.com): for #2084, refactor sql.statement package...",
+      "metadata": {
+        "commit_count": 5,
+        "language": "java",
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/JDBCDatabaseCommunicationEngine.java"
+      },
+      "similarity_score": 0.5274678468704224
+    },
+    {
+      "content": "# File: sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/datasource/JDBCBackendDataSourceFactory.java (java)\n\n## Key Code Elements:\nimport org.apache.shardingsphere.shardingproxy.config.yaml.YamlDataSourceParameter;\nimport javax.sql.DataSource;\n\n## Recent Changes:\n- ffcae87e by terrymanu (terrymanu@163.com): for #1898, add sharding-proxy-backend module...",
+      "metadata": {
+        "total_chunks": 1,
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/datasource/JDBCBackendDataSourceFactory.java",
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "language": "java",
+        "commit_count": 1
+      },
+      "similarity_score": 0.5285605788230896
+    },
+    {
+      "content": "# File: sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/recognizer/JDBCDriverURLRecognizerEngine.java (java)\n\n## Key Code Elements:\nimport lombok.AccessLevel;\nimport lombok.NoArgsConstructor;\nimport org.apache.shardingsphere.core.constant.DatabaseType;\nimport org.apache.shardingsphere.core.exception.ShardingException;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.recognizer.spi.JDBCDriverURLRecognizer;\nimport java.util.HashMap;\nimport java.util.Map;\nimport java.util.Map.Entry;\nimport java.util.ServiceLoader;\n@NoArgsConstructor(access = AccessLevel.PRIVATE)\n            case \"com.mysql.cj.jdbc.Driver\":\n            case \"com.mysql.jdbc.Driver\":\n            case \"org.postgresql.Driver\":\n            case \"oracle.jdbc.driver.OracleDriver\":\n            case \"com.microsoft.sqlserver.jdbc.SQLServerDriver\":\n\n## Recent Changes:\n- ffcae87e by terrymanu (terrymanu@163.com): for #1898, add sharding-proxy-backend module...",
+      "metadata": {
+        "commit_count": 1,
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "language": "java",
+        "chunk_index": 0,
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/recognizer/JDBCDriverURLRecognizerEngine.java"
+      },
+      "similarity_score": 0.5301538705825806
+    },
+    {
+      "content": "# File: sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/datasource/JDBCBackendDataSource.java (java)\n\n## Key Code Elements:\nimport lombok.Getter;\nimport org.apache.shardingsphere.core.constant.ConnectionMode;\nimport org.apache.shardingsphere.core.exception.ShardingException;\nimport org.apache.shardingsphere.shardingproxy.backend.BackendDataSource;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.LogicSchemas;\nimport org.apache.shardingsphere.shardingproxy.config.yaml.YamlDataSourceParameter;\nimport org.apache.shardingsphere.transaction.ShardingTransactionManagerEngine;\nimport org.apache.shardingsphere.transaction.core.TransactionType;\nimport org.apache.shardingsphere.transaction.spi.ShardingTransactionManager;\nimport javax.sql.DataSource;\nimport java.lang.reflect.Method;\nimport java.sql.Connection;\nimport java.sql.SQLException;\nimport java.util.ArrayList;\nimport java.util.Collections;\n\n## Recent Changes:\n- 1c2c2899 by terrymanu (terrymanu@163.com): fix #1995...\n- 420badea by terrymanu (terrymanu@163.com): remove useless constructor for JDBCBackendDataSource...\n- e3ed3a61 by terrymanu (terrymanu@163.com): for #1898, runtime package => context package...",
+      "metadata": {
+        "language": "java",
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "commit_count": 4,
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/datasource/JDBCBackendDataSource.java"
+      },
+      "similarity_score": 0.5356048941612244
+    },
+    {
+      "content": "# File: sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/execute/callback/ProxyJDBCExecutePrepareCallback.java (java)\n\n## Key Code Elements:\nimport lombok.RequiredArgsConstructor;\nimport org.apache.shardingsphere.core.constant.ConnectionMode;\nimport org.apache.shardingsphere.core.constant.DatabaseType;\nimport org.apache.shardingsphere.core.execute.StatementExecuteUnit;\nimport org.apache.shardingsphere.core.execute.sql.prepare.SQLExecutePrepareCallback;\nimport org.apache.shardingsphere.core.route.RouteUnit;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.connection.BackendConnection;\nimport org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.wrapper.JDBCExecutorWrapper;\nimport org.apache.shardingsphere.shardingproxy.backend.schema.LogicSchemas;\nimport java.sql.Connection;\nimport java.sql.SQLException;\nimport java.sql.Statement;\nimport java.util.List;\n@RequiredArgsConstructor\n    @Override\n\n## Recent Changes:\n- 03cd341d by terrymanu (terrymanu@163.com): for #1864, org.apache.shardingsphere.core.executor => org.apache.shardingsphere.core.execute...\n- c5b77473 by terrymanu (terrymanu@163.com): for #1864, org.apache.shardingsphere.core.routing => org.apache.shardingsphere.core.route...\n- ffcae87e by terrymanu (terrymanu@163.com): for #1898, add sharding-proxy-backend module...",
+      "metadata": {
+        "commit_count": 3,
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "file_path": "sharding-proxy/sharding-proxy-backend/src/main/java/org/apache/shardingsphere/shardingproxy/backend/communication/jdbc/execute/callback/ProxyJDBCExecutePrepareCallback.java",
+        "strategy": "compressed",
+        "language": "java"
+      },
+      "similarity_score": 0.5366218686103821
+    }
+  ]
+}

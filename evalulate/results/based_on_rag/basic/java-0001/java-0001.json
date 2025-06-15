@@ -1,0 +1,7 @@
+{
+  "reason": "The issue occurs because the SQL Server foreign key configurator does not properly handle foreign keys between tables in different schemas, causing them to not appear in the UI even though they exist in the database.",
+  "location": [
+    "plugins/org.jkiss.dbeaver.ext.mssql.ui/src/org/jkiss/dbeaver/ext/mssql/ui/config/SQLServerForeignKeyConfigurator.java"
+  ],
+  "fix": "Modify the SQLServerForeignKeyConfigurator to ensure it properly handles and displays foreign keys between tables in different schemas by updating the configureObject method to include schema information when creating the foreign key."
+}

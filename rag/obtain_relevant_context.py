@@ -22,6 +22,7 @@ class RelevantContextRetriever:
         self,
         vector_db_dir: str = "./vector_dbs",
         issues_file: str = "../evalulate/datasets/issues.json",
+        output_dir: str = "./relevant_context",
     ):
         """
         初始化检索器
@@ -29,9 +30,14 @@ class RelevantContextRetriever:
         Args:
             vector_db_dir: 向量数据库目录
             issues_file: issues.json文件路径
+            output_dir: 相关上下文输出目录
         """
         self.vector_db_dir = Path(vector_db_dir)
         self.issues_file = Path(issues_file)
+        self.output_dir = Path(output_dir)
+
+        # 创建输出目录
+        self.output_dir.mkdir(exist_ok=True)
 
         # 设置日志
         self._setup_logging()
@@ -182,10 +188,10 @@ class RelevantContextRetriever:
                 return False
 
             # 搜索相关上下文
-            search_results = self._search_relevant_context(query, repo_name, k=5)
+            search_results = self._search_relevant_context(query, repo_name, k=20)
 
-            # 创建输出目录
-            output_dir = self.vector_db_dir / f"repository-{repo_name}" / issue_id
+            # 创建输出目录（在独立的relevant_context目录下）
+            output_dir = self.output_dir / issue_id
             output_dir.mkdir(parents=True, exist_ok=True)
 
             # 保存结果
@@ -268,7 +274,7 @@ class RelevantContextRetriever:
                 )
 
         # 保存统计信息
-        stats_file = self.vector_db_dir / "context_retrieval_statistics.json"
+        stats_file = self.output_dir / "context_retrieval_statistics.json"
         final_stats = {
             **self.stats,
             "repo_results": repo_results,
@@ -325,22 +331,12 @@ def main():
     print(f"📊 成功: {stats['processed_issues']}, 失败: {stats['failed_issues']}")
 
     print("\n📁 输出目录结构:")
-    vector_db_dir = Path("./vector_dbs")
-    if vector_db_dir.exists():
-        for repo_dir in sorted(vector_db_dir.iterdir()):
-            if repo_dir.is_dir() and repo_dir.name.startswith("repository-"):
+    output_dir = Path("./relevant_context")
+    if output_dir.exists():
+        for repo_dir in sorted(output_dir.iterdir()):
+            if repo_dir.is_dir():
                 print(f"  📂 {repo_dir.name}/")
-                issue_dirs = [
-                    d
-                    for d in repo_dir.iterdir()
-                    if d.is_dir()
-                    and d.name
-                    not in [
-                        "chroma_db_basic",
-                        "chroma_db_enhanced",
-                        "chroma_db_compressed",
-                    ]
-                ]
+                issue_dirs = [d for d in repo_dir.iterdir() if d.is_dir()]
                 for issue_dir in sorted(issue_dirs)[:3]:  # 只显示前3个
                     print(f"    📁 {issue_dir.name}/")
                     print("      📄 rag_comparison_results.json")
@@ -348,7 +344,7 @@ def main():
                     print(f"    ... 和其他 {len(issue_dirs) - 3} 个问题目录")
 
     print("\n📝 日志文件: obtain_relevant_context.log")
-    print("📈 统计文件: ./vector_dbs/context_retrieval_statistics.json")
+    print("📈 统计文件: ./relevant_context/context_retrieval_statistics.json")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,96 @@
+{
+  "total_issues": 29,
+  "processed_issues": 29,
+  "failed_issues": 0,
+  "strategy_stats": {
+    "basic": {
+      "success": 25,
+      "failed": 4
+    },
+    "enhanced": {
+      "success": 25,
+      "failed": 4
+    },
+    "compressed": {
+      "success": 25,
+      "failed": 4
+    }
+  },
+  "processing_errors": [
+    {
+      "issue_id": "py-0018",
+      "strategy": "basic",
+      "error": "Processing failed",
+      "timestamp": "2025-06-15T13:24:35.487513"
+    },
+    {
+      "issue_id": "py-0018",
+      "strategy": "enhanced",
+      "error": "Processing failed",
+      "timestamp": "2025-06-15T13:24:36.488160"
+    },
+    {
+      "issue_id": "py-0018",
+      "strategy": "compressed",
+      "error": "Processing failed",
+      "timestamp": "2025-06-15T13:24:37.488925"
+    },
+    {
+      "issue_id": "py-0019",
+      "strategy": "basic",
+      "error": "Processing failed",
+      "timestamp": "2025-06-15T13:24:38.489756"
+    },
+    {
+      "issue_id": "py-0019",
+      "strategy": "enhanced",
+      "error": "Processing failed",
+      "timestamp": "2025-06-15T13:24:39.490273"
+    },
+    {
+      "issue_id": "py-0019",
+      "strategy": "compressed",
+      "error": "Processing failed",
+      "timestamp": "2025-06-15T13:24:40.490831"
+    },
+    {
+      "issue_id": "kt-0020",
+      "strategy": "basic",
+      "error": "Processing failed",
+      "timestamp": "2025-06-15T13:24:41.491478"
+    },
+    {
+      "issue_id": "kt-0020",
+      "strategy": "enhanced",
+      "error": "Processing failed",
+      "timestamp": "2025-06-15T13:24:42.492133"
+    },
+    {
+      "issue_id": "kt-0020",
+      "strategy": "compressed",
+      "error": "Processing failed",
+      "timestamp": "2025-06-15T13:24:43.492611"
+    },
+    {
+      "issue_id": "kt-0027",
+      "strategy": "basic",
+      "error": "Processing failed",
+      "timestamp": "2025-06-15T13:27:45.300039"
+    },
+    {
+      "issue_id": "kt-0027",
+      "strategy": "enhanced",
+      "error": "Processing failed",
+      "timestamp": "2025-06-15T13:27:46.300903"
+    },
+    {
+      "issue_id": "kt-0027",
+      "strategy": "compressed",
+      "error": "Processing failed",
+      "timestamp": "2025-06-15T13:27:47.301278"
+    }
+  ],
+  "start_time": "2025-06-15T13:16:26.554585",
+  "end_time": "2025-06-15T13:28:41.968566",
+  "total_processing_time": 735.4136867523193
+}

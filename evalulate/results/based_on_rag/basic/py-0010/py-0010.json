@@ -1,0 +1,7 @@
+{
+  "reason": "The issue is caused by using floating-point division (/) instead of integer division (//) in the calculation, leading to incorrect sum results due to floating-point precision errors.",
+  "location": [
+    "Project Euler/Problem 01/sol4.py"
+  ],
+  "fix": "Replace the division operations with integer division (//) in the 'mulitples' function to ensure accurate sum calculations. Here's the corrected function:\n\ndef mulitples(limit):\n    xmulti = []\n    zmulti = []\n    z = 3\n    x = 5\n    temp = 1\n    while True:\n        result = z * temp\n        if (result < limit):\n            zmulti.append(result)\n            temp += 1\n        else:\n            temp = 1\n            break\n    while True:\n        result = x * temp\n        if (result < limit):\n            xmulti.append(result)\n            temp += 1\n        else:\n            break\n    collection = list(set(xmulti+zmulti))\n    return sum(collection)\n\nprint(mulitples(1000))"
+}

@@ -1,0 +1,60 @@
+{
+  "repository": {
+    "name": "square/moshi",
+    "sha": "5912dfaaf621af77e895273c63c94911fa7c967d",
+    "generation_date": "2025-06-15T11:22:12.927939"
+  },
+  "files": {
+    "standard": {
+      "file_name": "repomix-output-moshi.md",
+      "file_size_mb": 0.9,
+      "character_count": 945207,
+      "line_count": 27878,
+      "word_count": 87507,
+      "token_counts": {
+        "gpt-4": 217419,
+        "estimated": 236301
+      },
+      "created_time": "2025-06-15T11:21:50.981188",
+      "modified_time": "2025-06-15T11:21:50.981188",
+      "generation_time": "2025-06-15T11:22:12.736059"
+    },
+    "compressed": {
+      "file_name": "repomix-output-moshi-compress.md",
+      "file_size_mb": 0.63,
+      "character_count": 650363,
+      "line_count": 18748,
+      "word_count": 64951,
+      "token_counts": {
+        "gpt-4": 157942,
+        "estimated": 162590
+      },
+      "created_time": "2025-06-15T11:21:57.204929",
+      "modified_time": "2025-06-15T11:21:57.204929",
+      "generation_time": "2025-06-15T11:22:12.783945"
+    },
+    "git_enhanced": {
+      "file_name": "repomix-output-moshi-with-git.md",
+      "file_size_mb": 1.86,
+      "character_count": 1926507,
+      "line_count": 58743,
+      "word_count": 199349,
+      "token_counts": {
+        "gpt-4": 473164,
+        "estimated": 481626
+      },
+      "created_time": "2025-06-15T11:22:12.593523",
+      "modified_time": "2025-06-15T11:22:12.593523",
+      "generation_time": "2025-06-15T11:22:12.927912"
+    }
+  },
+  "summary": {
+    "total_files": 3,
+    "total_size_bytes": 0,
+    "total_tokens_gpt4": 848525,
+    "compression_ratio": {
+      "size": 0,
+      "tokens": 0.726
+    }
+  }
+}

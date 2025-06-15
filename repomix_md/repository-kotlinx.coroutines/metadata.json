@@ -1,0 +1,60 @@
+{
+  "repository": {
+    "name": "kotlin/kotlinx.coroutines",
+    "sha": "5b64a1fcf36cbea6fbe3cf70966f4907a2a5f92f",
+    "generation_date": "2025-06-15T11:02:46.230603"
+  },
+  "files": {
+    "standard": {
+      "file_name": "repomix-output-kotlinx.coroutines.md",
+      "file_size_mb": 4.58,
+      "character_count": 4806584,
+      "line_count": 134793,
+      "word_count": 473342,
+      "token_counts": {
+        "gpt-4": 1065854,
+        "estimated": 1201646
+      },
+      "created_time": "2025-06-15T11:00:54.220274",
+      "modified_time": "2025-06-15T11:00:54.220274",
+      "generation_time": "2025-06-15T11:02:43.514327"
+    },
+    "compressed": {
+      "file_name": "repomix-output-kotlinx.coroutines-compress.md",
+      "file_size_mb": 4.56,
+      "character_count": 4779802,
+      "line_count": 134096,
+      "word_count": 471762,
+      "token_counts": {
+        "gpt-4": 1061907,
+        "estimated": 1194950
+      },
+      "created_time": "2025-06-15T11:01:09.702733",
+      "modified_time": "2025-06-15T11:01:09.702733",
+      "generation_time": "2025-06-15T11:02:44.148504"
+    },
+    "git_enhanced": {
+      "file_name": "repomix-output-kotlinx.coroutines-with-git.md",
+      "file_size_mb": 11.92,
+      "character_count": 12287897,
+      "line_count": 360069,
+      "word_count": 1336889,
+      "token_counts": {
+        "gpt-4": 3018300,
+        "estimated": 3071974
+      },
+      "created_time": "2025-06-15T11:02:42.457618",
+      "modified_time": "2025-06-15T11:02:42.457618",
+      "generation_time": "2025-06-15T11:02:46.224865"
+    }
+  },
+  "summary": {
+    "total_files": 3,
+    "total_size_bytes": 0,
+    "total_tokens_gpt4": 5146061,
+    "compression_ratio": {
+      "size": 0,
+      "tokens": 0.996
+    }
+  }
+}

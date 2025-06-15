@@ -2,11 +2,11 @@
   "repo_name": "leakcanary",
   "source_file": "../repomix_md/repository-leakcanary/repomix-output-leakcanary-with-git.md",
   "file_size_mb": 0.7129783630371094,
-  "build_time": "2025-06-15T09:56:41.081518",
+  "build_time": "2025-06-15T10:57:18.826142",
   "processing_time": {
-    "parse_time_seconds": 0.053698,
-    "index_time_seconds": 23.382226,
-    "total_time_seconds": 23.435924
+    "parse_time_seconds": 0.04604,
+    "index_time_seconds": 19.14999,
+    "total_time_seconds": 19.19603
   },
   "code_blocks_count": 93,
   "original_documents_count": {

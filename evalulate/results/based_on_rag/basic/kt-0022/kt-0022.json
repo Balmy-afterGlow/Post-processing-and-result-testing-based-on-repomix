@@ -1,0 +1,8 @@
+{
+  "reason": "The MultipleChoiceQuestion composable lacks the selectableGroup modifier which is needed for proper TalkBack accessibility support for radio button groups.",
+  "location": [
+    "Jetsurvey/app/src/main/java/com/example/compose/jetsurvey/survey/question/ChoiceQuestion.kt",
+    "MultipleChoiceQuestion"
+  ],
+  "fix": "Add the selectableGroup modifier to the Column in MultipleChoiceQuestion similar to how it's done in SingleChoiceQuestion. The fix would be: Column(modifier.selectableGroup()) { ... }"
+}

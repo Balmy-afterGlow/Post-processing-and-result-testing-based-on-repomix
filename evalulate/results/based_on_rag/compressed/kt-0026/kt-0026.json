@@ -1,0 +1,8 @@
+{
+  "reason": "The issue occurs during the shutdown sequence of `MultiWorkerDispatcher` where a worker thread may attempt to resume a continuation on an already terminated worker. This happens due to a race condition between channel closing and worker termination.",
+  "location": [
+    "kotlinx-coroutines-core/native/src/MultithreadedDispatchers.kt",
+    "kotlinx-coroutines-core/common/src/channels/BufferedChannel.kt"
+  ],
+  "fix": "The fix should ensure that all workers complete their helping tasks before termination. Modify the shutdown sequence to first request termination of workers and only then close the channel, ensuring no pending resumes can occur on terminated workers."
+}

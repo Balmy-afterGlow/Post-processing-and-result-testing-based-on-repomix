@@ -1,0 +1,708 @@
+{
+  "basic": [
+    {
+      "content": "# File: mitmproxy/connections.py (python)\n\n## Code Content:\n```python\nimport os\nimport time\nimport typing\nimport uuid\n\nfrom mitmproxy import certs\nfrom mitmproxy import exceptions\nfrom mitmproxy import stateobject\nfrom mitmproxy.net import tcp\nfrom mitmproxy.net import tls\nfrom mitmproxy.utils import human\nfrom mitmproxy.utils import strutils\n\n\nclass ClientConnection(tcp.BaseHandler, stateobject.StateObject):\n    \"\"\"\n    A client connection\n\n    Attributes:\n        address: Remote address\n        tls_established: True if TLS is established, False otherwise\n        clientcert: The TLS client certificate\n        mitmcert: The MITM'ed TLS server certificate presented to the client\n        timestamp_start: Connection start timestamp\n        timestamp_tls_setup: TLS established timestamp\n        timestamp_end: Connection end timestamp\n        sni: Server Name Indication sent by client during the TLS handshake\n        cipher_name: The current used cipher\n        alpn_proto_negotiated: The negotiated application protocol\n        tls_version: TLS version\n        tls_extensions: TLS ClientHello extensions\n    \"\"\"\n\n    def __init__(self, client_connection, address, server):\n        # Eventually, this object is restored from state. We don't have a\n        # connection then.\n        if client_connection:\n            super().__init__(client_connection, address, server)\n        else:\n            self.connection = None\n            self.server = None\n            self.wfile = None\n            self.rfile = None\n            self.address = None\n            self.clientcert = None\n            self.tls_established = None\n\n        self.id = str(uuid.uuid4())\n        self.mitmcert = None\n        self.timestamp_start = time.time()\n        self.timestamp_end = None\n        self.timestamp_tls_setup = None\n        self.sni = None\n        self.cipher_name = None\n        self.alpn_proto_negotiated = None\n        self.tls_version = None\n        self.tls_extensions = None",
+      "metadata": {
+        "strategy": "basic",
+        "file_path": "mitmproxy/connections.py",
+        "chunk_index": 0,
+        "language": "python",
+        "total_chunks": 7
+      },
+      "similarity_score": 0.6826261281967163
+    },
+    {
+      "content": "# File: mitmproxy/net/tls.py (python)\n\n## Code Content:\n```python\n# To enable all SSL methods use: SSLv23\n# then add options to disable certain methods\n# https://bugs.launchpad.net/pyopenssl/+bug/1020632/comments/3\nimport binascii\nimport io\nimport os\nimport struct\nimport threading\nimport typing\n\nimport certifi\nfrom OpenSSL import SSL\nfrom kaitaistruct import KaitaiStream\n\nimport mitmproxy.options\nfrom mitmproxy import certs, exceptions\nfrom mitmproxy.contrib.kaitaistruct import tls_client_hello\nfrom mitmproxy.net import check\n\nBASIC_OPTIONS = (\n    SSL.OP_CIPHER_SERVER_PREFERENCE\n)\nif hasattr(SSL, \"OP_NO_COMPRESSION\"):\n    BASIC_OPTIONS |= SSL.OP_NO_COMPRESSION\n\nDEFAULT_METHOD = SSL.SSLv23_METHOD\nDEFAULT_OPTIONS = (\n    SSL.OP_NO_SSLv2 |\n    SSL.OP_NO_SSLv3 |\n    BASIC_OPTIONS\n)\n\n\"\"\"\nMap a reasonable SSL version specification into the format OpenSSL expects.\nDon't ask...\nhttps://bugs.launchpad.net/pyopenssl/+bug/1020632/comments/3\n\"\"\"\nVERSION_CHOICES = {\n    \"all\": (SSL.SSLv23_METHOD, BASIC_OPTIONS),\n    # SSLv23_METHOD + NO_SSLv2 + NO_SSLv3 == TLS 1.0+\n    # TLSv1_METHOD would be TLS 1.0 only\n    \"secure\": (DEFAULT_METHOD, DEFAULT_OPTIONS),\n    \"SSLv2\": (SSL.SSLv2_METHOD, BASIC_OPTIONS),\n    \"SSLv3\": (SSL.SSLv3_METHOD, BASIC_OPTIONS),\n    \"TLSv1\": (SSL.TLSv1_METHOD, BASIC_OPTIONS),\n    \"TLSv1_1\": (SSL.TLSv1_1_METHOD, BASIC_OPTIONS),\n    \"TLSv1_2\": (SSL.TLSv1_2_METHOD, BASIC_OPTIONS),\n}\n\nMETHOD_NAMES = {\n    SSL.SSLv2_METHOD: \"SSLv2\",\n    SSL.SSLv3_METHOD: \"SSLv3\",\n    SSL.SSLv23_METHOD: \"SSLv23\",\n    SSL.TLSv1_METHOD: \"TLSv1\",\n    SSL.TLSv1_1_METHOD: \"TLSv1.1\",\n    SSL.TLSv1_2_METHOD: \"TLSv1.2\",\n}\n\n\ndef client_arguments_from_options(options: \"mitmproxy.options.Options\") -> dict:\n\n    if options.ssl_insecure:\n        verify = SSL.VERIFY_NONE\n    else:\n        verify = SSL.VERIFY_PEER\n\n    method, tls_options = VERSION_CHOICES[options.ssl_version_server]",
+      "metadata": {
+        "language": "python",
+        "total_chunks": 11,
+        "chunk_index": 0,
+        "strategy": "basic",
+        "file_path": "mitmproxy/net/tls.py"
+      },
+      "similarity_score": 0.7676080465316772
+    },
+    {
+      "content": "# File: pathod/pathod.py (python)\n\n## Code Content:\n```python\nimport copy\nimport logging\nimport os\nimport sys\nimport threading\nimport urllib\nimport typing  # noqa\n\nfrom mitmproxy import certs as mcerts, exceptions, version\nfrom mitmproxy.net import tcp, tls, websocket\n\nfrom pathod import language, utils, log, protocols\n\n\nDEFAULT_CERT_DOMAIN = b\"pathod.net\"\nCONFDIR = \"~/.mitmproxy\"\nCERTSTORE_BASENAME = \"mitmproxy\"\nCA_CERT_NAME = \"mitmproxy-ca.pem\"\nDEFAULT_CRAFT_ANCHOR = \"/p/\"\nKEY_SIZE = 2048\n\nlogger = logging.getLogger('pathod')\n\n\nclass PathodError(Exception):\n    pass\n\n\nclass SSLOptions:\n    def __init__(\n        self,\n        confdir=CONFDIR,\n        cn=None,\n        sans=(),\n        not_after_connect=None,\n        request_client_cert=False,\n        ssl_version=tls.DEFAULT_METHOD,\n        ssl_options=tls.DEFAULT_OPTIONS,\n        ciphers=None,\n        certs=None,\n        alpn_select=b'h2',\n    ):\n        self.confdir = confdir\n        self.cn = cn\n        self.sans = sans\n        self.not_after_connect = not_after_connect\n        self.request_client_cert = request_client_cert\n        self.ssl_version = ssl_version\n        self.ssl_options = ssl_options\n        self.ciphers = ciphers\n        self.alpn_select = alpn_select\n        self.certstore = mcerts.CertStore.from_store(\n            os.path.expanduser(confdir),\n            CERTSTORE_BASENAME,\n            KEY_SIZE\n        )\n        for i in certs or []:\n            self.certstore.add_cert_file(*i)\n\n    def get_cert(self, name):\n        if self.cn:\n            name = self.cn\n        elif not name:\n            name = DEFAULT_CERT_DOMAIN\n        return self.certstore.get_cert(name, self.sans)\n\n\nclass PathodHandler(tcp.BaseHandler):\n    wbufsize = 0\n    sni: typing.Union[str, None, bool] = None",
+      "metadata": {
+        "language": "python",
+        "file_path": "pathod/pathod.py",
+        "chunk_index": 0,
+        "total_chunks": 10,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.7734449505805969
+    },
+    {
+      "content": "# File: mitmproxy/proxy/root_context.py (python)\n\n## Code Content:\n```python\nfrom mitmproxy import log\nfrom mitmproxy import exceptions\nfrom mitmproxy.net import tls\nfrom mitmproxy.proxy import protocol\nfrom mitmproxy.proxy import modes\nfrom mitmproxy.proxy.protocol import http\n\n\nclass RootContext:\n\n    \"\"\"\n    The outermost context provided to the root layer.\n    As a consequence, every layer has access to methods and attributes defined here.\n\n    Attributes:\n        client_conn:\n            The :py:class:`client connection <mitmproxy.connections.ClientConnection>`.\n        channel:\n            A :py:class:`~mitmproxy.controller.Channel` to communicate with the FlowMaster.\n            Provides :py:meth:`.ask() <mitmproxy.controller.Channel.ask>` and\n            :py:meth:`.tell() <mitmproxy.controller.Channel.tell>` methods.\n        config:\n            The :py:class:`proxy server's configuration <mitmproxy.proxy.ProxyConfig>`\n    \"\"\"\n\n    def __init__(self, client_conn, config, channel):\n        self.client_conn = client_conn\n        self.channel = channel\n        self.config = config\n\n    def next_layer(self, top_layer):\n        \"\"\"\n        This function determines the next layer in the protocol stack.\n\n        Arguments:\n            top_layer: the current innermost layer.\n\n        Returns:\n            The next layer\n        \"\"\"\n        layer = self._next_layer(top_layer)\n        return self.channel.ask(\"next_layer\", layer)\n\n    def _next_layer(self, top_layer):\n        try:\n            d = top_layer.client_conn.rfile.peek(3)\n        except exceptions.TcpException as e:\n            raise exceptions.ProtocolException(str(e))\n        client_tls = tls.is_tls_record_magic(d)",
+      "metadata": {
+        "file_path": "mitmproxy/proxy/root_context.py",
+        "language": "python",
+        "strategy": "basic",
+        "total_chunks": 3,
+        "chunk_index": 0
+      },
+      "similarity_score": 0.783873438835144
+    },
+    {
+      "content": "# File: mitmproxy/proxy/protocol/tls.py (python)\n\n## Code Content:\n```python\nfrom typing import Optional  # noqa\nfrom typing import Union\n\nfrom mitmproxy import exceptions\nfrom mitmproxy.net import tls as net_tls\nfrom mitmproxy.proxy.protocol import base",
+      "metadata": {
+        "language": "python",
+        "total_chunks": 14,
+        "chunk_index": 0,
+        "strategy": "basic",
+        "file_path": "mitmproxy/proxy/protocol/tls.py"
+      },
+      "similarity_score": 0.8138779997825623
+    },
+    {
+      "content": "# File: examples/contrib/tls_passthrough.py (python)\n\n## Code Content:\n```python\n\"\"\"\nThis inline script allows conditional TLS Interception based\non a user-defined strategy.\n\nExample:\n\n    > mitmdump -s tls_passthrough.py\n\n    1. curl --proxy http://localhost:8080 https://example.com --insecure\n    // works - we'll also see the contents in mitmproxy\n\n    2. curl --proxy http://localhost:8080 https://example.com --insecure\n    // still works - we'll also see the contents in mitmproxy\n\n    3. curl --proxy http://localhost:8080 https://example.com\n    // fails with a certificate error, which we will also see in mitmproxy\n\n    4. curl --proxy http://localhost:8080 https://example.com\n    // works again, but mitmproxy does not intercept and we do *not* see the contents\n\nAuthors: Maximilian Hils, Matthew Tuusberg\n\"\"\"\nimport collections\nimport random\n\nfrom enum import Enum\n\nimport mitmproxy\nfrom mitmproxy import ctx\nfrom mitmproxy.exceptions import TlsProtocolException\nfrom mitmproxy.proxy.protocol import TlsLayer, RawTCPLayer\n\n\nclass InterceptionResult(Enum):\n    success = True\n    failure = False\n    skipped = None\n\n\nclass _TlsStrategy:\n    \"\"\"\n    Abstract base class for interception strategies.\n    \"\"\"\n\n    def __init__(self):\n        # A server_address -> interception results mapping\n        self.history = collections.defaultdict(lambda: collections.deque(maxlen=200))\n\n    def should_intercept(self, server_address):\n        \"\"\"\n        Returns:\n            True, if we should attempt to intercept the connection.\n            False, if we want to employ pass-through instead.\n        \"\"\"\n        raise NotImplementedError()\n\n    def record_success(self, server_address):\n        self.history[server_address].append(InterceptionResult.success)\n\n    def record_failure(self, server_address):\n        self.history[server_address].append(InterceptionResult.failure)",
+      "metadata": {
+        "language": "python",
+        "strategy": "basic",
+        "file_path": "examples/contrib/tls_passthrough.py",
+        "total_chunks": 3,
+        "chunk_index": 0
+      },
+      "similarity_score": 0.8305437564849854
+    },
+    {
+      "content": "24 July 2015: mitmproxy 0.13\n============================\n\n* Upstream certificate validation. See the --verify-upstream-cert,\n  --upstream-trusted-confdir and --upstream-trusted-ca parameters. Thanks to\n  Kyle Morton (github.com/kyle-m) for his work on this.\n* Add HTTP transparent proxy mode. This uses the host headers from HTTP\n  traffic (rather than SNI and IP address information from the OS) to\n  implement perform transparent proxying. Thanks to github.com/ijiro123 for\n  this feature.\n* Add ~src and ~dst REGEX filters, allowing matching on source and\n  destination addresses in the form of <IP>:<Port>\n* mitmproxy console: change g/G keyboard shortcuts to match less. Thanks to\n  Jose Luis Honorato (github.com/jlhonora).\n* mitmproxy console: Flow marking and unmarking. Marked flows are not\n  deleted when the flow list is cleared. Thanks to Jake Drahos\n  (github.com/drahosj).\n* mitmproxy console: add marking of flows\n* Remove the certforward feature. It was added to allow exploitation of\n  #gotofail, which is no longer a common vulnerability. Permitting this\n  hugely increased the complexity of packaging and distributing mitmproxy.\n\n3 June 2015: mitmproxy 0.12.1\n=============================\n\n* mitmproxy console: mouse interaction - scroll in the flow list, click on\n  flow to view, click to switch between tabs.\n* Update our crypto defaults: SHA256, 2048 bit RSA, 4096 bit DH parameters.\n* BUGFIX: crash under some circumstances when copying to clipboard.\n* BUGFIX: occasional crash when deleting flows.\n\n18 May 2015: mitmproxy 0.12\n===========================",
+      "metadata": {
+        "total_chunks": 26,
+        "language": "text",
+        "strategy": "basic",
+        "chunk_index": 16,
+        "file_path": "CHANGELOG.rst"
+      },
+      "similarity_score": 0.8429084420204163
+    },
+    {
+      "content": "# File: test/mitmproxy/io/test_protobuf.py (python)\n\n## Code Content:\n```python\nimport pytest\n\nfrom mitmproxy import certs\nfrom mitmproxy import exceptions\nfrom mitmproxy.io import protobuf\nfrom mitmproxy.test import tflow, tutils\n\n\n@pytest.mark.skip\nclass TestProtobuf:\n\n    def test_roundtrip_client(self):\n        c = tflow.tclient_conn()\n        del c.reply\n        c.rfile = None\n        c.wfile = None\n        pc = protobuf._dump_http_client_conn(c)\n        lc = protobuf._load_http_client_conn(pc)\n        assert c.__dict__ == lc.__dict__\n\n    def test_roundtrip_client_cert(self, tdata):\n        c = tflow.tclient_conn()\n        c.rfile = None\n        c.wfile = None\n        del c.reply\n        with open(tdata.path(\"mitmproxy/net/data/clientcert/client.pem\"), \"rb\") as f:\n            d = f.read()\n        c.clientcert = certs.Cert.from_pem(d)\n        pc = protobuf._dump_http_client_conn(c)\n        lc = protobuf._load_http_client_conn(pc)\n        assert c.__dict__ == lc.__dict__\n\n    def test_roundtrip_server(self):\n        s = tflow.tserver_conn()\n        del s.reply\n        s.wfile = None\n        s.rfile = None\n        ps = protobuf._dump_http_server_conn(s)\n        ls = protobuf._load_http_server_conn(ps)\n        assert s.__dict__ == ls.__dict__\n\n    def test_roundtrip_server_cert(self, tdata):\n        s = tflow.tserver_conn()\n        del s.reply\n        s.wfile = None\n        s.rfile = None\n        with open(tdata.path(\"mitmproxy/net/data/text_cert\"), \"rb\") as f:\n            d = f.read()\n        s.cert = certs.Cert.from_pem(d)\n        ps = protobuf._dump_http_server_conn(s)\n        ls = protobuf._load_http_server_conn(ps)\n        assert s.__dict__ == ls.__dict__",
+      "metadata": {
+        "chunk_index": 0,
+        "total_chunks": 3,
+        "language": "python",
+        "strategy": "basic",
+        "file_path": "test/mitmproxy/io/test_protobuf.py"
+      },
+      "similarity_score": 0.870693564414978
+    },
+    {
+      "content": "# File: mitmproxy/certs.py (python)\n\n## Code Content:\n```python\nimport os\nimport ssl\nimport time\nimport datetime\nimport ipaddress\nimport sys\nimport typing\nimport contextlib\n\nfrom pyasn1.type import univ, constraint, char, namedtype, tag\nfrom pyasn1.codec.der.decoder import decode\nfrom pyasn1.error import PyAsn1Error\nimport OpenSSL\n\nfrom mitmproxy.coretypes import serializable\n\n# Default expiry must not be too long: https://github.com/mitmproxy/mitmproxy/issues/815\nDEFAULT_EXP = 94608000  # = 60 * 60 * 24 * 365 * 3 = 3 years\nDEFAULT_EXP_DUMMY_CERT = 31536000  # = 60 * 60 * 24 * 365 = 1 year\n\n# Generated with \"openssl dhparam\". It's too slow to generate this on startup.\nDEFAULT_DHPARAM = b\"\"\"\n-----BEGIN DH PARAMETERS-----\nMIICCAKCAgEAyT6LzpwVFS3gryIo29J5icvgxCnCebcdSe/NHMkD8dKJf8suFCg3\nO2+dguLakSVif/t6dhImxInJk230HmfC8q93hdcg/j8rLGJYDKu3ik6H//BAHKIv\nj5O9yjU3rXCfmVJQic2Nne39sg3CreAepEts2TvYHhVv3TEAzEqCtOuTjgDv0ntJ\nGwpj+BJBRQGG9NvprX1YGJ7WOFBP/hWU7d6tgvE6Xa7T/u9QIKpYHMIkcN/l3ZFB\nchZEqVlyrcngtSXCROTPcDOQ6Q8QzhaBJS+Z6rcsd7X+haiQqvoFcmaJ08Ks6LQC\nZIL2EtYJw8V8z7C0igVEBIADZBI6OTbuuhDwRw//zU1uq52Oc48CIZlGxTYG/Evq\no9EWAXUYVzWkDSTeBH1r4z/qLPE2cnhtMxbFxuvK53jGB0emy2y1Ei6IhKshJ5qX\nIB/aE7SSHyQ3MDHHkCmQJCsOd4Mo26YX61NZ+n501XjqpCBQ2+DfZCBh8Va2wDyv\nA2Ryg9SUz8j0AXViRNMJgJrr446yro/FuJZwnQcO3WQnXeqSBnURqKjmqkeFP+d8\n6mk2tqJaY507lRNqtGlLnj7f5RNoBFJDCLBNurVgfvq9TCVWKDIFD4vZRjCrnl6I\nrD693XKIHUCWOjMh1if6omGXKHH40QuME2gNa50+YPn1iYDl88uDbbMCAQI=\n-----END DH PARAMETERS-----\n\"\"\"",
+      "metadata": {
+        "total_chunks": 10,
+        "file_path": "mitmproxy/certs.py",
+        "language": "python",
+        "strategy": "basic",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.8794046640396118
+    },
+    {
+      "content": "class HttpLayer(base.Layer):\n\n    if False:\n        # mypy type hints\n        server_conn: connections.ServerConnection = None\n\n    def __init__(self, ctx, mode):\n        super().__init__(ctx)\n        self.mode = mode\n        self.__initial_server_address: tuple = None\n        \"Contains the original destination in transparent mode, which needs to be restored\"\n        \"if an inline script modified the target server for a single http request\"\n        # We cannot rely on server_conn.tls_established,\n        # see https://github.com/mitmproxy/mitmproxy/issues/925\n        self.__initial_server_tls = None\n        # Requests happening after CONNECT do not need Proxy-Authorization headers.\n        self.connect_request = False\n\n    def __call__(self):\n        if self.mode == HTTPMode.transparent:\n            self.__initial_server_tls = self.server_tls\n            self.__initial_server_address = self.server_conn.address\n        while True:\n            flow = http.HTTPFlow(\n                self.client_conn,\n                self.server_conn,\n                live=self,\n                mode=self.mode.name\n            )\n            if not self._process_flow(flow):\n                return\n\n    def handle_regular_connect(self, f):\n        self.connect_request = True\n\n        try:\n            self.set_server((f.request.host, f.request.port))\n\n            if f.response:\n                resp = f.response\n            else:\n                resp = http.make_connect_response(f.request.data.http_version)\n\n            self.send_response(resp)",
+      "metadata": {
+        "total_chunks": 14,
+        "strategy": "basic",
+        "file_path": "mitmproxy/proxy/protocol/http.py",
+        "language": "python",
+        "chunk_index": 4
+      },
+      "similarity_score": 0.8799017071723938
+    },
+    {
+      "content": "# File: mitmproxy/proxy/protocol/rawtcp.py (python)\n\n## Code Content:\n```python\nimport socket\n\nfrom OpenSSL import SSL\n\nimport mitmproxy.net.tcp\nfrom mitmproxy import tcp\nfrom mitmproxy import flow\nfrom mitmproxy import exceptions\nfrom mitmproxy.proxy.protocol import base\n\n\nclass RawTCPLayer(base.Layer):\n    chunk_size = 4096\n\n    def __init__(self, ctx, ignore=False):\n        self.ignore = ignore\n        super().__init__(ctx)\n\n    def __call__(self):\n        self.connect()\n\n        if not self.ignore:\n            f = tcp.TCPFlow(self.client_conn, self.server_conn, self)\n            self.channel.ask(\"tcp_start\", f)\n\n        buf = memoryview(bytearray(self.chunk_size))\n\n        client = self.client_conn.connection\n        server = self.server_conn.connection\n        conns = [client, server]\n\n        # https://github.com/openssl/openssl/issues/6234\n        for conn in conns:\n            if isinstance(conn, SSL.Connection) and hasattr(SSL._lib, \"SSL_clear_mode\"):\n                SSL._lib.SSL_clear_mode(conn._ssl, SSL._lib.SSL_MODE_AUTO_RETRY)\n\n        try:\n            while not self.channel.should_exit.is_set():\n                r = mitmproxy.net.tcp.ssl_read_select(conns, 10)\n                for conn in r:\n                    dst = server if conn == client else client\n                    try:\n                        size = conn.recv_into(buf, self.chunk_size)\n                    except (SSL.WantReadError, SSL.WantWriteError):\n                        continue\n                    if not size:\n                        conns.remove(conn)\n                        # Shutdown connection to the other peer\n                        if isinstance(conn, SSL.Connection):\n                            # We can't half-close a connection, so we just close everything here.\n                            # Sockets will be cleaned up on a higher level.\n                            return\n                        else:\n                            dst.shutdown(socket.SHUT_WR)",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "basic",
+        "language": "python",
+        "file_path": "mitmproxy/proxy/protocol/rawtcp.py",
+        "total_chunks": 2
+      },
+      "similarity_score": 0.8879112601280212
+    },
+    {
+      "content": "# File: test/mitmproxy/tools/console/test_common.py (python)\n\n## Code Content:\n```python\nimport urwid\n\nfrom mitmproxy.test import tflow\nfrom mitmproxy.tools.console import common\n\n\ndef test_format_flow():\n    flows = [\n        tflow.tflow(resp=True),\n        tflow.tflow(err=True),\n        tflow.ttcpflow(),\n        tflow.ttcpflow(err=True),\n    ]\n    for f in flows:\n        for render_mode in common.RenderMode:\n            assert common.format_flow(f, render_mode=render_mode)\n            assert common.format_flow(f, render_mode=render_mode, hostheader=True, focused=False)\n\n\ndef test_format_keyvals():\n    assert common.format_keyvals(\n        [\n            (\"aa\", \"bb\"),\n            (\"cc\", \"dd\"),\n            (\"ee\", None),\n        ]\n    )\n    wrapped = urwid.BoxAdapter(\n        urwid.ListBox(\n            urwid.SimpleFocusListWalker(\n                common.format_keyvals([(\"foo\", \"bar\")])\n            )\n        ), 1\n    )\n    assert wrapped.render((30,))\n    assert common.format_keyvals(\n        [\n            (\"aa\", wrapped)\n        ]\n    )\n```",
+      "metadata": {
+        "strategy": "basic",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "language": "python",
+        "file_path": "test/mitmproxy/tools/console/test_common.py"
+      },
+      "similarity_score": 0.8886755704879761
+    },
+    {
+      "content": "client_conn:\n        The :py:class:`client connection <mitmproxy.connections.ClientConnection>`.\n\n    Returns:\n        The raw handshake packet bytes, without TLS record header(s).\n    \"\"\"\n    client_hello = b\"\"\n    client_hello_size = 1\n    offset = 0\n    while len(client_hello) < client_hello_size:\n        record_header = rfile.peek(offset + 5)[offset:]\n        if not is_tls_record_magic(record_header) or len(record_header) < 5:\n            raise exceptions.TlsProtocolException(\n                'Expected TLS record, got \"%s\" instead.' % record_header)\n        record_size = struct.unpack_from(\"!H\", record_header, 3)[0] + 5\n        record_body = rfile.peek(offset + record_size)[offset + 5:]\n        if len(record_body) != record_size - 5:\n            raise exceptions.TlsProtocolException(\n                \"Unexpected EOF in TLS handshake: %s\" % record_body)\n        client_hello += record_body\n        offset += record_size\n        client_hello_size = struct.unpack(\"!I\", b'\\x00' + client_hello[1:4])[0] + 4\n    return client_hello\n\n\nclass ClientHello:\n\n    def __init__(self, raw_client_hello):\n        self._client_hello = tls_client_hello.TlsClientHello(\n            KaitaiStream(io.BytesIO(raw_client_hello))\n        )\n\n    @property\n    def cipher_suites(self):\n        return self._client_hello.cipher_suites.cipher_suites\n\n    @property\n    def sni(self) -> typing.Optional[bytes]:\n        if self._client_hello.extensions:\n            for extension in self._client_hello.extensions.extensions:\n                is_valid_sni_extension = (\n                    extension.type == 0x00 and\n                    len(extension.body.server_names) == 1 and\n                    extension.body.server_names[0].name_type == 0 and\n                    check.is_valid_host(extension.body.server_names[0].host_name)\n                )\n                if is_valid_sni_extension:\n                    return extension.body.server_names[0].host_name\n        return None",
+      "metadata": {
+        "chunk_index": 9,
+        "total_chunks": 11,
+        "file_path": "mitmproxy/net/tls.py",
+        "strategy": "basic",
+        "language": "python"
+      },
+      "similarity_score": 0.8957926630973816
+    },
+    {
+      "content": "# File: mitmproxy/proxy/protocol/__init__.py (python)\n\n## Code Content:\n```python\n\"\"\"\nIn mitmproxy, protocols are implemented as a set of layers, which are composed\non top each other. The first layer is usually the proxy mode, e.g. transparent\nproxy or normal HTTP proxy. Next, various protocol layers are stacked on top of\neach other - imagine WebSocket on top of an HTTP Upgrade request. An actual\nmitmproxy connection may look as follows (outermost layer first):\n\n    Transparent HTTP proxy, no TLS:\n      - TransparentProxy\n      - Http1Layer\n      - HttpLayer\n\n    Regular proxy, CONNECT request with WebSocket over SSL:\n      - ReverseProxy\n      - Http1Layer\n      - HttpLayer\n      - TLSLayer\n      - WebSocketLayer (or TCPLayer)\n\nEvery layer acts as a read-only context for its inner layers (see\n:py:class:`Layer`). To communicate with an outer layer, a layer can use\nfunctions provided in the context. The next layer is always determined by a\ncall to :py:meth:`.next_layer() <mitmproxy.proxy.RootContext.next_layer>`,\nwhich is provided by the root context.\n\nAnother subtle design goal of this architecture is that upstream connections\nshould be established as late as possible; this makes server replay without any\noutgoing connections possible.\n\"\"\"\n\n\nfrom .base import Layer, ServerConnectionMixin\nfrom .http import UpstreamConnectLayer\nfrom .http import HttpLayer\nfrom .http1 import Http1Layer\nfrom .http2 import Http2Layer\nfrom .websocket import WebSocketLayer\nfrom .rawtcp import RawTCPLayer\nfrom .tls import TlsLayer\n\n__all__ = [\n    \"Layer\", \"ServerConnectionMixin\",\n    \"TlsLayer\",\n    \"UpstreamConnectLayer\",\n    \"HttpLayer\",\n    \"Http1Layer\",\n    \"Http2Layer\",\n    \"WebSocketLayer\",\n    \"RawTCPLayer\",\n]\n```",
+      "metadata": {
+        "language": "python",
+        "file_path": "mitmproxy/proxy/protocol/__init__.py",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.9030843377113342
+    },
+    {
+      "content": "# File: mitmproxy/net/tcp.py (python)\n\n## Code Content:\n```python\nimport os\nimport errno\nimport select\nimport socket\nimport sys\nimport threading\nimport time\nimport traceback\n\nfrom typing import Optional  # noqa\n\nfrom mitmproxy.net import tls\n\nfrom OpenSSL import SSL\n\nfrom mitmproxy import certs\nfrom mitmproxy import exceptions\nfrom mitmproxy.coretypes import basethread\n\nsocket_fileobject = socket.SocketIO\n\n# workaround for https://bugs.python.org/issue29515\n# Python 3.6 for Windows is missing a constant\nIPPROTO_IPV6 = getattr(socket, \"IPPROTO_IPV6\", 41)\n\n\nclass _FileLike:\n    BLOCKSIZE = 1024 * 32\n\n    def __init__(self, o):\n        self.o = o\n        self._log = None\n        self.first_byte_timestamp = None\n\n    def set_descriptor(self, o):\n        self.o = o\n\n    def __getattr__(self, attr):\n        return getattr(self.o, attr)\n\n    def start_log(self):\n        \"\"\"\n            Starts or resets the log.\n\n            This will store all bytes read or written.\n        \"\"\"\n        self._log = []\n\n    def stop_log(self):\n        \"\"\"\n            Stops the log.\n        \"\"\"\n        self._log = None\n\n    def is_logging(self):\n        return self._log is not None\n\n    def get_log(self):\n        \"\"\"\n            Returns the log as a string.\n        \"\"\"\n        if not self.is_logging():\n            raise ValueError(\"Not logging!\")\n        return b\"\".join(self._log)\n\n    def add_log(self, v):\n        if self.is_logging():\n            self._log.append(v)\n\n    def reset_timestamps(self):\n        self.first_byte_timestamp = None\n\n\nclass Writer(_FileLike):\n\n    def flush(self):\n        \"\"\"\n            May raise exceptions.TcpDisconnect\n        \"\"\"\n        if hasattr(self.o, \"flush\"):\n            try:\n                self.o.flush()\n            except OSError as v:\n                raise exceptions.TcpDisconnect(str(v))",
+      "metadata": {
+        "file_path": "mitmproxy/net/tcp.py",
+        "chunk_index": 0,
+        "total_chunks": 15,
+        "language": "python",
+        "strategy": "basic"
+      },
+      "similarity_score": 0.9157557487487793
+    },
+    {
+      "content": "# File: pathod/pathoc.py (python)\n\n## Code Content:\n```python\nimport contextlib\nimport sys\nimport os\nimport itertools\nimport hashlib\nimport queue\nimport random\nimport select\nimport time\n\nimport OpenSSL.crypto\nimport logging\n\nfrom mitmproxy import certs, exceptions\nfrom mitmproxy.net import tcp, tls, socks\nfrom mitmproxy.net import http as net_http\nfrom mitmproxy.coretypes import basethread\nfrom mitmproxy.utils import strutils\n\nfrom pathod import language, log\nfrom pathod.protocols import http2\n\n\nlogging.getLogger(\"hpack\").setLevel(logging.WARNING)\n\n\ndef xrepr(s):\n    return repr(s)[1:-1]\n\n\nclass PathocError(Exception):\n    pass\n\n\nclass SSLInfo:\n\n    def __init__(self, certchain, cipher, alp):\n        self.certchain, self.cipher, self.alp = certchain, cipher, alp",
+      "metadata": {
+        "total_chunks": 15,
+        "chunk_index": 0,
+        "file_path": "pathod/pathoc.py",
+        "language": "python",
+        "strategy": "basic"
+      },
+      "similarity_score": 0.9228537678718567
+    },
+    {
+      "content": "# File: mitmproxy/utils/arg_check.py (python)\n\n## Code Content:\n```python\nimport sys\nimport re\n\nDEPRECATED = \"\"\"\n--confdir\n-Z\n--body-size-limit\n--stream\n--palette\n--palette-transparent\n--follow\n--order\n--no-mouse\n--reverse\n--http2-priority\n--no-http2-priority\n--no-websocket\n--websocket\n--spoof-source-address\n--upstream-bind-address\n--ciphers-client\n--ciphers-server\n--client-certs\n--no-upstream-cert\n--add-upstream-certs-to-client-chain\n--upstream-trusted-confdir\n--upstream-trusted-ca\n--ssl-version-client\n--ssl-version-server\n--no-onboarding\n--onboarding-host\n--onboarding-port\n--server-replay-use-header\n--no-pop\n--replay-ignore-content\n--replay-ignore-payload-param\n--replay-ignore-param\n--replay-ignore-host\n--replace-from-file\n\"\"\"\n\nREPLACED = \"\"\"\n-t\n-u\n--wfile\n-a\n--afile\n-z\n-b\n--bind-address\n--port\n-I\n--ignore\n--tcp\n--cert\n--insecure\n-c\n--replace\n--replacements\n-i\n-f\n--filter\n--socks\n\"\"\"",
+      "metadata": {
+        "strategy": "basic",
+        "total_chunks": 4,
+        "language": "python",
+        "file_path": "mitmproxy/utils/arg_check.py",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.9307633638381958
+    },
+    {
+      "content": "# File: test/mitmproxy/proxy/protocol/test_http2.py (python)\n\n## Code Content:\n```python\nimport os\nimport tempfile\nimport traceback\nimport pytest\nimport h2\n\nfrom mitmproxy import options\n\nimport mitmproxy.net\nimport mitmproxy.http\nfrom ...net import tservers as net_tservers\nfrom mitmproxy import exceptions\nfrom mitmproxy.net.http import http1, http2\nfrom pathod.language import generators\n\nfrom ... import tservers\n\nimport logging\nlogging.getLogger(\"hyper.packages.hpack.hpack\").setLevel(logging.WARNING)\nlogging.getLogger(\"requests.packages.urllib3.connectionpool\").setLevel(logging.WARNING)\nlogging.getLogger(\"passlib.utils.compat\").setLevel(logging.WARNING)\nlogging.getLogger(\"passlib.registry\").setLevel(logging.WARNING)\n\n\n# inspect the log:\n#   for msg in self.proxy.tmaster.tlog:\n#       print(msg)\n\n\nclass _Http2ServerBase(net_tservers.ServerTestBase):\n    ssl = dict(alpn_select=b'h2')\n\n    class handler(mitmproxy.net.tcp.BaseHandler):\n\n        def handle(self):\n            config = h2.config.H2Configuration(\n                client_side=False,\n                validate_outbound_headers=False,\n                validate_inbound_headers=False)\n            h2_conn = h2.connection.H2Connection(config)\n\n            preamble = self.rfile.read(24)\n            h2_conn.initiate_connection()\n            h2_conn.receive_data(preamble)\n            self.wfile.write(h2_conn.data_to_send())\n            self.wfile.flush()\n\n            if 'h2_server_settings' in self.kwargs:\n                h2_conn.update_settings(self.kwargs['h2_server_settings'])\n                self.wfile.write(h2_conn.data_to_send())\n                self.wfile.flush()",
+      "metadata": {
+        "language": "python",
+        "chunk_index": 0,
+        "strategy": "basic",
+        "total_chunks": 26,
+        "file_path": "test/mitmproxy/proxy/protocol/test_http2.py"
+      },
+      "similarity_score": 0.9350261688232422
+    },
+    {
+      "content": "# File: mitmproxy/io/protobuf.py (python)\n\n## Code Content:\n```python\n\"\"\"\nNote: This module is currently unmaintained as we don't use it internally.\nWe're happy to accept PRs that fix bugs, but we won't provide any continuous maintenance.\n\"\"\"\nimport typing\n\nfrom mitmproxy import flow\nfrom mitmproxy import exceptions\nfrom mitmproxy.http import HTTPFlow, HTTPResponse, HTTPRequest\nfrom mitmproxy.certs import Cert\nfrom mitmproxy.connections import ClientConnection, ServerConnection\nfrom mitmproxy.io.proto import http_pb2\n\n\ndef _move_attrs(s_obj, d_obj, attrs):\n    for attr in attrs:\n        if not isinstance(d_obj, dict):\n            if hasattr(s_obj, attr) and getattr(s_obj, attr) is not None:\n                setattr(d_obj, attr, getattr(s_obj, attr))\n        else:\n            if hasattr(s_obj, attr) and getattr(s_obj, attr) is not None:\n                # ugly fix to set None in empty str or bytes fields\n                if getattr(s_obj, attr) == \"\" or getattr(s_obj, attr) == b\"\":\n                    d_obj[attr] = None\n                else:\n                    d_obj[attr] = getattr(s_obj, attr)\n\n\ndef _dump_http_response(res: HTTPResponse) -> http_pb2.HTTPResponse:\n    pres = http_pb2.HTTPResponse()\n    _move_attrs(res, pres, ['http_version', 'status_code', 'reason',\n                            'content', 'timestamp_start', 'timestamp_end', 'is_replay'])\n    if res.headers:\n        for h in res.headers.fields:\n            header = pres.headers.add()\n            header.name = h[0]\n            header.value = h[1]\n    return pres",
+      "metadata": {
+        "language": "python",
+        "file_path": "mitmproxy/io/protobuf.py",
+        "total_chunks": 5,
+        "chunk_index": 0,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.9374281167984009
+    },
+    {
+      "content": "# File: mitmproxy/proxy/protocol/websocket.py (python)\n\n## Code Content:\n```python\nimport queue\nfrom OpenSSL import SSL\n\nimport wsproto\nfrom wsproto import events, WSConnection\nfrom wsproto.connection import ConnectionType\nfrom wsproto.events import AcceptConnection, CloseConnection, Message, Ping, Request\nfrom wsproto.extensions import PerMessageDeflate\n\nfrom mitmproxy import exceptions, flow\nfrom mitmproxy.proxy.protocol import base\nfrom mitmproxy.net import tcp, websocket\nfrom mitmproxy.websocket import WebSocketFlow, WebSocketMessage\nfrom mitmproxy.utils import strutils\n\n\nclass WebSocketLayer(base.Layer):\n    \"\"\"\n        WebSocket layer to intercept, modify, and forward WebSocket messages.\n\n        Only version 13 is supported (as specified in RFC6455).\n        Only HTTP/1.1-initiated connections are supported.\n\n        The client starts by sending an Upgrade-request.\n        In order to determine the handshake and negotiate the correct protocol\n        and extensions, the Upgrade-request is forwarded to the server.\n        The response from the server is then parsed and negotiated settings are extracted.\n        Finally the handshake is completed by forwarding the server-response to the client.\n        After that, only WebSocket frames are exchanged.\n\n        PING/PONG frames pass through and must be answered by the other endpoint.\n\n        CLOSE frames are forwarded before this WebSocketLayer terminates.\n\n        This layer is transparent to any negotiated extensions.\n        This layer is transparent to any negotiated subprotocols.\n        Only raw frames are forwarded to the other endpoint.\n\n        WebSocket messages are stored in a WebSocketFlow.\n    \"\"\"\n\n    def __init__(self, ctx, handshake_flow):\n        super().__init__(ctx)\n        self.handshake_flow = handshake_flow\n        self.flow: WebSocketFlow = None\n\n        self.client_frame_buffer = []\n        self.server_frame_buffer = []\n\n        self.connections: dict[object, WSConnection] = {}",
+      "metadata": {
+        "total_chunks": 6,
+        "language": "python",
+        "chunk_index": 0,
+        "strategy": "basic",
+        "file_path": "mitmproxy/proxy/protocol/websocket.py"
+      },
+      "similarity_score": 0.9399400949478149
+    }
+  ],
+  "enhanced": [
+    {
+      "content": "### Commit 2\n- ID: 2b4f58eb\n- Author: Maximilian Hils (git@maximilianhils.com)\n- Date: 2017-09-03 09:02:13\n- Message: split TLS parts from net.tcp into net.tls\n- Changes:\n```diff\n@@ -4,7 +4,7 @@ import os\n import os.path\n import re\n \n-from mitmproxy.net import tcp\n+from mitmproxy.net import tls\n from mitmproxy.utils import human\n from mitmproxy import version\n from . import pathod\n@@ -143,7 +143,7 @@ def args_pathod(argv, stdout_=sys.stdout, stderr_=sys.stderr):\n     )\n     group.add_argument(\n         \"--ssl-version\", dest=\"ssl_version\", type=str, default=\"secure\",\n-        choices=tcp.sslversion_choices.keys(),\n+        choices=tls.VERSION_CHOICES.keys(),\n         help...\n```\n\n### Commit 3\n- ID: 3262b6e7\n- Author: Maximilian Hils (git@maximilianhils.com)\n- Date: 2017-07-26 03:55:26\n- Message: Squashed commit of the following:\n\ncommit edfbd41200a854f0bb7bb99f8bb70af9dbb9b8e0\nAuthor: Matt Weidner <matt.weidner@gmail.com>\nDate:   Tue Jul 25 01:19:53 2017 -0500\n\n    Extended view.load test to check for unhandled IOError exception.\n\ncommit a523b534bc59ea97ed1fd5a3e6f78112fee19b6f\nAuthor: requires.io <support@requires.io>\nDate:   Mon Jul 24 21:25:04 2017 +0200\n\n    [requires.io] dependency update\n\ncommit c725540c6eb92c003616b649ba43bee1f14e56ac\nAuthor: Thomas Kriechbaumer <thomas@kriechbaumer.name>\nDate:   Mon Jul 24 21:01:25 2017 +0200\n\n    update travis\n\ncommit eeb6cfb4c76e60ac1813b839f589cd489c041c6c\nAuthor: Thomas Kriechbaumer <Kriechi@users.noreply.github.com>\nDate:   Mon Jul 24 21:03:14 2017 +0200\n\n    [requires.io] dependency update on master branch (#2435)\n\ncommit 51a2672c782ee8ba8c7d5c7116073feccb4d8430\nAuthor: Maximilian Hils <git@maximilianhils.com>\nDate:   Mon Jul 24 19:03:01 2017 +0200\n\n    require latest mypy version (refs #2452)\n\ncommit 5685a4850af6edda7100cae900487955c8b7a3ab\nAuthor: Maximilian Hils <git@maximilianhils.com>\nDate:   Fri Jul 21 11:24:42 2017 +0200\n\n    fix addon tracebacks",
+      "metadata": {
+        "chunk_index": 6,
+        "file_path": "pathod/pathod_cmdline.py",
+        "language": "python",
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "total_chunks": 9
+      },
+      "similarity_score": 0.6530037522315979
+    },
+    {
+      "content": "### Commit 5\n- ID: fc80aa56\n- Author: Maximilian Hils (git@maximilianhils.com)\n- Date: 2018-01-13 04:40:35\n- Message: move ClientHello and related functions to mitmproxy.net.tls\n- Changes:\n```diff\n@@ -1,5 +1,6 @@\n from mitmproxy import log\n from mitmproxy import exceptions\n+from mitmproxy.net import tls\n from mitmproxy.proxy import protocol\n from mitmproxy.proxy import modes\n from mitmproxy.proxy.protocol import http\n@@ -45,14 +46,14 @@ class RootContext:\n             d = top_layer.client_conn.rfile.peek(3)\n         except exceptions.TcpException as e:\n             raise exceptions.ProtocolException(str(e))\n-        client_tls = protocol.is_tls_record_magic(d)\n+        client_tls = tls.is...\n```",
+      "metadata": {
+        "language": "python",
+        "chunk_index": 5,
+        "strategy": "enhanced",
+        "file_path": "mitmproxy/proxy/root_context.py",
+        "total_chunks": 6,
+        "commit_count": 5
+      },
+      "similarity_score": 0.655204713344574
+    },
+    {
+      "content": "# File: mitmproxy/connections.py (python)\n\n## Code Content:\n```python\nimport os\nimport time\nimport typing\nimport uuid\n\nfrom mitmproxy import certs\nfrom mitmproxy import exceptions\nfrom mitmproxy import stateobject\nfrom mitmproxy.net import tcp\nfrom mitmproxy.net import tls\nfrom mitmproxy.utils import human\nfrom mitmproxy.utils import strutils\n\n\nclass ClientConnection(tcp.BaseHandler, stateobject.StateObject):\n    \"\"\"\n    A client connection\n\n    Attributes:\n        address: Remote address\n        tls_established: True if TLS is established, False otherwise\n        clientcert: The TLS client certificate\n        mitmcert: The MITM'ed TLS server certificate presented to the client\n        timestamp_start: Connection start timestamp\n        timestamp_tls_setup: TLS established timestamp\n        timestamp_end: Connection end timestamp\n        sni: Server Name Indication sent by client during the TLS handshake\n        cipher_name: The current used cipher\n        alpn_proto_negotiated: The negotiated application protocol\n        tls_version: TLS version\n        tls_extensions: TLS ClientHello extensions\n    \"\"\"\n\n    def __init__(self, client_connection, address, server):\n        # Eventually, this object is restored from state. We don't have a\n        # connection then.\n        if client_connection:\n            super().__init__(client_connection, address, server)\n        else:\n            self.connection = None\n            self.server = None\n            self.wfile = None\n            self.rfile = None\n            self.address = None\n            self.clientcert = None\n            self.tls_established = None\n\n        self.id = str(uuid.uuid4())\n        self.mitmcert = None\n        self.timestamp_start = time.time()\n        self.timestamp_end = None\n        self.timestamp_tls_setup = None\n        self.sni = None\n        self.cipher_name = None\n        self.alpn_proto_negotiated = None\n        self.tls_version = None\n        self.tls_extensions = None",
+      "metadata": {
+        "language": "python",
+        "strategy": "enhanced",
+        "total_chunks": 8,
+        "file_path": "mitmproxy/connections.py",
+        "commit_count": 5,
+        "chunk_index": 0
+      },
+      "similarity_score": 0.6826261281967163
+    },
+    {
+      "content": "# File: mitmproxy/net/tls.py (python)\n\n## Code Content:\n```python\n# To enable all SSL methods use: SSLv23\n# then add options to disable certain methods\n# https://bugs.launchpad.net/pyopenssl/+bug/1020632/comments/3\nimport binascii\nimport io\nimport os\nimport struct\nimport threading\nimport typing\n\nimport certifi\nfrom OpenSSL import SSL\nfrom kaitaistruct import KaitaiStream\n\nimport mitmproxy.options\nfrom mitmproxy import certs, exceptions\nfrom mitmproxy.contrib.kaitaistruct import tls_client_hello\nfrom mitmproxy.net import check\n\nBASIC_OPTIONS = (\n    SSL.OP_CIPHER_SERVER_PREFERENCE\n)\nif hasattr(SSL, \"OP_NO_COMPRESSION\"):\n    BASIC_OPTIONS |= SSL.OP_NO_COMPRESSION\n\nDEFAULT_METHOD = SSL.SSLv23_METHOD\nDEFAULT_OPTIONS = (\n    SSL.OP_NO_SSLv2 |\n    SSL.OP_NO_SSLv3 |\n    BASIC_OPTIONS\n)\n\n\"\"\"\nMap a reasonable SSL version specification into the format OpenSSL expects.\nDon't ask...\nhttps://bugs.launchpad.net/pyopenssl/+bug/1020632/comments/3\n\"\"\"\nVERSION_CHOICES = {\n    \"all\": (SSL.SSLv23_METHOD, BASIC_OPTIONS),\n    # SSLv23_METHOD + NO_SSLv2 + NO_SSLv3 == TLS 1.0+\n    # TLSv1_METHOD would be TLS 1.0 only\n    \"secure\": (DEFAULT_METHOD, DEFAULT_OPTIONS),\n    \"SSLv2\": (SSL.SSLv2_METHOD, BASIC_OPTIONS),\n    \"SSLv3\": (SSL.SSLv3_METHOD, BASIC_OPTIONS),\n    \"TLSv1\": (SSL.TLSv1_METHOD, BASIC_OPTIONS),\n    \"TLSv1_1\": (SSL.TLSv1_1_METHOD, BASIC_OPTIONS),\n    \"TLSv1_2\": (SSL.TLSv1_2_METHOD, BASIC_OPTIONS),\n}\n\nMETHOD_NAMES = {\n    SSL.SSLv2_METHOD: \"SSLv2\",\n    SSL.SSLv3_METHOD: \"SSLv3\",\n    SSL.SSLv23_METHOD: \"SSLv23\",\n    SSL.TLSv1_METHOD: \"TLSv1\",\n    SSL.TLSv1_1_METHOD: \"TLSv1.1\",\n    SSL.TLSv1_2_METHOD: \"TLSv1.2\",\n}\n\n\ndef client_arguments_from_options(options: \"mitmproxy.options.Options\") -> dict:\n\n    if options.ssl_insecure:\n        verify = SSL.VERIFY_NONE\n    else:\n        verify = SSL.VERIFY_PEER\n\n    method, tls_options = VERSION_CHOICES[options.ssl_version_server]",
+      "metadata": {
+        "total_chunks": 13,
+        "strategy": "enhanced",
+        "chunk_index": 0,
+        "file_path": "mitmproxy/net/tls.py",
+        "language": "python",
+        "commit_count": 5
+      },
+      "similarity_score": 0.7676080465316772
+    },
+    {
+      "content": "# File: pathod/pathod.py (python)\n\n## Code Content:\n```python\nimport copy\nimport logging\nimport os\nimport sys\nimport threading\nimport urllib\nimport typing  # noqa\n\nfrom mitmproxy import certs as mcerts, exceptions, version\nfrom mitmproxy.net import tcp, tls, websocket\n\nfrom pathod import language, utils, log, protocols\n\n\nDEFAULT_CERT_DOMAIN = b\"pathod.net\"\nCONFDIR = \"~/.mitmproxy\"\nCERTSTORE_BASENAME = \"mitmproxy\"\nCA_CERT_NAME = \"mitmproxy-ca.pem\"\nDEFAULT_CRAFT_ANCHOR = \"/p/\"\nKEY_SIZE = 2048\n\nlogger = logging.getLogger('pathod')\n\n\nclass PathodError(Exception):\n    pass\n\n\nclass SSLOptions:\n    def __init__(\n        self,\n        confdir=CONFDIR,\n        cn=None,\n        sans=(),\n        not_after_connect=None,\n        request_client_cert=False,\n        ssl_version=tls.DEFAULT_METHOD,\n        ssl_options=tls.DEFAULT_OPTIONS,\n        ciphers=None,\n        certs=None,\n        alpn_select=b'h2',\n    ):\n        self.confdir = confdir\n        self.cn = cn\n        self.sans = sans\n        self.not_after_connect = not_after_connect\n        self.request_client_cert = request_client_cert\n        self.ssl_version = ssl_version\n        self.ssl_options = ssl_options\n        self.ciphers = ciphers\n        self.alpn_select = alpn_select\n        self.certstore = mcerts.CertStore.from_store(\n            os.path.expanduser(confdir),\n            CERTSTORE_BASENAME,\n            KEY_SIZE\n        )\n        for i in certs or []:\n            self.certstore.add_cert_file(*i)\n\n    def get_cert(self, name):\n        if self.cn:\n            name = self.cn\n        elif not name:\n            name = DEFAULT_CERT_DOMAIN\n        return self.certstore.get_cert(name, self.sans)\n\n\nclass PathodHandler(tcp.BaseHandler):\n    wbufsize = 0\n    sni: typing.Union[str, None, bool] = None",
+      "metadata": {
+        "file_path": "pathod/pathod.py",
+        "strategy": "enhanced",
+        "chunk_index": 0,
+        "commit_count": 5,
+        "language": "python",
+        "total_chunks": 12
+      },
+      "similarity_score": 0.7734449505805969
+    },
+    {
+      "content": "# File: mitmproxy/proxy/root_context.py (python)\n\n## Code Content:\n```python\nfrom mitmproxy import log\nfrom mitmproxy import exceptions\nfrom mitmproxy.net import tls\nfrom mitmproxy.proxy import protocol\nfrom mitmproxy.proxy import modes\nfrom mitmproxy.proxy.protocol import http\n\n\nclass RootContext:\n\n    \"\"\"\n    The outermost context provided to the root layer.\n    As a consequence, every layer has access to methods and attributes defined here.\n\n    Attributes:\n        client_conn:\n            The :py:class:`client connection <mitmproxy.connections.ClientConnection>`.\n        channel:\n            A :py:class:`~mitmproxy.controller.Channel` to communicate with the FlowMaster.\n            Provides :py:meth:`.ask() <mitmproxy.controller.Channel.ask>` and\n            :py:meth:`.tell() <mitmproxy.controller.Channel.tell>` methods.\n        config:\n            The :py:class:`proxy server's configuration <mitmproxy.proxy.ProxyConfig>`\n    \"\"\"\n\n    def __init__(self, client_conn, config, channel):\n        self.client_conn = client_conn\n        self.channel = channel\n        self.config = config\n\n    def next_layer(self, top_layer):\n        \"\"\"\n        This function determines the next layer in the protocol stack.\n\n        Arguments:\n            top_layer: the current innermost layer.\n\n        Returns:\n            The next layer\n        \"\"\"\n        layer = self._next_layer(top_layer)\n        return self.channel.ask(\"next_layer\", layer)\n\n    def _next_layer(self, top_layer):\n        try:\n            d = top_layer.client_conn.rfile.peek(3)\n        except exceptions.TcpException as e:\n            raise exceptions.ProtocolException(str(e))\n        client_tls = tls.is_tls_record_magic(d)",
+      "metadata": {
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "language": "python",
+        "file_path": "mitmproxy/proxy/root_context.py",
+        "chunk_index": 0,
+        "total_chunks": 6
+      },
+      "similarity_score": 0.783873438835144
+    },
+    {
+      "content": "### Commit 3\n- ID: 4bfb81c0\n- Author: Maximilian Hils (git@maximilianhils.com)\n- Date: 2020-04-03 22:33:53\n- Message: temporarily fix key logging for OpenSSL 1.1.1f\n- Changes:\n```diff\n@@ -87,7 +87,18 @@ class MasterSecretLogger:\n     __name__ = \"MasterSecretLogger\"\n \n     def __call__(self, connection, where, ret):\n-        if where == SSL.SSL_CB_HANDSHAKE_DONE and ret == 1:\n+        done_now = (\n+            where == SSL.SSL_CB_HANDSHAKE_DONE and ret == 1\n+        )\n+        # this is a horrendous workaround for https://github.com/mitmproxy/mitmproxy/pull/3692#issuecomment-608454530:\n+        # OpenSSL 1.1.1f decided to not make connection.master_key() fail in the SSL_CB_HAN...\n```\n\n### Commit 4\n- ID: e768f5ba\n- Author: Maximilian Hils (git@maximilianhils.com)\n- Date: 2019-11-23 08:16:16\n- Message: use OpenSSL's hostname validation\n- Changes:\n```diff\n@@ -7,14 +7,13 @@ import os\n import struct\n import threading\n import typing\n-from ssl import match_hostname, CertificateError\n \n import certifi\n from OpenSSL import SSL\n from kaitaistruct import KaitaiStream\n \n-import mitmproxy.options  # noqa\n-from mitmproxy import exceptions, certs\n+import mitmproxy.options\n+from mitmproxy import certs, exceptions\n from mitmproxy.contrib.kaitaistruct import tls_client_hello\n from mitmproxy.net import check\n \n@@ -237,33 +236,11 @@ def create_client_context(\n   ...\n```\n\n### Commit 5\n- ID: bdc15cbe\n- Author: Maximilian Hils (git@maximilianhils.com)\n- Date: 2019-11-12 09:59:01\n- Message: update mypy\n- Changes:\n```diff\n@@ -474,8 +474,7 @@ class ClientHello:\n             return cls(raw_client_hello)\n         except EOFError as e:\n             raise exceptions.TlsProtocolException(\n-                'Cannot parse Client Hello: %s, Raw Client Hello: %s' %\n-                (repr(e), binascii.hexlify(raw_client_hello))\n+                f\"Cannot parse Client Hello: {e!r}, Raw Client Hello: {binascii.hexlify(raw_client_hello)!r}\"\n             )\n \n     def __repr__(self):...\n```",
+      "metadata": {
+        "commit_count": 5,
+        "chunk_index": 12,
+        "file_path": "mitmproxy/net/tls.py",
+        "strategy": "enhanced",
+        "total_chunks": 13,
+        "language": "python"
+      },
+      "similarity_score": 0.7891625165939331
+    },
+    {
+      "content": "# File: mitmproxy/proxy/protocol/tls.py (python)\n\n## Code Content:\n```python\nfrom typing import Optional  # noqa\nfrom typing import Union\n\nfrom mitmproxy import exceptions\nfrom mitmproxy.net import tls as net_tls\nfrom mitmproxy.proxy.protocol import base",
+      "metadata": {
+        "language": "python",
+        "chunk_index": 0,
+        "file_path": "mitmproxy/proxy/protocol/tls.py",
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "total_chunks": 16
+      },
+      "similarity_score": 0.8138779997825623
+    },
+    {
+      "content": "# File: examples/contrib/tls_passthrough.py (python)\n\n## Code Content:\n```python\n\"\"\"\nThis inline script allows conditional TLS Interception based\non a user-defined strategy.\n\nExample:\n\n    > mitmdump -s tls_passthrough.py\n\n    1. curl --proxy http://localhost:8080 https://example.com --insecure\n    // works - we'll also see the contents in mitmproxy\n\n    2. curl --proxy http://localhost:8080 https://example.com --insecure\n    // still works - we'll also see the contents in mitmproxy\n\n    3. curl --proxy http://localhost:8080 https://example.com\n    // fails with a certificate error, which we will also see in mitmproxy\n\n    4. curl --proxy http://localhost:8080 https://example.com\n    // works again, but mitmproxy does not intercept and we do *not* see the contents\n\nAuthors: Maximilian Hils, Matthew Tuusberg\n\"\"\"\nimport collections\nimport random\n\nfrom enum import Enum\n\nimport mitmproxy\nfrom mitmproxy import ctx\nfrom mitmproxy.exceptions import TlsProtocolException\nfrom mitmproxy.proxy.protocol import TlsLayer, RawTCPLayer\n\n\nclass InterceptionResult(Enum):\n    success = True\n    failure = False\n    skipped = None\n\n\nclass _TlsStrategy:\n    \"\"\"\n    Abstract base class for interception strategies.\n    \"\"\"\n\n    def __init__(self):\n        # A server_address -> interception results mapping\n        self.history = collections.defaultdict(lambda: collections.deque(maxlen=200))\n\n    def should_intercept(self, server_address):\n        \"\"\"\n        Returns:\n            True, if we should attempt to intercept the connection.\n            False, if we want to employ pass-through instead.\n        \"\"\"\n        raise NotImplementedError()\n\n    def record_success(self, server_address):\n        self.history[server_address].append(InterceptionResult.success)\n\n    def record_failure(self, server_address):\n        self.history[server_address].append(InterceptionResult.failure)",
+      "metadata": {
+        "commit_count": 2,
+        "strategy": "enhanced",
+        "total_chunks": 4,
+        "chunk_index": 0,
+        "file_path": "examples/contrib/tls_passthrough.py",
+        "language": "python"
+      },
+      "similarity_score": 0.8305437564849854
+    },
+    {
+      "content": "### Commit 5\n- ID: 01a449b5\n- Author: Aldo Cortesi (aldo@nullcube.com)\n- Date: 2016-10-20 06:27:05\n- Message: netlib.exceptions.* -> mitmproxy.exceptions\n- Changes:\n```diff\n@@ -2,7 +2,6 @@ import socket\n \n from OpenSSL import SSL\n \n-import netlib.exceptions\n import netlib.tcp\n from mitmproxy import tcp\n from mitmproxy import flow\n@@ -56,7 +55,7 @@ class RawTCPLayer(base.Layer):\n                         self.channel.ask(\"tcp_message\", f)\n                     dst.sendall(tcp_message.content)\n \n-        except (socket.error, netlib.exceptions.TcpException, SSL.Error) as e:\n+        except (socket.error, exceptions.TcpException, SSL.Error) as e:\n             if not sel...\n```",
+      "metadata": {
+        "language": "python",
+        "strategy": "enhanced",
+        "total_chunks": 4,
+        "chunk_index": 3,
+        "commit_count": 5,
+        "file_path": "mitmproxy/proxy/protocol/rawtcp.py"
+      },
+      "similarity_score": 0.8360528945922852
+    },
+    {
+      "content": "# File: test/mitmproxy/io/test_protobuf.py (python)\n\n## Code Content:\n```python\nimport pytest\n\nfrom mitmproxy import certs\nfrom mitmproxy import exceptions\nfrom mitmproxy.io import protobuf\nfrom mitmproxy.test import tflow, tutils\n\n\n@pytest.mark.skip\nclass TestProtobuf:\n\n    def test_roundtrip_client(self):\n        c = tflow.tclient_conn()\n        del c.reply\n        c.rfile = None\n        c.wfile = None\n        pc = protobuf._dump_http_client_conn(c)\n        lc = protobuf._load_http_client_conn(pc)\n        assert c.__dict__ == lc.__dict__\n\n    def test_roundtrip_client_cert(self, tdata):\n        c = tflow.tclient_conn()\n        c.rfile = None\n        c.wfile = None\n        del c.reply\n        with open(tdata.path(\"mitmproxy/net/data/clientcert/client.pem\"), \"rb\") as f:\n            d = f.read()\n        c.clientcert = certs.Cert.from_pem(d)\n        pc = protobuf._dump_http_client_conn(c)\n        lc = protobuf._load_http_client_conn(pc)\n        assert c.__dict__ == lc.__dict__\n\n    def test_roundtrip_server(self):\n        s = tflow.tserver_conn()\n        del s.reply\n        s.wfile = None\n        s.rfile = None\n        ps = protobuf._dump_http_server_conn(s)\n        ls = protobuf._load_http_server_conn(ps)\n        assert s.__dict__ == ls.__dict__\n\n    def test_roundtrip_server_cert(self, tdata):\n        s = tflow.tserver_conn()\n        del s.reply\n        s.wfile = None\n        s.rfile = None\n        with open(tdata.path(\"mitmproxy/net/data/text_cert\"), \"rb\") as f:\n            d = f.read()\n        s.cert = certs.Cert.from_pem(d)\n        ps = protobuf._dump_http_server_conn(s)\n        ls = protobuf._load_http_server_conn(ps)\n        assert s.__dict__ == ls.__dict__",
+      "metadata": {
+        "commit_count": 2,
+        "file_path": "test/mitmproxy/io/test_protobuf.py",
+        "chunk_index": 0,
+        "total_chunks": 3,
+        "language": "python",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.870693564414978
+    },
+    {
+      "content": "### Commit 2\n- ID: 6289d9bc\n- Author: Thomas Kriechbaumer (thomas@kriechbaumer.name)\n- Date: 2020-11-03 04:08:54\n- Message: refactor and remove dead code\n- Changes:\n```diff\n@@ -3,18 +3,14 @@ import logging\n import os\n import sys\n import threading\n-from mitmproxy.net import tcp, tls\n-from mitmproxy import certs as mcerts\n-from mitmproxy.net import websocket_utils\n-from mitmproxy import version\n import urllib\n-from mitmproxy import exceptions\n-from pathod import language\n-from pathod import utils\n-from pathod import log\n-from pathod import protocols\n import typing  # noqa\n \n+from mitmproxy import certs as mcerts, exceptions, version\n+from mitmproxy.net import tcp, tl...\n```\n\n### Commit 3\n- ID: c8f98237\n- Author: Thomas Kriechbaumer (thomas@kriechbaumer.name)\n- Date: 2020-11-04 04:41:56\n- Message: detangle custom websockets implementation and replace it with mostly wsproto\n- Changes:\n```diff\n@@ -5,7 +5,7 @@ import sys\n import threading\n from mitmproxy.net import tcp, tls\n from mitmproxy import certs as mcerts\n-from mitmproxy.net import websockets\n+from mitmproxy.net import websocket_utils\n from mitmproxy import version\n import urllib\n from mitmproxy import exceptions\n@@ -177,8 +177,8 @@ class PathodHandler(tcp.BaseHandler):\n \n             m = utils.MemBool()\n \n-            valid_websocket_handshake = websockets.check_handshake(headers)\n-            self.settings.websocket_key = webs...\n```",
+      "metadata": {
+        "chunk_index": 10,
+        "file_path": "pathod/pathod.py",
+        "commit_count": 5,
+        "language": "python",
+        "total_chunks": 12,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.8713305592536926
+    },
+    {
+      "content": "# File: mitmproxy/certs.py (python)\n\n## Code Content:\n```python\nimport os\nimport ssl\nimport time\nimport datetime\nimport ipaddress\nimport sys\nimport typing\nimport contextlib\n\nfrom pyasn1.type import univ, constraint, char, namedtype, tag\nfrom pyasn1.codec.der.decoder import decode\nfrom pyasn1.error import PyAsn1Error\nimport OpenSSL\n\nfrom mitmproxy.coretypes import serializable\n\n# Default expiry must not be too long: https://github.com/mitmproxy/mitmproxy/issues/815\nDEFAULT_EXP = 94608000  # = 60 * 60 * 24 * 365 * 3 = 3 years\nDEFAULT_EXP_DUMMY_CERT = 31536000  # = 60 * 60 * 24 * 365 = 1 year\n\n# Generated with \"openssl dhparam\". It's too slow to generate this on startup.\nDEFAULT_DHPARAM = b\"\"\"\n-----BEGIN DH PARAMETERS-----\nMIICCAKCAgEAyT6LzpwVFS3gryIo29J5icvgxCnCebcdSe/NHMkD8dKJf8suFCg3\nO2+dguLakSVif/t6dhImxInJk230HmfC8q93hdcg/j8rLGJYDKu3ik6H//BAHKIv\nj5O9yjU3rXCfmVJQic2Nne39sg3CreAepEts2TvYHhVv3TEAzEqCtOuTjgDv0ntJ\nGwpj+BJBRQGG9NvprX1YGJ7WOFBP/hWU7d6tgvE6Xa7T/u9QIKpYHMIkcN/l3ZFB\nchZEqVlyrcngtSXCROTPcDOQ6Q8QzhaBJS+Z6rcsd7X+haiQqvoFcmaJ08Ks6LQC\nZIL2EtYJw8V8z7C0igVEBIADZBI6OTbuuhDwRw//zU1uq52Oc48CIZlGxTYG/Evq\no9EWAXUYVzWkDSTeBH1r4z/qLPE2cnhtMxbFxuvK53jGB0emy2y1Ei6IhKshJ5qX\nIB/aE7SSHyQ3MDHHkCmQJCsOd4Mo26YX61NZ+n501XjqpCBQ2+DfZCBh8Va2wDyv\nA2Ryg9SUz8j0AXViRNMJgJrr446yro/FuJZwnQcO3WQnXeqSBnURqKjmqkeFP+d8\n6mk2tqJaY507lRNqtGlLnj7f5RNoBFJDCLBNurVgfvq9TCVWKDIFD4vZRjCrnl6I\nrD693XKIHUCWOjMh1if6omGXKHH40QuME2gNa50+YPn1iYDl88uDbbMCAQI=\n-----END DH PARAMETERS-----\n\"\"\"",
+      "metadata": {
+        "language": "python",
+        "total_chunks": 12,
+        "chunk_index": 0,
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "file_path": "mitmproxy/certs.py"
+      },
+      "similarity_score": 0.8794046640396118
+    },
+    {
+      "content": "class HttpLayer(base.Layer):\n\n    if False:\n        # mypy type hints\n        server_conn: connections.ServerConnection = None\n\n    def __init__(self, ctx, mode):\n        super().__init__(ctx)\n        self.mode = mode\n        self.__initial_server_address: tuple = None\n        \"Contains the original destination in transparent mode, which needs to be restored\"\n        \"if an inline script modified the target server for a single http request\"\n        # We cannot rely on server_conn.tls_established,\n        # see https://github.com/mitmproxy/mitmproxy/issues/925\n        self.__initial_server_tls = None\n        # Requests happening after CONNECT do not need Proxy-Authorization headers.\n        self.connect_request = False\n\n    def __call__(self):\n        if self.mode == HTTPMode.transparent:\n            self.__initial_server_tls = self.server_tls\n            self.__initial_server_address = self.server_conn.address\n        while True:\n            flow = http.HTTPFlow(\n                self.client_conn,\n                self.server_conn,\n                live=self,\n                mode=self.mode.name\n            )\n            if not self._process_flow(flow):\n                return\n\n    def handle_regular_connect(self, f):\n        self.connect_request = True\n\n        try:\n            self.set_server((f.request.host, f.request.port))\n\n            if f.response:\n                resp = f.response\n            else:\n                resp = http.make_connect_response(f.request.data.http_version)\n\n            self.send_response(resp)",
+      "metadata": {
+        "language": "python",
+        "commit_count": 5,
+        "chunk_index": 4,
+        "total_chunks": 16,
+        "file_path": "mitmproxy/proxy/protocol/http.py",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.8799017071723938
+    },
+    {
+      "content": "## Git Commit History\n\n### Commit 1\n- ID: 6289d9bc\n- Author: Thomas Kriechbaumer (thomas@kriechbaumer.name)\n- Date: 2020-11-03 04:08:54\n- Message: refactor and remove dead code\n- Changes:\n```diff\n@@ -15,7 +15,7 @@ mitmproxy connection may look as follows (outermost layer first):\n       - Http1Layer\n       - HttpLayer\n       - TLSLayer\n-      - WebsocketLayer (or TCPLayer)\n+      - WebSocketLayer (or TCPLayer)\n \n Every layer acts as a read-only context for its inner layers (see\n :py:class:`Layer`). To communicate with an outer layer, a layer can use...\n```\n\n### Commit 2\n- ID: fc80aa56\n- Author: Maximilian Hils (git@maximilianhils.com)\n- Date: 2018-01-13 04:40:35\n- Message: move ClientHello and related functions to mitmproxy.net.tls\n- Changes:\n```diff\n@@ -36,13 +36,11 @@ from .http1 import Http1Layer\n from .http2 import Http2Layer\n from .websocket import WebSocketLayer\n from .rawtcp import RawTCPLayer\n-from .tls import TlsClientHello\n from .tls import TlsLayer\n-from .tls import is_tls_record_magic\n \n __all__ = [\n     \"Layer\", \"ServerConnectionMixin\",\n-    \"TlsLayer\", \"is_tls_record_magic\", \"TlsClientHello\",\n+    \"TlsLayer\",\n     \"UpstreamConnectLayer\",\n     \"HttpLayer\",\n     \"Http1Layer\",...\n```\n\n### Commit 3\n- ID: ffb3988d\n- Author: Thomas Kriechbaumer (thomas@kriechbaumer.name)\n- Date: 2016-11-13 23:18:29\n- Message: rename WebSocket{s,} protocol\n- Changes:\n```diff\n@@ -2,7 +2,7 @@\n In mitmproxy, protocols are implemented as a set of layers, which are composed\n on top each other. The first layer is usually the proxy mode, e.g. transparent\n proxy or normal HTTP proxy. Next, various protocol layers are stacked on top of\n-each other - imagine WebSockets on top of an HTTP Upgrade request. An actual\n+each other - imagine WebSocket on top of an HTTP Upgrade request. An actual\n mitmproxy connection may look as follows (outermost layer first):\n \n     Transparent HT...\n```",
+      "metadata": {
+        "strategy": "enhanced",
+        "chunk_index": 1,
+        "file_path": "mitmproxy/proxy/protocol/__init__.py",
+        "total_chunks": 3,
+        "language": "python",
+        "commit_count": 4
+      },
+      "similarity_score": 0.8878536224365234
+    },
+    {
+      "content": "# File: mitmproxy/proxy/protocol/rawtcp.py (python)\n\n## Code Content:\n```python\nimport socket\n\nfrom OpenSSL import SSL\n\nimport mitmproxy.net.tcp\nfrom mitmproxy import tcp\nfrom mitmproxy import flow\nfrom mitmproxy import exceptions\nfrom mitmproxy.proxy.protocol import base\n\n\nclass RawTCPLayer(base.Layer):\n    chunk_size = 4096\n\n    def __init__(self, ctx, ignore=False):\n        self.ignore = ignore\n        super().__init__(ctx)\n\n    def __call__(self):\n        self.connect()\n\n        if not self.ignore:\n            f = tcp.TCPFlow(self.client_conn, self.server_conn, self)\n            self.channel.ask(\"tcp_start\", f)\n\n        buf = memoryview(bytearray(self.chunk_size))\n\n        client = self.client_conn.connection\n        server = self.server_conn.connection\n        conns = [client, server]\n\n        # https://github.com/openssl/openssl/issues/6234\n        for conn in conns:\n            if isinstance(conn, SSL.Connection) and hasattr(SSL._lib, \"SSL_clear_mode\"):\n                SSL._lib.SSL_clear_mode(conn._ssl, SSL._lib.SSL_MODE_AUTO_RETRY)\n\n        try:\n            while not self.channel.should_exit.is_set():\n                r = mitmproxy.net.tcp.ssl_read_select(conns, 10)\n                for conn in r:\n                    dst = server if conn == client else client\n                    try:\n                        size = conn.recv_into(buf, self.chunk_size)\n                    except (SSL.WantReadError, SSL.WantWriteError):\n                        continue\n                    if not size:\n                        conns.remove(conn)\n                        # Shutdown connection to the other peer\n                        if isinstance(conn, SSL.Connection):\n                            # We can't half-close a connection, so we just close everything here.\n                            # Sockets will be cleaned up on a higher level.\n                            return\n                        else:\n                            dst.shutdown(socket.SHUT_WR)",
+      "metadata": {
+        "chunk_index": 0,
+        "commit_count": 5,
+        "total_chunks": 4,
+        "strategy": "enhanced",
+        "file_path": "mitmproxy/proxy/protocol/rawtcp.py",
+        "language": "python"
+      },
+      "similarity_score": 0.8879112601280212
+    },
+    {
+      "content": "# File: test/mitmproxy/tools/console/test_common.py (python)\n\n## Code Content:\n```python\nimport urwid\n\nfrom mitmproxy.test import tflow\nfrom mitmproxy.tools.console import common\n\n\ndef test_format_flow():\n    flows = [\n        tflow.tflow(resp=True),\n        tflow.tflow(err=True),\n        tflow.ttcpflow(),\n        tflow.ttcpflow(err=True),\n    ]\n    for f in flows:\n        for render_mode in common.RenderMode:\n            assert common.format_flow(f, render_mode=render_mode)\n            assert common.format_flow(f, render_mode=render_mode, hostheader=True, focused=False)\n\n\ndef test_format_keyvals():\n    assert common.format_keyvals(\n        [\n            (\"aa\", \"bb\"),\n            (\"cc\", \"dd\"),\n            (\"ee\", None),\n        ]\n    )\n    wrapped = urwid.BoxAdapter(\n        urwid.ListBox(\n            urwid.SimpleFocusListWalker(\n                common.format_keyvals([(\"foo\", \"bar\")])\n            )\n        ), 1\n    )\n    assert wrapped.render((30,))\n    assert common.format_keyvals(\n        [\n            (\"aa\", wrapped)\n        ]\n    )\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 8cd5e2d2\n- Author: Maximilian Hils (git@maximilianhils.com)\n- Date: 2020-04-12 07:22:44\n- Message: lint, mypy, tests++\n- Changes:\n```diff\n@@ -5,10 +5,16 @@ from mitmproxy.tools.console import common\n \n \n def test_format_flow():\n-    f = tflow.tflow(resp=True)\n-    assert common.format_flow(f, True)\n-    assert common.format_flow(f, True, hostheader=True)\n-    assert common.format_flow(f, True, extended=True)\n+    flows = [\n+        tflow.tflow(resp=True),\n+        tflow.tflow(err=True),\n+        tflow.ttcpflow(),\n+        tflow.ttcpflow(err=True),\n+    ]\n+    for f in flows:\n+        for render_mode in common.RenderMode:\n+        ...\n```\n\n### Commit 2\n- ID: 2e2daeed\n- Author: Maximilian Hils (git@maximilianhils.com)\n- Date: 2018-01-05 23:09:43\n- Message: refactor common.format_keyvals",
+      "metadata": {
+        "language": "python",
+        "chunk_index": 0,
+        "total_chunks": 3,
+        "strategy": "enhanced",
+        "file_path": "test/mitmproxy/tools/console/test_common.py",
+        "commit_count": 5
+      },
+      "similarity_score": 0.8886755704879761
+    },
+    {
+      "content": "### Commit 4\n- ID: c774a9fe\n- Author: Aldo Cortesi (aldo@nullcube.com)\n- Date: 2016-10-17 12:34:46\n- Message: python3: clean up super and __future__\n- Changes:\n```diff\n@@ -1,4 +1,3 @@\n-from __future__ import absolute_import, print_function, division\n \n from mitmproxy import protocol\n \n@@ -6,7 +5,7 @@ from mitmproxy import protocol\n class ReverseProxy(protocol.Layer, protocol.ServerConnectionMixin):\n \n     def __init__(self, ctx, server_address, server_tls):\n-        super(ReverseProxy, self).__init__(ctx, server_address=server_address)\n+        super().__init__(ctx, server_address=server_address)\n         self.server_tls = server_tls\n \n     def __call__(self):...\n```\n\n### Commit 5\n- ID: 0a2e7a97\n- Author: Maximilian Hils (git@maximilianhils.com)\n- Date: 2016-06-01 10:06:57\n- Message: use module-level imports only\n- Changes:\n```diff\n@@ -1,9 +1,9 @@\n-from __future__ import (absolute_import, print_function, division)\n+from __future__ import absolute_import, print_function, division\n \n-from ...protocol import Layer, ServerConnectionMixin\n+from mitmproxy import protocol\n \n \n-class ReverseProxy(Layer, ServerConnectionMixin):\n+class ReverseProxy(protocol.Layer, protocol.ServerConnectionMixin):\n \n     def __init__(self, ctx, server_address, server_tls):\n         super(ReverseProxy, self).__init__(ctx, server_address=server_address...\n```",
+      "metadata": {
+        "total_chunks": 2,
+        "commit_count": 5,
+        "language": "python",
+        "file_path": "mitmproxy/proxy/modes/reverse_proxy.py",
+        "chunk_index": 1,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.8921111226081848
+    },
+    {
+      "content": "client_conn:\n        The :py:class:`client connection <mitmproxy.connections.ClientConnection>`.\n\n    Returns:\n        The raw handshake packet bytes, without TLS record header(s).\n    \"\"\"\n    client_hello = b\"\"\n    client_hello_size = 1\n    offset = 0\n    while len(client_hello) < client_hello_size:\n        record_header = rfile.peek(offset + 5)[offset:]\n        if not is_tls_record_magic(record_header) or len(record_header) < 5:\n            raise exceptions.TlsProtocolException(\n                'Expected TLS record, got \"%s\" instead.' % record_header)\n        record_size = struct.unpack_from(\"!H\", record_header, 3)[0] + 5\n        record_body = rfile.peek(offset + record_size)[offset + 5:]\n        if len(record_body) != record_size - 5:\n            raise exceptions.TlsProtocolException(\n                \"Unexpected EOF in TLS handshake: %s\" % record_body)\n        client_hello += record_body\n        offset += record_size\n        client_hello_size = struct.unpack(\"!I\", b'\\x00' + client_hello[1:4])[0] + 4\n    return client_hello\n\n\nclass ClientHello:\n\n    def __init__(self, raw_client_hello):\n        self._client_hello = tls_client_hello.TlsClientHello(\n            KaitaiStream(io.BytesIO(raw_client_hello))\n        )\n\n    @property\n    def cipher_suites(self):\n        return self._client_hello.cipher_suites.cipher_suites\n\n    @property\n    def sni(self) -> typing.Optional[bytes]:\n        if self._client_hello.extensions:\n            for extension in self._client_hello.extensions.extensions:\n                is_valid_sni_extension = (\n                    extension.type == 0x00 and\n                    len(extension.body.server_names) == 1 and\n                    extension.body.server_names[0].name_type == 0 and\n                    check.is_valid_host(extension.body.server_names[0].host_name)\n                )\n                if is_valid_sni_extension:\n                    return extension.body.server_names[0].host_name\n        return None",
+      "metadata": {
+        "commit_count": 5,
+        "language": "python",
+        "strategy": "enhanced",
+        "total_chunks": 13,
+        "file_path": "mitmproxy/net/tls.py",
+        "chunk_index": 9
+      },
+      "similarity_score": 0.8957926630973816
+    },
+    {
+      "content": "def terr(content=\"error\"):\n    \"\"\"\n    @return: mitmproxy.proxy.protocol.primitives.Error\n    \"\"\"\n    err = flow.Error(content)\n    return err\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 38cca379\n- Author: Thomas Kriechbaumer (thomas@kriechbaumer.name)\n- Date: 2020-11-21 02:25:26\n- Message: pyupgrade --py36-plus mitmproxy/**/*.py\n- Changes:\n```diff\n@@ -86,8 +86,8 @@ def twebsocketflow(client_conn=True, server_conn=True, messages=True, err=None,\n     if messages is True:\n         messages = [\n             websocket.WebSocketMessage(Opcode.BINARY, True, b\"hello binary\"),\n-            websocket.WebSocketMessage(Opcode.TEXT, True, \"hello text\".encode()),\n-            websocket.WebSocketMessage(Opcode.TEXT, False, \"it's me\".encode()),\n+            websocket.WebSocketMessage(Opcode.TEXT, True, b\"hello text\"),\n+            websocket.WebSocketMess...\n```\n\n### Commit 2\n- ID: c8f98237\n- Author: Thomas Kriechbaumer (thomas@kriechbaumer.name)\n- Date: 2020-11-04 04:41:56\n- Message: detangle custom websockets implementation and replace it with mostly wsproto\n- Changes:\n```diff\n@@ -1,7 +1,6 @@\n import io\n import uuid\n \n-from mitmproxy.net import websockets\n from mitmproxy.test import tutils\n from mitmproxy import tcp\n from mitmproxy import websocket\n@@ -11,6 +10,8 @@ from mitmproxy import connections\n from mitmproxy import flow\n from mitmproxy.net import http as net_http\n \n+from wsproto.frame_protocol import Opcode\n+\n \n def ttcpflow(client_conn=True, server_conn=True, messages=True, err=None):\n     if client_conn is True:\n@@ -84,9 +85,9 @@ def twebsocketflow(client_con...\n```",
+      "metadata": {
+        "total_chunks": 7,
+        "file_path": "mitmproxy/test/tflow.py",
+        "language": "python",
+        "strategy": "enhanced",
+        "chunk_index": 4,
+        "commit_count": 5
+      },
+      "similarity_score": 0.8958405256271362
+    }
+  ],
+  "compressed": [
+    {
+      "content": "# File: test/mitmproxy/net/tools/getcertnames (text)\n\n## Key Code Elements:\nimport sys\nfrom mitmproxy.net import tcp\ndef get_remote_cert(host, port, sni):\nif len(sys.argv) > 2:\nelse:\nif len(sys.argv) > 3:\nelse:\nif cert.altnames:\n    for i in cert.altnames:\n\n## Recent Changes:\n- d15e96de by Thomas Kriechbaumer (thomas@kriechbaumer.name): rename TLS/SSL-related functions\n\nSSL is an outdated protocol superseeded by TLS. Although the commo...\n- 8430f857 by Aldo Cortesi (aldo@nullcube.com): The final piece: netlib -> mitproxy.net...",
+      "metadata": {
+        "file_path": "test/mitmproxy/net/tools/getcertnames",
+        "chunk_index": 0,
+        "language": "text",
+        "commit_count": 2,
+        "strategy": "compressed",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.7458921670913696
+    },
+    {
+      "content": "# File: mitmproxy/proxy/protocol/__init__.py (python)\n\n## Key Code Elements:\nmitmproxy connection may look as follows (outermost layer first):\n    Transparent HTTP proxy, no TLS:\n    Regular proxy, CONNECT request with WebSocket over SSL:\nfrom .base import Layer, ServerConnectionMixin\nfrom .http import UpstreamConnectLayer\nfrom .http import HttpLayer\nfrom .http1 import Http1Layer\nfrom .http2 import Http2Layer\nfrom .websocket import WebSocketLayer\nfrom .rawtcp import RawTCPLayer\nfrom .tls import TlsLayer\n\n## Recent Changes:\n- 6289d9bc by Thomas Kriechbaumer (thomas@kriechbaumer.name): refactor and remove dead code...\n- fc80aa56 by Maximilian Hils (git@maximilianhils.com): move ClientHello and related functions to mitmproxy.net.tls...\n- ffb3988d by Thomas Kriechbaumer (thomas@kriechbaumer.name): rename WebSocket{s,} protocol...",
+      "metadata": {
+        "file_path": "mitmproxy/proxy/protocol/__init__.py",
+        "total_chunks": 1,
+        "commit_count": 4,
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "language": "python"
+      },
+      "similarity_score": 0.7534810304641724
+    },
+    {
+      "content": "# File: mitmproxy/proxy/config.py (python)\n\n## Key Code Elements:\nimport os\nimport re\nimport typing\nfrom OpenSSL import crypto\nfrom mitmproxy import certs\nfrom mitmproxy import exceptions\nfrom mitmproxy import options as moptions\nfrom mitmproxy.net import server_spec\nclass HostMatcher:\n    def __init__(self, handle, patterns=tuple()):\n    def __call__(self, address):\n        if not address:\n        if self.handle in [\"ignore\", \"tcp\"]:\n    def __bool__(self):\nclass ProxyConfig:\n\n## Recent Changes:\n- abbdc31a by Miro Karvonen (miro@synopsys.com): Review comment fixes, passphrase is now always required to be bytes in add_cert_file and from_store....\n- adc2e8d2 by Miro Karvonen (miro@synopsys.com): new commandline argument --cert-passphrase added. For decrypting the private key that is provided wi...\n- 0a296817 by Blown_Snail (Blown_Snail@foxmail.com): Fix wrong behavior of --allow-hosts options...",
+      "metadata": {
+        "file_path": "mitmproxy/proxy/config.py",
+        "total_chunks": 1,
+        "commit_count": 5,
+        "strategy": "compressed",
+        "language": "python",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.7682702541351318
+    },
+    {
+      "content": "# File: mitmproxy/net/tls.py (python)\n\n## Key Code Elements:\nimport binascii\nimport io\nimport os\nimport struct\nimport threading\nimport typing\nimport certifi\nfrom OpenSSL import SSL\nfrom kaitaistruct import KaitaiStream\nimport mitmproxy.options\nfrom mitmproxy import certs, exceptions\nfrom mitmproxy.contrib.kaitaistruct import tls_client_hello\nfrom mitmproxy.net import check\nif hasattr(SSL, \"OP_NO_COMPRESSION\"):\ndef client_arguments_from_options(options: \"mitmproxy.options.Options\") -> dict:\n\n## Recent Changes:\n- 02fad342 by Maximilian Hils (git@maximilianhils.com): update verification certs...\n- 7c72776b by Maximilian Hils (git@maximilianhils.com): include full client certificate chain\n\nTesting this requires quite a bit of effort, so it makes sens...\n- 4bfb81c0 by Maximilian Hils (git@maximilianhils.com): temporarily fix key logging for OpenSSL 1.1.1f...",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "language": "python",
+        "total_chunks": 1,
+        "file_path": "mitmproxy/net/tls.py",
+        "commit_count": 5
+      },
+      "similarity_score": 0.7699571847915649
+    },
+    {
+      "content": "# File: pathod/pathod_cmdline.py (python)\n\n## Key Code Elements:\nimport sys\nimport argparse\nimport os\nimport os.path\nimport re\nfrom mitmproxy.net import tls\nfrom mitmproxy.utils import human\nfrom mitmproxy import version\nfrom . import print_tool_deprecation_message, pathod\ndef parse_anchor_spec(s):\n    if \"=\" not in s:\ndef args_pathod(argv, stdout_=sys.stdout, stderr_=sys.stderr):\n    for i in args.ssl_certs:\n        if len(parts) == 1:\n        if not os.path.isfile(parts[1]):\n\n## Recent Changes:\n- 6ff3ee06 by Thomas Kriechbaumer (thomas@kriechbaumer.name): mark pathod/pathoc as deprecated...\n- 2b4f58eb by Maximilian Hils (git@maximilianhils.com): split TLS parts from net.tcp into net.tls...\n- 3262b6e7 by Maximilian Hils (git@maximilianhils.com): Squashed commit of the following:\n\ncommit edfbd41200a854f0bb7bb99f8bb70af9dbb9b8e0\nAuthor: Matt Weid...",
+      "metadata": {
+        "strategy": "compressed",
+        "language": "python",
+        "chunk_index": 0,
+        "file_path": "pathod/pathod_cmdline.py",
+        "total_chunks": 1,
+        "commit_count": 5
+      },
+      "similarity_score": 0.7730109691619873
+    },
+    {
+      "content": "# File: test/mitmproxy/net/test_tls.py (python)\n\n## Key Code Elements:\nimport io\nimport pytest\nfrom mitmproxy import exceptions\nfrom mitmproxy.net import tls\nfrom mitmproxy.net.tcp import TCPClient\nfrom test.mitmproxy.net.test_tcp import EchoHandler\nfrom . import tservers\nclass TestMasterSecretLogger(tservers.ServerTestBase):\n    def test_log(self, tmpdir):\n        with c.connect():\n            with open(logfile, \"rb\") as f:\n    def test_create_logfun(self):\nclass TestTLSInvalid:\n    def test_invalid_ssl_method_should_fail(self):\n        with pytest.raises(exceptions.TlsException):\n\n## Recent Changes:\n- 0f868e99 by Maximilian Hils (git@maximilianhils.com): update cryptography...\n- f9799612 by Maximilian Hils (git@maximilianhils.com): minor improvements and sans-io adjustments...\n- 53cb5bf4 by Thomas Kriechbaumer (thomas@kriechbaumer.name): bump deps...",
+      "metadata": {
+        "total_chunks": 1,
+        "file_path": "test/mitmproxy/net/test_tls.py",
+        "commit_count": 5,
+        "strategy": "compressed",
+        "language": "python",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.7818601727485657
+    },
+    {
+      "content": "# File: mitmproxy/proxy/protocol/tls.py (python)\n\n## Key Code Elements:\nfrom typing import Optional  # noqa\nfrom typing import Union\nfrom mitmproxy import exceptions\nfrom mitmproxy.net import tls as net_tls\nfrom mitmproxy.proxy.protocol import base\nclass TlsLayer(base.Layer):\n    It exposes the following API to child layers:\n    def __init__(self, ctx, client_tls, server_tls, custom_server_sni=None):\n    def __call__(self):\n        The strategy for establishing TLS is as follows:\n        if self._client_tls:\n            try:\n            except exceptions.TlsProtocolException as e:\n        # There are two reasons why we would want to establish TLS with the server now:\n        # A couple of factors influence (2):\n\n## Recent Changes:\n- 38cca379 by Thomas Kriechbaumer (thomas@kriechbaumer.name): pyupgrade --py36-plus mitmproxy/**/*.py...\n- 79778071 by Thomas Kriechbaumer (thomas@kriechbaumer.name): close the client connection if TLS ClientHello parsing fails...\n- bdc15cbe by Maximilian Hils (git@maximilianhils.com): update mypy...",
+      "metadata": {
+        "language": "python",
+        "commit_count": 5,
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "file_path": "mitmproxy/proxy/protocol/tls.py"
+      },
+      "similarity_score": 0.7900171279907227
+    },
+    {
+      "content": "# File: pathod/protocols/http.py (python)\n\n## Key Code Elements:\nfrom mitmproxy import version\nfrom mitmproxy import exceptions\nfrom mitmproxy.net.http import http1\nfrom .. import language\nclass HTTPProtocol:\n    def __init__(self, pathod_handler):\n    def make_error_response(self, reason, body):\n    def handle_http_connect(self, connect, lg):\n        if not self.pathod_handler.server.ssloptions.not_after_connect:\n            try:\n            except exceptions.TlsException as v:\n    def read_request(self, lg=None):\n\n## Recent Changes:\n- d15e96de by Thomas Kriechbaumer (thomas@kriechbaumer.name): rename TLS/SSL-related functions\n\nSSL is an outdated protocol superseeded by TLS. Although the commo...\n- 8430f857 by Aldo Cortesi (aldo@nullcube.com): The final piece: netlib -> mitproxy.net...\n- 01a449b5 by Aldo Cortesi (aldo@nullcube.com): netlib.exceptions.* -> mitmproxy.exceptions...",
+      "metadata": {
+        "file_path": "pathod/protocols/http.py",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "language": "python",
+        "commit_count": 5,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.8064064979553223
+    },
+    {
+      "content": "# File: test/mitmproxy/net/tservers.py (python)\n\n## Key Code Elements:\nimport threading\nimport queue\nimport io\nimport OpenSSL\nfrom mitmproxy.net import tcp\nfrom mitmproxy.utils import data\nclass _ServerThread(threading.Thread):\n    def __init__(self, server):\n    def run(self):\nclass _TServer(tcp.TCPServer):\n    def __init__(self, ssl, q, handler_klass, addr, **kwargs):\n            ssl: A dictionary of SSL parameters:\n        if ssl is True:\n        elif isinstance(ssl, dict):\n        else:\n\n## Recent Changes:\n- 95e690ba by Aldo Cortesi (aldo@corte.si): test: shift test_data out of our public API...\n- d15e96de by Thomas Kriechbaumer (thomas@kriechbaumer.name): rename TLS/SSL-related functions\n\nSSL is an outdated protocol superseeded by TLS. Although the commo...\n- 2faaa0b2 by Thomas Kriechbaumer (thomas@kriechbaumer.name): connections tests: fix leaking sockets...",
+      "metadata": {
+        "file_path": "test/mitmproxy/net/tservers.py",
+        "total_chunks": 1,
+        "commit_count": 5,
+        "chunk_index": 0,
+        "language": "python",
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.8172752261161804
+    },
+    {
+      "content": "# File: mitmproxy/net/tcp.py (python)\n\n## Key Code Elements:\nimport os\nimport errno\nimport select\nimport socket\nimport sys\nimport threading\nimport time\nimport traceback\nfrom typing import Optional  # noqa\nfrom mitmproxy.net import tls\nfrom OpenSSL import SSL\nfrom mitmproxy import certs\nfrom mitmproxy import exceptions\nfrom mitmproxy.coretypes import basethread\nclass _FileLike:\n\n## Recent Changes:\n- 38cca379 by Thomas Kriechbaumer (thomas@kriechbaumer.name): pyupgrade --py36-plus mitmproxy/**/*.py...\n- 2bbffef3 by gorogoroumaru (force.minpiku@gmail.com): add default timeout value (#4068)...\n- 1ada2e26 by Seth Barrios (sethbarrios@google.com): Add support for IPv6-only environments\n\nPreviously, the proxy would attempt to bind to an IPv6 + IPv...",
+      "metadata": {
+        "commit_count": 5,
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "file_path": "mitmproxy/net/tcp.py",
+        "total_chunks": 1,
+        "language": "python"
+      },
+      "similarity_score": 0.8195202350616455
+    },
+    {
+      "content": "# File: mitmproxy/tools/cmdline.py (python)\n\n## Key Code Elements:\nimport argparse\ndef common_options(parser, opts):\ndef mitmproxy(opts):\ndef mitmdump(opts):\ndef mitmweb(opts):\n\n## Recent Changes:\n- adc2e8d2 by Miro Karvonen (miro@synopsys.com): new commandline argument --cert-passphrase added. For decrypting the private key that is provided wi...\n- 1b6b3cd9 by Martin Plattner (git@mplattner.at): add MapLocal addon draft...\n- 89fad1e2 by Martin Plattner (git@mplattner.at): add mapremote addon to modify request URLs...",
+      "metadata": {
+        "commit_count": 5,
+        "file_path": "mitmproxy/tools/cmdline.py",
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "language": "python"
+      },
+      "similarity_score": 0.8197702765464783
+    },
+    {
+      "content": "# File: pathod/pathod.py (python)\n\n## Key Code Elements:\nimport copy\nimport logging\nimport os\nimport sys\nimport threading\nimport urllib\nimport typing  # noqa\nfrom mitmproxy import certs as mcerts, exceptions, version\nfrom mitmproxy.net import tcp, tls, websocket\nfrom pathod import language, utils, log, protocols\nclass PathodError(Exception):\nclass SSLOptions:\n    def __init__(\n    ):\n        for i in certs or []:\n\n## Recent Changes:\n- 38cca379 by Thomas Kriechbaumer (thomas@kriechbaumer.name): pyupgrade --py36-plus mitmproxy/**/*.py...\n- 6289d9bc by Thomas Kriechbaumer (thomas@kriechbaumer.name): refactor and remove dead code...\n- c8f98237 by Thomas Kriechbaumer (thomas@kriechbaumer.name): detangle custom websockets implementation and replace it with mostly wsproto...",
+      "metadata": {
+        "strategy": "compressed",
+        "commit_count": 5,
+        "file_path": "pathod/pathod.py",
+        "language": "python",
+        "chunk_index": 0,
+        "total_chunks": 1
+      },
+      "similarity_score": 0.8332159519195557
+    },
+    {
+      "content": "# File: mitmproxy/proxy/protocol/rawtcp.py (python)\n\n## Key Code Elements:\nimport socket\nfrom OpenSSL import SSL\nimport mitmproxy.net.tcp\nfrom mitmproxy import tcp\nfrom mitmproxy import flow\nfrom mitmproxy import exceptions\nfrom mitmproxy.proxy.protocol import base\nclass RawTCPLayer(base.Layer):\n    def __init__(self, ctx, ignore=False):\n    def __call__(self):\n        if not self.ignore:\n        for conn in conns:\n            if isinstance(conn, SSL.Connection) and hasattr(SSL._lib, \"SSL_clear_mode\"):\n        try:\n            while not self.channel.should_exit.is_set():\n\n## Recent Changes:\n- 38cca379 by Thomas Kriechbaumer (thomas@kriechbaumer.name): pyupgrade --py36-plus mitmproxy/**/*.py...\n- 0f868e99 by Maximilian Hils (git@maximilianhils.com): update cryptography...\n- 8430f857 by Aldo Cortesi (aldo@nullcube.com): The final piece: netlib -> mitproxy.net...",
+      "metadata": {
+        "total_chunks": 1,
+        "commit_count": 5,
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "file_path": "mitmproxy/proxy/protocol/rawtcp.py",
+        "language": "python"
+      },
+      "similarity_score": 0.8474185466766357
+    },
+    {
+      "content": "# File: pathod/pathoc.py (python)\n\n## Key Code Elements:\nimport contextlib\nimport sys\nimport os\nimport itertools\nimport hashlib\nimport queue\nimport random\nimport select\nimport time\nimport OpenSSL.crypto\nimport logging\nfrom mitmproxy import certs, exceptions\nfrom mitmproxy.net import tcp, tls, socks\nfrom mitmproxy.net import http as net_http\nfrom mitmproxy.coretypes import basethread\n\n## Recent Changes:\n- 38cca379 by Thomas Kriechbaumer (thomas@kriechbaumer.name): pyupgrade --py36-plus mitmproxy/**/*.py...\n- c8f98237 by Thomas Kriechbaumer (thomas@kriechbaumer.name): detangle custom websockets implementation and replace it with mostly wsproto...\n- 5af57cfa by Maximilian Hils (git@maximilianhils.com): HTTPRequest -> http.Request, add request.authority...",
+      "metadata": {
+        "total_chunks": 1,
+        "commit_count": 5,
+        "file_path": "pathod/pathoc.py",
+        "strategy": "compressed",
+        "language": "python",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.8532484769821167
+    },
+    {
+      "content": "# File: mitmproxy/exceptions.py (python)\n\n## Key Code Elements:\nWe try to be very hygienic regarding the exceptions we throw:\nclass MitmproxyException(Exception):\n    def __init__(self, message=None):\nclass Kill(MitmproxyException):\nclass ProtocolException(MitmproxyException):\nclass TlsProtocolException(ProtocolException):\nclass ClientHandshakeException(TlsProtocolException):\n    def __init__(self, message, server):\nclass InvalidServerCertificate(TlsProtocolException):\n    def __repr__(self):\nclass Socks5ProtocolException(ProtocolException):\nclass HttpProtocolException(ProtocolException):\nclass Http2ProtocolException(ProtocolException):\nclass Http2ZombieException(ProtocolException):\nclass ServerException(MitmproxyException):\n\n## Recent Changes:\n- 1a584420 by madt1m (blackjuniper@protonmail.com): exceptions: new SessionLoad exception for load errors...\n- b0b67fe2 by Aldo Cortesi (aldo@nullcube.com): commands: refactor types\n\nThe type system was scattered over a number of places, making it hard to\nf...\n- 97000aa8 by Aldo Cortesi (aldo@nullcube.com): command: save.file flowspec path -> None\n\nOur first user-facing command. The following commands do t...",
+      "metadata": {
+        "commit_count": 5,
+        "language": "python",
+        "strategy": "compressed",
+        "file_path": "mitmproxy/exceptions.py",
+        "total_chunks": 1,
+        "chunk_index": 0
+      },
+      "similarity_score": 0.8623091578483582
+    },
+    {
+      "content": "# File: examples/contrib/tls_passthrough.py (python)\n\n## Key Code Elements:\nExample:\nimport collections\nimport random\nfrom enum import Enum\nimport mitmproxy\nfrom mitmproxy import ctx\nfrom mitmproxy.exceptions import TlsProtocolException\nfrom mitmproxy.proxy.protocol import TlsLayer, RawTCPLayer\nclass InterceptionResult(Enum):\nclass _TlsStrategy:\n    def __init__(self):\n    def should_intercept(self, server_address):\n        Returns:\n    def record_success(self, server_address):\n    def record_failure(self, server_address):\n\n## Recent Changes:\n- 38cca379 by Thomas Kriechbaumer (thomas@kriechbaumer.name): pyupgrade --py36-plus mitmproxy/**/*.py...\n- 08895e9b by Maximilian Hils (git@maximilianhils.com): restructure examples\n\n - restructure examples (fix #4031)\n - remove example dependencies from setup....",
+      "metadata": {
+        "chunk_index": 0,
+        "commit_count": 2,
+        "strategy": "compressed",
+        "file_path": "examples/contrib/tls_passthrough.py",
+        "language": "python",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.8647301197052002
+    },
+    {
+      "content": "# File: docs/src/content/howto-wireshark-tls.md (markdown)\n\n## Key Code Elements:\nmenu:\n    howto:\nthat it points to a writable text file:\n\n## Recent Changes:\n- c60c3dbb by Maximilian Hils (git@maximilianhils.com): docs: consistently use backticks for highlighting...\n- 6c10a4e0 by Philipp Johann Fritz (philipp.j.fritz@gmail.com): Update howto-wireshark-tls.md\n\nWireshark renamed the protocol from SSL to TLS in settings...\n- 1410bdd9 by ZHRhodes (zhrhodes@gmail.com): Update howto-wireshark-tls.md\n\nFixed a typo in describing the master keys...",
+      "metadata": {
+        "file_path": "docs/src/content/howto-wireshark-tls.md",
+        "commit_count": 4,
+        "chunk_index": 0,
+        "language": "markdown",
+        "total_chunks": 1,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.8717607259750366
+    },
+    {
+      "content": "# File: pathod/protocols/websockets.py (python)\n\n## Key Code Elements:\nimport time\nfrom pathod import language\nfrom mitmproxy import exceptions\nclass WebsocketsProtocol:\n    def __init__(self, pathod_handler):\n    def handle_websocket(self, logger):\n        while True:\n            with logger.ctx() as lg:\n                try:\n                except exceptions.NetlibException as e:\n            if self.pathod_handler.tls_established:\n            if frm.payload.startswith(ld):\n                try:\n                except language.exceptions.ParseException as v:\n                for frm in wf_gen:\n\n## Recent Changes:\n- c8f98237 by Thomas Kriechbaumer (thomas@kriechbaumer.name): detangle custom websockets implementation and replace it with mostly wsproto...\n- 9aae3213 by Thomas Kriechbaumer (thomas@kriechbaumer.name): rename TLS/SSL-related attributes\n\nSSL is an outdated protocol superseeded by TLS. Although the comm...\n- 380d8ec3 by Thomas Kriechbaumer (thomas@kriechbaumer.name): increase test coverage...",
+      "metadata": {
+        "total_chunks": 1,
+        "language": "python",
+        "file_path": "pathod/protocols/websockets.py",
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "commit_count": 5
+      },
+      "similarity_score": 0.8775047063827515
+    },
+    {
+      "content": "# File: test/mitmproxy/net/data/text_cert_2 (text)\n\n## Recent Changes:\n- 8430f857 by Aldo Cortesi (aldo@nullcube.com): The final piece: netlib -> mitproxy.net...",
+      "metadata": {
+        "total_chunks": 1,
+        "language": "text",
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "file_path": "test/mitmproxy/net/data/text_cert_2",
+        "commit_count": 1
+      },
+      "similarity_score": 0.8817607164382935
+    },
+    {
+      "content": "# File: test/mitmproxy/net/data/text_cert_weird1 (text)\n\n## Recent Changes:\n- 8430f857 by Aldo Cortesi (aldo@nullcube.com): The final piece: netlib -> mitproxy.net...",
+      "metadata": {
+        "language": "text",
+        "commit_count": 1,
+        "file_path": "test/mitmproxy/net/data/text_cert_weird1",
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.8837734460830688
+    }
+  ]
+}

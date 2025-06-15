@@ -1,0 +1,7 @@
+{
+  "reason": "The issue occurs when running train_prompts.sh with a single card (dist.get_world_size() == 1) because the prompt_sampler and pretrain_sampler are not defined in the single-card scenario.",
+  "location": [
+    "applications/Chat/examples/train_prompts.py"
+  ],
+  "fix": "Add a condition to define prompt_sampler and pretrain_sampler when dist.get_world_size() == 1, similar to how they are defined in the multi-card scenario. For example:\n\nif dist.get_world_size() > 1:\n    prompt_sampler = DistributedSampler(prompt_dataset, shuffle=True, seed=args.seed, drop_last=True)\n    pretrain_sampler = DistributedSampler(pretrain_dataset, shuffle=True, seed=args.seed, drop_last=True)\nelse:\n    prompt_sampler = None\n    pretrain_sampler = None"
+}

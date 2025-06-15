@@ -1,0 +1,708 @@
+{
+  "basic": [
+    {
+      "content": "@Test\n  public void testFloatEqualsBigDecimal() {\n    JsonPrimitive p1 = new JsonPrimitive(10.25F);\n    JsonPrimitive p2 = new JsonPrimitive(new BigDecimal(\"10.25\"));\n    assertThat(p1).isEqualTo(p2);\n    assertThat(p1.hashCode()).isEqualTo(p2.hashCode());\n  }\n\n  @Test\n  public void testDoubleEqualsBigDecimal() {\n    JsonPrimitive p1 = new JsonPrimitive(10.25D);\n    JsonPrimitive p2 = new JsonPrimitive(new BigDecimal(\"10.25\"));\n    assertThat(p1).isEqualTo(p2);\n    assertThat(p1.hashCode()).isEqualTo(p2.hashCode());\n  }\n\n  @Test\n  public void testValidJsonOnToString() {\n    JsonPrimitive json = new JsonPrimitive(\"Some\\nEscaped\\nValue\");\n    assertThat(json.toString()).isEqualTo(\"\\\"Some\\\\nEscaped\\\\nValue\\\"\");\n\n    json = new JsonPrimitive(new BigDecimal(\"1.333\"));\n    assertThat(json.toString()).isEqualTo(\"1.333\");\n  }",
+      "metadata": {
+        "chunk_index": 4,
+        "total_chunks": 7,
+        "strategy": "basic",
+        "language": "java",
+        "file_path": "gson/src/test/java/com/google/gson/JsonPrimitiveTest.java"
+      },
+      "similarity_score": 0.5007795095443726
+    },
+    {
+      "content": "@Test\n  public void testBigDecimalNoFractAsStringRepresentationDeserialization() {\n    String doubleValue = \"5E+5\";\n    BigDecimal expected = new BigDecimal(doubleValue);\n    BigDecimal actual = gson.fromJson(doubleValue, BigDecimal.class);\n    assertThat(actual).isEqualTo(expected);\n  }\n\n  @Test\n  public void testBigIntegerSerialization() {\n    BigInteger target = new BigInteger(\"12121211243123245845384534687435634558945453489543985435\");\n    assertThat(gson.toJson(target)).isEqualTo(target.toString());\n  }\n\n  @Test\n  public void testBigIntegerDeserialization() {\n    String json = \"12121211243123245845384534687435634558945453489543985435\";\n    BigInteger target = new BigInteger(json);\n    assertThat(gson.fromJson(json, BigInteger.class)).isEqualTo(target);\n  }\n\n  @Test\n  public void testBigIntegerInASingleElementArraySerialization() {\n    BigInteger[] target = {new BigInteger(\"1212121243434324323254365345367456456456465464564564\")};\n    String json = gson.toJson(target);\n    String actual = extractElementFromArray(json);\n    assertThat(new BigInteger(actual)).isEqualTo(target[0]);\n\n    json = gson.toJson(target, BigInteger[].class);\n    actual = extractElementFromArray(json);\n    assertThat(new BigInteger(actual)).isEqualTo(target[0]);\n  }\n\n  @Test\n  public void testSmallValueForBigIntegerSerialization() {\n    BigInteger target = new BigInteger(\"15\");\n    String actual = gson.toJson(target);\n    assertThat(actual).isEqualTo(target.toString());\n  }\n\n  @Test\n  public void testSmallValueForBigIntegerDeserialization() {\n    BigInteger expected = new BigInteger(\"15\");\n    BigInteger actual = gson.fromJson(\"15\", BigInteger.class);\n    assertThat(actual).isEqualTo(expected);\n  }\n\n  @Test\n  public void testBadValueForBigIntegerDeserialization() {\n    try {\n      gson.fromJson(\"15.099\", BigInteger.class);\n      fail(\"BigInteger can not be decimal values.\");\n    } catch (JsonSyntaxException expected) { }\n  }",
+      "metadata": {
+        "strategy": "basic",
+        "total_chunks": 20,
+        "language": "java",
+        "chunk_index": 9,
+        "file_path": "gson/src/test/java/com/google/gson/functional/PrimitiveTest.java"
+      },
+      "similarity_score": 0.5036036372184753
+    },
+    {
+      "content": "json = new JsonPrimitive(new BigDecimal(\"1.333\"));\n    assertThat(json.toString()).isEqualTo(\"1.333\");\n  }\n\n  @Test\n  public void testEquals() {\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(\"A\"), new JsonPrimitive(\"A\"));\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(true), new JsonPrimitive(true));\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(5L), new JsonPrimitive(5L));\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive('a'), new JsonPrimitive('a'));\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(Float.NaN), new JsonPrimitive(Float.NaN));\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(Float.NEGATIVE_INFINITY),\n        new JsonPrimitive(Float.NEGATIVE_INFINITY));\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(Float.POSITIVE_INFINITY),\n        new JsonPrimitive(Float.POSITIVE_INFINITY));\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(Double.NaN), new JsonPrimitive(Double.NaN));\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(Double.NEGATIVE_INFINITY),\n        new JsonPrimitive(Double.NEGATIVE_INFINITY));\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(Double.POSITIVE_INFINITY),\n        new JsonPrimitive(Double.POSITIVE_INFINITY));\n    assertThat(new JsonPrimitive(\"a\").equals(new JsonPrimitive(\"b\"))).isFalse();\n    assertThat(new JsonPrimitive(true).equals(new JsonPrimitive(false))).isFalse();\n    assertThat(new JsonPrimitive(0).equals(new JsonPrimitive(1))).isFalse();\n  }",
+      "metadata": {
+        "strategy": "basic",
+        "chunk_index": 5,
+        "file_path": "gson/src/test/java/com/google/gson/JsonPrimitiveTest.java",
+        "language": "java",
+        "total_chunks": 7
+      },
+      "similarity_score": 0.5338793992996216
+    },
+    {
+      "content": "@Test\n  public void testBigDecimalDeserialization() {\n    BigDecimal target = new BigDecimal(\"-122.0e-21\");\n    String json = \"-122.0e-21\";\n    assertThat(gson.fromJson(json, BigDecimal.class)).isEqualTo(target);\n  }\n\n  @Test\n  public void testBigDecimalInASingleElementArraySerialization() {\n    BigDecimal[] target = {new BigDecimal(\"-122.08e-21\")};\n    String json = gson.toJson(target);\n    String actual = extractElementFromArray(json);\n    assertThat(new BigDecimal(actual)).isEqualTo(target[0]);\n\n    json = gson.toJson(target, BigDecimal[].class);\n    actual = extractElementFromArray(json);\n    assertThat(new BigDecimal(actual)).isEqualTo(target[0]);\n  }\n\n  @Test\n  public void testSmallValueForBigDecimalSerialization() {\n    BigDecimal target = new BigDecimal(\"1.55\");\n    String actual = gson.toJson(target);\n    assertThat(actual).isEqualTo(target.toString());\n  }\n\n  @Test\n  public void testSmallValueForBigDecimalDeserialization() {\n    BigDecimal expected = new BigDecimal(\"1.55\");\n    BigDecimal actual = gson.fromJson(\"1.55\", BigDecimal.class);\n    assertThat(actual).isEqualTo(expected);\n  }\n\n  @Test\n  public void testBigDecimalPreservePrecisionSerialization() {\n    String expectedValue = \"1.000\";\n    BigDecimal obj = new BigDecimal(expectedValue);\n    String actualValue = gson.toJson(obj);\n\n    assertThat(actualValue).isEqualTo(expectedValue);\n  }\n\n  @Test\n  public void testBigDecimalPreservePrecisionDeserialization() {\n    String json = \"1.000\";\n    BigDecimal expected = new BigDecimal(json);\n    BigDecimal actual = gson.fromJson(json, BigDecimal.class);\n\n    assertThat(actual).isEqualTo(expected);\n  }\n\n  @Test\n  public void testBigDecimalAsStringRepresentationDeserialization() {\n    String doubleValue = \"0.05E+5\";\n    BigDecimal expected = new BigDecimal(doubleValue);\n    BigDecimal actual = gson.fromJson(doubleValue, BigDecimal.class);\n    assertThat(actual).isEqualTo(expected);\n  }",
+      "metadata": {
+        "chunk_index": 8,
+        "language": "java",
+        "total_chunks": 20,
+        "file_path": "gson/src/test/java/com/google/gson/functional/PrimitiveTest.java",
+        "strategy": "basic"
+      },
+      "similarity_score": 0.5618928074836731
+    },
+    {
+      "content": "@Test\n  public void testAsBigDecimals() {\n    Gson gson = new GsonBuilder()\n        .setObjectToNumberStrategy(ToNumberPolicy.BIG_DECIMAL)\n        .setNumberToNumberStrategy(ToNumberPolicy.BIG_DECIMAL)\n        .create();\n    assertThat(gson.fromJson(\"null\", Object.class)).isEqualTo(null);\n    assertThat(gson.fromJson(\"10\", Object.class)).isEqualTo(new BigDecimal(\"10\"));\n    assertThat(gson.fromJson(\"10.0\", Object.class)).isEqualTo(new BigDecimal(\"10.0\"));\n    assertThat(gson.fromJson(\"null\", Number.class)).isEqualTo(null);\n    assertThat(gson.fromJson(\"10\", Number.class)).isEqualTo(new BigDecimal(\"10\"));\n    assertThat(gson.fromJson(\"10.0\", Number.class)).isEqualTo(new BigDecimal(\"10.0\"));\n    assertThat(gson.fromJson(\"3.141592653589793238462643383279\", BigDecimal.class)).isEqualTo(new BigDecimal(\"3.141592653589793238462643383279\"));\n    assertThat(gson.fromJson(\"1e400\", BigDecimal.class)).isEqualTo(new BigDecimal(\"1e400\"));\n  }\n\n  @Test\n  public void testAsListOfLongsOrDoubles() {\n    Gson gson = new GsonBuilder()\n        .setObjectToNumberStrategy(ToNumberPolicy.LONG_OR_DOUBLE)\n        .setNumberToNumberStrategy(ToNumberPolicy.LONG_OR_DOUBLE)\n        .create();\n    Type objectCollectionType = new TypeToken<Collection<Object>>() { }.getType();\n    Collection<Object> objects = gson.fromJson(\"[null,10,10.0]\", objectCollectionType);\n    assertThat(objects).containsExactly(null, 10L, 10.0).inOrder();\n    Type numberCollectionType = new TypeToken<Collection<Number>>() { }.getType();\n    Collection<Object> numbers = gson.fromJson(\"[null,10,10.0]\", numberCollectionType);\n    assertThat(numbers).containsExactly(null, 10L, 10.0).inOrder();\n  }",
+      "metadata": {
+        "language": "java",
+        "total_chunks": 4,
+        "chunk_index": 2,
+        "strategy": "basic",
+        "file_path": "gson/src/test/java/com/google/gson/functional/ToNumberPolicyFunctionalTest.java"
+      },
+      "similarity_score": 0.5735432505607605
+    },
+    {
+      "content": "@Test\n  public void testEqualsAcrossTypes() {\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(\"a\"), new JsonPrimitive('a'));\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(new BigInteger(\"0\")), new JsonPrimitive(0));\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(0), new JsonPrimitive(0L));\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(new BigInteger(\"0\")), new JsonPrimitive(0));\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(Float.NaN), new JsonPrimitive(Double.NaN));\n  }\n\n  @Test\n  public void testEqualsIntegerAndBigInteger() {\n    JsonPrimitive a = new JsonPrimitive(5L);\n    JsonPrimitive b = new JsonPrimitive(new BigInteger(\"18446744073709551621\"));\n    assertWithMessage(\"%s not equals %s\", a, b).that(a.equals(b)).isFalse();\n  }\n\n  @Test\n  public void testEqualsDoesNotEquateStringAndNonStringTypes() {\n    assertThat(new JsonPrimitive(\"true\").equals(new JsonPrimitive(true))).isFalse();\n    assertThat(new JsonPrimitive(\"0\").equals(new JsonPrimitive(0))).isFalse();\n    assertThat(new JsonPrimitive(\"NaN\").equals(new JsonPrimitive(Float.NaN))).isFalse();\n  }\n\n  @Test\n  public void testDeepCopy() {\n    JsonPrimitive a = new JsonPrimitive(\"a\");\n    assertThat(a).isSameInstanceAs(a.deepCopy()); // Primitives are immutable!\n  }\n}\n```",
+      "metadata": {
+        "chunk_index": 6,
+        "strategy": "basic",
+        "file_path": "gson/src/test/java/com/google/gson/JsonPrimitiveTest.java",
+        "total_chunks": 7,
+        "language": "java"
+      },
+      "similarity_score": 0.6012188196182251
+    },
+    {
+      "content": "@Test\n  public void testNumbers() throws IOException {\n    StringWriter stringWriter = new StringWriter();\n    JsonWriter jsonWriter = new JsonWriter(stringWriter);\n    jsonWriter.beginArray();\n    jsonWriter.value(new BigInteger(\"0\"));\n    jsonWriter.value(new BigInteger(\"9223372036854775808\"));\n    jsonWriter.value(new BigInteger(\"-9223372036854775809\"));\n    jsonWriter.value(new BigDecimal(\"3.141592653589793238462643383\"));\n    jsonWriter.endArray();\n    jsonWriter.close();\n    assertThat(stringWriter.toString()).isEqualTo(\"[0,\"\n        + \"9223372036854775808,\"\n        + \"-9223372036854775809,\"\n        + \"3.141592653589793238462643383]\");\n  }\n\n  /**\n   * Tests writing {@code Number} instances which are not one of the standard JDK ones.\n   */\n  @Test\n  public void testNumbersCustomClass() throws IOException {\n    String[] validNumbers = {\n        \"-0.0\",\n        \"1.0\",\n        \"1.7976931348623157E308\",\n        \"4.9E-324\",\n        \"0.0\",\n        \"0.00\",\n        \"-0.5\",\n        \"2.2250738585072014E-308\",\n        \"3.141592653589793\",\n        \"2.718281828459045\",\n        \"0\",\n        \"0.01\",\n        \"0e0\",\n        \"1e+0\",\n        \"1e-0\",\n        \"1e0000\", // leading 0 is allowed for exponent\n        \"1e00001\",\n        \"1e+1\",\n    };\n\n    for (String validNumber : validNumbers) {\n      StringWriter stringWriter = new StringWriter();\n      JsonWriter jsonWriter = new JsonWriter(stringWriter);\n\n      jsonWriter.value(new LazilyParsedNumber(validNumber));\n      jsonWriter.close();\n\n      assertThat(stringWriter.toString()).isEqualTo(validNumber);\n    }\n  }",
+      "metadata": {
+        "file_path": "gson/src/test/java/com/google/gson/stream/JsonWriterTest.java",
+        "strategy": "basic",
+        "chunk_index": 8,
+        "total_chunks": 17,
+        "language": "java"
+      },
+      "similarity_score": 0.6050267219543457
+    },
+    {
+      "content": "@Test\n  public void testIntSerialization() {\n    assertThat(gson.toJson(1, int.class)).isEqualTo(\"1\");\n    assertThat(gson.toJson(1, Integer.class)).isEqualTo(\"1\");\n    assertThat(gson.toJson(Integer.MIN_VALUE, Integer.class)).isEqualTo(Integer.toString(Integer.MIN_VALUE));\n    assertThat(gson.toJson(Integer.MAX_VALUE, Integer.class)).isEqualTo(Integer.toString(Integer.MAX_VALUE));\n    // Should perform widening conversion\n    assertThat(gson.toJson((byte) 1, Integer.class)).isEqualTo(\"1\");\n    // Should perform narrowing conversion\n    assertThat(gson.toJson(2147483648L, Integer.class)).isEqualTo(\"-2147483648\");\n    assertThat(gson.toJson(1.5, Integer.class)).isEqualTo(\"1\");\n  }\n\n  @Test\n  public void testLongSerialization() {\n    assertThat(gson.toJson(1L, long.class)).isEqualTo(\"1\");\n    assertThat(gson.toJson(1L, Long.class)).isEqualTo(\"1\");\n    assertThat(gson.toJson(Long.MIN_VALUE, Long.class)).isEqualTo(Long.toString(Long.MIN_VALUE));\n    assertThat(gson.toJson(Long.MAX_VALUE, Long.class)).isEqualTo(Long.toString(Long.MAX_VALUE));\n    // Should perform widening conversion\n    assertThat(gson.toJson((byte) 1, Long.class)).isEqualTo(\"1\");\n    // Should perform narrowing conversion\n    assertThat(gson.toJson(1.5, Long.class)).isEqualTo(\"1\");\n  }",
+      "metadata": {
+        "language": "java",
+        "total_chunks": 20,
+        "file_path": "gson/src/test/java/com/google/gson/functional/PrimitiveTest.java",
+        "chunk_index": 3,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.6142303943634033
+    },
+    {
+      "content": "@Test\n  public void testPrimitiveIntegerAutoboxedDeserialization() {\n    int expected = 1;\n    int actual = gson.fromJson(\"1\", int.class);\n    assertThat(actual).isEqualTo(expected);\n\n    actual = gson.fromJson(\"1\", Integer.class);\n    assertThat(actual).isEqualTo(expected);\n  }\n\n  @Test\n  public void testByteSerialization() {\n    assertThat(gson.toJson(1, byte.class)).isEqualTo(\"1\");\n    assertThat(gson.toJson(1, Byte.class)).isEqualTo(\"1\");\n    assertThat(gson.toJson(Byte.MIN_VALUE, Byte.class)).isEqualTo(Byte.toString(Byte.MIN_VALUE));\n    assertThat(gson.toJson(Byte.MAX_VALUE, Byte.class)).isEqualTo(Byte.toString(Byte.MAX_VALUE));\n    // Should perform narrowing conversion\n    assertThat(gson.toJson(128, Byte.class)).isEqualTo(\"-128\");\n    assertThat(gson.toJson(1.5, Byte.class)).isEqualTo(\"1\");\n  }\n\n  @Test\n  public void testByteDeserialization() {\n    Byte boxed = gson.fromJson(\"1\", Byte.class);\n    assertThat(boxed).isEqualTo(1);\n    byte primitive = gson.fromJson(\"1\", byte.class);\n    assertThat(primitive).isEqualTo(1);\n\n    byte[] bytes = gson.fromJson(\"[-128, 0, 127, 255]\", byte[].class);\n    assertThat(bytes).isEqualTo(new byte[] {-128, 0, 127, -1});\n  }\n\n  @Test\n  public void testByteDeserializationLossy() {\n    try {\n      gson.fromJson(\"-129\", byte.class);\n      fail();\n    } catch (JsonSyntaxException e) {\n      assertThat(e.getMessage()).isEqualTo(\"Lossy conversion from -129 to byte; at path $\");\n    }\n\n    try {\n      gson.fromJson(\"256\", byte.class);\n      fail();\n    } catch (JsonSyntaxException e) {\n      assertThat(e.getMessage()).isEqualTo(\"Lossy conversion from 256 to byte; at path $\");\n    }\n\n    try {\n      gson.fromJson(\"2147483648\", byte.class);\n      fail();\n    } catch (JsonSyntaxException e) {\n      assertThat(e.getMessage()).isEqualTo(\"java.lang.NumberFormatException: Expected an int but was 2147483648 at line 1 column 11 path $\");\n    }\n  }",
+      "metadata": {
+        "file_path": "gson/src/test/java/com/google/gson/functional/PrimitiveTest.java",
+        "total_chunks": 20,
+        "language": "java",
+        "strategy": "basic",
+        "chunk_index": 1
+      },
+      "similarity_score": 0.6471291780471802
+    },
+    {
+      "content": "@Test\n  public void testDoubles() throws IOException {\n    StringWriter stringWriter = new StringWriter();\n    JsonWriter jsonWriter = new JsonWriter(stringWriter);\n    jsonWriter.beginArray();\n    jsonWriter.value(-0.0);\n    jsonWriter.value(1.0);\n    jsonWriter.value(Double.MAX_VALUE);\n    jsonWriter.value(Double.MIN_VALUE);\n    jsonWriter.value(0.0);\n    jsonWriter.value(-0.5);\n    jsonWriter.value(2.2250738585072014E-308);\n    jsonWriter.value(Math.PI);\n    jsonWriter.value(Math.E);\n    jsonWriter.endArray();\n    jsonWriter.close();\n    assertThat(stringWriter.toString()).isEqualTo(\"[-0.0,\"\n        + \"1.0,\"\n        + \"1.7976931348623157E308,\"\n        + \"4.9E-324,\"\n        + \"0.0,\"\n        + \"-0.5,\"\n        + \"2.2250738585072014E-308,\"\n        + \"3.141592653589793,\"\n        + \"2.718281828459045]\");\n  }\n\n  @Test\n  public void testLongs() throws IOException {\n    StringWriter stringWriter = new StringWriter();\n    JsonWriter jsonWriter = new JsonWriter(stringWriter);\n    jsonWriter.beginArray();\n    jsonWriter.value(0);\n    jsonWriter.value(1);\n    jsonWriter.value(-1);\n    jsonWriter.value(Long.MIN_VALUE);\n    jsonWriter.value(Long.MAX_VALUE);\n    jsonWriter.endArray();\n    jsonWriter.close();\n    assertThat(stringWriter.toString()).isEqualTo(\"[0,\"\n        + \"1,\"\n        + \"-1,\"\n        + \"-9223372036854775808,\"\n        + \"9223372036854775807]\");\n  }",
+      "metadata": {
+        "file_path": "gson/src/test/java/com/google/gson/stream/JsonWriterTest.java",
+        "total_chunks": 17,
+        "strategy": "basic",
+        "chunk_index": 7,
+        "language": "java"
+      },
+      "similarity_score": 0.6740502119064331
+    },
+    {
+      "content": "@Test\n  public void testOverrideBigIntegerTypeAdapter() throws Exception {\n    gson = new GsonBuilder()\n        .registerTypeAdapter(BigInteger.class, new NumberAsStringAdapter(BigInteger.class))\n        .create();\n    assertThat(gson.toJson(new BigInteger(\"123\"), BigInteger.class)).isEqualTo(\"\\\"123\\\"\");\n    assertThat(gson.fromJson(\"\\\"123\\\"\", BigInteger.class)).isEqualTo(new BigInteger(\"123\"));\n  }\n\n  @Test\n  public void testOverrideBigDecimalTypeAdapter() throws Exception {\n    gson = new GsonBuilder()\n        .registerTypeAdapter(BigDecimal.class, new NumberAsStringAdapter(BigDecimal.class))\n        .create();\n    assertThat(gson.toJson(new BigDecimal(\"1.1\"), BigDecimal.class)).isEqualTo(\"\\\"1.1\\\"\");\n    assertThat(gson.fromJson(\"\\\"1.1\\\"\", BigDecimal.class)).isEqualTo(new BigDecimal(\"1.1\"));\n  }\n\n  @Test\n  public void testSetSerialization() {\n    Gson gson = new Gson();\n    HashSet<String> s = new HashSet<>();\n    s.add(\"blah\");\n    String json = gson.toJson(s);\n    assertThat(json).isEqualTo(\"[\\\"blah\\\"]\");\n\n    json = gson.toJson(s, Set.class);\n    assertThat(json).isEqualTo(\"[\\\"blah\\\"]\");\n  }\n\n  @Test\n  public void testBitSetSerialization() {\n    Gson gson = new Gson();\n    BitSet bits = new BitSet();\n    bits.set(1);\n    bits.set(3, 6);\n    bits.set(9);\n    String json = gson.toJson(bits);\n    assertThat(json).isEqualTo(\"[0,1,0,1,1,1,0,0,0,1]\");\n  }\n\n  @Test\n  public void testBitSetDeserialization() {\n    BitSet expected = new BitSet();\n    expected.set(0);\n    expected.set(2, 6);\n    expected.set(8);\n\n    Gson gson = new Gson();\n    String json = gson.toJson(expected);\n    assertThat(gson.fromJson(json, BitSet.class)).isEqualTo(expected);\n\n    json = \"[1,0,1,1,1,1,0,0,1,0,0,0]\";\n    assertThat(gson.fromJson(json, BitSet.class)).isEqualTo(expected);\n\n    json = \"[\\\"1\\\",\\\"0\\\",\\\"1\\\",\\\"1\\\",\\\"1\\\",\\\"1\\\",\\\"0\\\",\\\"0\\\",\\\"1\\\"]\";\n    assertThat(gson.fromJson(json, BitSet.class)).isEqualTo(expected);",
+      "metadata": {
+        "chunk_index": 7,
+        "total_chunks": 16,
+        "strategy": "basic",
+        "file_path": "gson/src/test/java/com/google/gson/functional/DefaultTypeAdaptersTest.java",
+        "language": "java"
+      },
+      "similarity_score": 0.6785297393798828
+    },
+    {
+      "content": "@Test\n  public void testShortSerialization() {\n    assertThat(gson.toJson(1, short.class)).isEqualTo(\"1\");\n    assertThat(gson.toJson(1, Short.class)).isEqualTo(\"1\");\n    assertThat(gson.toJson(Short.MIN_VALUE, Short.class)).isEqualTo(Short.toString(Short.MIN_VALUE));\n    assertThat(gson.toJson(Short.MAX_VALUE, Short.class)).isEqualTo(Short.toString(Short.MAX_VALUE));\n    // Should perform widening conversion\n    assertThat(gson.toJson((byte) 1, Short.class)).isEqualTo(\"1\");\n    // Should perform narrowing conversion\n    assertThat(gson.toJson(32768, Short.class)).isEqualTo(\"-32768\");\n    assertThat(gson.toJson(1.5, Short.class)).isEqualTo(\"1\");\n  }\n\n  @Test\n  public void testShortDeserialization() {\n    Short boxed = gson.fromJson(\"1\", Short.class);\n    assertThat(boxed).isEqualTo(1);\n    short primitive = gson.fromJson(\"1\", short.class);\n    assertThat(primitive).isEqualTo(1);\n\n    short[] shorts = gson.fromJson(\"[-32768, 0, 32767, 65535]\", short[].class);\n    assertThat(shorts).isEqualTo(new short[] {-32768, 0, 32767, -1});\n  }\n\n  @Test\n  public void testShortDeserializationLossy() {\n    try {\n      gson.fromJson(\"-32769\", short.class);\n      fail();\n    } catch (JsonSyntaxException e) {\n      assertThat(e.getMessage()).isEqualTo(\"Lossy conversion from -32769 to short; at path $\");\n    }\n\n    try {\n      gson.fromJson(\"65536\", short.class);\n      fail();\n    } catch (JsonSyntaxException e) {\n      assertThat(e.getMessage()).isEqualTo(\"Lossy conversion from 65536 to short; at path $\");\n    }\n\n    try {\n      gson.fromJson(\"2147483648\", short.class);\n      fail();\n    } catch (JsonSyntaxException e) {\n      assertThat(e.getMessage()).isEqualTo(\"java.lang.NumberFormatException: Expected an int but was 2147483648 at line 1 column 11 path $\");\n    }\n  }",
+      "metadata": {
+        "language": "java",
+        "total_chunks": 20,
+        "strategy": "basic",
+        "file_path": "gson/src/test/java/com/google/gson/functional/PrimitiveTest.java",
+        "chunk_index": 2
+      },
+      "similarity_score": 0.6788623332977295
+    },
+    {
+      "content": "/**\n   * This test fails because there's no double for -9223372036854775809, and our\n   * long parsing uses Double.parseDouble() for fractional values.\n   */\n  @Test\n  @Ignore\n  public void disabled_testPeekLargerThanLongMinValue() throws IOException {\n    @SuppressWarnings(\"FloatingPointLiteralPrecision\")\n    double d = -9223372036854775809d;\n    JsonReader reader = new JsonReader(reader(\"[-9223372036854775809]\"));\n    reader.setLenient(true);\n    reader.beginArray();\n    assertThat(reader.peek()).isEqualTo(NUMBER);\n    try {\n      reader.nextLong();\n      fail();\n    } catch (NumberFormatException expected) {\n    }\n    assertThat(reader.nextDouble()).isEqualTo(d);\n  }\n\n  /**\n   * This test fails because there's no double for 9223372036854775806, and\n   * our long parsing uses Double.parseDouble() for fractional values.\n   */\n  @Test\n  @Ignore\n  public void disabled_testHighPrecisionLong() throws IOException {\n    String json = \"[9223372036854775806.000]\";\n    JsonReader reader = new JsonReader(reader(json));\n    reader.beginArray();\n    assertThat(reader.nextLong()).isEqualTo(9223372036854775806L);\n    reader.endArray();\n  }\n\n  @Test\n  public void testPeekMuchLargerThanLongMinValue() throws IOException {\n    @SuppressWarnings(\"FloatingPointLiteralPrecision\")\n    double d = -92233720368547758080d;\n    JsonReader reader = new JsonReader(reader(\"[-92233720368547758080]\"));\n    reader.setLenient(true);\n    reader.beginArray();\n    assertThat(reader.peek()).isEqualTo(NUMBER);\n    try {\n      reader.nextLong();\n      fail();\n    } catch (NumberFormatException expected) {\n    }\n    assertThat(reader.nextDouble()).isEqualTo(d);\n  }\n\n  @Test\n  public void testQuotedNumberWithEscape() throws IOException {\n    JsonReader reader = new JsonReader(reader(\"[\\\"12\\\\u00334\\\"]\"));\n    reader.setLenient(true);\n    reader.beginArray();\n    assertThat(reader.peek()).isEqualTo(STRING);\n    assertThat(reader.nextInt()).isEqualTo(1234);\n  }",
+      "metadata": {
+        "chunk_index": 14,
+        "file_path": "gson/src/test/java/com/google/gson/stream/JsonReaderTest.java",
+        "strategy": "basic",
+        "total_chunks": 37,
+        "language": "java"
+      },
+      "similarity_score": 0.6824020147323608
+    },
+    {
+      "content": "@Test\n  public void testReallyLongValuesSerialization() {\n    long value = 333961828784581L;\n    assertThat(gson.toJson(value)).isEqualTo(\"333961828784581\");\n  }\n\n  @Test\n  public void testReallyLongValuesDeserialization() {\n    String json = \"333961828784581\";\n    long value = gson.fromJson(json, Long.class);\n    assertThat(value).isEqualTo(333961828784581L);\n  }\n\n  @Test\n  public void testPrimitiveLongAutoboxedSerialization() {\n    assertThat(gson.toJson(1L, long.class)).isEqualTo(\"1\");\n    assertThat(gson.toJson(1L, Long.class)).isEqualTo(\"1\");\n  }\n\n  @Test\n  public void testPrimitiveLongAutoboxedDeserialization() {\n    long expected = 1L;\n    long actual = gson.fromJson(\"1\", long.class);\n    assertThat(actual).isEqualTo(expected);\n\n    actual = gson.fromJson(\"1\", Long.class);\n    assertThat(actual).isEqualTo(expected);\n  }\n\n  @Test\n  public void testPrimitiveLongAutoboxedInASingleElementArraySerialization() {\n    long[] target = {-23L};\n    assertThat(gson.toJson(target)).isEqualTo(\"[-23]\");\n    assertThat(gson.toJson(target, long[].class)).isEqualTo(\"[-23]\");\n    assertThat(gson.toJson(target, Long[].class)).isEqualTo(\"[-23]\");\n  }\n\n  @Test\n  public void testPrimitiveBooleanAutoboxedSerialization() {\n    assertThat(gson.toJson(true)).isEqualTo(\"true\");\n    assertThat(gson.toJson(false)).isEqualTo(\"false\");\n  }\n\n  @Test\n  public void testBooleanDeserialization() {\n    boolean value = gson.fromJson(\"false\", boolean.class);\n    assertThat(value).isEqualTo(false);\n    value = gson.fromJson(\"true\", boolean.class);\n    assertThat(value).isEqualTo(true);\n  }\n\n  @Test\n  public void testPrimitiveBooleanAutoboxedInASingleElementArraySerialization() {\n    boolean[] target = {false};\n    assertThat(gson.toJson(target)).isEqualTo(\"[false]\");\n    assertThat(gson.toJson(target, boolean[].class)).isEqualTo(\"[false]\");\n    assertThat(gson.toJson(target, Boolean[].class)).isEqualTo(\"[false]\");\n  }",
+      "metadata": {
+        "total_chunks": 20,
+        "chunk_index": 5,
+        "language": "java",
+        "file_path": "gson/src/test/java/com/google/gson/functional/PrimitiveTest.java",
+        "strategy": "basic"
+      },
+      "similarity_score": 0.683647871017456
+    },
+    {
+      "content": "@Test\n  public void testFloatSerialization() {\n    assertThat(gson.toJson(1.5f, float.class)).isEqualTo(\"1.5\");\n    assertThat(gson.toJson(1.5f, Float.class)).isEqualTo(\"1.5\");\n    assertThat(gson.toJson(Float.MIN_VALUE, Float.class)).isEqualTo(Float.toString(Float.MIN_VALUE));\n    assertThat(gson.toJson(Float.MAX_VALUE, Float.class)).isEqualTo(Float.toString(Float.MAX_VALUE));\n    // Should perform widening conversion\n    assertThat(gson.toJson((byte) 1, Float.class)).isEqualTo(\"1.0\");\n    // (This widening conversion is actually lossy)\n    assertThat(gson.toJson(Long.MAX_VALUE - 10L, Float.class)).isEqualTo(Float.toString((float) (Long.MAX_VALUE - 10L)));\n    // Should perform narrowing conversion\n    gson = new GsonBuilder().serializeSpecialFloatingPointValues().create();\n    assertThat(gson.toJson(Double.MAX_VALUE, Float.class)).isEqualTo(\"Infinity\");\n  }\n\n  @Test\n  public void testDoubleSerialization() {\n    assertThat(gson.toJson(1.5, double.class)).isEqualTo(\"1.5\");\n    assertThat(gson.toJson(1.5, Double.class)).isEqualTo(\"1.5\");\n    assertThat(gson.toJson(Double.MIN_VALUE, Double.class)).isEqualTo(Double.toString(Double.MIN_VALUE));\n    assertThat(gson.toJson(Double.MAX_VALUE, Double.class)).isEqualTo(Double.toString(Double.MAX_VALUE));\n    // Should perform widening conversion\n    assertThat(gson.toJson((byte) 1, Double.class)).isEqualTo(\"1.0\");\n    // (This widening conversion is actually lossy)\n    assertThat(gson.toJson(Long.MAX_VALUE - 10L, Double.class)).isEqualTo(Double.toString((double) (Long.MAX_VALUE - 10L)));\n  }\n\n  @Test\n  public void testPrimitiveIntegerAutoboxedInASingleElementArraySerialization() {\n    int[] target = {-9332};\n    assertThat(gson.toJson(target)).isEqualTo(\"[-9332]\");\n    assertThat(gson.toJson(target, int[].class)).isEqualTo(\"[-9332]\");\n    assertThat(gson.toJson(target, Integer[].class)).isEqualTo(\"[-9332]\");\n  }",
+      "metadata": {
+        "total_chunks": 20,
+        "chunk_index": 4,
+        "file_path": "gson/src/test/java/com/google/gson/functional/PrimitiveTest.java",
+        "strategy": "basic",
+        "language": "java"
+      },
+      "similarity_score": 0.6845251321792603
+    },
+    {
+      "content": "@Test\n  public void testLongs() throws IOException {\n    String json = \"[0,0,0,\"\n        + \"1,1,1,\"\n        + \"-1,-1,-1,\"\n        + \"-9223372036854775808,\"\n        + \"9223372036854775807]\";\n    JsonReader reader = new JsonReader(reader(json));\n    reader.beginArray();\n    assertThat(reader.nextLong()).isEqualTo(0L);\n    assertThat(reader.nextInt()).isEqualTo(0);\n    assertThat(reader.nextDouble()).isEqualTo(0.0);\n    assertThat(reader.nextLong()).isEqualTo(1L);\n    assertThat(reader.nextInt()).isEqualTo(1);\n    assertThat(reader.nextDouble()).isEqualTo(1.0);\n    assertThat(reader.nextLong()).isEqualTo(-1L);\n    assertThat(reader.nextInt()).isEqualTo(-1);\n    assertThat(reader.nextDouble()).isEqualTo(-1.0);\n    try {\n      reader.nextInt();\n      fail();\n    } catch (NumberFormatException expected) {\n    }\n    assertThat(reader.nextLong()).isEqualTo(Long.MIN_VALUE);\n    try {\n      reader.nextInt();\n      fail();\n    } catch (NumberFormatException expected) {\n    }\n    assertThat(reader.nextLong()).isEqualTo(Long.MAX_VALUE);\n    reader.endArray();\n    assertThat(reader.peek()).isEqualTo(JsonToken.END_DOCUMENT);\n  }\n\n  @Test\n  @Ignore\n  public void disabled_testNumberWithOctalPrefix() throws IOException {\n    String json = \"[01]\";\n    JsonReader reader = new JsonReader(reader(json));\n    reader.beginArray();\n    try {\n      reader.peek();\n      fail();\n    } catch (MalformedJsonException expected) {\n    }\n    try {\n      reader.nextInt();\n      fail();\n    } catch (MalformedJsonException expected) {\n    }\n    try {\n      reader.nextLong();\n      fail();\n    } catch (MalformedJsonException expected) {\n    }\n    try {\n      reader.nextDouble();\n      fail();\n    } catch (MalformedJsonException expected) {\n    }\n    assertThat(reader.nextString()).isEqualTo(\"01\");\n    reader.endArray();\n    assertThat(reader.peek()).isEqualTo(JsonToken.END_DOCUMENT);\n  }",
+      "metadata": {
+        "strategy": "basic",
+        "file_path": "gson/src/test/java/com/google/gson/stream/JsonReaderTest.java",
+        "language": "java",
+        "total_chunks": 37,
+        "chunk_index": 10
+      },
+      "similarity_score": 0.6986981630325317
+    },
+    {
+      "content": "@Test\n  public void testRawCollectionDeserializationNotAllowed() {\n    String json = \"[0,1,2,3,4,5,6,7,8,9]\";\n    Collection<?> integers = gson.fromJson(json, Collection.class);\n    // JsonReader converts numbers to double by default so we need a floating point comparison\n    assertThat(integers).containsExactly(0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0).inOrder();\n\n    json = \"[\\\"Hello\\\", \\\"World\\\"]\";\n    Collection<?> strings = gson.fromJson(json, Collection.class);\n    assertThat(strings).containsExactly(\"Hello\", \"World\").inOrder();\n  }\n\n  @Test\n  public void testRawCollectionOfBagOfPrimitivesNotAllowed() {\n    BagOfPrimitives bag = new BagOfPrimitives(10, 20, false, \"stringValue\");\n    String json = '[' + bag.getExpectedJson() + ',' + bag.getExpectedJson() + ']';\n    Collection<?> target = gson.fromJson(json, Collection.class);\n    assertThat(target.size()).isEqualTo(2);\n    for (Object bag1 : target) {\n      // Gson 2.0 converts raw objects into maps\n      @SuppressWarnings(\"unchecked\")\n      Map<String, Object> values = (Map<String, Object>) bag1;\n      assertThat(values.containsValue(10.0)).isTrue();\n      assertThat(values.containsValue(20.0)).isTrue();\n      assertThat(values.containsValue(\"stringValue\")).isTrue();\n    }\n  }\n\n  @Test\n  public void testWildcardPrimitiveCollectionSerilaization() {\n    Collection<? extends Integer> target = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9);\n    Type collectionType = new TypeToken<Collection<? extends Integer>>() { }.getType();\n    String json = gson.toJson(target, collectionType);\n    assertThat(json).isEqualTo(\"[1,2,3,4,5,6,7,8,9]\");\n\n    json = gson.toJson(target);\n    assertThat(json).isEqualTo(\"[1,2,3,4,5,6,7,8,9]\");\n  }",
+      "metadata": {
+        "strategy": "basic",
+        "total_chunks": 9,
+        "chunk_index": 5,
+        "file_path": "gson/src/test/java/com/google/gson/functional/CollectionTest.java",
+        "language": "java"
+      },
+      "similarity_score": 0.7272672653198242
+    },
+    {
+      "content": "@Test\n  public void testShortEqualsInteger() {\n    JsonPrimitive p1 = new JsonPrimitive((short) 10);\n    JsonPrimitive p2 = new JsonPrimitive(10);\n    assertThat(p1).isEqualTo(p2);\n    assertThat(p1.hashCode()).isEqualTo(p2.hashCode());\n  }\n\n  @Test\n  public void testShortEqualsLong() {\n    JsonPrimitive p1 = new JsonPrimitive((short) 10);\n    JsonPrimitive p2 = new JsonPrimitive(10L);\n    assertThat(p1).isEqualTo(p2);\n    assertThat(p1.hashCode()).isEqualTo(p2.hashCode());\n  }\n\n  @Test\n  public void testShortEqualsBigInteger() {\n    JsonPrimitive p1 = new JsonPrimitive((short) 10);\n    JsonPrimitive p2 = new JsonPrimitive(new BigInteger(\"10\"));\n    assertThat(p1).isEqualTo(p2);\n    assertThat(p1.hashCode()).isEqualTo(p2.hashCode());\n  }\n\n  @Test\n  public void testIntegerEqualsLong() {\n    JsonPrimitive p1 = new JsonPrimitive(10);\n    JsonPrimitive p2 = new JsonPrimitive(10L);\n    assertThat(p1).isEqualTo(p2);\n    assertThat(p1.hashCode()).isEqualTo(p2.hashCode());\n  }\n\n  @Test\n  public void testIntegerEqualsBigInteger() {\n    JsonPrimitive p1 = new JsonPrimitive(10);\n    JsonPrimitive p2 = new JsonPrimitive(new BigInteger(\"10\"));\n    assertThat(p1).isEqualTo(p2);\n    assertThat(p1.hashCode()).isEqualTo(p2.hashCode());\n  }\n\n  @Test\n  public void testLongEqualsBigInteger() {\n    JsonPrimitive p1 = new JsonPrimitive(10L);\n    JsonPrimitive p2 = new JsonPrimitive(new BigInteger(\"10\"));\n    assertThat(p1).isEqualTo(p2);\n    assertThat(p1.hashCode()).isEqualTo(p2.hashCode());\n  }\n\n  @Test\n  public void testFloatEqualsDouble() {\n    JsonPrimitive p1 = new JsonPrimitive(10.25F);\n    JsonPrimitive p2 = new JsonPrimitive(10.25D);\n    assertThat(p1).isEqualTo(p2);\n    assertThat(p1.hashCode()).isEqualTo(p2.hashCode());\n  }",
+      "metadata": {
+        "language": "java",
+        "strategy": "basic",
+        "file_path": "gson/src/test/java/com/google/gson/JsonPrimitiveTest.java",
+        "chunk_index": 3,
+        "total_chunks": 7
+      },
+      "similarity_score": 0.7412750720977783
+    },
+    {
+      "content": "@Test\n  public void testValueVeryCloseToZeroIsZero() {\n    assertThat(gson.fromJson(\"-122.08e-2132\", byte.class)).isEqualTo(0);\n    assertThat(gson.fromJson(\"-122.08e-2132\", short.class)).isEqualTo(0);\n    assertThat(gson.fromJson(\"-122.08e-2132\", int.class)).isEqualTo(0);\n    assertThat(gson.fromJson(\"-122.08e-2132\", long.class)).isEqualTo(0);\n    assertThat(gson.fromJson(\"-122.08e-2132\", float.class)).isEqualTo(-0.0f);\n    assertThat(gson.fromJson(\"-122.08e-2132\", double.class)).isEqualTo(-0.0);\n    assertThat(gson.fromJson(\"122.08e-2132\", float.class)).isEqualTo(0.0f);\n    assertThat(gson.fromJson(\"122.08e-2132\", double.class)).isEqualTo(0.0);\n  }\n\n  @Test\n  public void testDeserializingBigDecimalAsFloat() {\n    String json = \"-122.08e-2132332\";\n    float actual = gson.fromJson(json, float.class);\n    assertThat(actual).isEqualTo(-0.0f);\n  }\n\n  @Test\n  public void testDeserializingBigDecimalAsDouble() {\n    String json = \"-122.08e-2132332\";\n    double actual = gson.fromJson(json, double.class);\n    assertThat(actual).isEqualTo(-0.0d);\n  }\n\n  @Test\n  public void testDeserializingBigDecimalAsBigIntegerFails() {\n    try {\n      gson.fromJson(\"-122.08e-213\", BigInteger.class);\n      fail();\n    } catch (JsonSyntaxException expected) {\n    }\n  }\n\n  @Test\n  public void testDeserializingBigIntegerAsBigDecimal() {\n    BigDecimal actual =\n      gson.fromJson(\"12121211243123245845384534687435634558945453489543985435\", BigDecimal.class);\n    assertThat(actual.toPlainString()).isEqualTo(\"12121211243123245845384534687435634558945453489543985435\");\n  }\n\n  @Test\n  public void testStringsAsBooleans() {\n    String json = \"['true', 'false', 'TRUE', 'yes', '1']\";\n    assertThat(        gson.<List<Boolean>>fromJson(json, new TypeToken<List<Boolean>>() {}.getType())).isEqualTo(Arrays.asList(true, false, true, false, false));\n  }\n}\n```",
+      "metadata": {
+        "strategy": "basic",
+        "language": "java",
+        "total_chunks": 20,
+        "file_path": "gson/src/test/java/com/google/gson/functional/PrimitiveTest.java",
+        "chunk_index": 19
+      },
+      "similarity_score": 0.7434569597244263
+    },
+    {
+      "content": "// Extra support for booleans\n    json = new JsonPrimitive(1);\n    assertThat(json.getAsBoolean()).isFalse();\n\n    json = new JsonPrimitive(\"1\");\n    assertThat(json.getAsBoolean()).isFalse();\n\n    json = new JsonPrimitive(\"true\");\n    assertThat(json.getAsBoolean()).isTrue();\n\n    json = new JsonPrimitive(\"TrUe\");\n    assertThat(json.getAsBoolean()).isTrue();\n\n    json = new JsonPrimitive(\"1.3\");\n    assertThat(json.getAsBoolean()).isFalse();\n  }\n\n  @Test\n  public void testParsingStringAsBoolean() {\n    JsonPrimitive json = new JsonPrimitive(\"true\");\n\n    assertThat(json.isBoolean()).isFalse();\n    assertThat(json.getAsBoolean()).isTrue();\n  }\n\n  @Test\n  public void testParsingStringAsNumber() {\n    JsonPrimitive json = new JsonPrimitive(\"1\");\n\n    assertThat(json.isNumber()).isFalse();\n    assertThat(json.getAsDouble()).isEqualTo(1.0);\n    assertThat(json.getAsFloat()).isEqualTo(1F);\n    assertThat(json.getAsInt()).isEqualTo(1);\n    assertThat(json.getAsLong()).isEqualTo(1L);\n    assertThat(json.getAsShort()).isEqualTo((short) 1);\n    assertThat(json.getAsByte()).isEqualTo((byte) 1);\n    assertThat(json.getAsBigInteger()).isEqualTo(new BigInteger(\"1\"));\n    assertThat(json.getAsBigDecimal()).isEqualTo(new BigDecimal(\"1\"));\n  }\n\n  @Test\n  public void testAsNumber_Boolean() {\n    JsonPrimitive json = new JsonPrimitive(true);\n    try {\n      json.getAsNumber();\n      fail();\n    } catch (UnsupportedOperationException e) {\n      assertThat(e).hasMessageThat().isEqualTo(\"Primitive is neither a number nor a string\");\n    }\n  }\n\n  @SuppressWarnings(\"deprecation\")\n  @Test\n  public void testStringsAndChar() {\n    JsonPrimitive json = new JsonPrimitive(\"abc\");\n    assertThat(json.isString()).isTrue();\n    assertThat(json.getAsCharacter()).isEqualTo('a');\n    assertThat(json.getAsString()).isEqualTo(\"abc\");",
+      "metadata": {
+        "chunk_index": 1,
+        "strategy": "basic",
+        "total_chunks": 7,
+        "language": "java",
+        "file_path": "gson/src/test/java/com/google/gson/JsonPrimitiveTest.java"
+      },
+      "similarity_score": 0.7453409433364868
+    }
+  ],
+  "enhanced": [
+    {
+      "content": "* Fix the `equals` method of `JsonPrimitive` to work with BigInteger\n\n* Improve the `equals` & `getAsBigInteger` methods in `JsonPrimitive`\n- Changes:\n```diff\n@@ -300,10 +300,8 @@ public class JsonPrimitiveTest {\n   @Test\n   public void testEqualsIntegerAndBigInteger() {\n     JsonPrimitive a = new JsonPrimitive(5L);\n-    JsonPrimitive b = new JsonPrimitive(new BigInteger(\"18446744073709551621\")); // 2^64 + 5\n-    // Ideally, the following assertion should have failed but the price is too much to pay\n-    // assertFalse(a + \" equals \" + b, a.equals(b));\n-    assertWithMessage(\"%s equals %s\", a, b).that(a.equals(b)).isTrue();\n+    JsonPrimitive b = new ...\n```\n\n### Commit 2\n- ID: be87c3fd\n- Author: Maicol (79454487+MaicolAntali@users.noreply.github.com)\n- Date: 2023-01-17 23:59:10\n- Message: Port Junit test to Truth in the package `com.google.gson` of the module `gson` (#2299)\n\n* Add the Truth dependency\n\n* Port Junit test to Truth in the package `com.google.gson` of the module `gson`\n\n* Replace the `assertThat(e.getMessage()).isEqualTo(...)\"` with `assertThat(e).hasMessageThat().isEqualTo(...)`\n\n* Minor fixes\n- Changes:\n```diff\n@@ -16,10 +16,8 @@\n \n package com.google.gson;\n \n-import static org.junit.Assert.assertEquals;\n-import static org.junit.Assert.assertFalse;\n-import static org.junit.Assert.assertSame;\n-import static org.junit.Assert.assertTrue;\n+import static com.google.common.truth.Truth.assertThat;\n+import static com.google.common.truth.Truth.assertWithMessage;\n import static org.junit.Assert.fail;\n \n import com.google.gson.common.MoreAsserts;\n@@ -60,50 +58,50 @@ public class JsonPrimitiveTest {\n   }\n \n   @Tes...\n```\n\n### Commit 3\n- ID: 1a2170b9\n- Author: Maicol (79454487+MaicolAntali@users.noreply.github.com)\n- Date: 2022-12-22 22:04:16\n- Message: Port tests from JUnit 3 to JUnit 4 (#2294)\n\n* Port tests from JUnit 3 to JUnit 4\n\n* Port tests from JUnit 3 to JUnit 4",
+      "metadata": {
+        "total_chunks": 10,
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "chunk_index": 7,
+        "file_path": "gson/src/test/java/com/google/gson/JsonPrimitiveTest.java",
+        "language": "java"
+      },
+      "similarity_score": 0.4093918800354004
+    },
+    {
+      "content": "@Test\n  public void testFloatEqualsBigDecimal() {\n    JsonPrimitive p1 = new JsonPrimitive(10.25F);\n    JsonPrimitive p2 = new JsonPrimitive(new BigDecimal(\"10.25\"));\n    assertThat(p1).isEqualTo(p2);\n    assertThat(p1.hashCode()).isEqualTo(p2.hashCode());\n  }\n\n  @Test\n  public void testDoubleEqualsBigDecimal() {\n    JsonPrimitive p1 = new JsonPrimitive(10.25D);\n    JsonPrimitive p2 = new JsonPrimitive(new BigDecimal(\"10.25\"));\n    assertThat(p1).isEqualTo(p2);\n    assertThat(p1.hashCode()).isEqualTo(p2.hashCode());\n  }\n\n  @Test\n  public void testValidJsonOnToString() {\n    JsonPrimitive json = new JsonPrimitive(\"Some\\nEscaped\\nValue\");\n    assertThat(json.toString()).isEqualTo(\"\\\"Some\\\\nEscaped\\\\nValue\\\"\");\n\n    json = new JsonPrimitive(new BigDecimal(\"1.333\"));\n    assertThat(json.toString()).isEqualTo(\"1.333\");\n  }",
+      "metadata": {
+        "commit_count": 5,
+        "chunk_index": 4,
+        "file_path": "gson/src/test/java/com/google/gson/JsonPrimitiveTest.java",
+        "language": "java",
+        "strategy": "enhanced",
+        "total_chunks": 10
+      },
+      "similarity_score": 0.5007795095443726
+    },
+    {
+      "content": "@Test\n  public void testBigDecimalNoFractAsStringRepresentationDeserialization() {\n    String doubleValue = \"5E+5\";\n    BigDecimal expected = new BigDecimal(doubleValue);\n    BigDecimal actual = gson.fromJson(doubleValue, BigDecimal.class);\n    assertThat(actual).isEqualTo(expected);\n  }\n\n  @Test\n  public void testBigIntegerSerialization() {\n    BigInteger target = new BigInteger(\"12121211243123245845384534687435634558945453489543985435\");\n    assertThat(gson.toJson(target)).isEqualTo(target.toString());\n  }\n\n  @Test\n  public void testBigIntegerDeserialization() {\n    String json = \"12121211243123245845384534687435634558945453489543985435\";\n    BigInteger target = new BigInteger(json);\n    assertThat(gson.fromJson(json, BigInteger.class)).isEqualTo(target);\n  }\n\n  @Test\n  public void testBigIntegerInASingleElementArraySerialization() {\n    BigInteger[] target = {new BigInteger(\"1212121243434324323254365345367456456456465464564564\")};\n    String json = gson.toJson(target);\n    String actual = extractElementFromArray(json);\n    assertThat(new BigInteger(actual)).isEqualTo(target[0]);\n\n    json = gson.toJson(target, BigInteger[].class);\n    actual = extractElementFromArray(json);\n    assertThat(new BigInteger(actual)).isEqualTo(target[0]);\n  }\n\n  @Test\n  public void testSmallValueForBigIntegerSerialization() {\n    BigInteger target = new BigInteger(\"15\");\n    String actual = gson.toJson(target);\n    assertThat(actual).isEqualTo(target.toString());\n  }\n\n  @Test\n  public void testSmallValueForBigIntegerDeserialization() {\n    BigInteger expected = new BigInteger(\"15\");\n    BigInteger actual = gson.fromJson(\"15\", BigInteger.class);\n    assertThat(actual).isEqualTo(expected);\n  }\n\n  @Test\n  public void testBadValueForBigIntegerDeserialization() {\n    try {\n      gson.fromJson(\"15.099\", BigInteger.class);\n      fail(\"BigInteger can not be decimal values.\");\n    } catch (JsonSyntaxException expected) { }\n  }",
+      "metadata": {
+        "file_path": "gson/src/test/java/com/google/gson/functional/PrimitiveTest.java",
+        "strategy": "enhanced",
+        "total_chunks": 28,
+        "language": "java",
+        "commit_count": 5,
+        "chunk_index": 9
+      },
+      "similarity_score": 0.5036036372184753
+    },
+    {
+      "content": "json = new JsonPrimitive(new BigDecimal(\"1.333\"));\n    assertThat(json.toString()).isEqualTo(\"1.333\");\n  }\n\n  @Test\n  public void testEquals() {\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(\"A\"), new JsonPrimitive(\"A\"));\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(true), new JsonPrimitive(true));\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(5L), new JsonPrimitive(5L));\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive('a'), new JsonPrimitive('a'));\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(Float.NaN), new JsonPrimitive(Float.NaN));\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(Float.NEGATIVE_INFINITY),\n        new JsonPrimitive(Float.NEGATIVE_INFINITY));\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(Float.POSITIVE_INFINITY),\n        new JsonPrimitive(Float.POSITIVE_INFINITY));\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(Double.NaN), new JsonPrimitive(Double.NaN));\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(Double.NEGATIVE_INFINITY),\n        new JsonPrimitive(Double.NEGATIVE_INFINITY));\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(Double.POSITIVE_INFINITY),\n        new JsonPrimitive(Double.POSITIVE_INFINITY));\n    assertThat(new JsonPrimitive(\"a\").equals(new JsonPrimitive(\"b\"))).isFalse();\n    assertThat(new JsonPrimitive(true).equals(new JsonPrimitive(false))).isFalse();\n    assertThat(new JsonPrimitive(0).equals(new JsonPrimitive(1))).isFalse();\n  }",
+      "metadata": {
+        "language": "java",
+        "commit_count": 5,
+        "total_chunks": 10,
+        "file_path": "gson/src/test/java/com/google/gson/JsonPrimitiveTest.java",
+        "chunk_index": 5,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.5338793992996216
+    },
+    {
+      "content": "@Test\n  public void testBigDecimalDeserialization() {\n    BigDecimal target = new BigDecimal(\"-122.0e-21\");\n    String json = \"-122.0e-21\";\n    assertThat(gson.fromJson(json, BigDecimal.class)).isEqualTo(target);\n  }\n\n  @Test\n  public void testBigDecimalInASingleElementArraySerialization() {\n    BigDecimal[] target = {new BigDecimal(\"-122.08e-21\")};\n    String json = gson.toJson(target);\n    String actual = extractElementFromArray(json);\n    assertThat(new BigDecimal(actual)).isEqualTo(target[0]);\n\n    json = gson.toJson(target, BigDecimal[].class);\n    actual = extractElementFromArray(json);\n    assertThat(new BigDecimal(actual)).isEqualTo(target[0]);\n  }\n\n  @Test\n  public void testSmallValueForBigDecimalSerialization() {\n    BigDecimal target = new BigDecimal(\"1.55\");\n    String actual = gson.toJson(target);\n    assertThat(actual).isEqualTo(target.toString());\n  }\n\n  @Test\n  public void testSmallValueForBigDecimalDeserialization() {\n    BigDecimal expected = new BigDecimal(\"1.55\");\n    BigDecimal actual = gson.fromJson(\"1.55\", BigDecimal.class);\n    assertThat(actual).isEqualTo(expected);\n  }\n\n  @Test\n  public void testBigDecimalPreservePrecisionSerialization() {\n    String expectedValue = \"1.000\";\n    BigDecimal obj = new BigDecimal(expectedValue);\n    String actualValue = gson.toJson(obj);\n\n    assertThat(actualValue).isEqualTo(expectedValue);\n  }\n\n  @Test\n  public void testBigDecimalPreservePrecisionDeserialization() {\n    String json = \"1.000\";\n    BigDecimal expected = new BigDecimal(json);\n    BigDecimal actual = gson.fromJson(json, BigDecimal.class);\n\n    assertThat(actual).isEqualTo(expected);\n  }\n\n  @Test\n  public void testBigDecimalAsStringRepresentationDeserialization() {\n    String doubleValue = \"0.05E+5\";\n    BigDecimal expected = new BigDecimal(doubleValue);\n    BigDecimal actual = gson.fromJson(doubleValue, BigDecimal.class);\n    assertThat(actual).isEqualTo(expected);\n  }",
+      "metadata": {
+        "language": "java",
+        "file_path": "gson/src/test/java/com/google/gson/functional/PrimitiveTest.java",
+        "total_chunks": 28,
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "chunk_index": 8
+      },
+      "similarity_score": 0.5618928074836731
+    },
+    {
+      "content": "@Test\n  public void testAsBigDecimals() {\n    Gson gson = new GsonBuilder()\n        .setObjectToNumberStrategy(ToNumberPolicy.BIG_DECIMAL)\n        .setNumberToNumberStrategy(ToNumberPolicy.BIG_DECIMAL)\n        .create();\n    assertThat(gson.fromJson(\"null\", Object.class)).isEqualTo(null);\n    assertThat(gson.fromJson(\"10\", Object.class)).isEqualTo(new BigDecimal(\"10\"));\n    assertThat(gson.fromJson(\"10.0\", Object.class)).isEqualTo(new BigDecimal(\"10.0\"));\n    assertThat(gson.fromJson(\"null\", Number.class)).isEqualTo(null);\n    assertThat(gson.fromJson(\"10\", Number.class)).isEqualTo(new BigDecimal(\"10\"));\n    assertThat(gson.fromJson(\"10.0\", Number.class)).isEqualTo(new BigDecimal(\"10.0\"));\n    assertThat(gson.fromJson(\"3.141592653589793238462643383279\", BigDecimal.class)).isEqualTo(new BigDecimal(\"3.141592653589793238462643383279\"));\n    assertThat(gson.fromJson(\"1e400\", BigDecimal.class)).isEqualTo(new BigDecimal(\"1e400\"));\n  }\n\n  @Test\n  public void testAsListOfLongsOrDoubles() {\n    Gson gson = new GsonBuilder()\n        .setObjectToNumberStrategy(ToNumberPolicy.LONG_OR_DOUBLE)\n        .setNumberToNumberStrategy(ToNumberPolicy.LONG_OR_DOUBLE)\n        .create();\n    Type objectCollectionType = new TypeToken<Collection<Object>>() { }.getType();\n    Collection<Object> objects = gson.fromJson(\"[null,10,10.0]\", objectCollectionType);\n    assertThat(objects).containsExactly(null, 10L, 10.0).inOrder();\n    Type numberCollectionType = new TypeToken<Collection<Number>>() { }.getType();\n    Collection<Object> numbers = gson.fromJson(\"[null,10,10.0]\", numberCollectionType);\n    assertThat(numbers).containsExactly(null, 10L, 10.0).inOrder();\n  }",
+      "metadata": {
+        "chunk_index": 2,
+        "commit_count": 5,
+        "language": "java",
+        "total_chunks": 11,
+        "file_path": "gson/src/test/java/com/google/gson/functional/ToNumberPolicyFunctionalTest.java",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.5735432505607605
+    },
+    {
+      "content": "@Test\n  public void testEqualsAcrossTypes() {\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(\"a\"), new JsonPrimitive('a'));\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(new BigInteger(\"0\")), new JsonPrimitive(0));\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(0), new JsonPrimitive(0L));\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(new BigInteger(\"0\")), new JsonPrimitive(0));\n    MoreAsserts.assertEqualsAndHashCode(new JsonPrimitive(Float.NaN), new JsonPrimitive(Double.NaN));\n  }\n\n  @Test\n  public void testEqualsIntegerAndBigInteger() {\n    JsonPrimitive a = new JsonPrimitive(5L);\n    JsonPrimitive b = new JsonPrimitive(new BigInteger(\"18446744073709551621\"));\n    assertWithMessage(\"%s not equals %s\", a, b).that(a.equals(b)).isFalse();\n  }\n\n  @Test\n  public void testEqualsDoesNotEquateStringAndNonStringTypes() {\n    assertThat(new JsonPrimitive(\"true\").equals(new JsonPrimitive(true))).isFalse();\n    assertThat(new JsonPrimitive(\"0\").equals(new JsonPrimitive(0))).isFalse();\n    assertThat(new JsonPrimitive(\"NaN\").equals(new JsonPrimitive(Float.NaN))).isFalse();\n  }\n\n  @Test\n  public void testDeepCopy() {\n    JsonPrimitive a = new JsonPrimitive(\"a\");\n    assertThat(a).isSameInstanceAs(a.deepCopy()); // Primitives are immutable!\n  }\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: af217984\n- Author: Maicol (79454487+MaicolAntali@users.noreply.github.com)\n- Date: 2023-02-07 01:40:11\n- Message: Fix the `equals` method of `JsonPrimitive` to work with `BigInteger` (#2311)\n\n* Fix the `equals` method of `JsonPrimitive` to work with BigInteger",
+      "metadata": {
+        "strategy": "enhanced",
+        "total_chunks": 10,
+        "file_path": "gson/src/test/java/com/google/gson/JsonPrimitiveTest.java",
+        "commit_count": 5,
+        "language": "java",
+        "chunk_index": 6
+      },
+      "similarity_score": 0.6012188196182251
+    },
+    {
+      "content": "@Test\n  public void testNumbers() throws IOException {\n    StringWriter stringWriter = new StringWriter();\n    JsonWriter jsonWriter = new JsonWriter(stringWriter);\n    jsonWriter.beginArray();\n    jsonWriter.value(new BigInteger(\"0\"));\n    jsonWriter.value(new BigInteger(\"9223372036854775808\"));\n    jsonWriter.value(new BigInteger(\"-9223372036854775809\"));\n    jsonWriter.value(new BigDecimal(\"3.141592653589793238462643383\"));\n    jsonWriter.endArray();\n    jsonWriter.close();\n    assertThat(stringWriter.toString()).isEqualTo(\"[0,\"\n        + \"9223372036854775808,\"\n        + \"-9223372036854775809,\"\n        + \"3.141592653589793238462643383]\");\n  }\n\n  /**\n   * Tests writing {@code Number} instances which are not one of the standard JDK ones.\n   */\n  @Test\n  public void testNumbersCustomClass() throws IOException {\n    String[] validNumbers = {\n        \"-0.0\",\n        \"1.0\",\n        \"1.7976931348623157E308\",\n        \"4.9E-324\",\n        \"0.0\",\n        \"0.00\",\n        \"-0.5\",\n        \"2.2250738585072014E-308\",\n        \"3.141592653589793\",\n        \"2.718281828459045\",\n        \"0\",\n        \"0.01\",\n        \"0e0\",\n        \"1e+0\",\n        \"1e-0\",\n        \"1e0000\", // leading 0 is allowed for exponent\n        \"1e00001\",\n        \"1e+1\",\n    };\n\n    for (String validNumber : validNumbers) {\n      StringWriter stringWriter = new StringWriter();\n      JsonWriter jsonWriter = new JsonWriter(stringWriter);\n\n      jsonWriter.value(new LazilyParsedNumber(validNumber));\n      jsonWriter.close();\n\n      assertThat(stringWriter.toString()).isEqualTo(validNumber);\n    }\n  }",
+      "metadata": {
+        "file_path": "gson/src/test/java/com/google/gson/stream/JsonWriterTest.java",
+        "chunk_index": 8,
+        "commit_count": 5,
+        "language": "java",
+        "strategy": "enhanced",
+        "total_chunks": 20
+      },
+      "similarity_score": 0.6050267219543457
+    },
+    {
+      "content": "@Test\n  public void testIntSerialization() {\n    assertThat(gson.toJson(1, int.class)).isEqualTo(\"1\");\n    assertThat(gson.toJson(1, Integer.class)).isEqualTo(\"1\");\n    assertThat(gson.toJson(Integer.MIN_VALUE, Integer.class)).isEqualTo(Integer.toString(Integer.MIN_VALUE));\n    assertThat(gson.toJson(Integer.MAX_VALUE, Integer.class)).isEqualTo(Integer.toString(Integer.MAX_VALUE));\n    // Should perform widening conversion\n    assertThat(gson.toJson((byte) 1, Integer.class)).isEqualTo(\"1\");\n    // Should perform narrowing conversion\n    assertThat(gson.toJson(2147483648L, Integer.class)).isEqualTo(\"-2147483648\");\n    assertThat(gson.toJson(1.5, Integer.class)).isEqualTo(\"1\");\n  }\n\n  @Test\n  public void testLongSerialization() {\n    assertThat(gson.toJson(1L, long.class)).isEqualTo(\"1\");\n    assertThat(gson.toJson(1L, Long.class)).isEqualTo(\"1\");\n    assertThat(gson.toJson(Long.MIN_VALUE, Long.class)).isEqualTo(Long.toString(Long.MIN_VALUE));\n    assertThat(gson.toJson(Long.MAX_VALUE, Long.class)).isEqualTo(Long.toString(Long.MAX_VALUE));\n    // Should perform widening conversion\n    assertThat(gson.toJson((byte) 1, Long.class)).isEqualTo(\"1\");\n    // Should perform narrowing conversion\n    assertThat(gson.toJson(1.5, Long.class)).isEqualTo(\"1\");\n  }",
+      "metadata": {
+        "file_path": "gson/src/test/java/com/google/gson/functional/PrimitiveTest.java",
+        "chunk_index": 3,
+        "strategy": "enhanced",
+        "language": "java",
+        "total_chunks": 28,
+        "commit_count": 5
+      },
+      "similarity_score": 0.6142303943634033
+    },
+    {
+      "content": "@Test\n  public void testPrimitiveIntegerAutoboxedDeserialization() {\n    int expected = 1;\n    int actual = gson.fromJson(\"1\", int.class);\n    assertThat(actual).isEqualTo(expected);\n\n    actual = gson.fromJson(\"1\", Integer.class);\n    assertThat(actual).isEqualTo(expected);\n  }\n\n  @Test\n  public void testByteSerialization() {\n    assertThat(gson.toJson(1, byte.class)).isEqualTo(\"1\");\n    assertThat(gson.toJson(1, Byte.class)).isEqualTo(\"1\");\n    assertThat(gson.toJson(Byte.MIN_VALUE, Byte.class)).isEqualTo(Byte.toString(Byte.MIN_VALUE));\n    assertThat(gson.toJson(Byte.MAX_VALUE, Byte.class)).isEqualTo(Byte.toString(Byte.MAX_VALUE));\n    // Should perform narrowing conversion\n    assertThat(gson.toJson(128, Byte.class)).isEqualTo(\"-128\");\n    assertThat(gson.toJson(1.5, Byte.class)).isEqualTo(\"1\");\n  }\n\n  @Test\n  public void testByteDeserialization() {\n    Byte boxed = gson.fromJson(\"1\", Byte.class);\n    assertThat(boxed).isEqualTo(1);\n    byte primitive = gson.fromJson(\"1\", byte.class);\n    assertThat(primitive).isEqualTo(1);\n\n    byte[] bytes = gson.fromJson(\"[-128, 0, 127, 255]\", byte[].class);\n    assertThat(bytes).isEqualTo(new byte[] {-128, 0, 127, -1});\n  }\n\n  @Test\n  public void testByteDeserializationLossy() {\n    try {\n      gson.fromJson(\"-129\", byte.class);\n      fail();\n    } catch (JsonSyntaxException e) {\n      assertThat(e.getMessage()).isEqualTo(\"Lossy conversion from -129 to byte; at path $\");\n    }\n\n    try {\n      gson.fromJson(\"256\", byte.class);\n      fail();\n    } catch (JsonSyntaxException e) {\n      assertThat(e.getMessage()).isEqualTo(\"Lossy conversion from 256 to byte; at path $\");\n    }\n\n    try {\n      gson.fromJson(\"2147483648\", byte.class);\n      fail();\n    } catch (JsonSyntaxException e) {\n      assertThat(e.getMessage()).isEqualTo(\"java.lang.NumberFormatException: Expected an int but was 2147483648 at line 1 column 11 path $\");\n    }\n  }",
+      "metadata": {
+        "language": "java",
+        "file_path": "gson/src/test/java/com/google/gson/functional/PrimitiveTest.java",
+        "commit_count": 5,
+        "total_chunks": 28,
+        "chunk_index": 1,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.6471291780471802
+    },
+    {
+      "content": "@Test\n  public void testDoubles() throws IOException {\n    StringWriter stringWriter = new StringWriter();\n    JsonWriter jsonWriter = new JsonWriter(stringWriter);\n    jsonWriter.beginArray();\n    jsonWriter.value(-0.0);\n    jsonWriter.value(1.0);\n    jsonWriter.value(Double.MAX_VALUE);\n    jsonWriter.value(Double.MIN_VALUE);\n    jsonWriter.value(0.0);\n    jsonWriter.value(-0.5);\n    jsonWriter.value(2.2250738585072014E-308);\n    jsonWriter.value(Math.PI);\n    jsonWriter.value(Math.E);\n    jsonWriter.endArray();\n    jsonWriter.close();\n    assertThat(stringWriter.toString()).isEqualTo(\"[-0.0,\"\n        + \"1.0,\"\n        + \"1.7976931348623157E308,\"\n        + \"4.9E-324,\"\n        + \"0.0,\"\n        + \"-0.5,\"\n        + \"2.2250738585072014E-308,\"\n        + \"3.141592653589793,\"\n        + \"2.718281828459045]\");\n  }\n\n  @Test\n  public void testLongs() throws IOException {\n    StringWriter stringWriter = new StringWriter();\n    JsonWriter jsonWriter = new JsonWriter(stringWriter);\n    jsonWriter.beginArray();\n    jsonWriter.value(0);\n    jsonWriter.value(1);\n    jsonWriter.value(-1);\n    jsonWriter.value(Long.MIN_VALUE);\n    jsonWriter.value(Long.MAX_VALUE);\n    jsonWriter.endArray();\n    jsonWriter.close();\n    assertThat(stringWriter.toString()).isEqualTo(\"[0,\"\n        + \"1,\"\n        + \"-1,\"\n        + \"-9223372036854775808,\"\n        + \"9223372036854775807]\");\n  }",
+      "metadata": {
+        "total_chunks": 20,
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "chunk_index": 7,
+        "language": "java",
+        "file_path": "gson/src/test/java/com/google/gson/stream/JsonWriterTest.java"
+      },
+      "similarity_score": 0.6740502119064331
+    },
+    {
+      "content": "@Test\n  public void testOverrideBigIntegerTypeAdapter() throws Exception {\n    gson = new GsonBuilder()\n        .registerTypeAdapter(BigInteger.class, new NumberAsStringAdapter(BigInteger.class))\n        .create();\n    assertThat(gson.toJson(new BigInteger(\"123\"), BigInteger.class)).isEqualTo(\"\\\"123\\\"\");\n    assertThat(gson.fromJson(\"\\\"123\\\"\", BigInteger.class)).isEqualTo(new BigInteger(\"123\"));\n  }\n\n  @Test\n  public void testOverrideBigDecimalTypeAdapter() throws Exception {\n    gson = new GsonBuilder()\n        .registerTypeAdapter(BigDecimal.class, new NumberAsStringAdapter(BigDecimal.class))\n        .create();\n    assertThat(gson.toJson(new BigDecimal(\"1.1\"), BigDecimal.class)).isEqualTo(\"\\\"1.1\\\"\");\n    assertThat(gson.fromJson(\"\\\"1.1\\\"\", BigDecimal.class)).isEqualTo(new BigDecimal(\"1.1\"));\n  }\n\n  @Test\n  public void testSetSerialization() {\n    Gson gson = new Gson();\n    HashSet<String> s = new HashSet<>();\n    s.add(\"blah\");\n    String json = gson.toJson(s);\n    assertThat(json).isEqualTo(\"[\\\"blah\\\"]\");\n\n    json = gson.toJson(s, Set.class);\n    assertThat(json).isEqualTo(\"[\\\"blah\\\"]\");\n  }\n\n  @Test\n  public void testBitSetSerialization() {\n    Gson gson = new Gson();\n    BitSet bits = new BitSet();\n    bits.set(1);\n    bits.set(3, 6);\n    bits.set(9);\n    String json = gson.toJson(bits);\n    assertThat(json).isEqualTo(\"[0,1,0,1,1,1,0,0,0,1]\");\n  }\n\n  @Test\n  public void testBitSetDeserialization() {\n    BitSet expected = new BitSet();\n    expected.set(0);\n    expected.set(2, 6);\n    expected.set(8);\n\n    Gson gson = new Gson();\n    String json = gson.toJson(expected);\n    assertThat(gson.fromJson(json, BitSet.class)).isEqualTo(expected);\n\n    json = \"[1,0,1,1,1,1,0,0,1,0,0,0]\";\n    assertThat(gson.fromJson(json, BitSet.class)).isEqualTo(expected);\n\n    json = \"[\\\"1\\\",\\\"0\\\",\\\"1\\\",\\\"1\\\",\\\"1\\\",\\\"1\\\",\\\"0\\\",\\\"0\\\",\\\"1\\\"]\";\n    assertThat(gson.fromJson(json, BitSet.class)).isEqualTo(expected);",
+      "metadata": {
+        "total_chunks": 23,
+        "file_path": "gson/src/test/java/com/google/gson/functional/DefaultTypeAdaptersTest.java",
+        "commit_count": 5,
+        "language": "java",
+        "strategy": "enhanced",
+        "chunk_index": 7
+      },
+      "similarity_score": 0.6785297393798828
+    },
+    {
+      "content": "@Test\n  public void testShortSerialization() {\n    assertThat(gson.toJson(1, short.class)).isEqualTo(\"1\");\n    assertThat(gson.toJson(1, Short.class)).isEqualTo(\"1\");\n    assertThat(gson.toJson(Short.MIN_VALUE, Short.class)).isEqualTo(Short.toString(Short.MIN_VALUE));\n    assertThat(gson.toJson(Short.MAX_VALUE, Short.class)).isEqualTo(Short.toString(Short.MAX_VALUE));\n    // Should perform widening conversion\n    assertThat(gson.toJson((byte) 1, Short.class)).isEqualTo(\"1\");\n    // Should perform narrowing conversion\n    assertThat(gson.toJson(32768, Short.class)).isEqualTo(\"-32768\");\n    assertThat(gson.toJson(1.5, Short.class)).isEqualTo(\"1\");\n  }\n\n  @Test\n  public void testShortDeserialization() {\n    Short boxed = gson.fromJson(\"1\", Short.class);\n    assertThat(boxed).isEqualTo(1);\n    short primitive = gson.fromJson(\"1\", short.class);\n    assertThat(primitive).isEqualTo(1);\n\n    short[] shorts = gson.fromJson(\"[-32768, 0, 32767, 65535]\", short[].class);\n    assertThat(shorts).isEqualTo(new short[] {-32768, 0, 32767, -1});\n  }\n\n  @Test\n  public void testShortDeserializationLossy() {\n    try {\n      gson.fromJson(\"-32769\", short.class);\n      fail();\n    } catch (JsonSyntaxException e) {\n      assertThat(e.getMessage()).isEqualTo(\"Lossy conversion from -32769 to short; at path $\");\n    }\n\n    try {\n      gson.fromJson(\"65536\", short.class);\n      fail();\n    } catch (JsonSyntaxException e) {\n      assertThat(e.getMessage()).isEqualTo(\"Lossy conversion from 65536 to short; at path $\");\n    }\n\n    try {\n      gson.fromJson(\"2147483648\", short.class);\n      fail();\n    } catch (JsonSyntaxException e) {\n      assertThat(e.getMessage()).isEqualTo(\"java.lang.NumberFormatException: Expected an int but was 2147483648 at line 1 column 11 path $\");\n    }\n  }",
+      "metadata": {
+        "commit_count": 5,
+        "file_path": "gson/src/test/java/com/google/gson/functional/PrimitiveTest.java",
+        "chunk_index": 2,
+        "total_chunks": 28,
+        "language": "java",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.6788623332977295
+    },
+    {
+      "content": "/**\n   * This test fails because there's no double for -9223372036854775809, and our\n   * long parsing uses Double.parseDouble() for fractional values.\n   */\n  @Test\n  @Ignore\n  public void disabled_testPeekLargerThanLongMinValue() throws IOException {\n    @SuppressWarnings(\"FloatingPointLiteralPrecision\")\n    double d = -9223372036854775809d;\n    JsonReader reader = new JsonReader(reader(\"[-9223372036854775809]\"));\n    reader.setLenient(true);\n    reader.beginArray();\n    assertThat(reader.peek()).isEqualTo(NUMBER);\n    try {\n      reader.nextLong();\n      fail();\n    } catch (NumberFormatException expected) {\n    }\n    assertThat(reader.nextDouble()).isEqualTo(d);\n  }\n\n  /**\n   * This test fails because there's no double for 9223372036854775806, and\n   * our long parsing uses Double.parseDouble() for fractional values.\n   */\n  @Test\n  @Ignore\n  public void disabled_testHighPrecisionLong() throws IOException {\n    String json = \"[9223372036854775806.000]\";\n    JsonReader reader = new JsonReader(reader(json));\n    reader.beginArray();\n    assertThat(reader.nextLong()).isEqualTo(9223372036854775806L);\n    reader.endArray();\n  }\n\n  @Test\n  public void testPeekMuchLargerThanLongMinValue() throws IOException {\n    @SuppressWarnings(\"FloatingPointLiteralPrecision\")\n    double d = -92233720368547758080d;\n    JsonReader reader = new JsonReader(reader(\"[-92233720368547758080]\"));\n    reader.setLenient(true);\n    reader.beginArray();\n    assertThat(reader.peek()).isEqualTo(NUMBER);\n    try {\n      reader.nextLong();\n      fail();\n    } catch (NumberFormatException expected) {\n    }\n    assertThat(reader.nextDouble()).isEqualTo(d);\n  }\n\n  @Test\n  public void testQuotedNumberWithEscape() throws IOException {\n    JsonReader reader = new JsonReader(reader(\"[\\\"12\\\\u00334\\\"]\"));\n    reader.setLenient(true);\n    reader.beginArray();\n    assertThat(reader.peek()).isEqualTo(STRING);\n    assertThat(reader.nextInt()).isEqualTo(1234);\n  }",
+      "metadata": {
+        "language": "java",
+        "strategy": "enhanced",
+        "total_chunks": 44,
+        "commit_count": 5,
+        "file_path": "gson/src/test/java/com/google/gson/stream/JsonReaderTest.java",
+        "chunk_index": 14
+      },
+      "similarity_score": 0.6824020147323608
+    },
+    {
+      "content": "@Test\n  public void testReallyLongValuesSerialization() {\n    long value = 333961828784581L;\n    assertThat(gson.toJson(value)).isEqualTo(\"333961828784581\");\n  }\n\n  @Test\n  public void testReallyLongValuesDeserialization() {\n    String json = \"333961828784581\";\n    long value = gson.fromJson(json, Long.class);\n    assertThat(value).isEqualTo(333961828784581L);\n  }\n\n  @Test\n  public void testPrimitiveLongAutoboxedSerialization() {\n    assertThat(gson.toJson(1L, long.class)).isEqualTo(\"1\");\n    assertThat(gson.toJson(1L, Long.class)).isEqualTo(\"1\");\n  }\n\n  @Test\n  public void testPrimitiveLongAutoboxedDeserialization() {\n    long expected = 1L;\n    long actual = gson.fromJson(\"1\", long.class);\n    assertThat(actual).isEqualTo(expected);\n\n    actual = gson.fromJson(\"1\", Long.class);\n    assertThat(actual).isEqualTo(expected);\n  }\n\n  @Test\n  public void testPrimitiveLongAutoboxedInASingleElementArraySerialization() {\n    long[] target = {-23L};\n    assertThat(gson.toJson(target)).isEqualTo(\"[-23]\");\n    assertThat(gson.toJson(target, long[].class)).isEqualTo(\"[-23]\");\n    assertThat(gson.toJson(target, Long[].class)).isEqualTo(\"[-23]\");\n  }\n\n  @Test\n  public void testPrimitiveBooleanAutoboxedSerialization() {\n    assertThat(gson.toJson(true)).isEqualTo(\"true\");\n    assertThat(gson.toJson(false)).isEqualTo(\"false\");\n  }\n\n  @Test\n  public void testBooleanDeserialization() {\n    boolean value = gson.fromJson(\"false\", boolean.class);\n    assertThat(value).isEqualTo(false);\n    value = gson.fromJson(\"true\", boolean.class);\n    assertThat(value).isEqualTo(true);\n  }\n\n  @Test\n  public void testPrimitiveBooleanAutoboxedInASingleElementArraySerialization() {\n    boolean[] target = {false};\n    assertThat(gson.toJson(target)).isEqualTo(\"[false]\");\n    assertThat(gson.toJson(target, boolean[].class)).isEqualTo(\"[false]\");\n    assertThat(gson.toJson(target, Boolean[].class)).isEqualTo(\"[false]\");\n  }",
+      "metadata": {
+        "commit_count": 5,
+        "language": "java",
+        "chunk_index": 5,
+        "strategy": "enhanced",
+        "total_chunks": 28,
+        "file_path": "gson/src/test/java/com/google/gson/functional/PrimitiveTest.java"
+      },
+      "similarity_score": 0.683647871017456
+    },
+    {
+      "content": "@Test\n  public void testFloatSerialization() {\n    assertThat(gson.toJson(1.5f, float.class)).isEqualTo(\"1.5\");\n    assertThat(gson.toJson(1.5f, Float.class)).isEqualTo(\"1.5\");\n    assertThat(gson.toJson(Float.MIN_VALUE, Float.class)).isEqualTo(Float.toString(Float.MIN_VALUE));\n    assertThat(gson.toJson(Float.MAX_VALUE, Float.class)).isEqualTo(Float.toString(Float.MAX_VALUE));\n    // Should perform widening conversion\n    assertThat(gson.toJson((byte) 1, Float.class)).isEqualTo(\"1.0\");\n    // (This widening conversion is actually lossy)\n    assertThat(gson.toJson(Long.MAX_VALUE - 10L, Float.class)).isEqualTo(Float.toString((float) (Long.MAX_VALUE - 10L)));\n    // Should perform narrowing conversion\n    gson = new GsonBuilder().serializeSpecialFloatingPointValues().create();\n    assertThat(gson.toJson(Double.MAX_VALUE, Float.class)).isEqualTo(\"Infinity\");\n  }\n\n  @Test\n  public void testDoubleSerialization() {\n    assertThat(gson.toJson(1.5, double.class)).isEqualTo(\"1.5\");\n    assertThat(gson.toJson(1.5, Double.class)).isEqualTo(\"1.5\");\n    assertThat(gson.toJson(Double.MIN_VALUE, Double.class)).isEqualTo(Double.toString(Double.MIN_VALUE));\n    assertThat(gson.toJson(Double.MAX_VALUE, Double.class)).isEqualTo(Double.toString(Double.MAX_VALUE));\n    // Should perform widening conversion\n    assertThat(gson.toJson((byte) 1, Double.class)).isEqualTo(\"1.0\");\n    // (This widening conversion is actually lossy)\n    assertThat(gson.toJson(Long.MAX_VALUE - 10L, Double.class)).isEqualTo(Double.toString((double) (Long.MAX_VALUE - 10L)));\n  }\n\n  @Test\n  public void testPrimitiveIntegerAutoboxedInASingleElementArraySerialization() {\n    int[] target = {-9332};\n    assertThat(gson.toJson(target)).isEqualTo(\"[-9332]\");\n    assertThat(gson.toJson(target, int[].class)).isEqualTo(\"[-9332]\");\n    assertThat(gson.toJson(target, Integer[].class)).isEqualTo(\"[-9332]\");\n  }",
+      "metadata": {
+        "total_chunks": 28,
+        "language": "java",
+        "strategy": "enhanced",
+        "file_path": "gson/src/test/java/com/google/gson/functional/PrimitiveTest.java",
+        "chunk_index": 4,
+        "commit_count": 5
+      },
+      "similarity_score": 0.6845251321792603
+    },
+    {
+      "content": "@Test\n  public void testLongs() throws IOException {\n    String json = \"[0,0,0,\"\n        + \"1,1,1,\"\n        + \"-1,-1,-1,\"\n        + \"-9223372036854775808,\"\n        + \"9223372036854775807]\";\n    JsonReader reader = new JsonReader(reader(json));\n    reader.beginArray();\n    assertThat(reader.nextLong()).isEqualTo(0L);\n    assertThat(reader.nextInt()).isEqualTo(0);\n    assertThat(reader.nextDouble()).isEqualTo(0.0);\n    assertThat(reader.nextLong()).isEqualTo(1L);\n    assertThat(reader.nextInt()).isEqualTo(1);\n    assertThat(reader.nextDouble()).isEqualTo(1.0);\n    assertThat(reader.nextLong()).isEqualTo(-1L);\n    assertThat(reader.nextInt()).isEqualTo(-1);\n    assertThat(reader.nextDouble()).isEqualTo(-1.0);\n    try {\n      reader.nextInt();\n      fail();\n    } catch (NumberFormatException expected) {\n    }\n    assertThat(reader.nextLong()).isEqualTo(Long.MIN_VALUE);\n    try {\n      reader.nextInt();\n      fail();\n    } catch (NumberFormatException expected) {\n    }\n    assertThat(reader.nextLong()).isEqualTo(Long.MAX_VALUE);\n    reader.endArray();\n    assertThat(reader.peek()).isEqualTo(JsonToken.END_DOCUMENT);\n  }\n\n  @Test\n  @Ignore\n  public void disabled_testNumberWithOctalPrefix() throws IOException {\n    String json = \"[01]\";\n    JsonReader reader = new JsonReader(reader(json));\n    reader.beginArray();\n    try {\n      reader.peek();\n      fail();\n    } catch (MalformedJsonException expected) {\n    }\n    try {\n      reader.nextInt();\n      fail();\n    } catch (MalformedJsonException expected) {\n    }\n    try {\n      reader.nextLong();\n      fail();\n    } catch (MalformedJsonException expected) {\n    }\n    try {\n      reader.nextDouble();\n      fail();\n    } catch (MalformedJsonException expected) {\n    }\n    assertThat(reader.nextString()).isEqualTo(\"01\");\n    reader.endArray();\n    assertThat(reader.peek()).isEqualTo(JsonToken.END_DOCUMENT);\n  }",
+      "metadata": {
+        "total_chunks": 44,
+        "commit_count": 5,
+        "file_path": "gson/src/test/java/com/google/gson/stream/JsonReaderTest.java",
+        "language": "java",
+        "strategy": "enhanced",
+        "chunk_index": 10
+      },
+      "similarity_score": 0.6986981630325317
+    },
+    {
+      "content": "@Test\n  public void testRawCollectionDeserializationNotAllowed() {\n    String json = \"[0,1,2,3,4,5,6,7,8,9]\";\n    Collection<?> integers = gson.fromJson(json, Collection.class);\n    // JsonReader converts numbers to double by default so we need a floating point comparison\n    assertThat(integers).containsExactly(0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0).inOrder();\n\n    json = \"[\\\"Hello\\\", \\\"World\\\"]\";\n    Collection<?> strings = gson.fromJson(json, Collection.class);\n    assertThat(strings).containsExactly(\"Hello\", \"World\").inOrder();\n  }\n\n  @Test\n  public void testRawCollectionOfBagOfPrimitivesNotAllowed() {\n    BagOfPrimitives bag = new BagOfPrimitives(10, 20, false, \"stringValue\");\n    String json = '[' + bag.getExpectedJson() + ',' + bag.getExpectedJson() + ']';\n    Collection<?> target = gson.fromJson(json, Collection.class);\n    assertThat(target.size()).isEqualTo(2);\n    for (Object bag1 : target) {\n      // Gson 2.0 converts raw objects into maps\n      @SuppressWarnings(\"unchecked\")\n      Map<String, Object> values = (Map<String, Object>) bag1;\n      assertThat(values.containsValue(10.0)).isTrue();\n      assertThat(values.containsValue(20.0)).isTrue();\n      assertThat(values.containsValue(\"stringValue\")).isTrue();\n    }\n  }\n\n  @Test\n  public void testWildcardPrimitiveCollectionSerilaization() {\n    Collection<? extends Integer> target = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9);\n    Type collectionType = new TypeToken<Collection<? extends Integer>>() { }.getType();\n    String json = gson.toJson(target, collectionType);\n    assertThat(json).isEqualTo(\"[1,2,3,4,5,6,7,8,9]\");\n\n    json = gson.toJson(target);\n    assertThat(json).isEqualTo(\"[1,2,3,4,5,6,7,8,9]\");\n  }",
+      "metadata": {
+        "file_path": "gson/src/test/java/com/google/gson/functional/CollectionTest.java",
+        "chunk_index": 5,
+        "commit_count": 5,
+        "language": "java",
+        "strategy": "enhanced",
+        "total_chunks": 16
+      },
+      "similarity_score": 0.7272672653198242
+    },
+    {
+      "content": "This avoids floats being treated as doubles and having an unwarranted level of precision.\n\nFixes #1127.\n- Changes:\n```diff\n@@ -172,6 +172,30 @@ public final class JsonWriterTest extends TestCase {\n     assertEquals(\"{\\\"a\\\":{\\\"b\\\":true},\\\"c\\\":1}\", stringWriter.toString());\n   }\n \n+  public void testNonFiniteFloats() throws IOException {\n+    StringWriter stringWriter = new StringWriter();\n+    JsonWriter jsonWriter = new JsonWriter(stringWriter);\n+    jsonWriter.beginArray();\n+    try {\n+      jsonWriter.value(Float.NaN);\n+      fail();\n+    } catch (IllegalArgumentException expected) {\n+      assertEquals(\"Numeric v...\n```\n\n### Commit 5\n- ID: e2e851c9\n- Author: Marcono1234 (Marcono1234@users.noreply.github.com)\n- Date: 2022-01-29 03:26:28\n- Message: Add LazilyParsedNumber default adapter (#2060)\n\n* Add LazilyParsedNumber default adapter\n\n* Validate JsonWriter.value(Number) argument\n\n* Fix incorrect JSON number pattern, extend tests\n- Changes:\n```diff\n@@ -16,12 +16,12 @@\n \n package com.google.gson.stream;\n \n-import junit.framework.TestCase;\n-\n+import com.google.gson.internal.LazilyParsedNumber;\n import java.io.IOException;\n import java.io.StringWriter;\n import java.math.BigDecimal;\n import java.math.BigInteger;\n+import junit.framework.TestCase;\n \n @SuppressWarnings(\"resource\")\n public final class JsonWriterTest extends TestCase {\n@@ -180,20 +180,23 @@ public final class JsonWriterTest extends TestCase {\n       jsonWriter.value(Double.NaN);\n  ...\n```",
+      "metadata": {
+        "chunk_index": 19,
+        "commit_count": 5,
+        "total_chunks": 20,
+        "file_path": "gson/src/test/java/com/google/gson/stream/JsonWriterTest.java",
+        "language": "java",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.7364552021026611
+    },
+    {
+      "content": "@Test\n  public void testShortEqualsInteger() {\n    JsonPrimitive p1 = new JsonPrimitive((short) 10);\n    JsonPrimitive p2 = new JsonPrimitive(10);\n    assertThat(p1).isEqualTo(p2);\n    assertThat(p1.hashCode()).isEqualTo(p2.hashCode());\n  }\n\n  @Test\n  public void testShortEqualsLong() {\n    JsonPrimitive p1 = new JsonPrimitive((short) 10);\n    JsonPrimitive p2 = new JsonPrimitive(10L);\n    assertThat(p1).isEqualTo(p2);\n    assertThat(p1.hashCode()).isEqualTo(p2.hashCode());\n  }\n\n  @Test\n  public void testShortEqualsBigInteger() {\n    JsonPrimitive p1 = new JsonPrimitive((short) 10);\n    JsonPrimitive p2 = new JsonPrimitive(new BigInteger(\"10\"));\n    assertThat(p1).isEqualTo(p2);\n    assertThat(p1.hashCode()).isEqualTo(p2.hashCode());\n  }\n\n  @Test\n  public void testIntegerEqualsLong() {\n    JsonPrimitive p1 = new JsonPrimitive(10);\n    JsonPrimitive p2 = new JsonPrimitive(10L);\n    assertThat(p1).isEqualTo(p2);\n    assertThat(p1.hashCode()).isEqualTo(p2.hashCode());\n  }\n\n  @Test\n  public void testIntegerEqualsBigInteger() {\n    JsonPrimitive p1 = new JsonPrimitive(10);\n    JsonPrimitive p2 = new JsonPrimitive(new BigInteger(\"10\"));\n    assertThat(p1).isEqualTo(p2);\n    assertThat(p1.hashCode()).isEqualTo(p2.hashCode());\n  }\n\n  @Test\n  public void testLongEqualsBigInteger() {\n    JsonPrimitive p1 = new JsonPrimitive(10L);\n    JsonPrimitive p2 = new JsonPrimitive(new BigInteger(\"10\"));\n    assertThat(p1).isEqualTo(p2);\n    assertThat(p1.hashCode()).isEqualTo(p2.hashCode());\n  }\n\n  @Test\n  public void testFloatEqualsDouble() {\n    JsonPrimitive p1 = new JsonPrimitive(10.25F);\n    JsonPrimitive p2 = new JsonPrimitive(10.25D);\n    assertThat(p1).isEqualTo(p2);\n    assertThat(p1.hashCode()).isEqualTo(p2.hashCode());\n  }",
+      "metadata": {
+        "file_path": "gson/src/test/java/com/google/gson/JsonPrimitiveTest.java",
+        "total_chunks": 10,
+        "strategy": "enhanced",
+        "language": "java",
+        "chunk_index": 3,
+        "commit_count": 5
+      },
+      "similarity_score": 0.7412750720977783
+    }
+  ],
+  "compressed": [
+    {
+      "content": "# File: gson/src/test/java/com/google/gson/JsonPrimitiveTest.java (java)\n\n## Key Code Elements:\nimport static com.google.common.truth.Truth.assertThat;\nimport static com.google.common.truth.Truth.assertWithMessage;\nimport static org.junit.Assert.fail;\nimport com.google.gson.common.MoreAsserts;\nimport java.math.BigDecimal;\nimport java.math.BigInteger;\nimport org.junit.Test;\n  @SuppressWarnings(\"unused\")\n  @Test\n  @Test\n  @Test\n  @Test\n  @Test\n  @SuppressWarnings(\"deprecation\")\n  @Test\n\n## Recent Changes:\n- af217984 by Maicol (79454487+MaicolAntali@users.noreply.github.com): Fix the `equals` method of `JsonPrimitive` to work with `BigInteger` (#2311)\n\n* Fix the `equals` met...\n- be87c3fd by Maicol (79454487+MaicolAntali@users.noreply.github.com): Port Junit test to Truth in the package `com.google.gson` of the module `gson` (#2299)\n\n* Add the Tr...\n- 1a2170b9 by Maicol (79454487+MaicolAntali@users.noreply.github.com): Port tests from JUnit 3 to JUnit 4 (#2294)\n\n* Port tests from JUnit 3 to JUnit 4\n\n* Port tests from ...",
+      "metadata": {
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "language": "java",
+        "commit_count": 5,
+        "strategy": "compressed",
+        "file_path": "gson/src/test/java/com/google/gson/JsonPrimitiveTest.java"
+      },
+      "similarity_score": 0.7476582527160645
+    },
+    {
+      "content": "# File: gson/src/test/java/com/google/gson/functional/PrimitiveTest.java (java)\n\n## Key Code Elements:\nimport static com.google.common.truth.Truth.assertThat;\nimport static org.junit.Assert.fail;\nimport com.google.gson.Gson;\nimport com.google.gson.GsonBuilder;\nimport com.google.gson.JsonPrimitive;\nimport com.google.gson.JsonSyntaxException;\nimport com.google.gson.LongSerializationPolicy;\nimport com.google.gson.internal.LazilyParsedNumber;\nimport com.google.gson.reflect.TypeToken;\nimport java.io.Serializable;\nimport java.io.StringReader;\nimport java.math.BigDecimal;\nimport java.math.BigInteger;\nimport java.util.Arrays;\nimport java.util.List;\n\n## Recent Changes:\n- dc20b756 by Maicol (79454487+MaicolAntali@users.noreply.github.com): Fix error prone warns (#2320)\n\n* Adds `@SuppressWarnings(\"NarrowingCompoundAssignment\")`\n\n* Adds `@S...\n- 49b00d1a by Maicol (79454487+MaicolAntali@users.noreply.github.com): Port all Junit assert to Truth asserts (#2304)\n\n* Port Junit assert to Truth in `com.google.gson.str...\n- 1a2170b9 by Maicol (79454487+MaicolAntali@users.noreply.github.com): Port tests from JUnit 3 to JUnit 4 (#2294)\n\n* Port tests from JUnit 3 to JUnit 4\n\n* Port tests from ...",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "java",
+        "file_path": "gson/src/test/java/com/google/gson/functional/PrimitiveTest.java",
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "commit_count": 5
+      },
+      "similarity_score": 0.9380353093147278
+    },
+    {
+      "content": "# File: gson/src/test/java/com/google/gson/GsonTypeAdapterTest.java (java)\n\n## Key Code Elements:\nimport static com.google.common.truth.Truth.assertThat;\nimport static org.junit.Assert.fail;\nimport java.lang.reflect.Type;\nimport java.math.BigInteger;\nimport java.util.concurrent.atomic.AtomicInteger;\nimport java.util.concurrent.atomic.AtomicLong;\nimport org.junit.Before;\nimport org.junit.Test;\n  @Before\n  @Test\n  @Test\n  @Test\n  @Test\n    @Override public JsonElement serialize(\n    @Override public AtomicLong deserialize(\n\n## Recent Changes:\n- be87c3fd by Maicol (79454487+MaicolAntali@users.noreply.github.com): Port Junit test to Truth in the package `com.google.gson` of the module `gson` (#2299)\n\n* Add the Tr...\n- 1a2170b9 by Maicol (79454487+MaicolAntali@users.noreply.github.com): Port tests from JUnit 3 to JUnit 4 (#2294)\n\n* Port tests from JUnit 3 to JUnit 4\n\n* Port tests from ...\n- b0b68341 by Marcono1234 (Marcono1234@users.noreply.github.com): Mention that GsonBuilder.registerTypeAdapter makes (de-)serializers null-safe (#1704)...",
+      "metadata": {
+        "file_path": "gson/src/test/java/com/google/gson/GsonTypeAdapterTest.java",
+        "language": "java",
+        "commit_count": 5,
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.9475830793380737
+    },
+    {
+      "content": "# File: gson/src/test/java/com/google/gson/stream/JsonWriterTest.java (java)\n\n## Key Code Elements:\nimport static com.google.common.truth.Truth.assertThat;\nimport static org.junit.Assert.fail;\nimport com.google.gson.FormattingStyle;\nimport com.google.gson.internal.LazilyParsedNumber;\nimport java.io.IOException;\nimport java.io.StringWriter;\nimport java.math.BigDecimal;\nimport java.math.BigInteger;\nimport org.junit.Test;\n@SuppressWarnings(\"resource\")\n  @Test\n  @Test\n  @Test\n  @Test\n  @Test\n\n## Recent Changes:\n- 19f54ee6 by Mihai Nita (nmihai_2000@yahoo.com): Fixes #776: Add settings for the kind of newline to use (#2231)\n\n* Add settings for kind of newline ...\n- 49b00d1a by Maicol (79454487+MaicolAntali@users.noreply.github.com): Port all Junit assert to Truth asserts (#2304)\n\n* Port Junit assert to Truth in `com.google.gson.str...\n- 1a2170b9 by Maicol (79454487+MaicolAntali@users.noreply.github.com): Port tests from JUnit 3 to JUnit 4 (#2294)\n\n* Port tests from JUnit 3 to JUnit 4\n\n* Port tests from ...",
+      "metadata": {
+        "commit_count": 5,
+        "chunk_index": 0,
+        "file_path": "gson/src/test/java/com/google/gson/stream/JsonWriterTest.java",
+        "language": "java",
+        "total_chunks": 1,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.9580666422843933
+    },
+    {
+      "content": "# File: gson/src/main/java/com/google/gson/JsonPrimitive.java (java)\n\n## Key Code Elements:\nimport com.google.gson.internal.LazilyParsedNumber;\nimport java.math.BigDecimal;\nimport java.math.BigInteger;\nimport java.util.Objects;\n  @SuppressWarnings(\"deprecation\") // superclass constructor\n  @SuppressWarnings(\"deprecation\") // superclass constructor\n  @SuppressWarnings(\"deprecation\") // superclass constructor\n  @SuppressWarnings(\"deprecation\") // superclass constructor\n  @Override\n  @Override\n  @Override\n  @Override\n  @Override\n  @Override\n  @Override\n\n## Recent Changes:\n- 19f54ee6 by Mihai Nita (nmihai_2000@yahoo.com): Fixes #776: Add settings for the kind of newline to use (#2231)\n\n* Add settings for kind of newline ...\n- af217984 by Maicol (79454487+MaicolAntali@users.noreply.github.com): Fix the `equals` method of `JsonPrimitive` to work with `BigInteger` (#2311)\n\n* Fix the `equals` met...\n- 6c3cf224 by Maicol (79454487+MaicolAntali@users.noreply.github.com): Unnecessary unboxing at JsonPrimitive.getAsBoolean() (#2277)...",
+      "metadata": {
+        "strategy": "compressed",
+        "language": "java",
+        "commit_count": 5,
+        "total_chunks": 1,
+        "file_path": "gson/src/main/java/com/google/gson/JsonPrimitive.java",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.9777933359146118
+    },
+    {
+      "content": "# File: gson/src/test/java/com/google/gson/JsonArrayTest.java (java)\n\n## Key Code Elements:\nimport static com.google.common.truth.Truth.assertThat;\nimport static com.google.common.truth.Truth.assertWithMessage;\nimport static org.junit.Assert.fail;\nimport com.google.common.testing.EqualsTester;\nimport com.google.gson.common.MoreAsserts;\nimport java.math.BigInteger;\nimport org.junit.Test;\n  @Test\n  @Test\n  @Test\n  @Test\n  @Test\n  @Test\n  @Test\n  @Test\n\n## Recent Changes:\n- dc20b756 by Maicol (79454487+MaicolAntali@users.noreply.github.com): Fix error prone warns (#2320)\n\n* Adds `@SuppressWarnings(\"NarrowingCompoundAssignment\")`\n\n* Adds `@S...\n- 2658aca6 by Maicol (79454487+MaicolAntali@users.noreply.github.com): Fix error prone warnings (#2316)\n\n* Fix `OperatorPrecedence` warn in `JsonWriter#close`\n\n* Fix `Refe...\n- 9f26679e by Maicol (79454487+MaicolAntali@users.noreply.github.com): Adds Error Prone to the `maven-compiler-plugin` (#2308)\n\n* Adds Error Prone to the `pom.xml`\n\n* Adds...",
+      "metadata": {
+        "file_path": "gson/src/test/java/com/google/gson/JsonArrayTest.java",
+        "chunk_index": 0,
+        "commit_count": 5,
+        "language": "java",
+        "total_chunks": 1,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.9816210269927979
+    },
+    {
+      "content": "# File: gson/src/main/java/com/google/gson/JsonElement.java (java)\n\n## Key Code Elements:\nimport com.google.gson.internal.Streams;\nimport com.google.gson.stream.JsonWriter;\nimport java.io.IOException;\nimport java.io.StringWriter;\nimport java.math.BigDecimal;\nimport java.math.BigInteger;\n  @Deprecated\n  @Deprecated\n  @Override\n\n## Recent Changes:\n- 51a72b46 by Marcono1234 (Marcono1234@users.noreply.github.com): Make JsonElement conversion methods more consistent and fix javadoc (#2178)\n\n* Make JsonElement conv...\n- 0b6a7bf7 by Marcono1234 (Marcono1234@users.noreply.github.com): Deprecate JsonElement constructor (#1761)\n\n* Deprecate JsonElement constructor\n\nCreating custom Json...\n- 893a7e1c by Marcono1234 (Marcono1234@users.noreply.github.com): Fix malformed JsonElement.getAsBigDecimal() javadoc (#1772)...",
+      "metadata": {
+        "language": "java",
+        "commit_count": 5,
+        "file_path": "gson/src/main/java/com/google/gson/JsonElement.java",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.9888132214546204
+    },
+    {
+      "content": "# File: gson/src/test/java/com/google/gson/internal/LazilyParsedNumberTest.java (java)\n\n## Key Code Elements:\nimport static com.google.common.truth.Truth.assertThat;\nimport java.io.ByteArrayInputStream;\nimport java.io.ByteArrayOutputStream;\nimport java.io.IOException;\nimport java.io.ObjectInputStream;\nimport java.io.ObjectOutputStream;\nimport java.math.BigDecimal;\nimport org.junit.Test;\n  @Test\n  @Test\n  @Test\n\n## Recent Changes:\n- 49b00d1a by Maicol (79454487+MaicolAntali@users.noreply.github.com): Port all Junit assert to Truth asserts (#2304)\n\n* Port Junit assert to Truth in `com.google.gson.str...\n- 1a2170b9 by Maicol (79454487+MaicolAntali@users.noreply.github.com): Port tests from JUnit 3 to JUnit 4 (#2294)\n\n* Port tests from JUnit 3 to JUnit 4\n\n* Port tests from ...\n- e6fae590 by Marcono1234 (Marcono1234@users.noreply.github.com): Prevent Java deserialization of internal classes (#1991)\n\nAdversaries might be able to forge data wh...",
+      "metadata": {
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "language": "java",
+        "chunk_index": 0,
+        "file_path": "gson/src/test/java/com/google/gson/internal/LazilyParsedNumberTest.java",
+        "commit_count": 5
+      },
+      "similarity_score": 1.0090440511703491
+    },
+    {
+      "content": "# File: gson/src/test/java/com/google/gson/functional/ArrayTest.java (java)\n\n## Key Code Elements:\nimport static com.google.common.truth.Truth.assertThat;\nimport static org.junit.Assert.fail;\nimport com.google.gson.Gson;\nimport com.google.gson.GsonBuilder;\nimport com.google.gson.JsonParseException;\nimport com.google.gson.common.TestTypes.BagOfPrimitives;\nimport com.google.gson.common.TestTypes.ClassWithObjects;\nimport com.google.gson.reflect.TypeToken;\nimport java.lang.reflect.Type;\nimport java.math.BigDecimal;\nimport java.util.ArrayList;\nimport java.util.Arrays;\nimport java.util.Collection;\nimport org.junit.Before;\nimport org.junit.Test;\n\n## Recent Changes:\n- 49b00d1a by Maicol (79454487+MaicolAntali@users.noreply.github.com): Port all Junit assert to Truth asserts (#2304)\n\n* Port Junit assert to Truth in `com.google.gson.str...\n- 1a2170b9 by Maicol (79454487+MaicolAntali@users.noreply.github.com): Port tests from JUnit 3 to JUnit 4 (#2294)\n\n* Port tests from JUnit 3 to JUnit 4\n\n* Port tests from ...\n- f7a164d9 by Marcono1234 (Marcono1234@users.noreply.github.com): Fail Maven build on compiler warnings; remove some warning suppressions (#2183)\n\n* Fail Maven build ...",
+      "metadata": {
+        "language": "java",
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "commit_count": 5,
+        "chunk_index": 0,
+        "file_path": "gson/src/test/java/com/google/gson/functional/ArrayTest.java"
+      },
+      "similarity_score": 1.0105613470077515
+    },
+    {
+      "content": "# File: gson/src/test/java/com/google/gson/functional/JsonParserTest.java (java)\n\n## Key Code Elements:\nimport static com.google.common.truth.Truth.assertThat;\nimport static org.junit.Assert.fail;\nimport com.google.gson.Gson;\nimport com.google.gson.JsonArray;\nimport com.google.gson.JsonObject;\nimport com.google.gson.JsonParseException;\nimport com.google.gson.JsonParser;\nimport com.google.gson.JsonPrimitive;\nimport com.google.gson.JsonSyntaxException;\nimport com.google.gson.common.TestTypes.BagOfPrimitives;\nimport com.google.gson.common.TestTypes.Nested;\nimport com.google.gson.reflect.TypeToken;\nimport java.io.StringReader;\nimport java.lang.reflect.Type;\nimport java.util.Arrays;\n\n## Recent Changes:\n- 49b00d1a by Maicol (79454487+MaicolAntali@users.noreply.github.com): Port all Junit assert to Truth asserts (#2304)\n\n* Port Junit assert to Truth in `com.google.gson.str...\n- 1a2170b9 by Maicol (79454487+MaicolAntali@users.noreply.github.com): Port tests from JUnit 3 to JUnit 4 (#2294)\n\n* Port tests from JUnit 3 to JUnit 4\n\n* Port tests from ...\n- 7845c380 by Degubi (Degubi@users.noreply.github.com): Minor cleanups in deprecations and other warnings (#1522)...",
+      "metadata": {
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "commit_count": 5,
+        "language": "java",
+        "chunk_index": 0,
+        "file_path": "gson/src/test/java/com/google/gson/functional/JsonParserTest.java"
+      },
+      "similarity_score": 1.0112422704696655
+    },
+    {
+      "content": "# File: metrics/src/main/java/com/google/gson/metrics/BagOfPrimitives.java (java)\n\n## Key Code Elements:\nimport com.google.common.base.Objects;\n  @Override\n  @Override\n  @Override\n\n## Recent Changes:\n- dc20b756 by Maicol (79454487+MaicolAntali@users.noreply.github.com): Fix error prone warns (#2320)\n\n* Adds `@SuppressWarnings(\"NarrowingCompoundAssignment\")`\n\n* Adds `@S...\n- 0a42c31e by Maicol (79454487+MaicolAntali@users.noreply.github.com): Code cleanup (#2282)\n\n* Simplify `if` condition in JsonReader.peekNumber()\n\n* Remove `if` to simplif...\n- aa236ec3 by William Collishaw (williamcollishaw@hotmail.co.uk): Simplify BagOfPrimitives if statement (#1539)\n\n* Simplify BagOfPrimitives if statement\n\n* formatting...",
+      "metadata": {
+        "commit_count": 4,
+        "total_chunks": 1,
+        "file_path": "metrics/src/main/java/com/google/gson/metrics/BagOfPrimitives.java",
+        "chunk_index": 0,
+        "language": "java",
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.0213119983673096
+    },
+    {
+      "content": "# File: gson/src/test/java/com/google/gson/common/MoreAsserts.java (java)\n\n## Key Code Elements:\nimport java.lang.reflect.Method;\nimport java.lang.reflect.Modifier;\nimport java.util.Collection;\nimport java.util.LinkedHashSet;\nimport java.util.List;\nimport java.util.Set;\nimport org.junit.Assert;\n\n## Recent Changes:\n- 325f37cd by Marcono1234 (Marcono1234@users.noreply.github.com): Verify that JsonTreeReader and JsonTreeWriter override all methods (#2181)\n\n* Verify that JsonTreeRe...\n- 7845c380 by Degubi (Degubi@users.noreply.github.com): Minor cleanups in deprecations and other warnings (#1522)...\n- eb79ec73 by Vladislav Bauer (bauer.vlad@gmail.com): Add unit tests for constructors from util classes...",
+      "metadata": {
+        "file_path": "gson/src/test/java/com/google/gson/common/MoreAsserts.java",
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "commit_count": 5,
+        "language": "java",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.037145972251892
+    },
+    {
+      "content": "# File: gson/src/main/java/com/google/gson/ToNumberPolicy.java (java)\n\n## Key Code Elements:\nimport com.google.gson.internal.LazilyParsedNumber;\nimport com.google.gson.stream.JsonReader;\nimport com.google.gson.stream.MalformedJsonException;\nimport java.io.IOException;\nimport java.math.BigDecimal;\n    @Override public Double readNumber(JsonReader in) throws IOException {\n    @Override public Number readNumber(JsonReader in) throws IOException {\n    @Override public Number readNumber(JsonReader in) throws IOException, JsonParseException {\n    @Override public BigDecimal readNumber(JsonReader in) throws IOException {\n\n## Recent Changes:\n- 28609089 by Marcono1234 (Marcono1234@users.noreply.github.com): Add Javadoc since tags for previously added elements (#2211)...\n- b4dab86b by Marcono1234 (Marcono1234@users.noreply.github.com): Make default adapters stricter; improve exception messages (#2000)\n\n* Make default adapters stricter...\n- bda2e3d1 by Marcono1234 (Marcono1234@users.noreply.github.com): Improve number strategy implementation (#1987)\n\n* Fix GsonBuilder not copying number strategies from...",
+      "metadata": {
+        "strategy": "compressed",
+        "language": "java",
+        "chunk_index": 0,
+        "commit_count": 4,
+        "file_path": "gson/src/main/java/com/google/gson/ToNumberPolicy.java",
+        "total_chunks": 1
+      },
+      "similarity_score": 1.0482187271118164
+    },
+    {
+      "content": "# File: gson/src/test/java/com/google/gson/ToNumberPolicyTest.java (java)\n\n## Key Code Elements:\nimport static com.google.common.truth.Truth.assertThat;\nimport static org.junit.Assert.fail;\nimport com.google.gson.internal.LazilyParsedNumber;\nimport com.google.gson.stream.JsonReader;\nimport com.google.gson.stream.MalformedJsonException;\nimport java.io.IOException;\nimport java.io.StringReader;\nimport java.math.BigDecimal;\nimport org.junit.Test;\n  @Test\n  @Test\n  @Test\n  @Test\n  @Test\n\n## Recent Changes:\n- be87c3fd by Maicol (79454487+MaicolAntali@users.noreply.github.com): Port Junit test to Truth in the package `com.google.gson` of the module `gson` (#2299)\n\n* Add the Tr...\n- 1a2170b9 by Maicol (79454487+MaicolAntali@users.noreply.github.com): Port tests from JUnit 3 to JUnit 4 (#2294)\n\n* Port tests from JUnit 3 to JUnit 4\n\n* Port tests from ...\n- bda2e3d1 by Marcono1234 (Marcono1234@users.noreply.github.com): Improve number strategy implementation (#1987)\n\n* Fix GsonBuilder not copying number strategies from...",
+      "metadata": {
+        "commit_count": 4,
+        "language": "java",
+        "file_path": "gson/src/test/java/com/google/gson/ToNumberPolicyTest.java",
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "chunk_index": 0
+      },
+      "similarity_score": 1.0489064455032349
+    },
+    {
+      "content": "# File: gson/src/test/java/com/google/gson/functional/ToNumberPolicyFunctionalTest.java (java)\n\n## Key Code Elements:\nimport static com.google.common.truth.Truth.assertThat;\nimport static org.junit.Assert.fail;\nimport com.google.gson.Gson;\nimport com.google.gson.GsonBuilder;\nimport com.google.gson.ToNumberPolicy;\nimport com.google.gson.ToNumberStrategy;\nimport com.google.gson.internal.LazilyParsedNumber;\nimport com.google.gson.reflect.TypeToken;\nimport com.google.gson.stream.JsonReader;\nimport java.lang.reflect.Type;\nimport java.math.BigDecimal;\nimport java.util.Collection;\nimport java.util.List;\nimport org.junit.Test;\n  @Test\n\n## Recent Changes:\n- dc20b756 by Maicol (79454487+MaicolAntali@users.noreply.github.com): Fix error prone warns (#2320)\n\n* Adds `@SuppressWarnings(\"NarrowingCompoundAssignment\")`\n\n* Adds `@S...\n- 49b00d1a by Maicol (79454487+MaicolAntali@users.noreply.github.com): Port all Junit assert to Truth asserts (#2304)\n\n* Port Junit assert to Truth in `com.google.gson.str...\n- 1a2170b9 by Maicol (79454487+MaicolAntali@users.noreply.github.com): Port tests from JUnit 3 to JUnit 4 (#2294)\n\n* Port tests from JUnit 3 to JUnit 4\n\n* Port tests from ...",
+      "metadata": {
+        "language": "java",
+        "file_path": "gson/src/test/java/com/google/gson/functional/ToNumberPolicyFunctionalTest.java",
+        "total_chunks": 1,
+        "commit_count": 5,
+        "chunk_index": 0,
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.0563890933990479
+    },
+    {
+      "content": "# File: gson/src/test/java/com/google/gson/JsonObjectTest.java (java)\n\n## Key Code Elements:\nimport static com.google.common.truth.Truth.assertThat;\nimport static org.junit.Assert.fail;\nimport com.google.common.testing.EqualsTester;\nimport com.google.gson.common.MoreAsserts;\nimport java.util.AbstractMap.SimpleEntry;\nimport java.util.ArrayDeque;\nimport java.util.ArrayList;\nimport java.util.Arrays;\nimport java.util.Collections;\nimport java.util.Deque;\nimport java.util.Iterator;\nimport java.util.List;\nimport java.util.Map.Entry;\nimport java.util.Set;\nimport org.junit.Test;\n\n## Recent Changes:\n- 2658aca6 by Maicol (79454487+MaicolAntali@users.noreply.github.com): Fix error prone warnings (#2316)\n\n* Fix `OperatorPrecedence` warn in `JsonWriter#close`\n\n* Fix `Refe...\n- 9f26679e by Maicol (79454487+MaicolAntali@users.noreply.github.com): Adds Error Prone to the `maven-compiler-plugin` (#2308)\n\n* Adds Error Prone to the `pom.xml`\n\n* Adds...\n- 49b00d1a by Maicol (79454487+MaicolAntali@users.noreply.github.com): Port all Junit assert to Truth asserts (#2304)\n\n* Port Junit assert to Truth in `com.google.gson.str...",
+      "metadata": {
+        "strategy": "compressed",
+        "language": "java",
+        "file_path": "gson/src/test/java/com/google/gson/JsonObjectTest.java",
+        "commit_count": 5,
+        "total_chunks": 1,
+        "chunk_index": 0
+      },
+      "similarity_score": 1.062332034111023
+    },
+    {
+      "content": "# File: gson/src/test/java/com/google/gson/functional/GsonVersionDiagnosticsTest.java (java)\n\n## Key Code Elements:\nimport static com.google.common.truth.Truth.assertThat;\nimport static org.junit.Assert.assertThrows;\nimport com.google.gson.Gson;\nimport com.google.gson.GsonBuilder;\nimport com.google.gson.TypeAdapter;\nimport com.google.gson.stream.JsonReader;\nimport com.google.gson.stream.JsonWriter;\nimport java.util.regex.Pattern;\nimport org.junit.Before;\nimport org.junit.Test;\n  @Before\n      @Override public void write(JsonWriter out, TestType value) {\n      @Override public TestType read(JsonReader in) {\n  @Test\n  @Test\n\n## Recent Changes:\n- dc20b756 by Maicol (79454487+MaicolAntali@users.noreply.github.com): Fix error prone warns (#2320)\n\n* Adds `@SuppressWarnings(\"NarrowingCompoundAssignment\")`\n\n* Adds `@S...\n- 49b00d1a by Maicol (79454487+MaicolAntali@users.noreply.github.com): Port all Junit assert to Truth asserts (#2304)\n\n* Port Junit assert to Truth in `com.google.gson.str...\n- 1a2170b9 by Maicol (79454487+MaicolAntali@users.noreply.github.com): Port tests from JUnit 3 to JUnit 4 (#2294)\n\n* Port tests from JUnit 3 to JUnit 4\n\n* Port tests from ...",
+      "metadata": {
+        "file_path": "gson/src/test/java/com/google/gson/functional/GsonVersionDiagnosticsTest.java",
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "commit_count": 5,
+        "language": "java"
+      },
+      "similarity_score": 1.0702896118164062
+    },
+    {
+      "content": "# File: gson/src/test/java/com/google/gson/functional/CustomTypeAdaptersTest.java (java)\n\n## Key Code Elements:\nimport static com.google.common.truth.Truth.assertThat;\nimport com.google.common.base.Splitter;\nimport com.google.gson.Gson;\nimport com.google.gson.GsonBuilder;\nimport com.google.gson.InstanceCreator;\nimport com.google.gson.JsonDeserializationContext;\nimport com.google.gson.JsonDeserializer;\nimport com.google.gson.JsonElement;\nimport com.google.gson.JsonObject;\nimport com.google.gson.JsonParseException;\nimport com.google.gson.JsonPrimitive;\nimport com.google.gson.JsonSerializationContext;\nimport com.google.gson.JsonSerializer;\nimport com.google.gson.common.TestTypes.BagOfPrimitives;\nimport com.google.gson.common.TestTypes.ClassWithCustomTypeConverter;\n\n## Recent Changes:\n- dc20b756 by Maicol (79454487+MaicolAntali@users.noreply.github.com): Fix error prone warns (#2320)\n\n* Adds `@SuppressWarnings(\"NarrowingCompoundAssignment\")`\n\n* Adds `@S...\n- 49b00d1a by Maicol (79454487+MaicolAntali@users.noreply.github.com): Port all Junit assert to Truth asserts (#2304)\n\n* Port Junit assert to Truth in `com.google.gson.str...\n- 1a2170b9 by Maicol (79454487+MaicolAntali@users.noreply.github.com): Port tests from JUnit 3 to JUnit 4 (#2294)\n\n* Port tests from JUnit 3 to JUnit 4\n\n* Port tests from ...",
+      "metadata": {
+        "chunk_index": 0,
+        "commit_count": 5,
+        "language": "java",
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "file_path": "gson/src/test/java/com/google/gson/functional/CustomTypeAdaptersTest.java"
+      },
+      "similarity_score": 1.078992247581482
+    },
+    {
+      "content": "# File: gson/src/main/java/com/google/gson/JsonNull.java (java)\n\n## Key Code Elements:\n  @Deprecated\n  @Override\n  @Override\n  @Override\n\n## Recent Changes:\n- 66d934ba by Maicol (79454487+MaicolAntali@users.noreply.github.com): Remove already covered condition in JsonNull.equals() (#2271)...\n- 847d7f66 by Marcono1234 (Marcono1234@users.noreply.github.com): Improve documentation (#2193)\n\n* Improve JsonElement subclasses javadoc and add tests\n\n* Slightly im...\n- 0b6a7bf7 by Marcono1234 (Marcono1234@users.noreply.github.com): Deprecate JsonElement constructor (#1761)\n\n* Deprecate JsonElement constructor\n\nCreating custom Json...",
+      "metadata": {
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "commit_count": 5,
+        "file_path": "gson/src/main/java/com/google/gson/JsonNull.java",
+        "language": "java",
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.0803146362304688
+    },
+    {
+      "content": "# File: gson/src/test/java/com/google/gson/functional/UncategorizedTest.java (java)\n\n## Key Code Elements:\nimport static com.google.common.truth.Truth.assertThat;\nimport static org.junit.Assert.fail;\nimport com.google.gson.Gson;\nimport com.google.gson.GsonBuilder;\nimport com.google.gson.JsonDeserializationContext;\nimport com.google.gson.JsonDeserializer;\nimport com.google.gson.JsonElement;\nimport com.google.gson.JsonParseException;\nimport com.google.gson.common.TestTypes.BagOfPrimitives;\nimport com.google.gson.common.TestTypes.ClassOverridingEquals;\nimport com.google.gson.reflect.TypeToken;\nimport java.lang.reflect.Type;\nimport java.util.Arrays;\nimport java.util.List;\nimport org.junit.Before;\n\n## Recent Changes:\n- 49b00d1a by Maicol (79454487+MaicolAntali@users.noreply.github.com): Port all Junit assert to Truth asserts (#2304)\n\n* Port Junit assert to Truth in `com.google.gson.str...\n- 1a2170b9 by Maicol (79454487+MaicolAntali@users.noreply.github.com): Port tests from JUnit 3 to JUnit 4 (#2294)\n\n* Port tests from JUnit 3 to JUnit 4\n\n* Port tests from ...\n- e5b3f636 by Inderjeet Singh (inder@peel.com): updated minimum JDK version to 1.6.\nAdded Overrides for methods implementing an interface....",
+      "metadata": {
+        "language": "java",
+        "commit_count": 5,
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "file_path": "gson/src/test/java/com/google/gson/functional/UncategorizedTest.java",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.0899564027786255
+    }
+  ]
+}

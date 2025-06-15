@@ -1,0 +1,60 @@
+{
+  "repository": {
+    "name": "ktorio/ktor",
+    "sha": "86f7192d2dddd2605d3f7b83a0b9a7ed45b64e09",
+    "generation_date": "2025-06-15T11:21:45.131366"
+  },
+  "files": {
+    "standard": {
+      "file_name": "repomix-output-ktor.md",
+      "file_size_mb": 4.64,
+      "character_count": 4861858,
+      "line_count": 146784,
+      "word_count": 420063,
+      "token_counts": {
+        "gpt-4": 1093573,
+        "estimated": 1215464
+      },
+      "created_time": "2025-06-15T11:20:27.754221",
+      "modified_time": "2025-06-15T11:20:27.754221",
+      "generation_time": "2025-06-15T11:21:43.767177"
+    },
+    "compressed": {
+      "file_name": "repomix-output-ktor-compress.md",
+      "file_size_mb": 4.64,
+      "character_count": 4861489,
+      "line_count": 146764,
+      "word_count": 420064,
+      "token_counts": {
+        "gpt-4": 1093498,
+        "estimated": 1215372
+      },
+      "created_time": "2025-06-15T11:20:36.691175",
+      "modified_time": "2025-06-15T11:20:36.691175",
+      "generation_time": "2025-06-15T11:21:44.169444"
+    },
+    "git_enhanced": {
+      "file_name": "repomix-output-ktor-with-git.md",
+      "file_size_mb": 10.46,
+      "character_count": 10793163,
+      "line_count": 350125,
+      "word_count": 1074598,
+      "token_counts": {
+        "gpt-4": 2682192,
+        "estimated": 2698290
+      },
+      "created_time": "2025-06-15T11:21:43.060060",
+      "modified_time": "2025-06-15T11:21:43.060060",
+      "generation_time": "2025-06-15T11:21:45.130166"
+    }
+  },
+  "summary": {
+    "total_files": 3,
+    "total_size_bytes": 0,
+    "total_tokens_gpt4": 4869263,
+    "compression_ratio": {
+      "size": 0,
+      "tokens": 1.0
+    }
+  }
+}

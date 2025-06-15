@@ -1,0 +1,708 @@
+{
+  "basic": [
+    {
+      "content": "# File: leakcanary-watcher/src/main/AndroidManifest.xml (xml)\n\n## Code Content:\n```xml\n<!--\n  ~ Copyright (C) 2015 Square, Inc.\n  ~\n  ~ Licensed under the Apache License, Version 2.0 (the \"License\");\n  ~ you may not use this file except in compliance with the License.\n  ~ You may obtain a copy of the License at\n  ~\n  ~      http://www.apache.org/licenses/LICENSE-2.0\n  ~\n  ~ Unless required by applicable law or agreed to in writing, software\n  ~ distributed under the License is distributed on an \"AS IS\" BASIS,\n  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n  ~ See the License for the specific language governing permissions and\n  ~ limitations under the License.\n  -->\n<manifest\n    package=\"com.squareup.leakcanary.watcher\">\n  <application/>\n</manifest>\n```",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "leakcanary-watcher/src/main/AndroidManifest.xml",
+        "language": "xml",
+        "total_chunks": 1,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.8680615425109863
+    },
+    {
+      "content": "<application>\n    <service\n        android:name=\".internal.HeapAnalyzerService\"\n        android:process=\":leakcanary\"\n        android:enabled=\"false\"\n        />\n    <service\n        android:name=\".DisplayLeakService\"\n        android:enabled=\"false\"\n        />\n    <activity\n        android:theme=\"@style/leak_canary_LeakCanary.Base\"\n        android:name=\".internal.DisplayLeakActivity\"\n        android:enabled=\"false\"\n        android:label=\"@string/leak_canary_display_activity_label\"\n        android:icon=\"@drawable/leak_canary_icon\"\n        android:taskAffinity=\"com.squareup.leakcanary\"\n        >\n      <intent-filter>\n        <action android:name=\"android.intent.action.MAIN\"/>\n        <category android:name=\"android.intent.category.LAUNCHER\"/>\n      </intent-filter>\n    </activity>\n    <activity\n        android:theme=\"@style/leak_canary_Theme.Transparent\"\n        android:name=\".internal.RequestStoragePermissionActivity\"\n        android:taskAffinity=\"com.squareup.leakcanary\"\n        android:enabled=\"false\"\n        android:icon=\"@drawable/leak_canary_icon\"\n        android:label=\"@string/leak_canary_storage_permission_activity_label\"\n        />\n\n  </application>\n</manifest>\n```",
+      "metadata": {
+        "strategy": "basic",
+        "language": "xml",
+        "chunk_index": 1,
+        "file_path": "leakcanary-android/src/main/AndroidManifest.xml",
+        "total_chunks": 2
+      },
+      "similarity_score": 0.8940854072570801
+    },
+    {
+      "content": "LAYOUT_TRANSITION(SDK_INT >= ICE_CREAM_SANDWICH && SDK_INT <= LOLLIPOP_MR1) {\n    @Override void add(ExcludedRefs.Builder excluded) {\n      excluded.instanceField(\"android.animation.LayoutTransition$1\", \"val$parent\")\n          .reason(\"LayoutTransition leaks parent ViewGroup through\"\n              + \" ViewTreeObserver.OnPreDrawListener When triggered, this leaks stays until the\"\n              + \" window is destroyed. Tracked here:\"\n              + \" https://code.google.com/p/android/issues/detail?id=171830\");\n    }\n  },\n\n  SPELL_CHECKER_SESSION(SDK_INT >= JELLY_BEAN && SDK_INT <= LOLLIPOP_MR1) {\n    @Override void add(ExcludedRefs.Builder excluded) {\n      excluded.instanceField(\"android.view.textservice.SpellCheckerSession$1\", \"this$0\")\n          .reason(\"SpellCheckerSessionListenerImpl.mHandler is leaking destroyed Activity when the\"\n              + \" SpellCheckerSession is closed before the service is connected.\"\n              + \" Tracked here: https://code.google.com/p/android/issues/detail?id=172542\");\n    }\n  },\n\n  ACTIVITY_CHOOSE_MODEL(SDK_INT > ICE_CREAM_SANDWICH && SDK_INT <= LOLLIPOP_MR1) {\n    @Override void add(ExcludedRefs.Builder excluded) {\n      String reason = \"ActivityChooserModel holds a static reference to the last set\"\n          + \" ActivityChooserModelPolicy which can be an activity context.\"\n          + \" Tracked here: https://code.google.com/p/android/issues/detail?id=172659\"\n          + \" Hack: https://gist.github.com/andaag/b05ab66ed0f06167d6e0\";\n      excluded.instanceField(\"android.support.v7.internal.widget.ActivityChooserModel\",\n          \"mActivityChoserModelPolicy\").reason(reason);\n      excluded.instanceField(\"android.widget.ActivityChooserModel\", \"mActivityChoserModelPolicy\")\n          .reason(reason);\n    }\n  },",
+      "metadata": {
+        "chunk_index": 6,
+        "strategy": "basic",
+        "language": "java",
+        "file_path": "leakcanary-android/src/main/java/com/squareup/leakcanary/AndroidExcludedRefs.java",
+        "total_chunks": 16
+      },
+      "similarity_score": 0.9216188192367554
+    },
+    {
+      "content": "# File: leakcanary-android-no-op/src/main/java/com/squareup/leakcanary/LeakCanary.java (java)\n\n## Code Content:\n```java\npackage com.squareup.leakcanary;\n\nimport android.app.Application;\n\n/**\n * A no-op version of {@link LeakCanary} that can be used in release builds.\n */\npublic final class LeakCanary {\n\n  public static RefWatcher install(Application application) {\n    return RefWatcher.DISABLED;\n  }\n\n  private LeakCanary() {\n    throw new AssertionError();\n  }\n}\n```",
+      "metadata": {
+        "language": "java",
+        "strategy": "basic",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "file_path": "leakcanary-android-no-op/src/main/java/com/squareup/leakcanary/LeakCanary.java"
+      },
+      "similarity_score": 0.9267246127128601
+    },
+    {
+      "content": "@Override public void onActivityResumed(Activity activity) {\n        }\n\n        @Override public void onActivityPaused(Activity activity) {\n        }\n\n        @Override public void onActivityStopped(Activity activity) {\n        }\n\n        @Override public void onActivitySaveInstanceState(Activity activity, Bundle outState) {\n        }\n\n        @Override public void onActivityDestroyed(Activity activity) {\n          ActivityRefWatcher.this.onActivityDestroyed(activity);\n        }\n      };\n\n  private final Application application;\n  private final RefWatcher refWatcher;\n\n  /**\n   * Constructs an {@link ActivityRefWatcher} that will make sure the activities are not leaking\n   * after they have been destroyed.\n   */\n  public ActivityRefWatcher(Application application, final RefWatcher refWatcher) {\n    this.application = checkNotNull(application, \"application\");\n    this.refWatcher = checkNotNull(refWatcher, \"refWatcher\");\n  }\n\n  void onActivityDestroyed(Activity activity) {\n    refWatcher.watch(activity);\n  }\n\n  public void watchActivities() {\n    // Make sure you don't get installed twice.\n    stopWatchingActivities();\n    application.registerActivityLifecycleCallbacks(lifecycleCallbacks);\n  }\n\n  public void stopWatchingActivities() {\n    application.unregisterActivityLifecycleCallbacks(lifecycleCallbacks);\n  }\n}\n```",
+      "metadata": {
+        "total_chunks": 2,
+        "language": "java",
+        "chunk_index": 1,
+        "file_path": "leakcanary-android/src/main/java/com/squareup/leakcanary/ActivityRefWatcher.java",
+        "strategy": "basic"
+      },
+      "similarity_score": 0.927550196647644
+    },
+    {
+      "content": "# File: leakcanary-android-no-op/src/main/java/com/squareup/leakcanary/RefWatcher.java (java)\n\n## Code Content:\n```java\npackage com.squareup.leakcanary;\n\n/**\n * No-op implementation of {@link RefWatcher} for release builds. Please use {@link\n * RefWatcher#DISABLED}.\n */\npublic final class RefWatcher {\n\n  public static final RefWatcher DISABLED = new RefWatcher();\n\n  private RefWatcher() {\n  }\n\n  public void watch(Object watchedReference) {\n  }\n\n  public void watch(Object watchedReference, String referenceName) {\n  }\n}\n```",
+      "metadata": {
+        "strategy": "basic",
+        "file_path": "leakcanary-android-no-op/src/main/java/com/squareup/leakcanary/RefWatcher.java",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "language": "java"
+      },
+      "similarity_score": 0.9363055229187012
+    },
+    {
+      "content": "Leak getVisibleLeak() {\n    if (leaks == null) {\n      return null;\n    }\n    for (Leak leak : leaks) {\n      if (leak.heapDump.referenceKey.equals(visibleLeakRefKey)) {\n        return leak;\n      }\n    }\n    return null;\n  }\n\n  class LeakListAdapter extends BaseAdapter {\n\n    @Override public int getCount() {\n      return leaks.size();\n    }\n\n    @Override public Leak getItem(int position) {\n      return leaks.get(position);\n    }\n\n    @Override public long getItemId(int position) {\n      return position;\n    }\n\n    @Override public View getView(int position, View convertView, ViewGroup parent) {\n      if (convertView == null) {\n        convertView = LayoutInflater.from(DisplayLeakActivity.this)\n            .inflate(R.layout.leak_canary_leak_row, parent, false);\n      }\n      TextView titleView = (TextView) convertView.findViewById(R.id.__leak_canary_row_text);\n      TextView timeView = (TextView) convertView.findViewById(R.id.__leak_canary_row_time);\n      Leak leak = getItem(position);\n\n      String index = (leaks.size() - position) + \". \";\n\n      String title;\n      if (leak.result.failure == null) {\n        String className = classSimpleName(leak.result.className);\n        String size = formatShortFileSize(DisplayLeakActivity.this, leak.result.retainedHeapSize);\n        title = getString(R.string.leak_canary_class_has_leaked, className, size);\n        if (leak.result.excludedLeak) {\n          title = getString(R.string.leak_canary_excluded_row, title);\n        }\n        title = index + title;\n      } else {\n        title = index\n            + leak.result.failure.getClass().getSimpleName()\n            + \" \"\n            + leak.result.failure.getMessage();\n      }\n      titleView.setText(title);\n      String time =\n          DateUtils.formatDateTime(DisplayLeakActivity.this, leak.resultFile.lastModified(),\n              FORMAT_SHOW_TIME | FORMAT_SHOW_DATE);\n      timeView.setText(time);\n      return convertView;\n    }\n  }",
+      "metadata": {
+        "strategy": "basic",
+        "file_path": "leakcanary-android/src/main/java/com/squareup/leakcanary/internal/DisplayLeakActivity.java",
+        "total_chunks": 11,
+        "chunk_index": 8,
+        "language": "java"
+      },
+      "similarity_score": 0.9463909864425659
+    },
+    {
+      "content": "//noinspection unchecked\n    leaks = (List<Leak>) getLastNonConfigurationInstance();\n\n    setContentView(R.layout.leak_canary_display_leak);\n\n    listView = (ListView) findViewById(R.id.__leak_canary_display_leak_list);\n    failureView = (TextView) findViewById(R.id.__leak_canary_display_leak_failure);\n    actionButton = (Button) findViewById(R.id.__leak_canary_action);\n\n    updateUi();\n  }\n\n  // No, it's not deprecated. Android lies.\n  @Override public Object onRetainNonConfigurationInstance() {\n    return leaks;\n  }\n\n  @Override protected void onSaveInstanceState(Bundle outState) {\n    super.onSaveInstanceState(outState);\n    outState.putString(\"visibleLeakRefKey\", visibleLeakRefKey);\n  }\n\n  @Override protected void onResume() {\n    super.onResume();\n    LoadLeaks.load(this);\n  }\n\n  @Override public void setTheme(int resid) {\n    // We don't want this to be called with an incompatible theme.\n    // This could happen if you implement runtime switching of themes\n    // using ActivityLifecycleCallbacks.\n    if (resid != R.style.leak_canary_LeakCanary_Base) {\n      return;\n    }\n    super.setTheme(resid);\n  }\n\n  @Override protected void onDestroy() {\n    super.onDestroy();\n    LoadLeaks.forgetActivity();\n  }",
+      "metadata": {
+        "chunk_index": 3,
+        "total_chunks": 11,
+        "strategy": "basic",
+        "language": "java",
+        "file_path": "leakcanary-android/src/main/java/com/squareup/leakcanary/internal/DisplayLeakActivity.java"
+      },
+      "similarity_score": 0.9685971140861511
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/res/layout/leak_canary_display_leak.xml (xml)\n\n## Code Content:\n```xml\n<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!--\n  ~ Copyright (C) 2015 Square, Inc.\n  ~\n  ~ Licensed under the Apache License, Version 2.0 (the \"License\");\n  ~ you may not use this file except in compliance with the License.\n  ~ You may obtain a copy of the License at\n  ~\n  ~      http://www.apache.org/licenses/LICENSE-2.0\n  ~\n  ~ Unless required by applicable law or agreed to in writing, software\n  ~ distributed under the License is distributed on an \"AS IS\" BASIS,\n  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n  ~ See the License for the specific language governing permissions and\n  ~ limitations under the License.\n  -->\n<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"match_parent\"\n    android:orientation=\"vertical\"\n    android:background=\"#3c3c3c\"\n    >\n  <ListView\n      android:id=\"@+id/__leak_canary_display_leak_list\"\n      android:layout_width=\"match_parent\"\n      android:layout_height=\"0dp\"\n      android:layout_weight=\"1\"\n      android:dividerHeight=\"0dp\"\n      android:divider=\"@null\"\n      />\n  <TextView\n      android:id=\"@+id/__leak_canary_display_leak_failure\"\n      android:layout_width=\"match_parent\"\n      android:layout_height=\"0dp\"\n      android:layout_weight=\"1\"\n      android:textSize=\"12sp\"\n      android:visibility=\"gone\"\n      />\n  <Button\n      android:id=\"@+id/__leak_canary_action\"\n      android:layout_width=\"match_parent\"\n      android:layout_height=\"wrap_content\"\n      android:visibility=\"gone\"\n      />\n\n</LinearLayout>\n```",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "xml",
+        "file_path": "leakcanary-android/src/main/res/layout/leak_canary_display_leak.xml",
+        "total_chunks": 1,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.9744460582733154
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/res/layout/leak_canary_heap_dump_toast.xml (xml)\n\n## Code Content:\n```xml\n<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!--\n  ~ Copyright (C) 2015 Square, Inc.\n  ~\n  ~ Licensed under the Apache License, Version 2.0 (the \"License\");\n  ~ you may not use this file except in compliance with the License.\n  ~ You may obtain a copy of the License at\n  ~\n  ~      http://www.apache.org/licenses/LICENSE-2.0\n  ~\n  ~ Unless required by applicable law or agreed to in writing, software\n  ~ distributed under the License is distributed on an \"AS IS\" BASIS,\n  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n  ~ See the License for the specific language governing permissions and\n  ~ limitations under the License.\n  -->\n<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:layout_width=\"wrap_content\"\n    android:layout_height=\"wrap_content\"\n    android:orientation=\"vertical\"\n    android:background=\"@drawable/leak_canary_toast_background\"\n    android:padding=\"16dp\"\n    >\n  <ImageView\n      android:layout_width=\"wrap_content\"\n      android:layout_height=\"wrap_content\"\n      android:layout_gravity=\"center_horizontal\"\n      android:src=\"@drawable/leak_canary_icon\"/>\n\n  <TextView\n      android:layout_width=\"wrap_content\"\n      android:layout_height=\"wrap_content\"\n      android:layout_gravity=\"center_horizontal\"\n      android:textColor=\"#ffffff\"\n      android:textSize=\"18sp\"\n      android:text=\"@string/leak_canary_toast_heap_dump\"\n      />\n\n</LinearLayout>\n```",
+      "metadata": {
+        "language": "xml",
+        "strategy": "basic",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "file_path": "leakcanary-android/src/main/res/layout/leak_canary_heap_dump_toast.xml"
+      },
+      "similarity_score": 0.9794520139694214
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/res/values/leak_canary_themes.xml (xml)\n\n## Code Content:\n```xml\n<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!--\n  ~ Copyright (C) 2015 Square, Inc.\n  ~\n  ~ Licensed under the Apache License, Version 2.0 (the \"License\");\n  ~ you may not use this file except in compliance with the License.\n  ~ You may obtain a copy of the License at\n  ~\n  ~      http://www.apache.org/licenses/LICENSE-2.0\n  ~\n  ~ Unless required by applicable law or agreed to in writing, software\n  ~ distributed under the License is distributed on an \"AS IS\" BASIS,\n  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n  ~ See the License for the specific language governing permissions and\n  ~ limitations under the License.\n  -->\n<resources>\n  <style name=\"leak_canary_LeakCanary.Base\" parent=\"android:Theme\">\n  </style>\n\n  <style name=\"leak_canary_Theme.Transparent\" parent=\"android:Theme\">\n    <item name=\"android:windowIsTranslucent\">true</item>\n    <item name=\"android:windowBackground\">@android:color/transparent</item>\n    <item name=\"android:windowContentOverlay\">@null</item>\n    <item name=\"android:windowNoTitle\">true</item>\n    <item name=\"android:backgroundDimEnabled\">false</item>\n  </style>\n</resources>\n```",
+      "metadata": {
+        "total_chunks": 1,
+        "language": "xml",
+        "file_path": "leakcanary-android/src/main/res/values/leak_canary_themes.xml",
+        "strategy": "basic",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.9826939702033997
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/res/values/leak_canary_public.xml (xml)\n\n## Code Content:\n```xml\n<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!--\n  ~ Copyright (C) 2015 Square, Inc.\n  ~\n  ~ Licensed under the Apache License, Version 2.0 (the \"License\");\n  ~ you may not use this file except in compliance with the License.\n  ~ You may obtain a copy of the License at\n  ~\n  ~      http://www.apache.org/licenses/LICENSE-2.0\n  ~\n  ~ Unless required by applicable law or agreed to in writing, software\n  ~ distributed under the License is distributed on an \"AS IS\" BASIS,\n  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n  ~ See the License for the specific language governing permissions and\n  ~ limitations under the License.\n  -->\n<resources>\n\n  <public name=\"leak_canary_display_activity_label\" type=\"string\"/>\n  <public name=\"leak_canary_heap_dump_toast\" type=\"layout\"/>\n  <public name=\"leak_canary_icon\" type=\"drawable\"/>\n  <public name=\"leak_canary_max_stored_leaks\" type=\"integer\"/>\n  <public name=\"leak_canary_watch_delay_millis\" type=\"integer\"/>\n\n</resources>\n```",
+      "metadata": {
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "strategy": "basic",
+        "file_path": "leakcanary-android/src/main/res/values/leak_canary_public.xml",
+        "language": "xml"
+      },
+      "similarity_score": 0.985949695110321
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/java/com/squareup/leakcanary/ActivityRefWatcher.java (java)\n\n## Code Content:\n```java\n/*\n * Copyright (C) 2015 Square, Inc.\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obtain a copy of the License at\n *\n *      http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\npackage com.squareup.leakcanary;\n\nimport android.annotation.TargetApi;\nimport android.app.Activity;\nimport android.app.Application;\nimport android.os.Bundle;\n\nimport static android.os.Build.VERSION.SDK_INT;\nimport static android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH;\nimport static com.squareup.leakcanary.Preconditions.checkNotNull;\n\n@TargetApi(ICE_CREAM_SANDWICH) public final class ActivityRefWatcher {\n\n  public static void installOnIcsPlus(Application application, RefWatcher refWatcher) {\n    if (SDK_INT < ICE_CREAM_SANDWICH) {\n      // If you need to support Android < ICS, override onDestroy() in your base activity.\n      return;\n    }\n    ActivityRefWatcher activityRefWatcher = new ActivityRefWatcher(application, refWatcher);\n    activityRefWatcher.watchActivities();\n  }\n\n  private final Application.ActivityLifecycleCallbacks lifecycleCallbacks =\n      new Application.ActivityLifecycleCallbacks() {\n        @Override public void onActivityCreated(Activity activity, Bundle savedInstanceState) {\n        }\n\n        @Override public void onActivityStarted(Activity activity) {\n        }\n\n        @Override public void onActivityResumed(Activity activity) {\n        }\n\n        @Override public void onActivityPaused(Activity activity) {\n        }",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "basic",
+        "file_path": "leakcanary-android/src/main/java/com/squareup/leakcanary/ActivityRefWatcher.java",
+        "language": "java",
+        "total_chunks": 2
+      },
+      "similarity_score": 0.9876664876937866
+    },
+    {
+      "content": "# File: leakcanary-sample/src/main/res/layout/main_activity.xml (xml)\n\n## Code Content:\n```xml\n<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!--\n  ~ Copyright (C) 2015 Square, Inc.\n  ~\n  ~ Licensed under the Apache License, Version 2.0 (the \"License\");\n  ~ you may not use this file except in compliance with the License.\n  ~ You may obtain a copy of the License at\n  ~\n  ~      http://www.apache.org/licenses/LICENSE-2.0\n  ~\n  ~ Unless required by applicable law or agreed to in writing, software\n  ~ distributed under the License is distributed on an \"AS IS\" BASIS,\n  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n  ~ See the License for the specific language governing permissions and\n  ~ limitations under the License.\n  -->\n<LinearLayout\n    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:orientation=\"vertical\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"match_parent\"\n    android:layout_margin=\"16dp\"\n    >\n\n  <TextView\n      android:layout_width=\"match_parent\"\n      android:layout_height=\"wrap_content\"\n      android:layout_marginBottom=\"16dp\"\n      android:text=\"@string/helper_text\"\n      />\n\n  <Button\n      android:id=\"@+id/async_task\"\n      android:layout_width=\"match_parent\"\n      android:layout_height=\"wrap_content\"\n      android:text=\"@string/start_async_task\"\n      />\n\n</LinearLayout>\n```",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "leakcanary-sample/src/main/res/layout/main_activity.xml",
+        "total_chunks": 1,
+        "strategy": "basic",
+        "language": "xml"
+      },
+      "similarity_score": 0.9892899990081787
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/res/values-v21/leak_canary_themes.xml (xml)\n\n## Code Content:\n```xml\n<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!--\n  ~ Copyright (C) 2015 Square, Inc.\n  ~\n  ~ Licensed under the Apache License, Version 2.0 (the \"License\");\n  ~ you may not use this file except in compliance with the License.\n  ~ You may obtain a copy of the License at\n  ~\n  ~      http://www.apache.org/licenses/LICENSE-2.0\n  ~\n  ~ Unless required by applicable law or agreed to in writing, software\n  ~ distributed under the License is distributed on an \"AS IS\" BASIS,\n  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n  ~ See the License for the specific language governing permissions and\n  ~ limitations under the License.\n  -->\n<resources>\n  <style name=\"leak_canary_LeakCanary.Base\" parent=\"android:Theme.Material\">\n  </style>\n</resources>\n```",
+      "metadata": {
+        "language": "xml",
+        "file_path": "leakcanary-android/src/main/res/values-v21/leak_canary_themes.xml",
+        "strategy": "basic",
+        "total_chunks": 1,
+        "chunk_index": 0
+      },
+      "similarity_score": 0.9905486106872559
+    },
+    {
+      "content": "# File: leakcanary-sample/src/main/AndroidManifest.xml (xml)\n\n## Code Content:\n```xml\n<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!--\n  ~ Copyright (C) 2015 Square, Inc.\n  ~\n  ~ Licensed under the Apache License, Version 2.0 (the \"License\");\n  ~ you may not use this file except in compliance with the License.\n  ~ You may obtain a copy of the License at\n  ~\n  ~      http://www.apache.org/licenses/LICENSE-2.0\n  ~\n  ~ Unless required by applicable law or agreed to in writing, software\n  ~ distributed under the License is distributed on an \"AS IS\" BASIS,\n  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n  ~ See the License for the specific language governing permissions and\n  ~ limitations under the License.\n  -->\n<manifest\n    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    package=\"com.example.leakcanary\"\n    >\n  <application android:name=\".ExampleApplication\" android:allowBackup=\"false\"\n      android:icon=\"@drawable/ic_launcher\"\n      >\n    <activity\n        android:label=\"@string/app_name\"\n        android:name=\".MainActivity\"\n        >\n      <intent-filter>\n        <action android:name=\"android.intent.action.MAIN\"/>\n        <category android:name=\"android.intent.category.LAUNCHER\"/>\n        <category android:name=\"android.intent.category.DEFAULT\"/>\n      </intent-filter>\n    </activity>\n  </application>\n</manifest>\n```",
+      "metadata": {
+        "total_chunks": 1,
+        "language": "xml",
+        "strategy": "basic",
+        "chunk_index": 0,
+        "file_path": "leakcanary-sample/src/main/AndroidManifest.xml"
+      },
+      "similarity_score": 0.9921577572822571
+    },
+    {
+      "content": "MEDIA_SESSION_LEGACY_HELPER__SINSTANCE(SDK_INT == LOLLIPOP) {\n    @Override void add(ExcludedRefs.Builder excluded) {\n      excluded.staticField(\"android.media.session.MediaSessionLegacyHelper\", \"sInstance\")\n          .reason(\"MediaSessionLegacyHelper is a static singleton that is lazily instantiated and\"\n              + \" keeps a reference to the context it's given the first time\"\n              + \" MediaSessionLegacyHelper.getHelper() is called.\"\n              + \" This leak was introduced in android-5.0.1_r1 and fixed in Android 5.1.0_r1 by\"\n              + \" calling context.getApplicationContext().\"\n              + \" Fix: https://github.com/android/platform_frameworks_base/commit\"\n              + \"/9b5257c9c99c4cb541d8e8e78fb04f008b1a9091\"\n              + \" To fix this, you could call MediaSessionLegacyHelper.getHelper() early\"\n              + \" in Application.onCreate() and pass it the application context.\");\n    }\n  },\n\n  TEXT_LINE__SCACHED(SDK_INT <= LOLLIPOP_MR1) {\n    @Override void add(ExcludedRefs.Builder excluded) {\n      excluded.staticField(\"android.text.TextLine\", \"sCached\")\n          .reason(\"TextLine.sCached is a pool of 3 TextLine instances. TextLine.recycle() has had\"\n              + \" at least two bugs that created memory leaks by not correctly clearing the\"\n              + \" recycled TextLine instances. The first was fixed in android-5.1.0_r1:\"\n              + \" https://github.com/android/platform_frameworks_base/commit\"\n              + \"/893d6fe48d37f71e683f722457bea646994a10\"\n              + \" The second was fixed, not released yet:\"\n              + \" https://github.com/android/platform_frameworks_base/commit\"\n              + \"/b3a9bc038d3a218b1dbdf7b5668e3d6c12be5e\"\n              + \" To fix this, you could access TextLine.sCached and clear the pool every now\"\n              + \" and then (e.g. on activity destroy).\");\n    }\n  },",
+      "metadata": {
+        "file_path": "leakcanary-android/src/main/java/com/squareup/leakcanary/AndroidExcludedRefs.java",
+        "language": "java",
+        "strategy": "basic",
+        "total_chunks": 16,
+        "chunk_index": 3
+      },
+      "similarity_score": 0.9989610910415649
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/AndroidManifest.xml (xml)\n\n## Code Content:\n```xml\n<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!--\n  ~ Copyright (C) 2015 Square, Inc.\n  ~\n  ~ Licensed under the Apache License, Version 2.0 (the \"License\");\n  ~ you may not use this file except in compliance with the License.\n  ~ You may obtain a copy of the License at\n  ~\n  ~      http://www.apache.org/licenses/LICENSE-2.0\n  ~\n  ~ Unless required by applicable law or agreed to in writing, software\n  ~ distributed under the License is distributed on an \"AS IS\" BASIS,\n  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n  ~ See the License for the specific language governing permissions and\n  ~ limitations under the License.\n  -->\n<manifest\n    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    package=\"com.squareup.leakcanary\"\n    >\n\n  <!-- To store the heap dumps and leak analysis results. -->\n  <uses-permission android:name=\"android.permission.READ_EXTERNAL_STORAGE\" />\n  <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\" />",
+      "metadata": {
+        "total_chunks": 2,
+        "language": "xml",
+        "chunk_index": 0,
+        "strategy": "basic",
+        "file_path": "leakcanary-android/src/main/AndroidManifest.xml"
+      },
+      "similarity_score": 0.9998000264167786
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/java/com/squareup/leakcanary/AndroidWatchExecutor.java (java)\n\n## Code Content:\n```java\n/*\n * Copyright (C) 2015 Square, Inc.\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obtain a copy of the License at\n *\n *      http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\npackage com.squareup.leakcanary;\n\nimport android.os.Handler;\nimport android.os.HandlerThread;\nimport android.os.Looper;\nimport android.os.MessageQueue;\nimport java.util.concurrent.Executor;\n\n/**\n * {@link Executor} suitable for watching Android reference leaks. This executor waits for the main\n * thread to be idle then posts to a serial background thread with a delay of\n * {@link R.integer#leak_canary_watch_delay_millis} seconds.\n */\npublic final class AndroidWatchExecutor implements Executor {\n\n  static final String LEAK_CANARY_THREAD_NAME = \"LeakCanary-Heap-Dump\";\n  private final Handler mainHandler;\n  final Handler backgroundHandler;\n  final long delayMillis;\n\n  public AndroidWatchExecutor(int delayMillis) {\n    mainHandler = new Handler(Looper.getMainLooper());\n    HandlerThread handlerThread = new HandlerThread(LEAK_CANARY_THREAD_NAME);\n    handlerThread.start();\n    backgroundHandler = new Handler(handlerThread.getLooper());\n    this.delayMillis = delayMillis;\n  }",
+      "metadata": {
+        "total_chunks": 2,
+        "file_path": "leakcanary-android/src/main/java/com/squareup/leakcanary/AndroidWatchExecutor.java",
+        "language": "java",
+        "strategy": "basic",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.0005929470062256
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/res/values-v14/leak_canary_themes.xml (xml)\n\n## Code Content:\n```xml\n<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!--\n  ~ Copyright (C) 2015 Square, Inc.\n  ~\n  ~ Licensed under the Apache License, Version 2.0 (the \"License\");\n  ~ you may not use this file except in compliance with the License.\n  ~ You may obtain a copy of the License at\n  ~\n  ~      http://www.apache.org/licenses/LICENSE-2.0\n  ~\n  ~ Unless required by applicable law or agreed to in writing, software\n  ~ distributed under the License is distributed on an \"AS IS\" BASIS,\n  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n  ~ See the License for the specific language governing permissions and\n  ~ limitations under the License.\n  -->\n<resources>\n  <style name=\"leak_canary_LeakCanary.Base\" parent=\"android:Theme.Holo\">\n  </style>\n</resources>\n```",
+      "metadata": {
+        "file_path": "leakcanary-android/src/main/res/values-v14/leak_canary_themes.xml",
+        "total_chunks": 1,
+        "language": "xml",
+        "strategy": "basic",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.0023335218429565
+    }
+  ],
+  "enhanced": [
+    {
+      "content": "When a potential leak is detected, if the storage permission is missing, we drop the leak and we show a notification. That notification will then show the permission dialog.\n\nFixes #285\n- Changes:\n```diff\n@@ -17,4 +17,12 @@\n <resources>\n   <style name=\"leak_canary_LeakCanary.Base\" parent=\"android:Theme\">\n   </style>\n-</resources>\n\\ No newline at end of file\n+\n+  <style name=\"leak_canary_Theme.Transparent\" parent=\"android:Theme\">\n+    <item name=\"android:windowIsTranslucent\">true</item>\n+    <item name=\"android:windowBackground\">@android:color/transparent</item>\n+    <item name=\"android:windowContentOverlay\">@null</item>\n+    <item name=\"android:windowNoTitle\">true</item>\n+    <item name=\"android:...\n```\n\n### Commit 2\n- ID: 87aec26f\n- Author: Ian Thomas (ithomas@idealcorp.com)\n- Date: 2015-07-16 01:45:18\n- Message: #159 Renamed resources leading with \"__\" to resolve build errors in preview build tools \"1.3.0 rc1\"\n- Added resourcePrefix lint check to validate all resource names are correct.\n- Changes:\n```diff\n@@ -15,6 +15,6 @@\n   ~ limitations under the License.\n   -->\n <resources>\n-  <style name=\"__LeakCanary.Base\" parent=\"android:Theme\">\n+  <style name=\"leak_canary_LeakCanary.Base\" parent=\"android:Theme\">\n   </style>\n </resources>\n\\ No newline at end of file...\n```",
+      "metadata": {
+        "language": "xml",
+        "strategy": "enhanced",
+        "chunk_index": 1,
+        "total_chunks": 3,
+        "commit_count": 3,
+        "file_path": "leakcanary-android/src/main/res/values/leak_canary_themes.xml"
+      },
+      "similarity_score": 0.8747628927230835
+    },
+    {
+      "content": "<application>\n    <service\n        android:name=\".internal.HeapAnalyzerService\"\n        android:process=\":leakcanary\"\n        android:enabled=\"false\"\n        />\n    <service\n        android:name=\".DisplayLeakService\"\n        android:enabled=\"false\"\n        />\n    <activity\n        android:theme=\"@style/leak_canary_LeakCanary.Base\"\n        android:name=\".internal.DisplayLeakActivity\"\n        android:enabled=\"false\"\n        android:label=\"@string/leak_canary_display_activity_label\"\n        android:icon=\"@drawable/leak_canary_icon\"\n        android:taskAffinity=\"com.squareup.leakcanary\"\n        >\n      <intent-filter>\n        <action android:name=\"android.intent.action.MAIN\"/>\n        <category android:name=\"android.intent.category.LAUNCHER\"/>\n      </intent-filter>\n    </activity>\n    <activity\n        android:theme=\"@style/leak_canary_Theme.Transparent\"\n        android:name=\".internal.RequestStoragePermissionActivity\"\n        android:taskAffinity=\"com.squareup.leakcanary\"\n        android:enabled=\"false\"\n        android:icon=\"@drawable/leak_canary_icon\"\n        android:label=\"@string/leak_canary_storage_permission_activity_label\"\n        />\n\n  </application>\n</manifest>\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: ea0af1d6\n- Author: Pierre-Yves Ricau (py@squareup.com)\n- Date: 2016-01-07 21:31:04\n- Message: Handle storage permission on M\n\nWhen a potential leak is detected, if the storage permission is missing, we drop the leak and we show a notification. That notification will then show the permission dialog.",
+      "metadata": {
+        "total_chunks": 4,
+        "language": "xml",
+        "file_path": "leakcanary-android/src/main/AndroidManifest.xml",
+        "strategy": "enhanced",
+        "chunk_index": 1,
+        "commit_count": 4
+      },
+      "similarity_score": 0.8940854072570801
+    },
+    {
+      "content": "LAYOUT_TRANSITION(SDK_INT >= ICE_CREAM_SANDWICH && SDK_INT <= LOLLIPOP_MR1) {\n    @Override void add(ExcludedRefs.Builder excluded) {\n      excluded.instanceField(\"android.animation.LayoutTransition$1\", \"val$parent\")\n          .reason(\"LayoutTransition leaks parent ViewGroup through\"\n              + \" ViewTreeObserver.OnPreDrawListener When triggered, this leaks stays until the\"\n              + \" window is destroyed. Tracked here:\"\n              + \" https://code.google.com/p/android/issues/detail?id=171830\");\n    }\n  },\n\n  SPELL_CHECKER_SESSION(SDK_INT >= JELLY_BEAN && SDK_INT <= LOLLIPOP_MR1) {\n    @Override void add(ExcludedRefs.Builder excluded) {\n      excluded.instanceField(\"android.view.textservice.SpellCheckerSession$1\", \"this$0\")\n          .reason(\"SpellCheckerSessionListenerImpl.mHandler is leaking destroyed Activity when the\"\n              + \" SpellCheckerSession is closed before the service is connected.\"\n              + \" Tracked here: https://code.google.com/p/android/issues/detail?id=172542\");\n    }\n  },\n\n  ACTIVITY_CHOOSE_MODEL(SDK_INT > ICE_CREAM_SANDWICH && SDK_INT <= LOLLIPOP_MR1) {\n    @Override void add(ExcludedRefs.Builder excluded) {\n      String reason = \"ActivityChooserModel holds a static reference to the last set\"\n          + \" ActivityChooserModelPolicy which can be an activity context.\"\n          + \" Tracked here: https://code.google.com/p/android/issues/detail?id=172659\"\n          + \" Hack: https://gist.github.com/andaag/b05ab66ed0f06167d6e0\";\n      excluded.instanceField(\"android.support.v7.internal.widget.ActivityChooserModel\",\n          \"mActivityChoserModelPolicy\").reason(reason);\n      excluded.instanceField(\"android.widget.ActivityChooserModel\", \"mActivityChoserModelPolicy\")\n          .reason(reason);\n    }\n  },",
+      "metadata": {
+        "strategy": "enhanced",
+        "total_chunks": 18,
+        "commit_count": 5,
+        "file_path": "leakcanary-android/src/main/java/com/squareup/leakcanary/AndroidExcludedRefs.java",
+        "language": "java",
+        "chunk_index": 6
+      },
+      "similarity_score": 0.9216188192367554
+    },
+    {
+      "content": "@Override public void onActivityResumed(Activity activity) {\n        }\n\n        @Override public void onActivityPaused(Activity activity) {\n        }\n\n        @Override public void onActivityStopped(Activity activity) {\n        }\n\n        @Override public void onActivitySaveInstanceState(Activity activity, Bundle outState) {\n        }\n\n        @Override public void onActivityDestroyed(Activity activity) {\n          ActivityRefWatcher.this.onActivityDestroyed(activity);\n        }\n      };\n\n  private final Application application;\n  private final RefWatcher refWatcher;\n\n  /**\n   * Constructs an {@link ActivityRefWatcher} that will make sure the activities are not leaking\n   * after they have been destroyed.\n   */\n  public ActivityRefWatcher(Application application, final RefWatcher refWatcher) {\n    this.application = checkNotNull(application, \"application\");\n    this.refWatcher = checkNotNull(refWatcher, \"refWatcher\");\n  }\n\n  void onActivityDestroyed(Activity activity) {\n    refWatcher.watch(activity);\n  }\n\n  public void watchActivities() {\n    // Make sure you don't get installed twice.\n    stopWatchingActivities();\n    application.registerActivityLifecycleCallbacks(lifecycleCallbacks);\n  }\n\n  public void stopWatchingActivities() {\n    application.unregisterActivityLifecycleCallbacks(lifecycleCallbacks);\n  }\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 46a6216f\n- Author: Pierre-Yves Ricau (py@squareup.com)\n- Date: 2015-05-17 08:55:17\n- Message: Moving Library to root",
+      "metadata": {
+        "total_chunks": 3,
+        "strategy": "enhanced",
+        "chunk_index": 1,
+        "commit_count": 1,
+        "file_path": "leakcanary-android/src/main/java/com/squareup/leakcanary/ActivityRefWatcher.java",
+        "language": "java"
+      },
+      "similarity_score": 0.927550196647644
+    },
+    {
+      "content": "### Commit 3\n- ID: 660bc7f0\n- Author: Brian Wang (brianwang@squareup.com)\n- Date: 2015-05-23 05:39:26\n- Message: Fix NPE in HeapAnalyzerService\n- Changes:\n```diff\n@@ -18,6 +18,7 @@ package com.squareup.leakcanary.internal;\n import android.app.IntentService;\n import android.content.Context;\n import android.content.Intent;\n+import android.util.Log;\n import com.squareup.leakcanary.AbstractAnalysisResultService;\n import com.squareup.leakcanary.AnalysisResult;\n import com.squareup.leakcanary.ExcludedRefs;\n@@ -34,6 +35,7 @@ public final class HeapAnalyzerService extends IntentService {\n \n   private static final String LISTENER_CLASS_EXTRA = \"listener_class_extr...\n```\n\n### Commit 4\n- ID: 46a6216f\n- Author: Pierre-Yves Ricau (py@squareup.com)\n- Date: 2015-05-17 08:55:17\n- Message: Moving Library to root\n\nShould help with Travis, see #25\n- Changes:\n```diff\n@@ -0,0 +1,60 @@\n+/*\n+ * Copyright (C) 2015 Square, Inc.\n+ *\n+ * Licensed under the Apache License, Version 2.0 (the \"License\");\n+ * you may not use this file except in compliance with the License.\n+ * You may obtain a copy of the License at\n+ *\n+ *      http://www.apache.org/licenses/LICENSE-2.0\n+ *\n+ * Unless required by applicable law or agreed to in writing, software\n+ * distributed under the License is distributed on an \"AS IS\" BASIS,\n+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either...\n```",
+      "metadata": {
+        "language": "java",
+        "total_chunks": 4,
+        "chunk_index": 3,
+        "file_path": "leakcanary-android/src/main/java/com/squareup/leakcanary/internal/HeapAnalyzerService.java",
+        "commit_count": 4,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.9308434724807739
+    },
+    {
+      "content": "Leak getVisibleLeak() {\n    if (leaks == null) {\n      return null;\n    }\n    for (Leak leak : leaks) {\n      if (leak.heapDump.referenceKey.equals(visibleLeakRefKey)) {\n        return leak;\n      }\n    }\n    return null;\n  }\n\n  class LeakListAdapter extends BaseAdapter {\n\n    @Override public int getCount() {\n      return leaks.size();\n    }\n\n    @Override public Leak getItem(int position) {\n      return leaks.get(position);\n    }\n\n    @Override public long getItemId(int position) {\n      return position;\n    }\n\n    @Override public View getView(int position, View convertView, ViewGroup parent) {\n      if (convertView == null) {\n        convertView = LayoutInflater.from(DisplayLeakActivity.this)\n            .inflate(R.layout.leak_canary_leak_row, parent, false);\n      }\n      TextView titleView = (TextView) convertView.findViewById(R.id.__leak_canary_row_text);\n      TextView timeView = (TextView) convertView.findViewById(R.id.__leak_canary_row_time);\n      Leak leak = getItem(position);\n\n      String index = (leaks.size() - position) + \". \";\n\n      String title;\n      if (leak.result.failure == null) {\n        String className = classSimpleName(leak.result.className);\n        String size = formatShortFileSize(DisplayLeakActivity.this, leak.result.retainedHeapSize);\n        title = getString(R.string.leak_canary_class_has_leaked, className, size);\n        if (leak.result.excludedLeak) {\n          title = getString(R.string.leak_canary_excluded_row, title);\n        }\n        title = index + title;\n      } else {\n        title = index\n            + leak.result.failure.getClass().getSimpleName()\n            + \" \"\n            + leak.result.failure.getMessage();\n      }\n      titleView.setText(title);\n      String time =\n          DateUtils.formatDateTime(DisplayLeakActivity.this, leak.resultFile.lastModified(),\n              FORMAT_SHOW_TIME | FORMAT_SHOW_DATE);\n      timeView.setText(time);\n      return convertView;\n    }\n  }",
+      "metadata": {
+        "chunk_index": 8,
+        "strategy": "enhanced",
+        "total_chunks": 14,
+        "commit_count": 5,
+        "language": "java",
+        "file_path": "leakcanary-android/src/main/java/com/squareup/leakcanary/internal/DisplayLeakActivity.java"
+      },
+      "similarity_score": 0.9463909864425659
+    },
+    {
+      "content": "# File: leakcanary-android/consumer-proguard-rules.pro (text)\n\n## Code Content:\n```text\n-dontwarn com.squareup.haha.guava.**\n-dontwarn com.squareup.haha.perflib.**\n-dontwarn com.squareup.haha.trove.**\n-dontwarn com.squareup.leakcanary.**\n-keep class com.squareup.haha.** { *; }\n-keep class com.squareup.leakcanary.** { *; }\n\n# Marshmallow removed Notification.setLatestEventInfo()\n-dontwarn android.app.Notification\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 3ac5b369\n- Author: Roger Hu (roger.hu@gmail.com)\n- Date: 2016-01-19 13:35:56\n- Message: Fixes to allow LeakCanary to work with ProGuard.\n\nFix ProGuard rules for debug builds.\n\nKill Eclipse\n- Changes:\n```diff\n@@ -1,5 +1,9 @@\n--keep class org.eclipse.mat.** { *; }\n+-dontwarn com.squareup.haha.guava.**\n+-dontwarn com.squareup.haha.perflib.**\n+-dontwarn com.squareup.haha.trove.**\n+-dontwarn com.squareup.leakcanary.**\n+-keep class com.squareup.haha.** { *; }\n -keep class com.squareup.leakcanary.** { *; }\n \n # Marshmallow removed Notification.setLatestEventInfo()\n--dontwarn android.app.Notification\n\\ No newline at end of file\n+-dontwarn android.app.Notification...\n```\n\n### Commit 2\n- ID: ca183ea1\n- Author: Dan Lew (danlew42@gmail.com)\n- Date: 2015-10-21 23:33:40\n- Message: Add proguard rule for android.app.Notification\n\nMarshmallow removed Notification.setLatestEventInfo(). LeakCanary uses it,\nbut only pre-Marshmallow. This rule should prevent proguard from complaining.\n- Changes:\n```diff\n@@ -1,2 +1,5 @@\n -keep class org.eclipse.mat.** { *; }\n -keep class com.squareup.leakcanary.** { *; }\n+\n+# Marshmallow removed Notification.setLatestEventInfo()\n+-dontwarn android.app.Notification\n\\ No newline at end of file...\n```\n\n### Commit 3\n- ID: c1d512f9\n- Author: Jerzy Chalupski (jerzy@getbase.com)\n- Date: 2015-05-20 16:03:29\n- Message: Add consumer ProGuard configuration\n\nCloses #132\n- Changes:\n```diff\n@@ -0,0 +1,2 @@\n+-keep class org.eclipse.mat.** { *; }\n+-keep class com.squareup.leakcanary.** { *; }...\n```",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "enhanced",
+        "commit_count": 3,
+        "file_path": "leakcanary-android/consumer-proguard-rules.pro",
+        "language": "text",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.9612044095993042
+    },
+    {
+      "content": "//noinspection unchecked\n    leaks = (List<Leak>) getLastNonConfigurationInstance();\n\n    setContentView(R.layout.leak_canary_display_leak);\n\n    listView = (ListView) findViewById(R.id.__leak_canary_display_leak_list);\n    failureView = (TextView) findViewById(R.id.__leak_canary_display_leak_failure);\n    actionButton = (Button) findViewById(R.id.__leak_canary_action);\n\n    updateUi();\n  }\n\n  // No, it's not deprecated. Android lies.\n  @Override public Object onRetainNonConfigurationInstance() {\n    return leaks;\n  }\n\n  @Override protected void onSaveInstanceState(Bundle outState) {\n    super.onSaveInstanceState(outState);\n    outState.putString(\"visibleLeakRefKey\", visibleLeakRefKey);\n  }\n\n  @Override protected void onResume() {\n    super.onResume();\n    LoadLeaks.load(this);\n  }\n\n  @Override public void setTheme(int resid) {\n    // We don't want this to be called with an incompatible theme.\n    // This could happen if you implement runtime switching of themes\n    // using ActivityLifecycleCallbacks.\n    if (resid != R.style.leak_canary_LeakCanary_Base) {\n      return;\n    }\n    super.setTheme(resid);\n  }\n\n  @Override protected void onDestroy() {\n    super.onDestroy();\n    LoadLeaks.forgetActivity();\n  }",
+      "metadata": {
+        "file_path": "leakcanary-android/src/main/java/com/squareup/leakcanary/internal/DisplayLeakActivity.java",
+        "language": "java",
+        "chunk_index": 3,
+        "commit_count": 5,
+        "total_chunks": 14,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.9685971140861511
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/res/layout/leak_canary_display_leak.xml (xml)\n\n## Code Content:\n```xml\n<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!--\n  ~ Copyright (C) 2015 Square, Inc.\n  ~\n  ~ Licensed under the Apache License, Version 2.0 (the \"License\");\n  ~ you may not use this file except in compliance with the License.\n  ~ You may obtain a copy of the License at\n  ~\n  ~      http://www.apache.org/licenses/LICENSE-2.0\n  ~\n  ~ Unless required by applicable law or agreed to in writing, software\n  ~ distributed under the License is distributed on an \"AS IS\" BASIS,\n  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n  ~ See the License for the specific language governing permissions and\n  ~ limitations under the License.\n  -->\n<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"match_parent\"\n    android:orientation=\"vertical\"\n    android:background=\"#3c3c3c\"\n    >\n  <ListView\n      android:id=\"@+id/__leak_canary_display_leak_list\"\n      android:layout_width=\"match_parent\"\n      android:layout_height=\"0dp\"\n      android:layout_weight=\"1\"\n      android:dividerHeight=\"0dp\"\n      android:divider=\"@null\"\n      />\n  <TextView\n      android:id=\"@+id/__leak_canary_display_leak_failure\"\n      android:layout_width=\"match_parent\"\n      android:layout_height=\"0dp\"\n      android:layout_weight=\"1\"\n      android:textSize=\"12sp\"\n      android:visibility=\"gone\"\n      />\n  <Button\n      android:id=\"@+id/__leak_canary_action\"\n      android:layout_width=\"match_parent\"\n      android:layout_height=\"wrap_content\"\n      android:visibility=\"gone\"\n      />\n\n</LinearLayout>\n```\n\n## Git Commit History",
+      "metadata": {
+        "strategy": "enhanced",
+        "commit_count": 1,
+        "file_path": "leakcanary-android/src/main/res/layout/leak_canary_display_leak.xml",
+        "chunk_index": 0,
+        "total_chunks": 2,
+        "language": "xml"
+      },
+      "similarity_score": 0.9744460582733154
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/res/layout/leak_canary_heap_dump_toast.xml (xml)\n\n## Code Content:\n```xml\n<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!--\n  ~ Copyright (C) 2015 Square, Inc.\n  ~\n  ~ Licensed under the Apache License, Version 2.0 (the \"License\");\n  ~ you may not use this file except in compliance with the License.\n  ~ You may obtain a copy of the License at\n  ~\n  ~      http://www.apache.org/licenses/LICENSE-2.0\n  ~\n  ~ Unless required by applicable law or agreed to in writing, software\n  ~ distributed under the License is distributed on an \"AS IS\" BASIS,\n  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n  ~ See the License for the specific language governing permissions and\n  ~ limitations under the License.\n  -->\n<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:layout_width=\"wrap_content\"\n    android:layout_height=\"wrap_content\"\n    android:orientation=\"vertical\"\n    android:background=\"@drawable/leak_canary_toast_background\"\n    android:padding=\"16dp\"\n    >\n  <ImageView\n      android:layout_width=\"wrap_content\"\n      android:layout_height=\"wrap_content\"\n      android:layout_gravity=\"center_horizontal\"\n      android:src=\"@drawable/leak_canary_icon\"/>\n\n  <TextView\n      android:layout_width=\"wrap_content\"\n      android:layout_height=\"wrap_content\"\n      android:layout_gravity=\"center_horizontal\"\n      android:textColor=\"#ffffff\"\n      android:textSize=\"18sp\"\n      android:text=\"@string/leak_canary_toast_heap_dump\"\n      />\n\n</LinearLayout>\n```\n\n## Git Commit History",
+      "metadata": {
+        "file_path": "leakcanary-android/src/main/res/layout/leak_canary_heap_dump_toast.xml",
+        "strategy": "enhanced",
+        "total_chunks": 2,
+        "language": "xml",
+        "commit_count": 2,
+        "chunk_index": 0
+      },
+      "similarity_score": 0.9794520139694214
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/res/values/leak_canary_themes.xml (xml)\n\n## Code Content:\n```xml\n<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!--\n  ~ Copyright (C) 2015 Square, Inc.\n  ~\n  ~ Licensed under the Apache License, Version 2.0 (the \"License\");\n  ~ you may not use this file except in compliance with the License.\n  ~ You may obtain a copy of the License at\n  ~\n  ~      http://www.apache.org/licenses/LICENSE-2.0\n  ~\n  ~ Unless required by applicable law or agreed to in writing, software\n  ~ distributed under the License is distributed on an \"AS IS\" BASIS,\n  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n  ~ See the License for the specific language governing permissions and\n  ~ limitations under the License.\n  -->\n<resources>\n  <style name=\"leak_canary_LeakCanary.Base\" parent=\"android:Theme\">\n  </style>\n\n  <style name=\"leak_canary_Theme.Transparent\" parent=\"android:Theme\">\n    <item name=\"android:windowIsTranslucent\">true</item>\n    <item name=\"android:windowBackground\">@android:color/transparent</item>\n    <item name=\"android:windowContentOverlay\">@null</item>\n    <item name=\"android:windowNoTitle\">true</item>\n    <item name=\"android:backgroundDimEnabled\">false</item>\n  </style>\n</resources>\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: ea0af1d6\n- Author: Pierre-Yves Ricau (py@squareup.com)\n- Date: 2016-01-07 21:31:04\n- Message: Handle storage permission on M\n\nWhen a potential leak is detected, if the storage permission is missing, we drop the leak and we show a notification. That notification will then show the permission dialog.",
+      "metadata": {
+        "language": "xml",
+        "strategy": "enhanced",
+        "chunk_index": 0,
+        "file_path": "leakcanary-android/src/main/res/values/leak_canary_themes.xml",
+        "commit_count": 3,
+        "total_chunks": 3
+      },
+      "similarity_score": 0.9826939702033997
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/res/values/leak_canary_public.xml (xml)\n\n## Code Content:\n```xml\n<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!--\n  ~ Copyright (C) 2015 Square, Inc.\n  ~\n  ~ Licensed under the Apache License, Version 2.0 (the \"License\");\n  ~ you may not use this file except in compliance with the License.\n  ~ You may obtain a copy of the License at\n  ~\n  ~      http://www.apache.org/licenses/LICENSE-2.0\n  ~\n  ~ Unless required by applicable law or agreed to in writing, software\n  ~ distributed under the License is distributed on an \"AS IS\" BASIS,\n  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n  ~ See the License for the specific language governing permissions and\n  ~ limitations under the License.\n  -->\n<resources>\n\n  <public name=\"leak_canary_display_activity_label\" type=\"string\"/>\n  <public name=\"leak_canary_heap_dump_toast\" type=\"layout\"/>\n  <public name=\"leak_canary_icon\" type=\"drawable\"/>\n  <public name=\"leak_canary_max_stored_leaks\" type=\"integer\"/>\n  <public name=\"leak_canary_watch_delay_millis\" type=\"integer\"/>\n\n</resources>\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: b171e265\n- Author: Pierre-Yves Ricau (py@squareup.com)\n- Date: 2016-01-05 16:37:26\n- Message: Follow up to #318\n- Changes:\n```diff\n@@ -16,9 +16,10 @@\n   -->\n <resources>\n \n-  <public name=\"leak_canary_icon\" type=\"drawable\"/>\n   <public name=\"leak_canary_display_activity_label\" type=\"string\"/>\n-  <public name=\"leak_canary_max_stored_leaks\" type=\"integer\"/>\n   <public name=\"leak_canary_heap_dump_toast\" type=\"layout\"/>\n+  <public name=\"leak_canary_icon\" type=\"drawable\"/>\n+  <public name=\"leak_canary_max_stored_leaks\" type=\"integer\"/>\n+  <public name=\"leak_canary_watch_delay_millis\" type=\"integer\"/>\n \n-</resources>\n\\ No newline...\n```\n\n### Commit 2\n- ID: 1705b704\n- Author: Simon Marquis (contact@simon-marquis.fr)\n- Date: 2015-08-29 19:40:49\n- Message: Configure public resources, ref #238",
+      "metadata": {
+        "strategy": "enhanced",
+        "language": "xml",
+        "commit_count": 2,
+        "file_path": "leakcanary-android/src/main/res/values/leak_canary_public.xml",
+        "total_chunks": 2,
+        "chunk_index": 0
+      },
+      "similarity_score": 0.985949695110321
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/res/drawable/leak_canary_toast_background.xml (xml)\n\n## Code Content:\n```xml\n<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<shape xmlns:android=\"http://schemas.android.com/apk/res/android\">\n  <solid android:color=\"#cc000000\"/>\n  <corners android:radius=\"16dp\"/>\n</shape>\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 7b16af4a\n- Author: Ian Thomas (toxicbakery@gmail.com)\n- Date: 2015-05-29 21:39:26\n- Message: #159 Renamed resources leading with \"__\" to resolve build errors in preview build tools \"1.3.0 rc1\"\n- Changes:\n```diff\n@@ -0,0 +1,5 @@\n+<?xml version=\"1.0\" encoding=\"utf-8\"?>\n+<shape xmlns:android=\"http://schemas.android.com/apk/res/android\">\n+  <solid android:color=\"#cc000000\"/>\n+  <corners android:radius=\"16dp\"/>\n+</shape>\n\\ No newline at end of file...\n```",
+      "metadata": {
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "commit_count": 1,
+        "language": "xml",
+        "file_path": "leakcanary-android/src/main/res/drawable/leak_canary_toast_background.xml",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.986724317073822
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/java/com/squareup/leakcanary/ActivityRefWatcher.java (java)\n\n## Code Content:\n```java\n/*\n * Copyright (C) 2015 Square, Inc.\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obtain a copy of the License at\n *\n *      http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\npackage com.squareup.leakcanary;\n\nimport android.annotation.TargetApi;\nimport android.app.Activity;\nimport android.app.Application;\nimport android.os.Bundle;\n\nimport static android.os.Build.VERSION.SDK_INT;\nimport static android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH;\nimport static com.squareup.leakcanary.Preconditions.checkNotNull;\n\n@TargetApi(ICE_CREAM_SANDWICH) public final class ActivityRefWatcher {\n\n  public static void installOnIcsPlus(Application application, RefWatcher refWatcher) {\n    if (SDK_INT < ICE_CREAM_SANDWICH) {\n      // If you need to support Android < ICS, override onDestroy() in your base activity.\n      return;\n    }\n    ActivityRefWatcher activityRefWatcher = new ActivityRefWatcher(application, refWatcher);\n    activityRefWatcher.watchActivities();\n  }\n\n  private final Application.ActivityLifecycleCallbacks lifecycleCallbacks =\n      new Application.ActivityLifecycleCallbacks() {\n        @Override public void onActivityCreated(Activity activity, Bundle savedInstanceState) {\n        }\n\n        @Override public void onActivityStarted(Activity activity) {\n        }\n\n        @Override public void onActivityResumed(Activity activity) {\n        }\n\n        @Override public void onActivityPaused(Activity activity) {\n        }",
+      "metadata": {
+        "total_chunks": 3,
+        "file_path": "leakcanary-android/src/main/java/com/squareup/leakcanary/ActivityRefWatcher.java",
+        "language": "java",
+        "commit_count": 1,
+        "chunk_index": 0,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.9876664876937866
+    },
+    {
+      "content": "# File: leakcanary-sample/src/main/res/layout/main_activity.xml (xml)\n\n## Code Content:\n```xml\n<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!--\n  ~ Copyright (C) 2015 Square, Inc.\n  ~\n  ~ Licensed under the Apache License, Version 2.0 (the \"License\");\n  ~ you may not use this file except in compliance with the License.\n  ~ You may obtain a copy of the License at\n  ~\n  ~      http://www.apache.org/licenses/LICENSE-2.0\n  ~\n  ~ Unless required by applicable law or agreed to in writing, software\n  ~ distributed under the License is distributed on an \"AS IS\" BASIS,\n  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n  ~ See the License for the specific language governing permissions and\n  ~ limitations under the License.\n  -->\n<LinearLayout\n    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:orientation=\"vertical\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"match_parent\"\n    android:layout_margin=\"16dp\"\n    >\n\n  <TextView\n      android:layout_width=\"match_parent\"\n      android:layout_height=\"wrap_content\"\n      android:layout_marginBottom=\"16dp\"\n      android:text=\"@string/helper_text\"\n      />\n\n  <Button\n      android:id=\"@+id/async_task\"\n      android:layout_width=\"match_parent\"\n      android:layout_height=\"wrap_content\"\n      android:text=\"@string/start_async_task\"\n      />\n\n</LinearLayout>\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 46a6216f\n- Author: Pierre-Yves Ricau (py@squareup.com)\n- Date: 2015-05-17 08:55:17\n- Message: Moving Library to root",
+      "metadata": {
+        "strategy": "enhanced",
+        "language": "xml",
+        "chunk_index": 0,
+        "commit_count": 1,
+        "file_path": "leakcanary-sample/src/main/res/layout/main_activity.xml",
+        "total_chunks": 2
+      },
+      "similarity_score": 0.9892899990081787
+    },
+    {
+      "content": "## Git Commit History\n\n### Commit 1\n- ID: 37b276e9\n- Author: agrieve (agrieve@chromium.org)\n- Date: 2015-07-29 02:12:20\n- Message: Fix lint warnings in res/layout/leak_canary_ref_row.xml\n\nmarginLeft -> marginStart\nmarginRight -> marginEnd\n- Changes:\n```diff\n@@ -25,8 +25,8 @@\n       android:id=\"@+id/__leak_canary_row_connector\"\n       android:layout_width=\"16dp\"\n       android:layout_height=\"match_parent\"\n-      android:layout_marginLeft=\"16dp\"\n-      android:layout_marginRight=\"16dp\"\n+      android:layout_marginStart=\"16dp\"\n+      android:layout_marginEnd=\"16dp\"\n       />\n \n   <TextView\n@@ -42,8 +42,8 @@\n       android:layout_width=\"12dp\"\n       android:layout_height=\"12dp\"\n       android:layout_gravity=\"center_vertical\"\n-      android:layout_margi...\n```\n\n### Commit 2\n- ID: 7b16af4a\n- Author: Ian Thomas (toxicbakery@gmail.com)\n- Date: 2015-05-29 21:39:26\n- Message: #159 Renamed resources leading with \"__\" to resolve build errors in preview build tools \"1.3.0 rc1\"\n- Changes:\n```diff\n@@ -0,0 +1,49 @@\n+<?xml version=\"1.0\" encoding=\"utf-8\"?>\n+<!--\n+  ~ Copyright (C) 2015 Square, Inc.\n+  ~\n+  ~ Licensed under the Apache License, Version 2.0 (the \"License\");\n+  ~ you may not use this file except in compliance with the License.\n+  ~ You may obtain a copy of the License at\n+  ~\n+  ~      http://www.apache.org/licenses/LICENSE-2.0\n+  ~\n+  ~ Unless required by applicable law or agreed to in writing, software\n+  ~ distributed under the License is distributed on an \"AS IS\" BASIS,\n+  ~...\n```",
+      "metadata": {
+        "file_path": "leakcanary-android/src/main/res/layout/leak_canary_ref_row.xml",
+        "commit_count": 2,
+        "language": "xml",
+        "strategy": "enhanced",
+        "total_chunks": 2,
+        "chunk_index": 1
+      },
+      "similarity_score": 0.9898699522018433
+    },
+    {
+      "content": "# File: leakcanary-sample/src/main/AndroidManifest.xml (xml)\n\n## Code Content:\n```xml\n<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!--\n  ~ Copyright (C) 2015 Square, Inc.\n  ~\n  ~ Licensed under the Apache License, Version 2.0 (the \"License\");\n  ~ you may not use this file except in compliance with the License.\n  ~ You may obtain a copy of the License at\n  ~\n  ~      http://www.apache.org/licenses/LICENSE-2.0\n  ~\n  ~ Unless required by applicable law or agreed to in writing, software\n  ~ distributed under the License is distributed on an \"AS IS\" BASIS,\n  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n  ~ See the License for the specific language governing permissions and\n  ~ limitations under the License.\n  -->\n<manifest\n    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    package=\"com.example.leakcanary\"\n    >\n  <application android:name=\".ExampleApplication\" android:allowBackup=\"false\"\n      android:icon=\"@drawable/ic_launcher\"\n      >\n    <activity\n        android:label=\"@string/app_name\"\n        android:name=\".MainActivity\"\n        >\n      <intent-filter>\n        <action android:name=\"android.intent.action.MAIN\"/>\n        <category android:name=\"android.intent.category.LAUNCHER\"/>\n        <category android:name=\"android.intent.category.DEFAULT\"/>\n      </intent-filter>\n    </activity>\n  </application>\n</manifest>\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 46a6216f\n- Author: Pierre-Yves Ricau (py@squareup.com)\n- Date: 2015-05-17 08:55:17\n- Message: Moving Library to root",
+      "metadata": {
+        "language": "xml",
+        "chunk_index": 0,
+        "file_path": "leakcanary-sample/src/main/AndroidManifest.xml",
+        "commit_count": 1,
+        "total_chunks": 2,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.9921577572822571
+    },
+    {
+      "content": "### Commit 2\n- ID: b171e265\n- Author: Pierre-Yves Ricau (py@squareup.com)\n- Date: 2016-01-05 16:37:26\n- Message: Follow up to #318\n- Changes:\n```diff\n@@ -24,7 +24,7 @@ import java.util.concurrent.Executor;\n /**\n  * {@link Executor} suitable for watching Android reference leaks. This executor waits for the main\n  * thread to be idle then posts to a serial background thread with a delay of\n- * {@link R.integer.leak_canary_watch_delay_millis} seconds.\n+ * {@link R.integer#leak_canary_watch_delay_millis} seconds.\n  */\n public final class AndroidWatchExecutor implements Executor {...\n```\n\n### Commit 3\n- ID: e72b74c7\n- Author: Sergio Gutierrez (sergio@gokarumi.com)\n- Date: 2015-11-06 02:33:50\n- Message: Add configurable delay time to AndroidWatcherExecutor\n- Changes:\n```diff\n@@ -23,22 +23,22 @@ import java.util.concurrent.Executor;\n \n /**\n  * {@link Executor} suitable for watching Android reference leaks. This executor waits for the main\n- * thread to be idle then posts to a serial background thread with a delay of {@link\n- * #DELAY_MILLIS} milliseconds.\n+ * thread to be idle then posts to a serial background thread with a delay of\n+ * {@link R.integer.leak_canary_watch_delay_millis} seconds.\n  */\n public final class AndroidWatchExecutor implements Executor {\n \n   s...\n```\n\n### Commit 4\n- ID: 46a6216f\n- Author: Pierre-Yves Ricau (py@squareup.com)\n- Date: 2015-05-17 08:55:17\n- Message: Moving Library to root\n\nShould help with Travis, see #25\n- Changes:\n```diff\n@@ -0,0 +1,69 @@\n+/*\n+ * Copyright (C) 2015 Square, Inc.\n+ *\n+ * Licensed under the Apache License, Version 2.0 (the \"License\");\n+ * you may not use this file except in compliance with the License.\n+ * You may obtain a copy of the License at\n+ *\n+ *      http://www.apache.org/licenses/LICENSE-2.0\n+ *\n+ * Unless required by applicable law or agreed to in writing, software\n+ * distributed under the License is distributed on an \"AS IS\" BASIS,\n+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either...\n```",
+      "metadata": {
+        "total_chunks": 3,
+        "commit_count": 4,
+        "strategy": "enhanced",
+        "file_path": "leakcanary-android/src/main/java/com/squareup/leakcanary/AndroidWatchExecutor.java",
+        "chunk_index": 2,
+        "language": "java"
+      },
+      "similarity_score": 0.9950941205024719
+    },
+    {
+      "content": "When a potential leak is detected, if the storage permission is missing, we drop the leak and we show a notification. That notification will then show the permission dialog.\n\nFixes #285\n- Changes:\n```diff\n@@ -15,7 +15,11 @@\n  */\n package com.squareup.leakcanary.internal;\n \n+import android.annotation.TargetApi;\n import android.app.ActivityManager;\n+import android.app.Notification;\n+import android.app.NotificationManager;\n+import android.app.PendingIntent;\n import android.app.Service;\n import android.content.ComponentName;\n import android.content.Context;\n@@ -23,6 +27,8 @@ import android.content.pm.PackageInfo;\n import android.content.pm.PackageManager;\n import android.content.pm.ServiceInfo;\n impo...\n```\n\n### Commit 2\n- ID: a35624b6\n- Author: jferlisi (john.ferlisi@gmail.com)\n- Date: 2016-01-05 03:22:25\n- Message: The LoadLeaks and File IO background executors now have appropriate thread names.\n- Changes:\n```diff\n@@ -40,7 +40,7 @@ public final class LeakCanaryInternals {\n   public static final String LG = \"LGE\";\n   public static final String NVIDIA = \"NVIDIA\";\n \n-  private static final Executor fileIoExecutor = Executors.newSingleThreadExecutor();\n+  private static final Executor fileIoExecutor = newSingleThreadExecutor(\"File-IO\");\n \n   public static void executeOnFileIoThread(Runnable runnable) {\n     fileIoExecutor.execute(runnable);\n@@ -114,6 +114,10 @@ public final class LeakCanaryInternals {\n     re...\n```\n\n### Commit 3\n- ID: 99038fef\n- Author: Pierre-Yves Ricau (py@squareup.com)\n- Date: 2016-01-05 18:48:20\n- Message: Improve storage of leaks",
+      "metadata": {
+        "strategy": "enhanced",
+        "total_chunks": 7,
+        "chunk_index": 4,
+        "commit_count": 5,
+        "language": "java",
+        "file_path": "leakcanary-android/src/main/java/com/squareup/leakcanary/internal/LeakCanaryInternals.java"
+      },
+      "similarity_score": 0.9966395497322083
+    },
+    {
+      "content": "MEDIA_SESSION_LEGACY_HELPER__SINSTANCE(SDK_INT == LOLLIPOP) {\n    @Override void add(ExcludedRefs.Builder excluded) {\n      excluded.staticField(\"android.media.session.MediaSessionLegacyHelper\", \"sInstance\")\n          .reason(\"MediaSessionLegacyHelper is a static singleton that is lazily instantiated and\"\n              + \" keeps a reference to the context it's given the first time\"\n              + \" MediaSessionLegacyHelper.getHelper() is called.\"\n              + \" This leak was introduced in android-5.0.1_r1 and fixed in Android 5.1.0_r1 by\"\n              + \" calling context.getApplicationContext().\"\n              + \" Fix: https://github.com/android/platform_frameworks_base/commit\"\n              + \"/9b5257c9c99c4cb541d8e8e78fb04f008b1a9091\"\n              + \" To fix this, you could call MediaSessionLegacyHelper.getHelper() early\"\n              + \" in Application.onCreate() and pass it the application context.\");\n    }\n  },\n\n  TEXT_LINE__SCACHED(SDK_INT <= LOLLIPOP_MR1) {\n    @Override void add(ExcludedRefs.Builder excluded) {\n      excluded.staticField(\"android.text.TextLine\", \"sCached\")\n          .reason(\"TextLine.sCached is a pool of 3 TextLine instances. TextLine.recycle() has had\"\n              + \" at least two bugs that created memory leaks by not correctly clearing the\"\n              + \" recycled TextLine instances. The first was fixed in android-5.1.0_r1:\"\n              + \" https://github.com/android/platform_frameworks_base/commit\"\n              + \"/893d6fe48d37f71e683f722457bea646994a10\"\n              + \" The second was fixed, not released yet:\"\n              + \" https://github.com/android/platform_frameworks_base/commit\"\n              + \"/b3a9bc038d3a218b1dbdf7b5668e3d6c12be5e\"\n              + \" To fix this, you could access TextLine.sCached and clear the pool every now\"\n              + \" and then (e.g. on activity destroy).\");\n    }\n  },",
+      "metadata": {
+        "file_path": "leakcanary-android/src/main/java/com/squareup/leakcanary/AndroidExcludedRefs.java",
+        "total_chunks": 18,
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "chunk_index": 3,
+        "language": "java"
+      },
+      "similarity_score": 0.9989610910415649
+    }
+  ],
+  "compressed": [
+    {
+      "content": "# File: leakcanary-android/src/main/java/com/squareup/leakcanary/ActivityRefWatcher.java (java)\n\n## Key Code Elements:\nimport android.annotation.TargetApi;\nimport android.app.Activity;\nimport android.app.Application;\nimport android.os.Bundle;\nimport static android.os.Build.VERSION.SDK_INT;\nimport static android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH;\nimport static com.squareup.leakcanary.Preconditions.checkNotNull;\n@TargetApi(ICE_CREAM_SANDWICH) public final class ActivityRefWatcher {\n        @Override public void onActivityCreated(Activity activity, Bundle savedInstanceState) {\n        @Override public void onActivityStarted(Activity activity) {\n        @Override public void onActivityResumed(Activity activity) {\n        @Override public void onActivityPaused(Activity activity) {\n        @Override public void onActivityStopped(Activity activity) {\n        @Override public void onActivitySaveInstanceState(Activity activity, Bundle outState) {\n        @Override public void onActivityDestroyed(Activity activity) {\n\n## Recent Changes:\n- 46a6216f by Pierre-Yves Ricau (py@squareup.com): Moving Library to root\n\nShould help with Travis, see #25...",
+      "metadata": {
+        "total_chunks": 1,
+        "language": "java",
+        "file_path": "leakcanary-android/src/main/java/com/squareup/leakcanary/ActivityRefWatcher.java",
+        "commit_count": 1,
+        "strategy": "compressed",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.8274189829826355
+    },
+    {
+      "content": "# File: leakcanary-sample/src/main/java/com/example/leakcanary/MainActivity.java (java)\n\n## Key Code Elements:\nimport android.app.Activity;\nimport android.os.AsyncTask;\nimport android.os.Bundle;\nimport android.os.SystemClock;\nimport android.view.View;\n  @Override protected void onCreate(Bundle savedInstanceState) {\n      @Override public void onClick(View v) {\n      @Override protected Void doInBackground(Void... params) {\n\n## Recent Changes:\n- 1b3efb4f by John Rodriguez (john.rodriguez@gmail.com): increase visibility to remove synthetic methods...\n- 46a6216f by Pierre-Yves Ricau (py@squareup.com): Moving Library to root\n\nShould help with Travis, see #25...",
+      "metadata": {
+        "language": "java",
+        "commit_count": 2,
+        "chunk_index": 0,
+        "file_path": "leakcanary-sample/src/main/java/com/example/leakcanary/MainActivity.java",
+        "strategy": "compressed",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.8818122148513794
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/java/com/squareup/leakcanary/AndroidWatchExecutor.java (java)\n\n## Key Code Elements:\nimport android.os.Handler;\nimport android.os.HandlerThread;\nimport android.os.Looper;\nimport android.os.MessageQueue;\nimport java.util.concurrent.Executor;\n  @Override public void execute(final Runnable command) {\n        @Override public void run() {\n      @Override public boolean queueIdle() {\n\n## Recent Changes:\n- 1b3efb4f by John Rodriguez (john.rodriguez@gmail.com): increase visibility to remove synthetic methods...\n- b171e265 by Pierre-Yves Ricau (py@squareup.com): Follow up to #318...\n- e72b74c7 by Sergio Gutierrez (sergio@gokarumi.com): Add configurable delay time to AndroidWatcherExecutor...",
+      "metadata": {
+        "language": "java",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "file_path": "leakcanary-android/src/main/java/com/squareup/leakcanary/AndroidWatchExecutor.java",
+        "commit_count": 4
+      },
+      "similarity_score": 0.9061554670333862
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/java/com/squareup/leakcanary/AndroidExcludedRefs.java (java)\n\n## Key Code Elements:\nimport java.lang.ref.PhantomReference;\nimport java.lang.ref.SoftReference;\nimport java.lang.ref.WeakReference;\nimport java.util.EnumSet;\nimport static android.os.Build.MANUFACTURER;\nimport static android.os.Build.VERSION.SDK_INT;\nimport static android.os.Build.VERSION_CODES.ECLAIR;\nimport static android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH;\nimport static android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1;\nimport static android.os.Build.VERSION_CODES.JELLY_BEAN;\nimport static android.os.Build.VERSION_CODES.KITKAT;\nimport static android.os.Build.VERSION_CODES.LOLLIPOP;\nimport static android.os.Build.VERSION_CODES.M;\nimport static com.squareup.leakcanary.AndroidWatchExecutor.LEAK_CANARY_THREAD_NAME;\nimport static com.squareup.leakcanary.internal.LeakCanaryInternals.LG;\n\n## Recent Changes:\n- 50a9a0ae by Pierre-Yves Ricau (py@squareup.com): Add reason for ignoring to analysis result\n\n* When creating an ExcludedRef rule, we can now provide ...\n- 2fdb025f by John Rodriguez (john.rodriguez@gmail.com): exclude INPUT_METHOD_MANAGER__SERVED_VIEW on M...\n- 05ef6fda by John Rodriguez (john.rodriguez@gmail.com): extend TextView.mLastHoveredView exclusion to Lollipop...",
+      "metadata": {
+        "language": "java",
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "file_path": "leakcanary-android/src/main/java/com/squareup/leakcanary/AndroidExcludedRefs.java",
+        "commit_count": 5,
+        "chunk_index": 0
+      },
+      "similarity_score": 0.9167242050170898
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/res/values/leak_canary_int.xml (xml)\n\n## Recent Changes:\n- b171e265 by Pierre-Yves Ricau (py@squareup.com): Follow up to #318...\n- e72b74c7 by Sergio Gutierrez (sergio@gokarumi.com): Add configurable delay time to AndroidWatcherExecutor...\n- 87aec26f by Ian Thomas (ithomas@idealcorp.com): #159 Renamed resources leading with \"__\" to resolve build errors in preview build tools \"1.3.0 rc1\"\n...",
+      "metadata": {
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "language": "xml",
+        "strategy": "compressed",
+        "file_path": "leakcanary-android/src/main/res/values/leak_canary_int.xml",
+        "commit_count": 4
+      },
+      "similarity_score": 0.9492282867431641
+    },
+    {
+      "content": "# File: leakcanary-watcher/src/main/AndroidManifest.xml (xml)\n\n## Recent Changes:\n- 46a6216f by Pierre-Yves Ricau (py@squareup.com): Moving Library to root\n\nShould help with Travis, see #25...",
+      "metadata": {
+        "language": "xml",
+        "commit_count": 1,
+        "chunk_index": 0,
+        "file_path": "leakcanary-watcher/src/main/AndroidManifest.xml",
+        "strategy": "compressed",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.968191921710968
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/java/com/squareup/leakcanary/DefaultLeakDirectoryProvider.java (java)\n\n## Key Code Elements:\nimport android.annotation.TargetApi;\nimport android.app.PendingIntent;\nimport android.content.Context;\nimport android.os.Environment;\nimport com.squareup.leakcanary.internal.RequestStoragePermissionActivity;\nimport java.io.File;\nimport static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;\nimport static android.content.pm.PackageManager.PERMISSION_GRANTED;\nimport static android.os.Build.VERSION.SDK_INT;\nimport static android.os.Build.VERSION_CODES.M;\nimport static android.os.Environment.DIRECTORY_DOWNLOADS;\nimport static com.squareup.leakcanary.internal.LeakCanaryInternals.showNotification;\n  @Override public File leakDirectory() {\n  @Override public void requestWritePermission() {\n  @Override public boolean isLeakStorageWritable() {\n\n## Recent Changes:\n- ea0af1d6 by Pierre-Yves Ricau (py@squareup.com): Handle storage permission on M\n\nWhen a potential leak is detected, if the storage permission is miss...\n- 99038fef by Pierre-Yves Ricau (py@squareup.com): Improve storage of leaks\n\n* One directory per package.\n* Stored on the SDCard by default, but custom...",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "language": "java",
+        "file_path": "leakcanary-android/src/main/java/com/squareup/leakcanary/DefaultLeakDirectoryProvider.java",
+        "total_chunks": 1,
+        "commit_count": 2
+      },
+      "similarity_score": 0.9719597101211548
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/res/drawable/leak_canary_toast_background.xml (xml)\n\n## Recent Changes:\n- 7b16af4a by Ian Thomas (toxicbakery@gmail.com): #159 Renamed resources leading with \"__\" to resolve build errors in preview build tools \"1.3.0 rc1\"...",
+      "metadata": {
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "commit_count": 1,
+        "language": "xml",
+        "file_path": "leakcanary-android/src/main/res/drawable/leak_canary_toast_background.xml"
+      },
+      "similarity_score": 0.9727351069450378
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/java/com/squareup/leakcanary/internal/DisplayLeakActivity.java (java)\n\n## Key Code Elements:\nimport android.annotation.TargetApi;\nimport android.app.Activity;\nimport android.app.PendingIntent;\nimport android.content.Context;\nimport android.content.Intent;\nimport android.net.Uri;\nimport android.os.Build;\nimport android.os.Bundle;\nimport android.os.Handler;\nimport android.os.Looper;\nimport android.text.format.DateUtils;\nimport android.util.Log;\nimport android.view.LayoutInflater;\nimport android.view.Menu;\nimport android.view.MenuItem;\n\n## Recent Changes:\n- 8a4d36b7 by Pierre-Yves Ricau (py@squareup.com): format...\n- 021f1699 by Richard Liang (rw.liang1@gmail.com): Fix delete button not working on error views - also move deletion logic to their own methods...\n- 8dc9528d by Pierre-Yves Ricau (py.ricau@gmail.com): Merge pull request #260 from square/py/retained_size_for_realz\n\nAdd retained size to leak reports...",
+      "metadata": {
+        "total_chunks": 1,
+        "file_path": "leakcanary-android/src/main/java/com/squareup/leakcanary/internal/DisplayLeakActivity.java",
+        "commit_count": 5,
+        "language": "java",
+        "strategy": "compressed",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.9760199785232544
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/res/values-v14/leak_canary_themes.xml (xml)\n\n## Recent Changes:\n- 87aec26f by Ian Thomas (ithomas@idealcorp.com): #159 Renamed resources leading with \"__\" to resolve build errors in preview build tools \"1.3.0 rc1\"\n...\n- 7b16af4a by Ian Thomas (toxicbakery@gmail.com): #159 Renamed resources leading with \"__\" to resolve build errors in preview build tools \"1.3.0 rc1\"...",
+      "metadata": {
+        "file_path": "leakcanary-android/src/main/res/values-v14/leak_canary_themes.xml",
+        "language": "xml",
+        "total_chunks": 1,
+        "commit_count": 2,
+        "chunk_index": 0,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.9875844120979309
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/res/values-v21/leak_canary_themes.xml (xml)\n\n## Recent Changes:\n- 87aec26f by Ian Thomas (ithomas@idealcorp.com): #159 Renamed resources leading with \"__\" to resolve build errors in preview build tools \"1.3.0 rc1\"\n...\n- 7b16af4a by Ian Thomas (toxicbakery@gmail.com): #159 Renamed resources leading with \"__\" to resolve build errors in preview build tools \"1.3.0 rc1\"...",
+      "metadata": {
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "commit_count": 2,
+        "file_path": "leakcanary-android/src/main/res/values-v21/leak_canary_themes.xml",
+        "language": "xml"
+      },
+      "similarity_score": 0.9908930063247681
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/java/com/squareup/leakcanary/internal/RequestStoragePermissionActivity.java (java)\n\n## Key Code Elements:\nimport android.annotation.TargetApi;\nimport android.app.Activity;\nimport android.app.PendingIntent;\nimport android.content.Context;\nimport android.content.Intent;\nimport static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;\nimport static android.app.PendingIntent.FLAG_UPDATE_CURRENT;\nimport static android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP;\nimport static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;\nimport static android.content.pm.PackageManager.PERMISSION_GRANTED;\nimport static android.os.Build.VERSION_CODES.M;\nimport static com.squareup.leakcanary.internal.LeakCanaryInternals.setEnabledBlocking;\n@TargetApi(M) //\n  @Override protected void onResume() {\n\n## Recent Changes:\n- ea0af1d6 by Pierre-Yves Ricau (py@squareup.com): Handle storage permission on M\n\nWhen a potential leak is detected, if the storage permission is miss...",
+      "metadata": {
+        "total_chunks": 1,
+        "file_path": "leakcanary-android/src/main/java/com/squareup/leakcanary/internal/RequestStoragePermissionActivity.java",
+        "language": "java",
+        "commit_count": 1,
+        "chunk_index": 0,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.9925085306167603
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/res/values/leak_canary_public.xml (xml)\n\n## Recent Changes:\n- b171e265 by Pierre-Yves Ricau (py@squareup.com): Follow up to #318...\n- 1705b704 by Simon Marquis (contact@simon-marquis.fr): Configure public resources, ref #238\n\nPublic resources are:\n - activity icon\n - activity name\n - max...",
+      "metadata": {
+        "strategy": "compressed",
+        "commit_count": 2,
+        "chunk_index": 0,
+        "language": "xml",
+        "total_chunks": 1,
+        "file_path": "leakcanary-android/src/main/res/values/leak_canary_public.xml"
+      },
+      "similarity_score": 0.9978402853012085
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/java/com/squareup/leakcanary/internal/LeakCanaryInternals.java (java)\n\n## Key Code Elements:\nimport android.annotation.TargetApi;\nimport android.app.ActivityManager;\nimport android.app.Notification;\nimport android.app.NotificationManager;\nimport android.app.PendingIntent;\nimport android.app.Service;\nimport android.content.ComponentName;\nimport android.content.Context;\nimport android.content.pm.PackageInfo;\nimport android.content.pm.PackageManager;\nimport android.content.pm.ServiceInfo;\nimport com.squareup.leakcanary.CanaryLog;\nimport com.squareup.leakcanary.R;\nimport java.lang.reflect.Method;\nimport java.util.concurrent.Executor;\n\n## Recent Changes:\n- ea0af1d6 by Pierre-Yves Ricau (py@squareup.com): Handle storage permission on M\n\nWhen a potential leak is detected, if the storage permission is miss...\n- a35624b6 by jferlisi (john.ferlisi@gmail.com): The LoadLeaks and File IO background executors now have appropriate thread names....\n- 99038fef by Pierre-Yves Ricau (py@squareup.com): Improve storage of leaks\n\n* One directory per package.\n* Stored on the SDCard by default, but custom...",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "language": "java",
+        "total_chunks": 1,
+        "file_path": "leakcanary-android/src/main/java/com/squareup/leakcanary/internal/LeakCanaryInternals.java",
+        "commit_count": 5
+      },
+      "similarity_score": 1.0064661502838135
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/res/layout/leak_canary_display_leak.xml (xml)\n\n## Recent Changes:\n- 7b16af4a by Ian Thomas (toxicbakery@gmail.com): #159 Renamed resources leading with \"__\" to resolve build errors in preview build tools \"1.3.0 rc1\"...",
+      "metadata": {
+        "language": "xml",
+        "strategy": "compressed",
+        "file_path": "leakcanary-android/src/main/res/layout/leak_canary_display_leak.xml",
+        "chunk_index": 0,
+        "commit_count": 1,
+        "total_chunks": 1
+      },
+      "similarity_score": 1.0064833164215088
+    },
+    {
+      "content": "# File: leakcanary-android-no-op/src/main/java/com/squareup/leakcanary/RefWatcher.java (java)\n\n## Recent Changes:\n- 46a6216f by Pierre-Yves Ricau (py@squareup.com): Moving Library to root\n\nShould help with Travis, see #25...",
+      "metadata": {
+        "language": "java",
+        "commit_count": 1,
+        "chunk_index": 0,
+        "file_path": "leakcanary-android-no-op/src/main/java/com/squareup/leakcanary/RefWatcher.java",
+        "total_chunks": 1,
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.0122613906860352
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/res/values/leak_canary_themes.xml (xml)\n\n## Recent Changes:\n- ea0af1d6 by Pierre-Yves Ricau (py@squareup.com): Handle storage permission on M\n\nWhen a potential leak is detected, if the storage permission is miss...\n- 87aec26f by Ian Thomas (ithomas@idealcorp.com): #159 Renamed resources leading with \"__\" to resolve build errors in preview build tools \"1.3.0 rc1\"\n...\n- 7b16af4a by Ian Thomas (toxicbakery@gmail.com): #159 Renamed resources leading with \"__\" to resolve build errors in preview build tools \"1.3.0 rc1\"...",
+      "metadata": {
+        "commit_count": 3,
+        "language": "xml",
+        "strategy": "compressed",
+        "file_path": "leakcanary-android/src/main/res/values/leak_canary_themes.xml",
+        "total_chunks": 1,
+        "chunk_index": 0
+      },
+      "similarity_score": 1.0195422172546387
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/java/com/squareup/leakcanary/internal/DisplayLeakConnectorView.java (java)\n\n## Key Code Elements:\nimport android.content.Context;\nimport android.graphics.Bitmap;\nimport android.graphics.Canvas;\nimport android.graphics.Color;\nimport android.graphics.Paint;\nimport android.util.AttributeSet;\nimport android.view.View;\nimport static android.graphics.Bitmap.Config.ARGB_8888;\n  @SuppressWarnings(\"SuspiciousNameCombination\") @Override protected void onDraw(Canvas canvas) {\n        case NODE:\n        case START:\n        default:\n\n## Recent Changes:\n- 46a6216f by Pierre-Yves Ricau (py@squareup.com): Moving Library to root\n\nShould help with Travis, see #25...",
+      "metadata": {
+        "total_chunks": 1,
+        "language": "java",
+        "commit_count": 1,
+        "file_path": "leakcanary-android/src/main/java/com/squareup/leakcanary/internal/DisplayLeakConnectorView.java",
+        "chunk_index": 0,
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.0218089818954468
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/res/layout/leak_canary_heap_dump_toast.xml (xml)\n\n## Recent Changes:\n- 87aec26f by Ian Thomas (ithomas@idealcorp.com): #159 Renamed resources leading with \"__\" to resolve build errors in preview build tools \"1.3.0 rc1\"\n...\n- 7b16af4a by Ian Thomas (toxicbakery@gmail.com): #159 Renamed resources leading with \"__\" to resolve build errors in preview build tools \"1.3.0 rc1\"...",
+      "metadata": {
+        "strategy": "compressed",
+        "commit_count": 2,
+        "total_chunks": 1,
+        "file_path": "leakcanary-android/src/main/res/layout/leak_canary_heap_dump_toast.xml",
+        "language": "xml",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.0292116403579712
+    },
+    {
+      "content": "# File: leakcanary-android/src/main/java/com/squareup/leakcanary/internal/LeakCanarySingleThreadFactory.java (java)\n\n## Key Code Elements:\nimport java.util.concurrent.ThreadFactory;\n  @Override public Thread newThread(Runnable runnable) {\n\n## Recent Changes:\n- a35624b6 by jferlisi (john.ferlisi@gmail.com): The LoadLeaks and File IO background executors now have appropriate thread names....",
+      "metadata": {
+        "language": "java",
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "commit_count": 1,
+        "file_path": "leakcanary-android/src/main/java/com/squareup/leakcanary/internal/LeakCanarySingleThreadFactory.java"
+      },
+      "similarity_score": 1.029640555381775
+    }
+  ]
+}

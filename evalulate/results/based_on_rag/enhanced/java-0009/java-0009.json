@@ -1,0 +1,8 @@
+{
+  "reason": "NullPointerException occurs when trying to decode resources.arsc file, likely due to missing or corrupted resource values in the APK.",
+  "location": [
+    "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/decoder/ARSCDecoder.java",
+    "brut.apktool/apktool-lib/src/main/java/brut/androlib/res/AndrolibResources.java"
+  ],
+  "fix": "Add null checks in ARSCDecoder.readValue() and handle missing resource values gracefully by either skipping or providing default values."
+}

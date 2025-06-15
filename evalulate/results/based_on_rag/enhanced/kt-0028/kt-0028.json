@@ -1,0 +1,7 @@
+{
+  "reason": "The issue occurs because the hostname resolution happens too early when creating an Endpoint, using InetSocketAddress which doesn't guarantee hostname resolution. This leads to retry attempts being ineffective and endpoints getting stuck in a failed state when DNS resolution fails temporarily.",
+  "location": [
+    "ktor-client/ktor-client-cio/jvm/src/io/ktor/client/engine/cio/Endpoint.kt"
+  ],
+  "fix": "Modify the Endpoint class to use unresolved InetSocketAddress initially and handle resolution during connection attempts. Change the address initialization to: `private val address = InetSocketAddress.createUnresolved(host, port)` and ensure proper resolution handling in the connect method."
+}

@@ -1,0 +1,708 @@
+{
+  "basic": [
+    {
+      "content": "/**\n * @author xiaojing\n */\n\n@Configuration\n@EnableConfigurationProperties\n@ConditionalOnNacosDiscoveryEnabled\n@ConditionalOnClass(name = \"org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent\")\n@ConditionalOnProperty(value = \"spring.cloud.service-registry.auto-registration.enabled\", matchIfMissing = true)\n@AutoConfigureBefore({ AutoServiceRegistrationAutoConfiguration.class,\n\t\tNacosDiscoveryClientAutoConfiguration.class })\npublic class NacosDiscoveryAutoConfiguration {\n\n\t@Bean\n\tpublic NacosServiceRegistry nacosServiceRegistry() {\n\t\treturn new NacosServiceRegistry();\n\t}\n\n\t@Bean\n\t@ConditionalOnMissingBean\n\tpublic NacosDiscoveryProperties nacosProperties() {\n\t\treturn new NacosDiscoveryProperties();\n\t}\n\n\t@Bean\n\t@ConditionalOnBean(AutoServiceRegistrationProperties.class)\n\tpublic NacosRegistration nacosRegistration() {\n\t\treturn new NacosRegistration();\n\t}\n\n\t@Bean\n\t@ConditionalOnBean(AutoServiceRegistrationProperties.class)\n\tpublic NacosAutoServiceRegistration nacosAutoServiceRegistration(\n\t\t\tNacosServiceRegistry registry,\n\t\t\tAutoServiceRegistrationProperties autoServiceRegistrationProperties,\n\t\t\tNacosRegistration registration) {\n\t\treturn new NacosAutoServiceRegistration(registry,\n\t\t\t\tautoServiceRegistrationProperties, registration);\n\t}\n}\n```",
+      "metadata": {
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/NacosDiscoveryAutoConfiguration.java",
+        "chunk_index": 1,
+        "total_chunks": 2,
+        "strategy": "basic",
+        "language": "java"
+      },
+      "similarity_score": 0.4274904429912567
+    },
+    {
+      "content": "import static org.assertj.core.api.Assertions.assertThat;\n\n/**\n * @author xiaojing\n */\npublic class NacosDiscoveryAutoConfigurationTests {\n\n\tprivate ConfigurableApplicationContext context;\n\n\t@Before\n\tpublic void setUp() throws Exception {\n\t\tthis.context = new SpringApplicationBuilder(NacosDiscoveryTestConfiguration.class,\n\t\t\t\tNacosDiscoveryAutoConfiguration.class).web(false).run(\n\t\t\t\t\t\t\"--spring.cloud.nacos.discovery.server-addr=127.0.0.1:8080\",\n\t\t\t\t\t\t\"--spring.cloud.nacos.discovery.port=18080\",\n\t\t\t\t\t\t\"--spring.cloud.nacos.discovery.service=myapp\");\n\t}\n\n\t@Test\n\tpublic void testProperties() {\n\n\t\tNacosDiscoveryProperties properties = context\n\t\t\t\t.getBean(NacosDiscoveryProperties.class);\n\t\tassertThat(properties.getPort()).isEqualTo(18080);\n\t\tassertThat(properties.getServerAddr()).isEqualTo(\"127.0.0.1:8080\");\n\t\tassertThat(properties.getService()).isEqualTo(\"myapp\");\n\n\t}\n\n\t@Test\n\tpublic void nacosRegistration() {\n\n\t\tNacosRegistration nacosRegistration = context.getBean(NacosRegistration.class);\n\t\tassertThat(nacosRegistration.getPort()).isEqualTo(18080);\n\t\tassertThat(nacosRegistration.getServiceId()).isEqualTo(\"myapp\");\n\t\tassertThat(nacosRegistration.getRegisterWeight()).isEqualTo(1F);\n\n\t}\n\n\t@Configuration\n\t@AutoConfigureBefore(NacosDiscoveryAutoConfiguration.class)\n\tstatic class NacosDiscoveryTestConfiguration {\n\n\t\t@Bean\n\t\t@ConditionalOnMissingBean\n\t\tAutoServiceRegistrationProperties autoServiceRegistrationProperties() {\n\t\t\treturn new AutoServiceRegistrationProperties();\n\t\t}\n\n\t\t@Bean\n\t\tInetUtils inetUtils() {\n\t\t\treturn new InetUtils(new InetUtilsProperties());\n\t\t}\n\t}\n\n}\n```",
+      "metadata": {
+        "strategy": "basic",
+        "language": "java",
+        "chunk_index": 1,
+        "total_chunks": 2,
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/test/java/org/springframework/cloud/alibaba/nacos/NacosDiscoveryAutoConfigurationTests.java"
+      },
+      "similarity_score": 0.651493489742279
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-discovery/src/main/resources/META-INF/spring.factories (text)\n\n## Code Content:\n```text\norg.springframework.boot.autoconfigure.EnableAutoConfiguration=\\\n  org.springframework.cloud.alibaba.nacos.NacosDiscoveryAutoConfiguration,\\\n  org.springframework.cloud.alibaba.nacos.ribbon.RibbonNacosAutoConfiguration,\\\n  org.springframework.cloud.alibaba.nacos.endpoint.NacosDiscoveryEndpointAutoConfiguration\norg.springframework.cloud.client.discovery.EnableDiscoveryClient=\\\norg.springframework.cloud.alibaba.nacos.NacosDiscoveryClientAutoConfiguration\n```",
+      "metadata": {
+        "strategy": "basic",
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/main/resources/META-INF/spring.factories",
+        "total_chunks": 1,
+        "language": "text",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.676152229309082
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-examples/nacos-example/nacos-discovery-example/nacos-discovery-provider-example/src/main/java/org/springframework/cloud/alibaba/cloud/examples/ProviderApplication.java (java)\n\n## Code Content:\n```java\npackage org.springframework.cloud.alibaba.cloud.examples;\n\nimport org.springframework.boot.SpringApplication;\nimport org.springframework.boot.autoconfigure.SpringBootApplication;\nimport org.springframework.cloud.client.discovery.EnableDiscoveryClient;\nimport org.springframework.web.bind.annotation.PathVariable;\nimport org.springframework.web.bind.annotation.RequestMapping;\nimport org.springframework.web.bind.annotation.RequestMethod;\nimport org.springframework.web.bind.annotation.RestController;\n\n/**\n * @author xiaojing\n */\n@SpringBootApplication\n@EnableDiscoveryClient\npublic class ProviderApplication {\n\n\tpublic static void main(String[] args) {\n\t\tSpringApplication.run(ProviderApplication.class, args);\n\t}\n\n\t@RestController\n\tclass EchoController {\n\t\t@RequestMapping(value = \"/echo/{string}\", method = RequestMethod.GET)\n\t\tpublic String echo(@PathVariable String string) {\n\t\t\treturn \"hello Nacos Discovery \" + string;\n\t\t}\n\t}\n}\n```",
+      "metadata": {
+        "file_path": "spring-cloud-alibaba-examples/nacos-example/nacos-discovery-example/nacos-discovery-provider-example/src/main/java/org/springframework/cloud/alibaba/cloud/examples/ProviderApplication.java",
+        "strategy": "basic",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "language": "java"
+      },
+      "similarity_score": 0.6876159906387329
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-discovery/src/main/resources/META-INF/additional-spring-configuration-metadata.json (json)\n\n## Code Content:\n```json\n{\"properties\": [\n    {\n      \"name\": \"spring.cloud.nacos.discovery.service\",\n      \"type\": \"java.lang.String\",\n      \"defaultValue\": \"${spring.application.name}\",\n      \"description\": \"the service name to register, default value is ${spring.application.name}.\"\n    }\n]}\n```",
+      "metadata": {
+        "strategy": "basic",
+        "total_chunks": 1,
+        "language": "json",
+        "chunk_index": 0,
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/main/resources/META-INF/additional-spring-configuration-metadata.json"
+      },
+      "similarity_score": 0.757557213306427
+    },
+    {
+      "content": "import static org.assertj.core.api.Assertions.assertThat;\n\n/**\n * @author xiaojing\n */\npublic class NacosRibbonClientConfigurationTests {\n\n\tprivate ConfigurableApplicationContext context;\n\n\t@Before\n\tpublic void setUp() throws Exception {\n\t\tthis.context = new SpringApplicationBuilder(NacosRibbonTestConfiguration.class,\n\t\t\t\tNacosDiscoveryAutoConfiguration.class,\n\t\t\t\tNacosRibbonClientConfiguration.class, RibbonNacosAutoConfiguration.class)\n\t\t\t\t\t\t.web(false).run(\"--server.port=18080\",\n\t\t\t\t\t\t\t\t\"--spring.cloud.nacos.discovery.server-addr=127.0.0.1:8080\",\n\t\t\t\t\t\t\t\t\"--spring.cloud.nacos.discovery.port=18080\",\n\t\t\t\t\t\t\t\t\"--spring.cloud.nacos.discovery.service=myapp\");\n\t}\n\n\t@Test\n\tpublic void testProperties() {\n\n\t\tNacosServerList serverList = context.getBean(NacosServerList.class);\n\t\tassertThat(serverList.getServiceId()).isEqualTo(\"myapp\");\n\t}\n\n\t@Configuration\n\t@AutoConfigureBefore(value = { NacosDiscoveryAutoConfiguration.class })\n\tstatic class NacosRibbonTestConfiguration {\n\n\t\t@Bean\n\t\t@ConditionalOnMissingBean\n\t\tAutoServiceRegistrationProperties autoServiceRegistrationProperties() {\n\t\t\treturn new AutoServiceRegistrationProperties();\n\t\t}\n\n\t\t@Bean\n\t\tIClientConfig iClientConfig() {\n\t\t\tDefaultClientConfigImpl config = new DefaultClientConfigImpl();\n\t\t\tconfig.setClientName(\"myapp\");\n\t\t\treturn config;\n\t\t}\n\n\t\t@Bean\n\t\t@LoadBalanced\n\t\tRestTemplate restTemplate() {\n\t\t\treturn new RestTemplate();\n\t\t}\n\n\t\t@Bean\n\t\tInetUtils inetUtils() {\n\t\t\treturn new InetUtils(new InetUtilsProperties());\n\t\t}\n\n\t}\n\n}\n```",
+      "metadata": {
+        "strategy": "basic",
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/test/java/org/springframework/cloud/alibaba/nacos/ribbon/NacosRibbonClientConfigurationTests.java",
+        "language": "java",
+        "chunk_index": 1,
+        "total_chunks": 2
+      },
+      "similarity_score": 0.799180269241333
+    },
+    {
+      "content": "**Prerequisite:**\n\nAdd dependency spring-boot-starter-actuator to your pom.xml file, and configure your endpoint security strategy.\n\nSpring Boot 1.x: Add configuration management.security.enabled=false\nSpring Boot 2.x: Add configuration management.endpoints.web.exposure.include=*\nTo view the endpoint information, visit the following URLS:\n\nSpring Boot1.x: Nacos Discovery  Endpoint URL is http://127.0.0.1:18083/nacos_discovery.\nSpring Boot2.x: Nacos Discovery  Endpoint URL is http://127.0.0.1:18083/actuator/nacos-discovery.\n\n![actuator](https://cdn.nlark.com/lark/0/2018/png/54319/1536986319285-d542dc5f-5dff-462a-9f52-7254776bcd99.png)\n\nAs shown in the figure above, NacosDiscoveryProperties is the configuration of Nacos Discovery itself, and also includes the contents registered by the application, subscribe is the service information that the application has subscribed to.\n\n    \t\n## More",
+      "metadata": {
+        "strategy": "basic",
+        "total_chunks": 8,
+        "chunk_index": 5,
+        "language": "markdown",
+        "file_path": "spring-cloud-alibaba-examples/nacos-example/nacos-discovery-example/readme.md"
+      },
+      "similarity_score": 0.8192382454872131
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-config/src/main/resources/META-INF/spring.factories (text)\n\n## Code Content:\n```text\norg.springframework.cloud.bootstrap.BootstrapConfiguration=\\\norg.springframework.cloud.alibaba.nacos.NacosConfigBootstrapConfiguration\norg.springframework.boot.autoconfigure.EnableAutoConfiguration=\\\norg.springframework.cloud.alibaba.nacos.NacosConfigAutoConfiguration,\\\norg.springframework.cloud.alibaba.nacos.endpoint.NacosConfigEndpointAutoConfiguration\norg.springframework.boot.diagnostics.FailureAnalyzer=\\\norg.springframework.cloud.alibaba.nacos.diagnostics.analyzer.NacosConnectionFailureAnalyzer\n```",
+      "metadata": {
+        "strategy": "basic",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "file_path": "spring-cloud-alibaba-nacos-config/src/main/resources/META-INF/spring.factories",
+        "language": "text"
+      },
+      "similarity_score": 0.8256597518920898
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-examples/nacos-example/nacos-discovery-example/nacos-discovery-consumer-example/src/main/java/org/springframework/cloud/alibaba/cloud/examples/ConsumerApplication.java (java)\n\n## Code Content:\n```java\npackage org.springframework.cloud.alibaba.cloud.examples;\n\nimport org.springframework.boot.SpringApplication;\nimport org.springframework.boot.autoconfigure.SpringBootApplication;\nimport org.springframework.cloud.client.discovery.EnableDiscoveryClient;\nimport org.springframework.cloud.client.loadbalancer.LoadBalanced;\nimport org.springframework.cloud.netflix.feign.EnableFeignClients;\nimport org.springframework.cloud.netflix.feign.FeignClient;\nimport org.springframework.context.annotation.Bean;\nimport org.springframework.web.bind.annotation.PathVariable;\nimport org.springframework.web.bind.annotation.RequestMapping;\nimport org.springframework.web.bind.annotation.RequestMethod;\nimport org.springframework.web.client.RestTemplate;\n\n/**\n * @author xiaojing\n */\n@SpringBootApplication\n@EnableDiscoveryClient\n@EnableFeignClients\npublic class ConsumerApplication {\n\n    @LoadBalanced\n    @Bean\n    public RestTemplate restTemplate() {\n        return new RestTemplate();\n    }\n\n\n\n\n    public static void main(String[] args) {\n        SpringApplication.run(ConsumerApplication.class, args);\n    }\n\n    @FeignClient(name = \"service-provider\")\n    public interface EchoService {\n        @RequestMapping(value = \"/echo/{str}\", method = RequestMethod.GET)\n        String echo(@PathVariable(\"str\") String str);\n    }\n}\n```",
+      "metadata": {
+        "file_path": "spring-cloud-alibaba-examples/nacos-example/nacos-discovery-example/nacos-discovery-consumer-example/src/main/java/org/springframework/cloud/alibaba/cloud/examples/ConsumerApplication.java",
+        "total_chunks": 1,
+        "strategy": "basic",
+        "chunk_index": 0,
+        "language": "java"
+      },
+      "similarity_score": 0.8269701600074768
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-examples/nacos-example/nacos-config-example/src/main/java/org/springframework/cloud/alibaba/cloud/examples/Application.java (java)\n\n## Code Content:\n```java\npackage org.springframework.cloud.alibaba.cloud.examples;\n\nimport org.springframework.beans.factory.annotation.Value;\nimport org.springframework.boot.ApplicationArguments;\nimport org.springframework.boot.ApplicationRunner;\nimport org.springframework.boot.SpringApplication;\nimport org.springframework.boot.autoconfigure.SpringBootApplication;\nimport org.springframework.cloud.context.config.annotation.RefreshScope;\nimport org.springframework.stereotype.Component;\nimport org.springframework.web.bind.annotation.RequestMapping;\nimport org.springframework.web.bind.annotation.RestController;\n\n/**\n * @author xiaojing\n */\n@SpringBootApplication\npublic class Application {\n\n    public static void main(String[] args) {\n        SpringApplication.run(Application.class, args);\n    }\n}\n\n@Component\nclass SampleRunner implements ApplicationRunner {\n\n    @Value(\"${user.name}\")\n    String userName;\n\n    @Value(\"${user.age}\")\n    int userAge;\n\n    @Override\n    public void run(ApplicationArguments args) throws Exception {\n        System.out.println(userName);\n        System.out.println(userAge);\n    }\n}\n\n@RestController\n@RefreshScope\nclass SampleController {\n\n    @Value(\"${user.name}\")\n    String userName;\n\n    @Value(\"${user.age}\")\n    int age;\n\n    @RequestMapping(\"/user\")\n    public String simple() {\n        return \"Hello Nacos Config!\" + \"Hello \" + userName + \" \" + age + \"!\";\n    }\n}\n```",
+      "metadata": {
+        "language": "java",
+        "file_path": "spring-cloud-alibaba-examples/nacos-example/nacos-config-example/src/main/java/org/springframework/cloud/alibaba/cloud/examples/Application.java",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.833440899848938
+    },
+    {
+      "content": "import static org.assertj.core.api.Assertions.assertThat;\n\n/**\n * @author xiaojing\n */\npublic class NacosConfigAutoConfigurationTests {\n\n    private ConfigurableApplicationContext context;\n\n    @Before\n    public void setUp() throws Exception {\n        this.context = new SpringApplicationBuilder(\n            NacosConfigBootstrapConfiguration.class,\n            NacosConfigAutoConfiguration.class,\n            TestConfiguration.class)\n            .web(false).run(\n            \"--spring.cloud.config.enabled=true\",\n            \"--spring.cloud.nacos.config.server-addr=127.0.0.1:8080\",\n            \"--spring.cloud.nacos.config.prefix=myapp\");\n    }\n\n    @After\n    public void tearDown() throws Exception {\n        if (this.context != null) {\n            this.context.close();\n        }\n    }\n\n    @Test\n    public void testNacosConfigProperties() {\n\n        NacosPropertySourceLocator nacosPropertySourceLocator = this.context.getBean(NacosPropertySourceLocator.class);\n        Environment environment = this.context.getEnvironment();\n        try{\n            nacosPropertySourceLocator.locate(environment);\n        }catch (Exception e){\n\n        }\n\n        NacosConfigProperties nacosConfigProperties = this.context.getBean(NacosConfigProperties.class);\n        assertThat(nacosConfigProperties.getFileExtension()).isEqualTo(\"properties\");\n        assertThat(nacosConfigProperties.getPrefix()).isEqualTo(\"myapp\");\n\n    }\n\n\n    @Test\n    public void testNacosRefreshProperties() {\n\n        NacosRefreshProperties nacosRefreshProperties = this.context.getBean(NacosRefreshProperties.class);\n        assertThat(nacosRefreshProperties.isEnabled()).isEqualTo(true);\n\n    }\n\n    @Configuration\n    @AutoConfigureBefore(NacosConfigAutoConfiguration.class)\n    static class TestConfiguration{\n\n\n        @Autowired\n        ConfigurableApplicationContext context;\n\n        @Bean\n        ContextRefresher contextRefresher(){\n            return new ContextRefresher(context, new RefreshScope());\n        }",
+      "metadata": {
+        "chunk_index": 1,
+        "strategy": "basic",
+        "language": "java",
+        "file_path": "spring-cloud-alibaba-nacos-config/src/test/java/org/springframework/cloud/alibaba/nacos/NacosConfigAutoConfigurationTests.java",
+        "total_chunks": 3
+      },
+      "similarity_score": 0.8465467691421509
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-examples/nacos-example/nacos-discovery-example/nacos-discovery-consumer-example/src/main/java/org/springframework/cloud/alibaba/cloud/examples/TestController.java (java)\n\n## Code Content:\n```java\npackage org.springframework.cloud.alibaba.cloud.examples;\n\nimport org.springframework.beans.factory.annotation.Autowired;\nimport org.springframework.cloud.alibaba.cloud.examples.ConsumerApplication.EchoService;\nimport org.springframework.cloud.client.discovery.DiscoveryClient;\nimport org.springframework.web.bind.annotation.PathVariable;\nimport org.springframework.web.bind.annotation.RequestMapping;\nimport org.springframework.web.bind.annotation.RequestMethod;\nimport org.springframework.web.bind.annotation.RestController;\nimport org.springframework.web.client.RestTemplate;\n\n/**\n * @author xiaojing\n */\n@RestController\npublic class TestController {\n\n    @Autowired\n    private RestTemplate restTemplate;\n    @Autowired\n    private EchoService echoService;\n\n\n    @Autowired\n    private DiscoveryClient discoveryClient;\n\n    @RequestMapping(value = \"/echo-rest/{str}\", method = RequestMethod.GET)\n    public String rest(@PathVariable String str) {\n        return restTemplate.getForObject(\"http://service-provider/echo/\" + str, String.class);\n    }\n    @RequestMapping(value = \"/echo-feign/{str}\", method = RequestMethod.GET)\n    public String feign(@PathVariable String str) {\n        return echoService.echo(str);\n    }\n\n\n    @RequestMapping(value=\"/services/{service}\",method = RequestMethod.GET)\n    public Object client(@PathVariable String service){\n        return discoveryClient.getInstances(service);\n    }\n    @RequestMapping(value=\"/services\",method = RequestMethod.GET)\n    public Object services(){\n        return discoveryClient.getServices();\n    }\n}\n```",
+      "metadata": {
+        "strategy": "basic",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "language": "java",
+        "file_path": "spring-cloud-alibaba-examples/nacos-example/nacos-discovery-example/nacos-discovery-consumer-example/src/main/java/org/springframework/cloud/alibaba/cloud/examples/TestController.java"
+      },
+      "similarity_score": 0.850922167301178
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/ConditionalOnNacosDiscoveryEnabled.java (java)\n\n## Code Content:\n```java\n/*\n * Copyright (C) 2018 the original author or authors.\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obtain a copy of the License at\n *\n *      http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\n\npackage org.springframework.cloud.alibaba.nacos;\n\nimport org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;\n\nimport java.lang.annotation.ElementType;\nimport java.lang.annotation.Retention;\nimport java.lang.annotation.RetentionPolicy;\nimport java.lang.annotation.Target;\n\n@Retention(RetentionPolicy.RUNTIME)\n@Target({ ElementType.TYPE, ElementType.METHOD })\n@ConditionalOnProperty(value = \"spring.cloud.nacos.discovery.enabled\", matchIfMissing = true)\npublic @interface ConditionalOnNacosDiscoveryEnabled {\n\n}\n```",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "basic",
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/ConditionalOnNacosDiscoveryEnabled.java",
+        "total_chunks": 1,
+        "language": "java"
+      },
+      "similarity_score": 0.8544145822525024
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/NacosDiscoveryAutoConfiguration.java (java)\n\n## Code Content:\n```java\n/*\n * Copyright (C) 2018 the original author or authors.\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obtain a copy of the License at\n *\n *      http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\n\npackage org.springframework.cloud.alibaba.nacos;\n\nimport org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;\nimport org.springframework.boot.autoconfigure.AutoConfigureBefore;\nimport org.springframework.boot.autoconfigure.condition.ConditionalOnBean;\nimport org.springframework.boot.autoconfigure.condition.ConditionalOnClass;\nimport org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;\nimport org.springframework.boot.context.properties.EnableConfigurationProperties;\nimport org.springframework.cloud.alibaba.nacos.registry.NacosAutoServiceRegistration;\nimport org.springframework.cloud.alibaba.nacos.registry.NacosRegistration;\nimport org.springframework.cloud.alibaba.nacos.registry.NacosServiceRegistry;\nimport org.springframework.cloud.client.serviceregistry.AutoServiceRegistrationAutoConfiguration;\nimport org.springframework.cloud.client.serviceregistry.AutoServiceRegistrationProperties;\nimport org.springframework.context.annotation.Bean;\nimport org.springframework.context.annotation.Configuration;\n\n/**\n * @author xiaojing\n */",
+      "metadata": {
+        "chunk_index": 0,
+        "language": "java",
+        "total_chunks": 2,
+        "strategy": "basic",
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/NacosDiscoveryAutoConfiguration.java"
+      },
+      "similarity_score": 0.8676682710647583
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-examples/nacos-example/nacos-discovery-example/nacos-discovery-provider-example/src/main/resources/application.properties (text)\n\n## Code Content:\n```text\nserver.port=18082\nspring.application.name=service-provider\nspring.cloud.nacos.discovery.server-addr=127.0.0.1:8848\nmanagement.endpoints.web.exposure.include=*\n```",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "spring-cloud-alibaba-examples/nacos-example/nacos-discovery-example/nacos-discovery-provider-example/src/main/resources/application.properties",
+        "strategy": "basic",
+        "total_chunks": 1,
+        "language": "text"
+      },
+      "similarity_score": 0.8693598508834839
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/NacosDiscoveryClientAutoConfiguration.java (java)\n\n## Code Content:\n```java\n/*\n * Copyright (C) 2018 the original author or authors.\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obtain a copy of the License at\n *\n *      http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\n\npackage org.springframework.cloud.alibaba.nacos;\n\nimport org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;\nimport org.springframework.boot.context.properties.EnableConfigurationProperties;\nimport org.springframework.cloud.client.discovery.DiscoveryClient;\nimport org.springframework.context.annotation.Bean;\nimport org.springframework.context.annotation.Configuration;\n\n/**\n * @author xiaojing\n */\n@Configuration\n@ConditionalOnMissingBean(DiscoveryClient.class)\n@ConditionalOnNacosDiscoveryEnabled\n@EnableConfigurationProperties\npublic class NacosDiscoveryClientAutoConfiguration {\n\n\t@Bean\n\tpublic DiscoveryClient nacosDiscoveryClient() {\n\t\treturn new NacosDiscoveryClient();\n\t}\n\n}\n```",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/NacosDiscoveryClientAutoConfiguration.java",
+        "language": "java",
+        "total_chunks": 1,
+        "strategy": "basic"
+      },
+      "similarity_score": 0.8696844577789307
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-examples/nacos-example/nacos-discovery-example/readme.md (markdown)\n\n## Code Content:\n```markdown\n# Nacos Discovery Example\n\n## Project Instruction\n\nThis example illustrates how to use Nacos Discovery Starter implement Service discovery for Spring Cloud applications.\n\n[Nacos](https://github.com/alibaba/Nacos) an easy-to-use dynamic service discovery, configuration and service management platform for building cloud native applications.\n\n## Demo\n\n### Connect to Nacos Discovery\nBefore we start the demo, let's learn how to connect Nacos Config to a Spring Cloud application. **Note: This section is to show you how to connect to Nacos Discovery. The configurations have been completed in the following example, so you don't need modify the code any more.**\n\n1. Add dependency spring-cloud-starter-alibaba-nacos-discovery in the pom.xml file in your Spring Cloud project.\n\n\t    <dependency>\n            <groupId>org.springframework.cloud</groupId>\n            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>\n        </dependency>\n\t\n2. Add Nacos server address configurations to file /src/main/resources/application.properties.\n\t\n\t\tspring.cloud.nacos.discovery.server-addr=127.0.0.1:8848\n\t\t  \n3. Use the @EnableDiscoveryClient annotation to turn on service registration and discovery.\n\t\t\n\t\t@SpringBootApplication\n\t\t@EnableDiscoveryClient\n\t\tpublic class ProviderApplication {\n\n\t\t\tpublic static void main(String[] args) {\n\t\t\t\tSpringApplication.run(Application.class, args);\n\t\t\t}\n\n\t\t\t@RestController\n\t\t\tclass EchoController {\n\t\t\t\t@RequestMapping(value = \"/echo/{string}\", method = RequestMethod.GET)\n\t\t\t\tpublic String echo(@PathVariable String string) {\n\t\t\t\t\t\treturn string;\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\n### Start Nacos Server \n\n1. Install Nacos Server by downloading or build from source code.**Recommended latest version Nacos Server**",
+      "metadata": {
+        "file_path": "spring-cloud-alibaba-examples/nacos-example/nacos-discovery-example/readme.md",
+        "strategy": "basic",
+        "chunk_index": 0,
+        "language": "markdown",
+        "total_chunks": 8
+      },
+      "similarity_score": 0.8737526535987854
+    },
+    {
+      "content": "import static com.alibaba.nacos.api.PropertyKeyConst.*;\n\n/**\n * @author xiaojing\n */\npublic class NacosRegistration implements Registration, ServiceInstance {\n\n\tprivate static final String MANAGEMENT_PORT = \"management.port\";\n\tprivate static final String MANAGEMENT_CONTEXT_PATH = \"management.context-path\";\n\tprivate static final String MANAGEMENT_ADDRESS = \"management.address\";\n\n\t@Autowired\n\tprivate NacosDiscoveryProperties nacosDiscoveryProperties;\n\n\t@Autowired\n\tprivate ApplicationContext context;\n\n\tprivate NamingService nacosNamingService;\n\n\t@PostConstruct\n\tpublic void init() {\n\n\t\tEnvironment env = context.getEnvironment();\n\t\tnacosDiscoveryProperties.overrideFromEnv(context.getEnvironment());\n\n\t\tProperties properties = new Properties();\n\t\tproperties.put(SERVER_ADDR, nacosDiscoveryProperties.getServerAddr());\n\t\tproperties.put(NAMESPACE, nacosDiscoveryProperties.getNamespace());\n\t\tproperties.put(UtilAndComs.NACOS_NAMING_LOG_NAME,\n\t\t\t\tnacosDiscoveryProperties.getLogName());\n\t\tproperties.put(ENDPOINT, nacosDiscoveryProperties.getEndpoint());\n\t\tproperties.put(ACCESS_KEY, nacosDiscoveryProperties.getAccessKey());\n\t\tproperties.put(SECRET_KEY, nacosDiscoveryProperties.getSecretKey());\n\t\tproperties.put(CLUSTER_NAME, nacosDiscoveryProperties.getClusterName());\n\t\ttry {\n\t\t\tnacosNamingService = NacosFactory.createNamingService(properties);\n\t\t}\n\t\tcatch (Exception e) {\n\n\t\t}\n\n\t\tInteger managementPort = ManagementServerPortUtils.getPort(context);\n\t\tif (null != managementPort) {\n\t\t\tMap<String, String> metadata = nacosDiscoveryProperties.getMetadata();\n\t\t\tmetadata.put(MANAGEMENT_PORT, managementPort.toString());\n\t\t\tString contextPath = env.getProperty(\"management.context-path\");\n\t\t\tString address = env.getProperty(\"management.address\");\n\t\t\tif (!StringUtils.isEmpty(contextPath)) {\n\t\t\t\tmetadata.put(MANAGEMENT_CONTEXT_PATH, contextPath);\n\t\t\t}\n\t\t\tif (!StringUtils.isEmpty(address)) {\n\t\t\t\tmetadata.put(MANAGEMENT_ADDRESS, address);\n\t\t\t}\n\t\t}\n\t}",
+      "metadata": {
+        "strategy": "basic",
+        "language": "java",
+        "chunk_index": 1,
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/registry/NacosRegistration.java",
+        "total_chunks": 3
+      },
+      "similarity_score": 0.8742256164550781
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-examples/nacos-example/nacos-discovery-example/nacos-discovery-provider-example/pom.xml (xml)\n\n## Code Content:\n```xml\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n         xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd\">\n\n    <parent>\n        <groupId>org.springframework.cloud</groupId>\n        <artifactId>nacos-discovery-example</artifactId>\n        <version>0.1.0</version>\n    </parent>\n    <modelVersion>4.0.0</modelVersion>\n\n\n    <artifactId>nacos-discovery-provider-example</artifactId>\n    <packaging>jar</packaging>\n    <description>Example demonstrating how to use nacos discovery</description>\n\n\n    <dependencies>\n        <dependency>\n            <groupId>org.springframework.boot</groupId>\n            <artifactId>spring-boot-starter-web</artifactId>\n        </dependency>\n        <dependency>\n            <groupId>org.springframework.cloud</groupId>\n            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>\n        </dependency>\n\n        <dependency>\n            <groupId>org.springframework.boot</groupId>\n            <artifactId>spring-boot-starter-actuator</artifactId>\n        </dependency>\n\n    </dependencies>\n\n    <build>\n        <plugins>\n            <plugin>\n                <groupId>org.springframework.boot</groupId>\n                <artifactId>spring-boot-maven-plugin</artifactId>\n            </plugin>\n            <plugin>\n                <groupId>org.apache.maven.plugins</groupId>\n                <artifactId>maven-deploy-plugin</artifactId>\n                <version>${maven-deploy-plugin.version}</version>\n                <configuration>\n                    <skip>true</skip>\n                </configuration>\n            </plugin>\n        </plugins>\n    </build>\n\n</project>\n```",
+      "metadata": {
+        "file_path": "spring-cloud-alibaba-examples/nacos-example/nacos-discovery-example/nacos-discovery-provider-example/pom.xml",
+        "strategy": "basic",
+        "language": "xml",
+        "chunk_index": 0,
+        "total_chunks": 1
+      },
+      "similarity_score": 0.877372145652771
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-examples/nacos-example/nacos-discovery-example/nacos-discovery-consumer-example/pom.xml (xml)\n\n## Code Content:\n```xml\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n         xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd\">\n\n    <parent>\n        <groupId>org.springframework.cloud</groupId>\n        <artifactId>nacos-discovery-example</artifactId>\n        <version>0.1.0</version>\n    </parent>\n    <modelVersion>4.0.0</modelVersion>\n\n\n    <artifactId>nacos-discovery-consumer-example</artifactId>\n    <packaging>jar</packaging>\n    <description>Example demonstrating how to use nacos discovery</description>\n\n\n    <dependencies>\n        <dependency>\n            <groupId>org.springframework.boot</groupId>\n            <artifactId>spring-boot-starter-web</artifactId>\n        </dependency>\n        <dependency>\n            <groupId>org.springframework.cloud</groupId>\n            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>\n        </dependency>\n\n        <dependency>\n            <groupId>org.springframework.boot</groupId>\n            <artifactId>spring-boot-starter-actuator</artifactId>\n        </dependency>\n\n        <dependency>\n            <groupId>org.springframework.cloud</groupId>\n            <artifactId>spring-cloud-starter-netflix-ribbon</artifactId>\n        </dependency>\n\n        <dependency>\n            <groupId>org.springframework.cloud</groupId>\n            <artifactId>spring-cloud-starter-feign</artifactId>\n        </dependency>\n\n    </dependencies>",
+      "metadata": {
+        "total_chunks": 2,
+        "chunk_index": 0,
+        "file_path": "spring-cloud-alibaba-examples/nacos-example/nacos-discovery-example/nacos-discovery-consumer-example/pom.xml",
+        "language": "xml",
+        "strategy": "basic"
+      },
+      "similarity_score": 0.878231406211853
+    }
+  ],
+  "enhanced": [
+    {
+      "content": "/**\n * @author xiaojing\n */\n\n@Configuration\n@EnableConfigurationProperties\n@ConditionalOnNacosDiscoveryEnabled\n@ConditionalOnClass(name = \"org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent\")\n@ConditionalOnProperty(value = \"spring.cloud.service-registry.auto-registration.enabled\", matchIfMissing = true)\n@AutoConfigureBefore({ AutoServiceRegistrationAutoConfiguration.class,\n\t\tNacosDiscoveryClientAutoConfiguration.class })\npublic class NacosDiscoveryAutoConfiguration {\n\n\t@Bean\n\tpublic NacosServiceRegistry nacosServiceRegistry() {\n\t\treturn new NacosServiceRegistry();\n\t}\n\n\t@Bean\n\t@ConditionalOnMissingBean\n\tpublic NacosDiscoveryProperties nacosProperties() {\n\t\treturn new NacosDiscoveryProperties();\n\t}\n\n\t@Bean\n\t@ConditionalOnBean(AutoServiceRegistrationProperties.class)\n\tpublic NacosRegistration nacosRegistration() {\n\t\treturn new NacosRegistration();\n\t}\n\n\t@Bean\n\t@ConditionalOnBean(AutoServiceRegistrationProperties.class)\n\tpublic NacosAutoServiceRegistration nacosAutoServiceRegistration(\n\t\t\tNacosServiceRegistry registry,\n\t\t\tAutoServiceRegistrationProperties autoServiceRegistrationProperties,\n\t\t\tNacosRegistration registration) {\n\t\treturn new NacosAutoServiceRegistration(registry,\n\t\t\t\tautoServiceRegistrationProperties, registration);\n\t}\n}\n```\n\n## Git Commit History",
+      "metadata": {
+        "strategy": "enhanced",
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/NacosDiscoveryAutoConfiguration.java",
+        "commit_count": 2,
+        "chunk_index": 1,
+        "total_chunks": 3,
+        "language": "java"
+      },
+      "similarity_score": 0.4274904429912567
+    },
+    {
+      "content": "import static org.assertj.core.api.Assertions.assertThat;\n\n/**\n * @author xiaojing\n */\npublic class NacosDiscoveryAutoConfigurationTests {\n\n\tprivate ConfigurableApplicationContext context;\n\n\t@Before\n\tpublic void setUp() throws Exception {\n\t\tthis.context = new SpringApplicationBuilder(NacosDiscoveryTestConfiguration.class,\n\t\t\t\tNacosDiscoveryAutoConfiguration.class).web(false).run(\n\t\t\t\t\t\t\"--spring.cloud.nacos.discovery.server-addr=127.0.0.1:8080\",\n\t\t\t\t\t\t\"--spring.cloud.nacos.discovery.port=18080\",\n\t\t\t\t\t\t\"--spring.cloud.nacos.discovery.service=myapp\");\n\t}\n\n\t@Test\n\tpublic void testProperties() {\n\n\t\tNacosDiscoveryProperties properties = context\n\t\t\t\t.getBean(NacosDiscoveryProperties.class);\n\t\tassertThat(properties.getPort()).isEqualTo(18080);\n\t\tassertThat(properties.getServerAddr()).isEqualTo(\"127.0.0.1:8080\");\n\t\tassertThat(properties.getService()).isEqualTo(\"myapp\");\n\n\t}\n\n\t@Test\n\tpublic void nacosRegistration() {\n\n\t\tNacosRegistration nacosRegistration = context.getBean(NacosRegistration.class);\n\t\tassertThat(nacosRegistration.getPort()).isEqualTo(18080);\n\t\tassertThat(nacosRegistration.getServiceId()).isEqualTo(\"myapp\");\n\t\tassertThat(nacosRegistration.getRegisterWeight()).isEqualTo(1F);\n\n\t}\n\n\t@Configuration\n\t@AutoConfigureBefore(NacosDiscoveryAutoConfiguration.class)\n\tstatic class NacosDiscoveryTestConfiguration {\n\n\t\t@Bean\n\t\t@ConditionalOnMissingBean\n\t\tAutoServiceRegistrationProperties autoServiceRegistrationProperties() {\n\t\t\treturn new AutoServiceRegistrationProperties();\n\t\t}\n\n\t\t@Bean\n\t\tInetUtils inetUtils() {\n\t\t\treturn new InetUtils(new InetUtilsProperties());\n\t\t}\n\t}\n\n}\n```\n\n## Git Commit History",
+      "metadata": {
+        "strategy": "enhanced",
+        "commit_count": 1,
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/test/java/org/springframework/cloud/alibaba/nacos/NacosDiscoveryAutoConfigurationTests.java",
+        "total_chunks": 3,
+        "chunk_index": 1,
+        "language": "java"
+      },
+      "similarity_score": 0.651493489742279
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-examples/nacos-example/nacos-discovery-example/nacos-discovery-provider-example/src/main/java/org/springframework/cloud/alibaba/cloud/examples/ProviderApplication.java (java)\n\n## Code Content:\n```java\npackage org.springframework.cloud.alibaba.cloud.examples;\n\nimport org.springframework.boot.SpringApplication;\nimport org.springframework.boot.autoconfigure.SpringBootApplication;\nimport org.springframework.cloud.client.discovery.EnableDiscoveryClient;\nimport org.springframework.web.bind.annotation.PathVariable;\nimport org.springframework.web.bind.annotation.RequestMapping;\nimport org.springframework.web.bind.annotation.RequestMethod;\nimport org.springframework.web.bind.annotation.RestController;\n\n/**\n * @author xiaojing\n */\n@SpringBootApplication\n@EnableDiscoveryClient\npublic class ProviderApplication {\n\n\tpublic static void main(String[] args) {\n\t\tSpringApplication.run(ProviderApplication.class, args);\n\t}\n\n\t@RestController\n\tclass EchoController {\n\t\t@RequestMapping(value = \"/echo/{string}\", method = RequestMethod.GET)\n\t\tpublic String echo(@PathVariable String string) {\n\t\t\treturn \"hello Nacos Discovery \" + string;\n\t\t}\n\t}\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 1e030e6e\n- Author: flystar32 (flystar32@163.com)\n- Date: 2018-09-17 17:41:55\n- Message: add nacos-config starter and nacos-discovery starter\n- Changes:\n```diff\n@@ -0,0 +1,29 @@\n+package org.springframework.cloud.alibaba.cloud.examples;\n+\n+import org.springframework.boot.SpringApplication;\n+import org.springframework.boot.autoconfigure.SpringBootApplication;\n+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;\n+import org.springframework.web.bind.annotation.PathVariable;\n+import org.springframework.web.bind.annotation.RequestMapping;\n+import org.springframework.web.bind.annotation.RequestMethod;\n+import org.springframework.web.bind....\n```",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "enhanced",
+        "commit_count": 1,
+        "total_chunks": 1,
+        "language": "java",
+        "file_path": "spring-cloud-alibaba-examples/nacos-example/nacos-discovery-example/nacos-discovery-provider-example/src/main/java/org/springframework/cloud/alibaba/cloud/examples/ProviderApplication.java"
+      },
+      "similarity_score": 0.6876159906387329
+    },
+    {
+      "content": "@Bean\n\t@ConditionalOnMissingBean\n\tpublic NacosDiscoveryEndpoint nacosDiscoveryEndpoint() {\n\t\treturn new NacosDiscoveryEndpoint();\n\t}\n\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 879e6893\n- Author: flystar32 (flystar32@163.com)\n- Date: 2018-09-18 14:58:50\n- Message: update NacosAutoServiceRegistration, update pom.xml, and format code\n- Changes:\n```diff\n@@ -30,7 +30,6 @@ import org.springframework.context.annotation.Configuration;\n @ConditionalOnClass(name = \"org.springframework.boot.actuate.endpoint.AbstractEndpoint\")\n public class NacosDiscoveryEndpointAutoConfiguration {\n \n-\n \t@Bean\n \t@ConditionalOnMissingBean\n \tpublic NacosDiscoveryEndpoint nacosDiscoveryEndpoint() {...\n```\n\n### Commit 2\n- ID: 1e030e6e\n- Author: flystar32 (flystar32@163.com)\n- Date: 2018-09-17 17:41:55\n- Message: add nacos-config starter and nacos-discovery starter\n- Changes:\n```diff\n@@ -0,0 +1,40 @@\n+/*\n+ * Copyright (C) 2018 the original author or authors.\n+ *\n+ * Licensed under the Apache License, Version 2.0 (the \"License\");\n+ * you may not use this file except in compliance with the License.\n+ * You may obtain a copy of the License at\n+ *\n+ *      http://www.apache.org/licenses/LICENSE-2.0\n+ *\n+ * Unless required by applicable law or agreed to in writing, software\n+ * distributed under the License is distributed on an \"AS IS\" BASIS,\n+ * WITHOUT WARRANTIES OR CONDITIONS ...\n```",
+      "metadata": {
+        "total_chunks": 2,
+        "chunk_index": 1,
+        "language": "java",
+        "commit_count": 2,
+        "strategy": "enhanced",
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/endpoint/NacosDiscoveryEndpointAutoConfiguration.java"
+      },
+      "similarity_score": 0.7624123096466064
+    },
+    {
+      "content": "### Commit 2\n- ID: 1e030e6e\n- Author: flystar32 (flystar32@163.com)\n- Date: 2018-09-17 17:41:55\n- Message: add nacos-config starter and nacos-discovery starter\n- Changes:\n```diff\n@@ -0,0 +1,7 @@\n+org.springframework.cloud.bootstrap.BootstrapConfiguration=\\\n+org.springframework.cloud.alibaba.nacos.NacosConfigBootstrapConfiguration\n+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\\\n+org.springframework.cloud.alibaba.nacos.NacosConfigAutoConfiguration,\\\n+org.springframework.cloud.alibaba.nacos.endpoint.NacosConfigEndpointAutoConfiguration\n+org.springframework.boot.diagnostics.FailureAnalyzer=\\\n+org.springframework.cloud.alibaba.nacos..analyzer.NacosConnection...\n```",
+      "metadata": {
+        "total_chunks": 2,
+        "language": "text",
+        "file_path": "spring-cloud-alibaba-nacos-config/src/main/resources/META-INF/spring.factories",
+        "strategy": "enhanced",
+        "chunk_index": 1,
+        "commit_count": 2
+      },
+      "similarity_score": 0.7764757871627808
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-discovery/src/main/resources/META-INF/spring.factories (text)\n\n## Code Content:\n```text\norg.springframework.boot.autoconfigure.EnableAutoConfiguration=\\\n  org.springframework.cloud.alibaba.nacos.NacosDiscoveryAutoConfiguration,\\\n  org.springframework.cloud.alibaba.nacos.ribbon.RibbonNacosAutoConfiguration,\\\n  org.springframework.cloud.alibaba.nacos.endpoint.NacosDiscoveryEndpointAutoConfiguration\norg.springframework.cloud.client.discovery.EnableDiscoveryClient=\\\norg.springframework.cloud.alibaba.nacos.NacosDiscoveryClientAutoConfiguration\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 1e030e6e\n- Author: flystar32 (flystar32@163.com)\n- Date: 2018-09-17 17:41:55\n- Message: add nacos-config starter and nacos-discovery starter\n- Changes:\n```diff\n@@ -0,0 +1,6 @@\n+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\\\n+  org.springframework.cloud.alibaba.nacos.NacosDiscoveryAutoConfiguration,\\\n+  org.springframework.cloud.alibaba.nacos.ribbon.RibbonNacosAutoConfiguration,\\\n+  org.springframework.cloud.alibaba.nacos.endpoint.NacosDiscoveryEndpointAutoConfiguration\n+org.springframework.cloud.client.discovery.EnableDiscoveryClient=\\\n+org.springframework.cloud.alibaba.nacos.NacosDiscoveryClientAutoConfiguration...\n```",
+      "metadata": {
+        "language": "text",
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/main/resources/META-INF/spring.factories",
+        "strategy": "enhanced",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "commit_count": 1
+      },
+      "similarity_score": 0.7905296087265015
+    },
+    {
+      "content": "import static org.assertj.core.api.Assertions.assertThat;\n\n/**\n * @author xiaojing\n */\npublic class NacosRibbonClientConfigurationTests {\n\n\tprivate ConfigurableApplicationContext context;\n\n\t@Before\n\tpublic void setUp() throws Exception {\n\t\tthis.context = new SpringApplicationBuilder(NacosRibbonTestConfiguration.class,\n\t\t\t\tNacosDiscoveryAutoConfiguration.class,\n\t\t\t\tNacosRibbonClientConfiguration.class, RibbonNacosAutoConfiguration.class)\n\t\t\t\t\t\t.web(false).run(\"--server.port=18080\",\n\t\t\t\t\t\t\t\t\"--spring.cloud.nacos.discovery.server-addr=127.0.0.1:8080\",\n\t\t\t\t\t\t\t\t\"--spring.cloud.nacos.discovery.port=18080\",\n\t\t\t\t\t\t\t\t\"--spring.cloud.nacos.discovery.service=myapp\");\n\t}\n\n\t@Test\n\tpublic void testProperties() {\n\n\t\tNacosServerList serverList = context.getBean(NacosServerList.class);\n\t\tassertThat(serverList.getServiceId()).isEqualTo(\"myapp\");\n\t}\n\n\t@Configuration\n\t@AutoConfigureBefore(value = { NacosDiscoveryAutoConfiguration.class })\n\tstatic class NacosRibbonTestConfiguration {\n\n\t\t@Bean\n\t\t@ConditionalOnMissingBean\n\t\tAutoServiceRegistrationProperties autoServiceRegistrationProperties() {\n\t\t\treturn new AutoServiceRegistrationProperties();\n\t\t}\n\n\t\t@Bean\n\t\tIClientConfig iClientConfig() {\n\t\t\tDefaultClientConfigImpl config = new DefaultClientConfigImpl();\n\t\t\tconfig.setClientName(\"myapp\");\n\t\t\treturn config;\n\t\t}\n\n\t\t@Bean\n\t\t@LoadBalanced\n\t\tRestTemplate restTemplate() {\n\t\t\treturn new RestTemplate();\n\t\t}\n\n\t\t@Bean\n\t\tInetUtils inetUtils() {\n\t\t\treturn new InetUtils(new InetUtilsProperties());\n\t\t}\n\n\t}\n\n}\n```\n\n## Git Commit History",
+      "metadata": {
+        "commit_count": 1,
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/test/java/org/springframework/cloud/alibaba/nacos/ribbon/NacosRibbonClientConfigurationTests.java",
+        "total_chunks": 3,
+        "language": "java",
+        "strategy": "enhanced",
+        "chunk_index": 1
+      },
+      "similarity_score": 0.799180269241333
+    },
+    {
+      "content": "## Git Commit History\n\n### Commit 1\n- ID: 1e030e6e\n- Author: flystar32 (flystar32@163.com)\n- Date: 2018-09-17 17:41:55\n- Message: add nacos-config starter and nacos-discovery starter\n- Changes:\n```diff\n@@ -0,0 +1,45 @@\n+package org.springframework.cloud.alibaba.cloud.examples;\n+\n+import org.springframework.beans.factory.annotation.Autowired;\n+import org.springframework.cloud.alibaba.cloud.examples.ConsumerApplication.EchoService;\n+import org.springframework.cloud.client.discovery.DiscoveryClient;\n+import org.springframework.web.bind.annotation.PathVariable;\n+import org.springframework.web.bind.annotation.RequestMapping;\n+import org.springframework.web.bind.annotation.RequestMethod;\n+import org...\n```",
+      "metadata": {
+        "chunk_index": 1,
+        "commit_count": 1,
+        "language": "java",
+        "total_chunks": 2,
+        "file_path": "spring-cloud-alibaba-examples/nacos-example/nacos-discovery-example/nacos-discovery-consumer-example/src/main/java/org/springframework/cloud/alibaba/cloud/examples/TestController.java",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.7994421720504761
+    },
+    {
+      "content": "## Git Commit History\n\n### Commit 1\n- ID: 1e030e6e\n- Author: flystar32 (flystar32@163.com)\n- Date: 2018-09-17 17:41:55\n- Message: add nacos-config starter and nacos-discovery starter\n- Changes:\n```diff\n@@ -0,0 +1,41 @@\n+package org.springframework.cloud.alibaba.cloud.examples;\n+\n+import org.springframework.boot.SpringApplication;\n+import org.springframework.boot.autoconfigure.SpringBootApplication;\n+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;\n+import org.springframework.cloud.client.loadbalancer.LoadBalanced;\n+import org.springframework.cloud.netflix.feign.EnableFeignClients;\n+import org.springframework.cloud.netflix.feign.FeignClient;\n+import org.springframework.c...\n```",
+      "metadata": {
+        "chunk_index": 1,
+        "commit_count": 1,
+        "language": "java",
+        "file_path": "spring-cloud-alibaba-examples/nacos-example/nacos-discovery-example/nacos-discovery-consumer-example/src/main/java/org/springframework/cloud/alibaba/cloud/examples/ConsumerApplication.java",
+        "strategy": "enhanced",
+        "total_chunks": 2
+      },
+      "similarity_score": 0.8145559430122375
+    },
+    {
+      "content": "**Prerequisite:**\n\nAdd dependency spring-boot-starter-actuator to your pom.xml file, and configure your endpoint security strategy.\n\nSpring Boot 1.x: Add configuration management.security.enabled=false\nSpring Boot 2.x: Add configuration management.endpoints.web.exposure.include=*\nTo view the endpoint information, visit the following URLS:\n\nSpring Boot1.x: Nacos Discovery  Endpoint URL is http://127.0.0.1:18083/nacos_discovery.\nSpring Boot2.x: Nacos Discovery  Endpoint URL is http://127.0.0.1:18083/actuator/nacos-discovery.\n\n![actuator](https://cdn.nlark.com/lark/0/2018/png/54319/1536986319285-d542dc5f-5dff-462a-9f52-7254776bcd99.png)\n\nAs shown in the figure above, NacosDiscoveryProperties is the configuration of Nacos Discovery itself, and also includes the contents registered by the application, subscribe is the service information that the application has subscribed to.\n\n    \t\n## More",
+      "metadata": {
+        "total_chunks": 9,
+        "strategy": "enhanced",
+        "language": "markdown",
+        "chunk_index": 5,
+        "commit_count": 4,
+        "file_path": "spring-cloud-alibaba-examples/nacos-example/nacos-discovery-example/readme.md"
+      },
+      "similarity_score": 0.8192382454872131
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-examples/nacos-example/nacos-discovery-example/nacos-discovery-consumer-example/src/main/java/org/springframework/cloud/alibaba/cloud/examples/ConsumerApplication.java (java)\n\n## Code Content:\n```java\npackage org.springframework.cloud.alibaba.cloud.examples;\n\nimport org.springframework.boot.SpringApplication;\nimport org.springframework.boot.autoconfigure.SpringBootApplication;\nimport org.springframework.cloud.client.discovery.EnableDiscoveryClient;\nimport org.springframework.cloud.client.loadbalancer.LoadBalanced;\nimport org.springframework.cloud.netflix.feign.EnableFeignClients;\nimport org.springframework.cloud.netflix.feign.FeignClient;\nimport org.springframework.context.annotation.Bean;\nimport org.springframework.web.bind.annotation.PathVariable;\nimport org.springframework.web.bind.annotation.RequestMapping;\nimport org.springframework.web.bind.annotation.RequestMethod;\nimport org.springframework.web.client.RestTemplate;\n\n/**\n * @author xiaojing\n */\n@SpringBootApplication\n@EnableDiscoveryClient\n@EnableFeignClients\npublic class ConsumerApplication {\n\n    @LoadBalanced\n    @Bean\n    public RestTemplate restTemplate() {\n        return new RestTemplate();\n    }\n\n\n\n\n    public static void main(String[] args) {\n        SpringApplication.run(ConsumerApplication.class, args);\n    }\n\n    @FeignClient(name = \"service-provider\")\n    public interface EchoService {\n        @RequestMapping(value = \"/echo/{str}\", method = RequestMethod.GET)\n        String echo(@PathVariable(\"str\") String str);\n    }\n}\n```\n\n## Git Commit History",
+      "metadata": {
+        "language": "java",
+        "total_chunks": 2,
+        "file_path": "spring-cloud-alibaba-examples/nacos-example/nacos-discovery-example/nacos-discovery-consumer-example/src/main/java/org/springframework/cloud/alibaba/cloud/examples/ConsumerApplication.java",
+        "commit_count": 1,
+        "chunk_index": 0,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.8269701600074768
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-examples/nacos-example/nacos-config-example/src/main/java/org/springframework/cloud/alibaba/cloud/examples/Application.java (java)\n\n## Code Content:\n```java\npackage org.springframework.cloud.alibaba.cloud.examples;\n\nimport org.springframework.beans.factory.annotation.Value;\nimport org.springframework.boot.ApplicationArguments;\nimport org.springframework.boot.ApplicationRunner;\nimport org.springframework.boot.SpringApplication;\nimport org.springframework.boot.autoconfigure.SpringBootApplication;\nimport org.springframework.cloud.context.config.annotation.RefreshScope;\nimport org.springframework.stereotype.Component;\nimport org.springframework.web.bind.annotation.RequestMapping;\nimport org.springframework.web.bind.annotation.RestController;\n\n/**\n * @author xiaojing\n */\n@SpringBootApplication\npublic class Application {\n\n    public static void main(String[] args) {\n        SpringApplication.run(Application.class, args);\n    }\n}\n\n@Component\nclass SampleRunner implements ApplicationRunner {\n\n    @Value(\"${user.name}\")\n    String userName;\n\n    @Value(\"${user.age}\")\n    int userAge;\n\n    @Override\n    public void run(ApplicationArguments args) throws Exception {\n        System.out.println(userName);\n        System.out.println(userAge);\n    }\n}\n\n@RestController\n@RefreshScope\nclass SampleController {\n\n    @Value(\"${user.name}\")\n    String userName;\n\n    @Value(\"${user.age}\")\n    int age;\n\n    @RequestMapping(\"/user\")\n    public String simple() {\n        return \"Hello Nacos Config!\" + \"Hello \" + userName + \" \" + age + \"!\";\n    }\n}\n```\n\n## Git Commit History",
+      "metadata": {
+        "language": "java",
+        "chunk_index": 0,
+        "commit_count": 1,
+        "strategy": "enhanced",
+        "file_path": "spring-cloud-alibaba-examples/nacos-example/nacos-config-example/src/main/java/org/springframework/cloud/alibaba/cloud/examples/Application.java",
+        "total_chunks": 2
+      },
+      "similarity_score": 0.833440899848938
+    },
+    {
+      "content": "import static org.assertj.core.api.Assertions.assertThat;\n\n/**\n * @author xiaojing\n */\npublic class NacosConfigAutoConfigurationTests {\n\n    private ConfigurableApplicationContext context;\n\n    @Before\n    public void setUp() throws Exception {\n        this.context = new SpringApplicationBuilder(\n            NacosConfigBootstrapConfiguration.class,\n            NacosConfigAutoConfiguration.class,\n            TestConfiguration.class)\n            .web(false).run(\n            \"--spring.cloud.config.enabled=true\",\n            \"--spring.cloud.nacos.config.server-addr=127.0.0.1:8080\",\n            \"--spring.cloud.nacos.config.prefix=myapp\");\n    }\n\n    @After\n    public void tearDown() throws Exception {\n        if (this.context != null) {\n            this.context.close();\n        }\n    }\n\n    @Test\n    public void testNacosConfigProperties() {\n\n        NacosPropertySourceLocator nacosPropertySourceLocator = this.context.getBean(NacosPropertySourceLocator.class);\n        Environment environment = this.context.getEnvironment();\n        try{\n            nacosPropertySourceLocator.locate(environment);\n        }catch (Exception e){\n\n        }\n\n        NacosConfigProperties nacosConfigProperties = this.context.getBean(NacosConfigProperties.class);\n        assertThat(nacosConfigProperties.getFileExtension()).isEqualTo(\"properties\");\n        assertThat(nacosConfigProperties.getPrefix()).isEqualTo(\"myapp\");\n\n    }\n\n\n    @Test\n    public void testNacosRefreshProperties() {\n\n        NacosRefreshProperties nacosRefreshProperties = this.context.getBean(NacosRefreshProperties.class);\n        assertThat(nacosRefreshProperties.isEnabled()).isEqualTo(true);\n\n    }\n\n    @Configuration\n    @AutoConfigureBefore(NacosConfigAutoConfiguration.class)\n    static class TestConfiguration{\n\n\n        @Autowired\n        ConfigurableApplicationContext context;\n\n        @Bean\n        ContextRefresher contextRefresher(){\n            return new ContextRefresher(context, new RefreshScope());\n        }",
+      "metadata": {
+        "language": "java",
+        "file_path": "spring-cloud-alibaba-nacos-config/src/test/java/org/springframework/cloud/alibaba/nacos/NacosConfigAutoConfigurationTests.java",
+        "total_chunks": 3,
+        "chunk_index": 1,
+        "commit_count": 2,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.8465467691421509
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-examples/nacos-example/nacos-discovery-example/nacos-discovery-consumer-example/src/main/java/org/springframework/cloud/alibaba/cloud/examples/TestController.java (java)\n\n## Code Content:\n```java\npackage org.springframework.cloud.alibaba.cloud.examples;\n\nimport org.springframework.beans.factory.annotation.Autowired;\nimport org.springframework.cloud.alibaba.cloud.examples.ConsumerApplication.EchoService;\nimport org.springframework.cloud.client.discovery.DiscoveryClient;\nimport org.springframework.web.bind.annotation.PathVariable;\nimport org.springframework.web.bind.annotation.RequestMapping;\nimport org.springframework.web.bind.annotation.RequestMethod;\nimport org.springframework.web.bind.annotation.RestController;\nimport org.springframework.web.client.RestTemplate;\n\n/**\n * @author xiaojing\n */\n@RestController\npublic class TestController {\n\n    @Autowired\n    private RestTemplate restTemplate;\n    @Autowired\n    private EchoService echoService;\n\n\n    @Autowired\n    private DiscoveryClient discoveryClient;\n\n    @RequestMapping(value = \"/echo-rest/{str}\", method = RequestMethod.GET)\n    public String rest(@PathVariable String str) {\n        return restTemplate.getForObject(\"http://service-provider/echo/\" + str, String.class);\n    }\n    @RequestMapping(value = \"/echo-feign/{str}\", method = RequestMethod.GET)\n    public String feign(@PathVariable String str) {\n        return echoService.echo(str);\n    }\n\n\n    @RequestMapping(value=\"/services/{service}\",method = RequestMethod.GET)\n    public Object client(@PathVariable String service){\n        return discoveryClient.getInstances(service);\n    }\n    @RequestMapping(value=\"/services\",method = RequestMethod.GET)\n    public Object services(){\n        return discoveryClient.getServices();\n    }\n}\n```\n\n## Git Commit History",
+      "metadata": {
+        "file_path": "spring-cloud-alibaba-examples/nacos-example/nacos-discovery-example/nacos-discovery-consumer-example/src/main/java/org/springframework/cloud/alibaba/cloud/examples/TestController.java",
+        "commit_count": 1,
+        "total_chunks": 2,
+        "chunk_index": 0,
+        "language": "java",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.850922167301178
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/ConditionalOnNacosDiscoveryEnabled.java (java)\n\n## Code Content:\n```java\n/*\n * Copyright (C) 2018 the original author or authors.\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obtain a copy of the License at\n *\n *      http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\n\npackage org.springframework.cloud.alibaba.nacos;\n\nimport org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;\n\nimport java.lang.annotation.ElementType;\nimport java.lang.annotation.Retention;\nimport java.lang.annotation.RetentionPolicy;\nimport java.lang.annotation.Target;\n\n@Retention(RetentionPolicy.RUNTIME)\n@Target({ ElementType.TYPE, ElementType.METHOD })\n@ConditionalOnProperty(value = \"spring.cloud.nacos.discovery.enabled\", matchIfMissing = true)\npublic @interface ConditionalOnNacosDiscoveryEnabled {\n\n}\n```\n\n## Git Commit History",
+      "metadata": {
+        "language": "java",
+        "commit_count": 1,
+        "chunk_index": 0,
+        "total_chunks": 2,
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/ConditionalOnNacosDiscoveryEnabled.java",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.8544145822525024
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/NacosDiscoveryAutoConfiguration.java (java)\n\n## Code Content:\n```java\n/*\n * Copyright (C) 2018 the original author or authors.\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obtain a copy of the License at\n *\n *      http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\n\npackage org.springframework.cloud.alibaba.nacos;\n\nimport org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;\nimport org.springframework.boot.autoconfigure.AutoConfigureBefore;\nimport org.springframework.boot.autoconfigure.condition.ConditionalOnBean;\nimport org.springframework.boot.autoconfigure.condition.ConditionalOnClass;\nimport org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;\nimport org.springframework.boot.context.properties.EnableConfigurationProperties;\nimport org.springframework.cloud.alibaba.nacos.registry.NacosAutoServiceRegistration;\nimport org.springframework.cloud.alibaba.nacos.registry.NacosRegistration;\nimport org.springframework.cloud.alibaba.nacos.registry.NacosServiceRegistry;\nimport org.springframework.cloud.client.serviceregistry.AutoServiceRegistrationAutoConfiguration;\nimport org.springframework.cloud.client.serviceregistry.AutoServiceRegistrationProperties;\nimport org.springframework.context.annotation.Bean;\nimport org.springframework.context.annotation.Configuration;\n\n/**\n * @author xiaojing\n */",
+      "metadata": {
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/NacosDiscoveryAutoConfiguration.java",
+        "language": "java",
+        "total_chunks": 3,
+        "commit_count": 2,
+        "strategy": "enhanced",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.8676682710647583
+    },
+    {
+      "content": "}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 879e6893\n- Author: flystar32 (flystar32@163.com)\n- Date: 2018-09-18 14:58:50\n- Message: update NacosAutoServiceRegistration, update pom.xml, and format code\n- Changes:\n```diff\n@@ -16,7 +16,6 @@\n \n package org.springframework.cloud.alibaba.nacos;\n \n-import com.fasterxml.jackson.annotation.JsonIgnore;\n import org.springframework.beans.factory.annotation.Autowired;\n import org.springframework.beans.factory.annotation.Value;\n import org.springframework.boot.context.properties.ConfigurationProperties;\n@@ -49,7 +48,8 @@ public class NacosDiscoveryProperties {\n \tprivate String serverAddr;\n \n \t/**\n-\t * the domain name of a service, through which the server address can be dyna...\n```\n\n### Commit 2\n- ID: 1e030e6e\n- Author: flystar32 (flystar32@163.com)\n- Date: 2018-09-17 17:41:55\n- Message: add nacos-config starter and nacos-discovery starter\n- Changes:\n```diff\n@@ -0,0 +1,343 @@\n+/*\n+ * Copyright (C) 2018 the original author or authors.\n+ *\n+ * Licensed under the Apache License, Version 2.0 (the \"License\");\n+ * you may not use this file except in compliance with the License.\n+ * You may obtain a copy of the License at\n+ *\n+ *      http://www.apache.org/licenses/LICENSE-2.0\n+ *\n+ * Unless required by applicable law or agreed to in writing, software\n+ * distributed under the License is distributed on an \"AS IS\" BASIS,\n+ * WITHOUT WARRANTIES OR CONDITIONS...\n```",
+      "metadata": {
+        "chunk_index": 5,
+        "total_chunks": 6,
+        "commit_count": 2,
+        "strategy": "enhanced",
+        "language": "java",
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/NacosDiscoveryProperties.java"
+      },
+      "similarity_score": 0.8683746457099915
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-config/src/main/resources/META-INF/spring.factories (text)\n\n## Code Content:\n```text\norg.springframework.cloud.bootstrap.BootstrapConfiguration=\\\norg.springframework.cloud.alibaba.nacos.NacosConfigBootstrapConfiguration\norg.springframework.boot.autoconfigure.EnableAutoConfiguration=\\\norg.springframework.cloud.alibaba.nacos.NacosConfigAutoConfiguration,\\\norg.springframework.cloud.alibaba.nacos.endpoint.NacosConfigEndpointAutoConfiguration\norg.springframework.boot.diagnostics.FailureAnalyzer=\\\norg.springframework.cloud.alibaba.nacos.diagnostics.analyzer.NacosConnectionFailureAnalyzer\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 16d2c1b9\n- Author: flystar32 (flystar32@163.com)\n- Date: 2018-09-20 11:32:30\n- Message: update nacos version to 0.2.1-RC and format code\n- Changes:\n```diff\n@@ -4,4 +4,4 @@ org.springframework.boot.autoconfigure.EnableAutoConfiguration=\\\n org.springframework.cloud.alibaba.nacos.NacosConfigAutoConfiguration,\\\n org.springframework.cloud.alibaba.nacos.endpoint.NacosConfigEndpointAutoConfiguration\n org.springframework.boot.diagnostics.FailureAnalyzer=\\\n-org.springframework.cloud.alibaba.nacos..analyzer.NacosConnectionFailureAnalyzerdiagnostics\n\\ No newline at end of file\n+org.springframework.cloud.alibaba.nacos.diagnostics.analyzer.NacosConnectionFailur...\n```",
+      "metadata": {
+        "file_path": "spring-cloud-alibaba-nacos-config/src/main/resources/META-INF/spring.factories",
+        "chunk_index": 0,
+        "strategy": "enhanced",
+        "total_chunks": 2,
+        "commit_count": 2,
+        "language": "text"
+      },
+      "similarity_score": 0.8692718148231506
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/NacosDiscoveryClientAutoConfiguration.java (java)\n\n## Code Content:\n```java\n/*\n * Copyright (C) 2018 the original author or authors.\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obtain a copy of the License at\n *\n *      http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\n\npackage org.springframework.cloud.alibaba.nacos;\n\nimport org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;\nimport org.springframework.boot.context.properties.EnableConfigurationProperties;\nimport org.springframework.cloud.client.discovery.DiscoveryClient;\nimport org.springframework.context.annotation.Bean;\nimport org.springframework.context.annotation.Configuration;\n\n/**\n * @author xiaojing\n */\n@Configuration\n@ConditionalOnMissingBean(DiscoveryClient.class)\n@ConditionalOnNacosDiscoveryEnabled\n@EnableConfigurationProperties\npublic class NacosDiscoveryClientAutoConfiguration {\n\n\t@Bean\n\tpublic DiscoveryClient nacosDiscoveryClient() {\n\t\treturn new NacosDiscoveryClient();\n\t}\n\n}\n```\n\n## Git Commit History",
+      "metadata": {
+        "commit_count": 1,
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/NacosDiscoveryClientAutoConfiguration.java",
+        "total_chunks": 2,
+        "chunk_index": 0,
+        "language": "java",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.8696844577789307
+    },
+    {
+      "content": "## Git Commit History\n\n### Commit 1\n- ID: 879e6893\n- Author: flystar32 (flystar32@163.com)\n- Date: 2018-09-18 14:58:50\n- Message: update NacosAutoServiceRegistration, update pom.xml, and format code\n- Changes:\n```diff\n@@ -63,8 +63,10 @@ public class NacosDiscoveryAutoConfiguration {\n \t@Bean\n \t@ConditionalOnBean(AutoServiceRegistrationProperties.class)\n \tpublic NacosAutoServiceRegistration nacosAutoServiceRegistration(\n-\t\t\tNacosServiceRegistry registry, AutoServiceRegistrationProperties properties,\n+\t\t\tNacosServiceRegistry registry,\n+\t\t\tAutoServiceRegistrationProperties autoServiceRegistrationProperties,\n \t\t\tNacosRegistration registration) {\n-\t\treturn new NacosAutoServiceRegistration(registry, properties, regi...\n```\n\n### Commit 2\n- ID: 1e030e6e\n- Author: flystar32 (flystar32@163.com)\n- Date: 2018-09-17 17:41:55\n- Message: add nacos-config starter and nacos-discovery starter\n- Changes:\n```diff\n@@ -0,0 +1,70 @@\n+/*\n+ * Copyright (C) 2018 the original author or authors.\n+ *\n+ * Licensed under the Apache License, Version 2.0 (the \"License\");\n+ * you may not use this file except in compliance with the License.\n+ * You may obtain a copy of the License at\n+ *\n+ *      http://www.apache.org/licenses/LICENSE-2.0\n+ *\n+ * Unless required by applicable law or agreed to in writing, software\n+ * distributed under the License is distributed on an \"AS IS\" BASIS,\n+ * WITHOUT WARRANTIES OR CONDITIONS ...\n```",
+      "metadata": {
+        "strategy": "enhanced",
+        "chunk_index": 2,
+        "commit_count": 2,
+        "language": "java",
+        "total_chunks": 3,
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/NacosDiscoveryAutoConfiguration.java"
+      },
+      "similarity_score": 0.8718134164810181
+    }
+  ],
+  "compressed": [
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/NacosDiscoveryClientAutoConfiguration.java (java)\n\n## Key Code Elements:\nimport org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;\nimport org.springframework.boot.context.properties.EnableConfigurationProperties;\nimport org.springframework.cloud.client.discovery.DiscoveryClient;\nimport org.springframework.context.annotation.Bean;\nimport org.springframework.context.annotation.Configuration;\n@Configuration\n@ConditionalOnMissingBean(DiscoveryClient.class)\n@ConditionalOnNacosDiscoveryEnabled\n@EnableConfigurationProperties\n\t@Bean\n\n## Recent Changes:\n- 1e030e6e by flystar32 (flystar32@163.com): add nacos-config starter and nacos-discovery starter...",
+      "metadata": {
+        "language": "java",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/NacosDiscoveryClientAutoConfiguration.java",
+        "commit_count": 1
+      },
+      "similarity_score": 0.5266228318214417
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/endpoint/NacosDiscoveryEndpointAutoConfiguration.java (java)\n\n## Key Code Elements:\nimport org.springframework.boot.autoconfigure.condition.ConditionalOnClass;\nimport org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;\nimport org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;\nimport org.springframework.context.annotation.Bean;\nimport org.springframework.context.annotation.Configuration;\n@Configuration\n@ConditionalOnProperty(value = \"spring.cloud.service-registry.auto-registration.enabled\", matchIfMissing = true)\n@ConditionalOnClass(name = \"org.springframework.boot.actuate.endpoint.AbstractEndpoint\")\n\t@Bean\n\t@ConditionalOnMissingBean\n\n## Recent Changes:\n- 879e6893 by flystar32 (flystar32@163.com): update NacosAutoServiceRegistration, update pom.xml, and format code...\n- 1e030e6e by flystar32 (flystar32@163.com): add nacos-config starter and nacos-discovery starter...",
+      "metadata": {
+        "language": "java",
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/endpoint/NacosDiscoveryEndpointAutoConfiguration.java",
+        "chunk_index": 0,
+        "commit_count": 2
+      },
+      "similarity_score": 0.5758495926856995
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/registry/NacosAutoServiceRegistration.java (java)\n\n## Key Code Elements:\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.springframework.beans.factory.annotation.Autowired;\nimport org.springframework.cloud.client.serviceregistry.AbstractAutoServiceRegistration;\nimport org.springframework.cloud.client.serviceregistry.AutoServiceRegistrationProperties;\nimport org.springframework.cloud.client.serviceregistry.ServiceRegistry;\nimport org.springframework.util.Assert;\nimport org.springframework.util.StringUtils;\n\t@Autowired\n\t@Deprecated\n\t@Override\n\t@Override\n\t@Override\n\t@Override\n\t@Override\n\n## Recent Changes:\n- 879e6893 by flystar32 (flystar32@163.com): update NacosAutoServiceRegistration, update pom.xml, and format code...\n- 1e030e6e by flystar32 (flystar32@163.com): add nacos-config starter and nacos-discovery starter...",
+      "metadata": {
+        "language": "java",
+        "chunk_index": 0,
+        "commit_count": 2,
+        "strategy": "compressed",
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/registry/NacosAutoServiceRegistration.java",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.6380347013473511
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/registry/NacosRegistration.java (java)\n\n## Key Code Elements:\nimport org.springframework.cloud.alibaba.nacos.NacosDiscoveryProperties;\nimport org.springframework.beans.factory.annotation.Autowired;\nimport org.springframework.cloud.client.DefaultServiceInstance;\nimport org.springframework.cloud.client.ServiceInstance;\nimport org.springframework.cloud.client.discovery.ManagementServerPortUtils;\nimport org.springframework.cloud.client.serviceregistry.Registration;\nimport org.springframework.context.ApplicationContext;\nimport org.springframework.core.env.Environment;\nimport org.springframework.util.StringUtils;\nimport java.net.URI;\nimport java.util.Map;\nimport java.util.Properties;\nimport javax.annotation.PostConstruct;\nimport com.alibaba.nacos.api.NacosFactory;\nimport com.alibaba.nacos.api.naming.NamingService;\n\n## Recent Changes:\n- 74490738 by 亦盏 (yizhan.xj@alibaba-inc.com): add management info to registry metadata...\n- 879e6893 by flystar32 (flystar32@163.com): update NacosAutoServiceRegistration, update pom.xml, and format code...\n- 1e030e6e by flystar32 (flystar32@163.com): add nacos-config starter and nacos-discovery starter...",
+      "metadata": {
+        "strategy": "compressed",
+        "language": "java",
+        "total_chunks": 1,
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/registry/NacosRegistration.java",
+        "commit_count": 3,
+        "chunk_index": 0
+      },
+      "similarity_score": 0.6390484571456909
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/ConditionalOnNacosDiscoveryEnabled.java (java)\n\n## Key Code Elements:\nimport org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;\nimport java.lang.annotation.ElementType;\nimport java.lang.annotation.Retention;\nimport java.lang.annotation.RetentionPolicy;\nimport java.lang.annotation.Target;\n@Retention(RetentionPolicy.RUNTIME)\n@Target({ ElementType.TYPE, ElementType.METHOD })\n@ConditionalOnProperty(value = \"spring.cloud.nacos.discovery.enabled\", matchIfMissing = true)\n\n## Recent Changes:\n- 1e030e6e by flystar32 (flystar32@163.com): add nacos-config starter and nacos-discovery starter...",
+      "metadata": {
+        "total_chunks": 1,
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/ConditionalOnNacosDiscoveryEnabled.java",
+        "language": "java",
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "commit_count": 1
+      },
+      "similarity_score": 0.6479085087776184
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/NacosDiscoveryAutoConfiguration.java (java)\n\n## Key Code Elements:\nimport org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;\nimport org.springframework.boot.autoconfigure.AutoConfigureBefore;\nimport org.springframework.boot.autoconfigure.condition.ConditionalOnBean;\nimport org.springframework.boot.autoconfigure.condition.ConditionalOnClass;\nimport org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;\nimport org.springframework.boot.context.properties.EnableConfigurationProperties;\nimport org.springframework.cloud.alibaba.nacos.registry.NacosAutoServiceRegistration;\nimport org.springframework.cloud.alibaba.nacos.registry.NacosRegistration;\nimport org.springframework.cloud.alibaba.nacos.registry.NacosServiceRegistry;\nimport org.springframework.cloud.client.serviceregistry.AutoServiceRegistrationAutoConfiguration;\nimport org.springframework.cloud.client.serviceregistry.AutoServiceRegistrationProperties;\nimport org.springframework.context.annotation.Bean;\nimport org.springframework.context.annotation.Configuration;\n@Configuration\n@EnableConfigurationProperties\n\n## Recent Changes:\n- 879e6893 by flystar32 (flystar32@163.com): update NacosAutoServiceRegistration, update pom.xml, and format code...\n- 1e030e6e by flystar32 (flystar32@163.com): add nacos-config starter and nacos-discovery starter...",
+      "metadata": {
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/NacosDiscoveryAutoConfiguration.java",
+        "chunk_index": 0,
+        "language": "java",
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "commit_count": 2
+      },
+      "similarity_score": 0.6520664691925049
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-discovery/src/test/java/org/springframework/cloud/alibaba/nacos/NacosDiscoveryAutoConfigurationTests.java (java)\n\n## Key Code Elements:\nimport org.junit.Before;\nimport org.junit.Test;\nimport org.springframework.boot.autoconfigure.AutoConfigureBefore;\nimport org.springframework.boot.autoconfigure.EnableAutoConfiguration;\nimport org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;\nimport org.springframework.boot.builder.SpringApplicationBuilder;\nimport org.springframework.cloud.alibaba.nacos.registry.NacosRegistration;\nimport org.springframework.cloud.client.serviceregistry.AutoServiceRegistrationProperties;\nimport org.springframework.cloud.commons.util.InetUtils;\nimport org.springframework.cloud.commons.util.InetUtilsProperties;\nimport org.springframework.context.ConfigurableApplicationContext;\nimport org.springframework.context.annotation.Bean;\nimport org.springframework.context.annotation.Configuration;\nimport static org.assertj.core.api.Assertions.assertThat;\n\t@Before\n\n## Recent Changes:\n- 1e030e6e by flystar32 (flystar32@163.com): add nacos-config starter and nacos-discovery starter...",
+      "metadata": {
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/test/java/org/springframework/cloud/alibaba/nacos/NacosDiscoveryAutoConfigurationTests.java",
+        "total_chunks": 1,
+        "commit_count": 1,
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "language": "java"
+      },
+      "similarity_score": 0.6895617246627808
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-examples/nacos-example/nacos-discovery-example/nacos-discovery-provider-example/src/main/java/org/springframework/cloud/alibaba/cloud/examples/ProviderApplication.java (java)\n\n## Key Code Elements:\nimport org.springframework.boot.SpringApplication;\nimport org.springframework.boot.autoconfigure.SpringBootApplication;\nimport org.springframework.cloud.client.discovery.EnableDiscoveryClient;\nimport org.springframework.web.bind.annotation.PathVariable;\nimport org.springframework.web.bind.annotation.RequestMapping;\nimport org.springframework.web.bind.annotation.RequestMethod;\nimport org.springframework.web.bind.annotation.RestController;\n@SpringBootApplication\n@EnableDiscoveryClient\n\t@RestController\n\tclass EchoController {\n\t\t@RequestMapping(value = \"/echo/{string}\", method = RequestMethod.GET)\n\n## Recent Changes:\n- 1e030e6e by flystar32 (flystar32@163.com): add nacos-config starter and nacos-discovery starter...",
+      "metadata": {
+        "language": "java",
+        "commit_count": 1,
+        "chunk_index": 0,
+        "file_path": "spring-cloud-alibaba-examples/nacos-example/nacos-discovery-example/nacos-discovery-provider-example/src/main/java/org/springframework/cloud/alibaba/cloud/examples/ProviderApplication.java",
+        "strategy": "compressed",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.7107897400856018
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-config/src/main/java/org/springframework/cloud/alibaba/nacos/NacosConfigBootstrapConfiguration.java (java)\n\n## Key Code Elements:\nimport org.springframework.cloud.alibaba.nacos.client.NacosPropertySourceLocator;\nimport org.springframework.context.annotation.Bean;\nimport org.springframework.context.annotation.Configuration;\n@Configuration\n\t@Bean\n\t@Bean\n\n## Recent Changes:\n- 1e030e6e by flystar32 (flystar32@163.com): add nacos-config starter and nacos-discovery starter...",
+      "metadata": {
+        "language": "java",
+        "strategy": "compressed",
+        "commit_count": 1,
+        "total_chunks": 1,
+        "file_path": "spring-cloud-alibaba-nacos-config/src/main/java/org/springframework/cloud/alibaba/nacos/NacosConfigBootstrapConfiguration.java",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.7215158939361572
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-config/src/main/java/org/springframework/cloud/alibaba/nacos/NacosPropertySourceRepository.java (java)\n\n## Key Code Elements:\nimport java.util.ArrayList;\nimport java.util.List;\nimport org.springframework.cloud.alibaba.nacos.client.NacosPropertySource;\nimport org.springframework.context.ApplicationContext;\nimport org.springframework.context.ConfigurableApplicationContext;\nimport org.springframework.core.env.CompositePropertySource;\nimport org.springframework.core.env.PropertySource;\n\n## Recent Changes:\n- 1e030e6e by flystar32 (flystar32@163.com): add nacos-config starter and nacos-discovery starter...",
+      "metadata": {
+        "commit_count": 1,
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "file_path": "spring-cloud-alibaba-nacos-config/src/main/java/org/springframework/cloud/alibaba/nacos/NacosPropertySourceRepository.java",
+        "language": "java"
+      },
+      "similarity_score": 0.7240256071090698
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-config/src/main/java/org/springframework/cloud/alibaba/nacos/endpoint/NacosConfigEndpointAutoConfiguration.java (java)\n\n## Key Code Elements:\nimport com.alibaba.nacos.api.config.ConfigService;\nimport org.springframework.beans.factory.annotation.Autowired;\nimport org.springframework.boot.autoconfigure.condition.ConditionalOnBean;\nimport org.springframework.boot.autoconfigure.condition.ConditionalOnClass;\nimport org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;\nimport org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;\nimport org.springframework.cloud.alibaba.nacos.NacosConfigProperties;\nimport org.springframework.cloud.alibaba.nacos.NacosPropertySourceRepository;\nimport org.springframework.cloud.alibaba.nacos.refresh.NacosRefreshHistory;\nimport org.springframework.context.annotation.Bean;\n@ConditionalOnWebApplication\n@ConditionalOnClass(name = \"org.springframework.boot.actuate.endpoint.AbstractEndpoint\")\n\t@Autowired\n\t@Autowired\n\t@Autowired\n\n## Recent Changes:\n- 1e030e6e by flystar32 (flystar32@163.com): add nacos-config starter and nacos-discovery starter...",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "spring-cloud-alibaba-nacos-config/src/main/java/org/springframework/cloud/alibaba/nacos/endpoint/NacosConfigEndpointAutoConfiguration.java",
+        "total_chunks": 1,
+        "commit_count": 1,
+        "strategy": "compressed",
+        "language": "java"
+      },
+      "similarity_score": 0.7259576916694641
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/registry/NacosServiceRegistry.java (java)\n\n## Key Code Elements:\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.springframework.cloud.client.serviceregistry.ServiceRegistry;\nimport org.springframework.util.StringUtils;\nimport com.alibaba.nacos.api.naming.NamingService;\nimport com.alibaba.nacos.api.naming.pojo.Cluster;\nimport com.alibaba.nacos.api.naming.pojo.Instance;\n\t@Override\n\t@Override\n\t@Override\n\t@Override\n\t@Override\n\n## Recent Changes:\n- 09c8a700 by flystar32 (flystar32@163.com): registry meta data...\n- 1e030e6e by flystar32 (flystar32@163.com): add nacos-config starter and nacos-discovery starter...",
+      "metadata": {
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/registry/NacosServiceRegistry.java",
+        "total_chunks": 1,
+        "commit_count": 2,
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "language": "java"
+      },
+      "similarity_score": 0.7389852404594421
+    },
+    {
+      "content": "# File: spring-cloud-starter-alibaba/pom.xml (xml)\n\n## Recent Changes:\n- 5ab2faed by flystar32 (flystar32@163.com): update version to 0.1.0...\n- 2b953bae by flystar32 (flystar32@163.com): fix NacosDiscoveryClienet getInstance method, only healthy instancerename alibaba storage to aliclou...\n- 1e030e6e by flystar32 (flystar32@163.com): add nacos-config starter and nacos-discovery starter...",
+      "metadata": {
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "language": "xml",
+        "commit_count": 4,
+        "file_path": "spring-cloud-starter-alibaba/pom.xml",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.7424585819244385
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/NacosServiceInstance.java (java)\n\n## Key Code Elements:\nimport org.springframework.cloud.client.DefaultServiceInstance;\nimport org.springframework.cloud.client.ServiceInstance;\nimport java.net.URI;\nimport java.util.Map;\n\t@Override\n\t@Override\n\t@Override\n\t@Override\n\t@Override\n\t@Override\n\n## Recent Changes:\n- 1e030e6e by flystar32 (flystar32@163.com): add nacos-config starter and nacos-discovery starter...",
+      "metadata": {
+        "commit_count": 1,
+        "total_chunks": 1,
+        "language": "java",
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/NacosServiceInstance.java"
+      },
+      "similarity_score": 0.7497746348381042
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-config/src/main/java/org/springframework/cloud/alibaba/nacos/client/NacosPropertySource.java (java)\n\n## Key Code Elements:\nimport java.util.Date;\nimport java.util.Map;\nimport org.springframework.core.env.MapPropertySource;\n\n## Recent Changes:\n- 1e030e6e by flystar32 (flystar32@163.com): add nacos-config starter and nacos-discovery starter...",
+      "metadata": {
+        "commit_count": 1,
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "language": "java",
+        "file_path": "spring-cloud-alibaba-nacos-config/src/main/java/org/springframework/cloud/alibaba/nacos/client/NacosPropertySource.java",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.7620217204093933
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/endpoint/NacosDiscoveryEndpoint.java (java)\n\n## Key Code Elements:\nimport java.util.Collections;\nimport java.util.HashMap;\nimport java.util.List;\nimport java.util.Map;\nimport com.alibaba.nacos.api.naming.NamingService;\nimport com.alibaba.nacos.api.naming.pojo.ServiceInfo;\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.springframework.beans.factory.annotation.Autowired;\nimport org.springframework.boot.actuate.endpoint.AbstractEndpoint;\nimport org.springframework.cloud.alibaba.nacos.NacosDiscoveryProperties;\nimport org.springframework.cloud.alibaba.nacos.registry.NacosRegistration;\n\t@Autowired\n\t@Autowired\n\t@Override\n\n## Recent Changes:\n- 1e030e6e by flystar32 (flystar32@163.com): add nacos-config starter and nacos-discovery starter...",
+      "metadata": {
+        "strategy": "compressed",
+        "language": "java",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/endpoint/NacosDiscoveryEndpoint.java",
+        "commit_count": 1
+      },
+      "similarity_score": 0.7636361122131348
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/ribbon/ConditionalOnRibbonNacos.java (java)\n\n## Key Code Elements:\nimport org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;\nimport java.lang.annotation.ElementType;\nimport java.lang.annotation.Retention;\nimport java.lang.annotation.RetentionPolicy;\nimport java.lang.annotation.Target;\n@Retention(RetentionPolicy.RUNTIME)\n@Target({ ElementType.TYPE, ElementType.METHOD })\n@ConditionalOnProperty(value = \"ribbon.nacos.enabled\", matchIfMissing = true)\n\n## Recent Changes:\n- 1e030e6e by flystar32 (flystar32@163.com): add nacos-config starter and nacos-discovery starter...",
+      "metadata": {
+        "chunk_index": 0,
+        "commit_count": 1,
+        "language": "java",
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/ribbon/ConditionalOnRibbonNacos.java",
+        "strategy": "compressed",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.7766990065574646
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-config/src/main/java/org/springframework/cloud/alibaba/nacos/refresh/NacosRefreshProperties.java (java)\n\n## Key Code Elements:\nimport org.springframework.beans.factory.annotation.Value;\nimport org.springframework.stereotype.Component;\n@Component\n\t@Value(\"${spring.cloud.nacos.config.refresh.enabled:true}\")\n\n## Recent Changes:\n- 1e030e6e by flystar32 (flystar32@163.com): add nacos-config starter and nacos-discovery starter...",
+      "metadata": {
+        "commit_count": 1,
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "language": "java",
+        "file_path": "spring-cloud-alibaba-nacos-config/src/main/java/org/springframework/cloud/alibaba/nacos/refresh/NacosRefreshProperties.java",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.7802640199661255
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/NacosDiscoveryProperties.java (java)\n\n## Key Code Elements:\nimport org.springframework.beans.factory.annotation.Autowired;\nimport org.springframework.beans.factory.annotation.Value;\nimport org.springframework.boot.context.properties.ConfigurationProperties;\nimport org.springframework.cloud.commons.util.InetUtils;\nimport org.springframework.core.env.Environment;\nimport org.springframework.util.StringUtils;\nimport javax.annotation.PostConstruct;\nimport java.net.Inet4Address;\nimport java.net.InetAddress;\nimport java.net.NetworkInterface;\nimport java.net.SocketException;\nimport java.util.Enumeration;\nimport java.util.HashMap;\nimport java.util.Map;\nimport java.util.Objects;\n\n## Recent Changes:\n- 879e6893 by flystar32 (flystar32@163.com): update NacosAutoServiceRegistration, update pom.xml, and format code...\n- 1e030e6e by flystar32 (flystar32@163.com): add nacos-config starter and nacos-discovery starter...",
+      "metadata": {
+        "commit_count": 2,
+        "total_chunks": 1,
+        "language": "java",
+        "file_path": "spring-cloud-alibaba-nacos-discovery/src/main/java/org/springframework/cloud/alibaba/nacos/NacosDiscoveryProperties.java",
+        "chunk_index": 0,
+        "strategy": "compressed"
+      },
+      "similarity_score": 0.7933475375175476
+    },
+    {
+      "content": "# File: spring-cloud-alibaba-nacos-config/src/main/java/org/springframework/cloud/alibaba/nacos/NacosConfigAutoConfiguration.java (java)\n\n## Key Code Elements:\nimport com.alibaba.nacos.api.config.ConfigService;\nimport org.springframework.beans.BeansException;\nimport org.springframework.beans.factory.annotation.Autowired;\nimport org.springframework.cloud.alibaba.nacos.refresh.NacosContextRefresher;\nimport org.springframework.cloud.alibaba.nacos.refresh.NacosRefreshHistory;\nimport org.springframework.cloud.alibaba.nacos.refresh.NacosRefreshProperties;\nimport org.springframework.cloud.context.refresh.ContextRefresher;\nimport org.springframework.context.ApplicationContext;\nimport org.springframework.context.ApplicationContextAware;\nimport org.springframework.context.annotation.Bean;\nimport org.springframework.context.annotation.Configuration;\n@Configuration\n\t@Autowired\n\t@Autowired\n\t@Autowired\n\n## Recent Changes:\n- 1e030e6e by flystar32 (flystar32@163.com): add nacos-config starter and nacos-discovery starter...",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "commit_count": 1,
+        "language": "java",
+        "file_path": "spring-cloud-alibaba-nacos-config/src/main/java/org/springframework/cloud/alibaba/nacos/NacosConfigAutoConfiguration.java",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.7982878684997559
+    }
+  ]
+}

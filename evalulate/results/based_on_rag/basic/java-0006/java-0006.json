@@ -1,0 +1,7 @@
+{
+  "reason": "The issue is likely due to the texture coordinates being incorrectly set or the image being loaded with an incorrect orientation in the Particle Editor preview window. The image appears flipped upside down in the preview but correct when saved and loaded, indicating a rendering or texture coordinate issue during preview.",
+  "location": [
+    "extensions/gdx-tools/src/com/badlogic/gdx/tools/particle/ParticleEditor.java"
+  ],
+  "fix": "In the ParticleEditor class, ensure that the texture coordinates are correctly set when rendering the preview. Specifically, check the SpriteBatch draw calls or texture region setup to ensure the image is not being flipped. For example, when creating or rendering the texture region, ensure the 'flip' parameters are set correctly (typically false for both vertical and horizontal flips)."
+}

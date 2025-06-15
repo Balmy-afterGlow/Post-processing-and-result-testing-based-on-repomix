@@ -1,0 +1,708 @@
+{
+  "basic": [
+    {
+      "content": "# File: rich/_extension.py (python)\n\n## Code Content:\n```python\nfrom typing import Any\n\n\ndef load_ipython_extension(ip: Any) -> None:  # pragma: no cover\n    # prevent circular import\n    from rich.pretty import install\n    from rich.traceback import install as tr_install\n\n    install()\n    tr_install()\n```",
+      "metadata": {
+        "total_chunks": 1,
+        "file_path": "rich/_extension.py",
+        "strategy": "basic",
+        "language": "python",
+        "chunk_index": 0
+      },
+      "similarity_score": 0.7868831157684326
+    },
+    {
+      "content": "# File: tox.ini (text)\n\n## Code Content:\n```text\n[tox]\nminversion = 3.9.0\nenvlist =\n    lint\n    docs\n    py{36,37,38,39}\nisolated_build = True\n\n[testenv]\ndescription = Run unit-testing\ndeps =\n    poetry\n# do not put * in passenv as it may break builds due to reduced isolation\npassenv =\n    CI\n    GITHUB_*\n    HOME\n    PYTEST_*\n    SSH_AUTH_SOCK\n    TERM\nsetenv =\n    PYTHONDONTWRITEBYTECODE=1\n    PYTHONUNBUFFERED=1\ncommands =\n    poetry install\n    pytest --cov-report term-missing --cov=rich tests/ {posargs}\n\n[testenv:lint]\ndescription = Runs all linting tasks\ncommands =\n    black .\n    mypy -p rich --config-file= --ignore-missing-imports --no-implicit-optional --warn-unreachable\nskip_install = true\n\n[testenv:docs]\ndescription = Builds documentation\nchangedir = docs\ndeps =\n    -r docs/requirements.txt\ncommands =\n    sphinx-build -M html source build\n```",
+      "metadata": {
+        "strategy": "basic",
+        "chunk_index": 0,
+        "file_path": "tox.ini",
+        "language": "text",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.8730818033218384
+    },
+    {
+      "content": "# File: rich/__init__.py (python)\n\n## Code Content:\n```python\n\"\"\"Rich text and beautiful formatting in the terminal.\"\"\"\n\nimport os\nfrom typing import IO, TYPE_CHECKING, Any, Callable, Optional, Union\n\nfrom ._extension import load_ipython_extension  # noqa: F401\n\n__all__ = [\"get_console\", \"reconfigure\", \"print\", \"inspect\"]\n\nif TYPE_CHECKING:\n    from .console import Console\n\n# Global console used by alternative print\n_console: Optional[\"Console\"] = None\n\n_IMPORT_CWD = os.path.abspath(os.getcwd())\n\n\ndef get_console() -> \"Console\":\n    \"\"\"Get a global :class:`~rich.console.Console` instance. This function is used when Rich requires a Console,\n    and hasn't been explicitly given one.\n\n    Returns:\n        Console: A console instance.\n    \"\"\"\n    global _console\n    if _console is None:\n        from .console import Console\n\n        _console = Console()\n\n    return _console\n\n\ndef reconfigure(*args: Any, **kwargs: Any) -> None:\n    \"\"\"Reconfigures the global console by replacing it with another.\n\n    Args:\n        console (Console): Replacement console instance.\n    \"\"\"\n    from rich.console import Console\n\n    new_console = Console(*args, **kwargs)\n    _console = get_console()\n    _console.__dict__ = new_console.__dict__\n\n\ndef print(\n    *objects: Any,\n    sep: str = \" \",\n    end: str = \"\\n\",\n    file: Optional[IO[str]] = None,\n    flush: bool = False,\n) -> None:\n    r\"\"\"Print object(s) supplied via positional arguments.\n    This function has an identical signature to the built-in print.\n    For more advanced features, see the :class:`~rich.console.Console` class.\n\n    Args:\n        sep (str, optional): Separator between printed objects. Defaults to \" \".\n        end (str, optional): Character to write at end of output. Defaults to \"\\\\n\".\n        file (IO[str], optional): File to write to, or None for stdout. Defaults to None.\n        flush (bool, optional): Has no effect as Rich always flushes output. Defaults to False.\n\n    \"\"\"\n    from .console import Console",
+      "metadata": {
+        "total_chunks": 4,
+        "language": "python",
+        "file_path": "rich/__init__.py",
+        "strategy": "basic",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.002042531967163
+    },
+    {
+      "content": "# File: setup.py (python)\n\n## Code Content:\n```python\n#!/usr/bin/env python\n\n# This is a shim to hopefully allow Github to detect the package, build is done with poetry\n\nimport setuptools\n\nif __name__ == \"__main__\":\n    setuptools.setup(name=\"rich\")\n```",
+      "metadata": {
+        "strategy": "basic",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "file_path": "setup.py",
+        "language": "python"
+      },
+      "similarity_score": 1.018882393836975
+    },
+    {
+      "content": "```python\nfrom rich import print\n\nprint(\"Hello, [bold magenta]World[/bold magenta]!\", \":vampire:\", locals())\n```\n\n![Hello World](https://github.com/willmcgugan/rich/raw/master/imgs/print.png)\n\n## Rich REPL\n\nRichはPythonのREPLでインストールすることができ、データ構造がきれいに表示され、ハイライトされます。\n\n```python\n>>> from rich import pretty\n>>> pretty.install()\n```\n\n![REPL](https://github.com/willmcgugan/rich/raw/master/imgs/repl.png)\n\n## Rich Inspect\n\nRichにはPythonオブジェクトやクラス、インスタンス、組み込み関数などに関するレポートを作成することができる、[inspect関数](https://rich.readthedocs.io/en/latest/reference/init.html?highlight=inspect#rich.inspect)があります。\n\nの使い方\n\nリッチなターミナルコンテンツをより制御していくには、[Console](https://rich.readthedocs.io/en/latest/reference/console.html#rich.console.Console) オブジェクトをインポートして構築していきます。\n\nConsole オブジェクトには `print` メソッドがあり、これは組み込み関数の `print` と意図的に似たインターフェイスを持っています。\n以下に使用例を示します:\n\nあなたが予想した通り、これは `\"Hello World!\"` をターミナルに表示します。組み込み関数の `print` とは異なり、Rich はターミナルの幅に合わせてテキストをワードラップすることに注意してください。\n\n出力結果に色やスタイルを追加する方法はいくつかあります。キーワード引数に `style` を追加することで、出力結果全体のスタイルを設定することができます。以下に例を示します:\n\"\"\"\n```",
+      "metadata": {
+        "strategy": "basic",
+        "total_chunks": 6,
+        "file_path": "benchmarks/snippets.py",
+        "language": "python",
+        "chunk_index": 5
+      },
+      "similarity_score": 1.023544430732727
+    },
+    {
+      "content": "# File: asv.conf.json (json)\n\n## Code Content:\n```json\n{\n  \"version\": 1,\n  \"project\": \"rich\",\n  \"project_url\": \"https://github.com/Textualize/rich\",\n  \"repo\": \".\",\n  \"repo_subdir\": \"\",\n  \"install_command\": [\n    \"in-dir={env_dir} python -mpip install {wheel_file}\"\n  ],\n  \"uninstall_command\": [\n    \"return-code=any python -mpip uninstall -y {project}\"\n  ],\n  \"build_command\": [\n    \"pip install poetry\",\n    \"python setup.py build\",\n    \"PIP_NO_BUILD_ISOLATION=false python -mpip wheel --no-deps --no-index -w {build_cache_dir} {build_dir}\"\n  ],\n  \"branches\": [\n    \"master\"\n  ],\n  \"html_dir\": \"./benchmarks/html\",\n  \"results_dir\": \"./benchmarks/results\",\n  \"env_dir\": \"./benchmarks/env\",\n  \"dvcs\": \"git\",\n  \"environment_type\": \"virtualenv\",\n  \"install_timeout\": 180,\n  \"show_commit_url\": \"http://github.com/Textualize/rich/commit/\",\n  \"pythons\": [\n    \"3.10\"\n  ],\n  \"matrix\": {\n    \"req\": {}\n  }\n}\n```",
+      "metadata": {
+        "language": "json",
+        "file_path": "asv.conf.json",
+        "total_chunks": 1,
+        "strategy": "basic",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.0320581197738647
+    },
+    {
+      "content": "# File: rich/default_styles.py (python)\n\n## Code Content:\n```python\nfrom typing import Dict\n\nfrom .style import Style",
+      "metadata": {
+        "total_chunks": 6,
+        "strategy": "basic",
+        "chunk_index": 0,
+        "file_path": "rich/default_styles.py",
+        "language": "python"
+      },
+      "similarity_score": 1.033516526222229
+    },
+    {
+      "content": "# File: pyproject.toml (toml)\n\n## Code Content:\n```toml\n[tool.poetry]\nname = \"rich\"\nhomepage = \"https://github.com/willmcgugan/rich\"\ndocumentation = \"https://rich.readthedocs.io/en/latest/\"\nversion = \"12.2.0\"\ndescription = \"Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal\"\nauthors = [\"Will McGugan <willmcgugan@gmail.com>\"]\nlicense = \"MIT\"\nreadme = \"README.md\"\nclassifiers = [\n    \"Development Status :: 5 - Production/Stable\",\n    \"Environment :: Console\",\n    \"Framework :: IPython\",\n    \"Intended Audience :: Developers\",\n    \"Operating System :: Microsoft :: Windows\",\n    \"Operating System :: MacOS\",\n    \"Operating System :: POSIX :: Linux\",\n    \"Programming Language :: Python :: 3.6\",\n    \"Programming Language :: Python :: 3.7\",\n    \"Programming Language :: Python :: 3.8\",\n    \"Programming Language :: Python :: 3.9\",\n    \"Programming Language :: Python :: 3.10\",\n    \"Typing :: Typed\",\n]\ninclude = [\"rich/py.typed\"]\n\n\n[tool.poetry.dependencies]\npython = \"^3.6.3\"\ntyping-extensions = { version = \">=4.0.0, <5.0\", python = \"<3.9\" }\ndataclasses = { version = \">=0.7,<0.9\", python = \"<3.7\" }\npygments = \"^2.6.0\"\ncommonmark = \"^0.9.0\"\nipywidgets = { version = \"^7.5.1\", optional = true }\n\n\n[tool.poetry.extras]\njupyter = [\"ipywidgets\"]\n\n[tool.poetry.dev-dependencies]\npytest = \"^7.0.0\"\nblack = \"^22.3\"\nmypy = \"^0.942\"\npytest-cov = \"^3.0.0\"\nattrs = \"^21.4.0\"\ntypes-dataclasses = \"^0.6.4\"\npre-commit = \"^2.17.0\"\nasv = \"^0.5.1\"\n\n[build-system]\nrequires = [\"poetry-core>=1.0.0\"]\nbuild-backend = \"poetry.core.masonry.api\"\n\n\n[tool.mypy]\nfiles = [\"rich\"]\nshow_error_codes = true\nstrict = true\nenable_error_code = [\"ignore-without-code\", \"redundant-expr\", \"truthy-bool\"]\n\n[[tool.mypy.overrides]]\nmodule = [\"pygments.*\", \"IPython.*\", \"commonmark.*\", \"ipywidgets.*\"]\nignore_missing_imports = true\n```",
+      "metadata": {
+        "total_chunks": 1,
+        "language": "toml",
+        "strategy": "basic",
+        "chunk_index": 0,
+        "file_path": "pyproject.toml"
+      },
+      "similarity_score": 1.0430850982666016
+    },
+    {
+      "content": "python -m rich.syntax syntax.py\n\nFor the full list of arguments, run the following::\n\n    python -m rich.syntax -h\n```",
+      "metadata": {
+        "language": "text",
+        "total_chunks": 2,
+        "file_path": "docs/source/syntax.rst",
+        "chunk_index": 1,
+        "strategy": "basic"
+      },
+      "similarity_score": 1.056577205657959
+    },
+    {
+      "content": "# File: rich/_win32_console.py (python)\n\n## Code Content:\n```python\n\"\"\"Light wrapper around the Win32 Console API - this module should only be imported on Windows\n\nThe API that this module wraps is documented at https://docs.microsoft.com/en-us/windows/console/console-functions\n\"\"\"\nimport ctypes\nimport sys\nfrom typing import Any\n\nwindll: Any = None\nif sys.platform == \"win32\":\n    windll = ctypes.LibraryLoader(ctypes.WinDLL)\nelse:\n    raise ImportError(f\"{__name__} can only be imported on Windows\")\n\nimport time\nfrom ctypes import Structure, byref, wintypes\nfrom typing import IO, NamedTuple, Type, cast\n\nfrom rich.color import ColorSystem\nfrom rich.style import Style\n\nSTDOUT = -11\nENABLE_VIRTUAL_TERMINAL_PROCESSING = 4\n\nCOORD = wintypes._COORD\n\n\nclass LegacyWindowsError(Exception):\n    pass\n\n\nclass WindowsCoordinates(NamedTuple):\n    \"\"\"Coordinates in the Windows Console API are (y, x), not (x, y).\n    This class is intended to prevent that confusion.\n    Rows and columns are indexed from 0.\n    This class can be used in place of wintypes._COORD in arguments and argtypes.\n    \"\"\"\n\n    row: int\n    col: int\n\n    @classmethod\n    def from_param(cls, value: \"WindowsCoordinates\") -> COORD:\n        \"\"\"Converts a WindowsCoordinates into a wintypes _COORD structure.\n        This classmethod is internally called by ctypes to perform the conversion.\n\n        Args:\n            value (WindowsCoordinates): The input coordinates to convert.\n\n        Returns:\n            wintypes._COORD: The converted coordinates struct.\n        \"\"\"\n        return COORD(value.col, value.row)\n\n\nclass CONSOLE_SCREEN_BUFFER_INFO(Structure):\n    _fields_ = [\n        (\"dwSize\", COORD),\n        (\"dwCursorPosition\", COORD),\n        (\"wAttributes\", wintypes.WORD),\n        (\"srWindow\", wintypes.SMALL_RECT),\n        (\"dwMaximumWindowSize\", COORD),\n    ]\n\n\nclass CONSOLE_CURSOR_INFO(ctypes.Structure):\n    _fields_ = [(\"dwSize\", wintypes.DWORD), (\"bVisible\", wintypes.BOOL)]",
+      "metadata": {
+        "strategy": "basic",
+        "total_chunks": 13,
+        "file_path": "rich/_win32_console.py",
+        "language": "python",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.0627691745758057
+    },
+    {
+      "content": "# File: rich/errors.py (python)\n\n## Code Content:\n```python\nclass ConsoleError(Exception):\n    \"\"\"An error in console operation.\"\"\"\n\n\nclass StyleError(Exception):\n    \"\"\"An error in styles.\"\"\"\n\n\nclass StyleSyntaxError(ConsoleError):\n    \"\"\"Style was badly formatted.\"\"\"\n\n\nclass MissingStyle(StyleError):\n    \"\"\"No such style.\"\"\"\n\n\nclass StyleStackError(ConsoleError):\n    \"\"\"Style stack is invalid.\"\"\"\n\n\nclass NotRenderableError(ConsoleError):\n    \"\"\"Object is not renderable.\"\"\"\n\n\nclass MarkupError(ConsoleError):\n    \"\"\"Markup was badly formatted.\"\"\"\n\n\nclass LiveError(ConsoleError):\n    \"\"\"Error related to Live display.\"\"\"\n\n\nclass NoAltScreen(ConsoleError):\n    \"\"\"Alt screen mode was required.\"\"\"\n```",
+      "metadata": {
+        "file_path": "rich/errors.py",
+        "strategy": "basic",
+        "language": "python",
+        "chunk_index": 0,
+        "total_chunks": 1
+      },
+      "similarity_score": 1.0648061037063599
+    },
+    {
+      "content": "# File: docs/source/traceback.rst (text)\n\n## Code Content:\n```text\nTraceback\n=========\n\nRich can render Python tracebacks with syntax highlighting and formatting. Rich tracebacks are easier to read and show more code than standard Python tracebacks.\n\nTo see an example of a Rich traceback, running the following command::\n\n    python -m rich.traceback\n\n\nPrinting tracebacks\n-------------------\n\nThe :meth:`~rich.console.Console.print_exception` method will print a traceback for the current exception being handled. Here's an example::\n\n    from rich.console import Console\n    console = Console()\n\n    try:\n        do_something()\n    except Exception:\n        console.print_exception(show_locals=True)\n\nThe ``show_locals=True`` parameter causes Rich to display the value of local variables for each frame of the traceback.\n \nSee `exception.py <https://github.com/willmcgugan/rich/blob/master/examples/exception.py>`_ for a larger example.\n\n\nTraceback Handler\n-----------------\n\nRich can be installed as the default traceback handler so that all uncaught exceptions will be rendered with highlighting. Here's how::\n\n    from rich.traceback import install\n    install(show_locals=True)\n\nThere are a few options to configure the traceback handler, see :func:`~rich.traceback.install` for details.\n\nAutomatic Traceback Handler\n^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nIn some cases you may want to have the traceback handler installed automatically without having to worry about importing the code in your module. You can do that by modifying the `sitecustomize.py` in your virtual environment. Typically it would be located in your virtual environment path, underneath the `site-packages` folder, something like this::\n\n    ./.venv/lib/python3.9/site-packages/sitecustomize.py\n\nIn most cases this file will not exist. If it doesn't exist, you can create it by::\n\n    $ touch .venv/lib/python3.9/site-packages/sitecustomize.py\n\nAdd the following code to the file::",
+      "metadata": {
+        "language": "text",
+        "chunk_index": 0,
+        "total_chunks": 2,
+        "file_path": "docs/source/traceback.rst",
+        "strategy": "basic"
+      },
+      "similarity_score": 1.088017225265503
+    },
+    {
+      "content": "# File: .gitignore (text)\n\n## Code Content:\n```text\n*.ipynb\n.pytype\n.DS_Store\n.vscode\n.idea/\nmypy_report\ndocs/build\ndocs/source/_build\ntools/*.txt\nplayground/\n\n# Byte-compiled / optimized / DLL files\n__pycache__/\n*.py[cod]\n*$py.class\n\n# C extensions\n*.so\n\n# Distribution / packaging\n.Python\nbuild/\ndevelop-eggs/\ndist/\ndownloads/\neggs/\n.eggs/\nlib/\nlib64/\nparts/\nsdist/\nvar/\nwheels/\n*.egg-info/\n.installed.cfg\n*.egg\nMANIFEST\n\n# PyInstaller\n#  Usually these files are written by a python script from a template\n#  before PyInstaller builds the exe, so as to inject date/other infos into it.\n*.manifest\n*.spec\n\n# Installer logs\npip-log.txt\npip-delete-this-directory.txt\n\n# Unit test / coverage reports\nhtmlcov/\n.tox/\n.coverage\n.coverage.*\n.cache\nnosetests.xml\ncoverage.xml\n*.cover\n.hypothesis/\n.pytest_cache/\n\n# Translations\n*.mo\n*.pot\n\n# Django stuff:\n*.log\nlocal_settings.py\ndb.sqlite3\n\n# Flask stuff:\ninstance/\n.webassets-cache\n\n# Scrapy stuff:\n.scrapy\n\n# Sphinx documentation\ndocs/_build/\n\n# PyBuilder\ntarget/\n\n# Jupyter Notebook\n.ipynb_checkpoints\n\n# pyenv\n.python-version\n\n# celery beat schedule file\ncelerybeat-schedule\n\n# SageMath parsed files\n*.sage.py\n\n# Environments\n.env\n.venv\nenv/\nvenv/\nENV/\nenv.bak/\nvenv.bak/\n\n# Spyder project settings\n.spyderproject\n.spyproject\n\n# Rope project settings\n.ropeproject\n\n# mkdocs documentation\n/site\n\n# mypy\n.mypy_cache/\n\n# airspeed velocity\nbenchmarks/env/\nbenchmarks/html/\n```",
+      "metadata": {
+        "file_path": ".gitignore",
+        "chunk_index": 0,
+        "language": "text",
+        "total_chunks": 1,
+        "strategy": "basic"
+      },
+      "similarity_score": 1.0969129800796509
+    },
+    {
+      "content": "# File: docs/source/syntax.rst (text)\n\n## Code Content:\n```text\nSyntax\n======\n\nRich can syntax highlight various programming languages with line numbers.\n\nTo syntax highlight code, construct a :class:`~rich.syntax.Syntax` object and print it to the console. Here's an example::\n\n    from rich.console import Console\n    from rich.syntax import Syntax\n\n    console = Console()\n    with open(\"syntax.py\", \"rt\") as code_file:\n        syntax = Syntax(code_file.read(), \"python\")\n    console.print(syntax)\n\nYou may also use the :meth:`~rich.syntax.Syntax.from_path` alternative constructor which will load the code from disk and auto-detect the file type. The example above could be re-written as follows::\n\n\n    from rich.console import Console\n    from rich.syntax import Syntax\n\n    console = Console()\n    syntax = Syntax.from_path(\"syntax.py\")\n    console.print(syntax)\n\n\nLine numbers\n------------\n\nIf you set ``line_numbers=True``, Rich will render a column for line numbers::\n\n    syntax = Syntax.from_path(\"syntax.py\", line_numbers=True)\n\n\nTheme\n-----\n\nThe Syntax constructor (and :meth:`~rich.syntax.Syntax.from_path`) accept a ``theme`` attribute which should be the name of a `Pygments theme <https://pygments.org/demo/>`_. It may also be one of the special case theme names \"ansi_dark\" or \"ansi_light\" which will use the color theme configured by the terminal.\n\n\nBackground color\n----------------\n\nYou can override the background color from the theme by supplying a ``background_color`` argument to the constructor. This should be a string in the same format a style definition accepts, .e.g \"red\", \"#ff0000\", \"rgb(255,0,0)\" etc. You may also set the special value \"default\" which will use the default background color set in the terminal.\n\n\nSyntax CLI\n----------\n\nYou can use this class from the command line. Here's how you would syntax highlight a file called \"syntax.py\"::\n\n    python -m rich.syntax syntax.py\n\nFor the full list of arguments, run the following::",
+      "metadata": {
+        "language": "text",
+        "strategy": "basic",
+        "total_chunks": 2,
+        "chunk_index": 0,
+        "file_path": "docs/source/syntax.rst"
+      },
+      "similarity_score": 1.0978385210037231
+    },
+    {
+      "content": "# File: Makefile (text)\n\n## Code Content:\n```text\ntest:\n\tTERM=unknown pytest --cov-report term-missing --cov=rich tests/ -vv\nformat-check:\n\tblack --check .\nformat:\n\tblack .\ntypecheck:\n\tmypy -p rich --no-incremental\ntypecheck-report:\n\tmypy -p rich --html-report mypy_report\n.PHONY: docs\ndocs:\n\tcd docs; make html\n```",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "basic",
+        "language": "text",
+        "total_chunks": 1,
+        "file_path": "Makefile"
+      },
+      "similarity_score": 1.0995484590530396
+    },
+    {
+      "content": "# File: rich/_windows.py (python)\n\n## Code Content:\n```python\nimport sys\nfrom dataclasses import dataclass\n\n\n@dataclass\nclass WindowsConsoleFeatures:\n    \"\"\"Windows features available.\"\"\"\n\n    vt: bool = False\n    \"\"\"The console supports VT codes.\"\"\"\n    truecolor: bool = False\n    \"\"\"The console supports truecolor.\"\"\"\n\n\ntry:\n    import ctypes\n    from ctypes import LibraryLoader\n\n    if sys.platform == \"win32\":\n        windll = LibraryLoader(ctypes.WinDLL)\n    else:\n        windll = None\n        raise ImportError(\"Not windows\")\n\n    from rich._win32_console import (\n        ENABLE_VIRTUAL_TERMINAL_PROCESSING,\n        GetConsoleMode,\n        GetStdHandle,\n        LegacyWindowsError,\n    )\n\nexcept (AttributeError, ImportError, ValueError):\n\n    # Fallback if we can't load the Windows DLL\n    def get_windows_console_features() -> WindowsConsoleFeatures:\n        features = WindowsConsoleFeatures()\n        return features\n\nelse:\n\n    def get_windows_console_features() -> WindowsConsoleFeatures:\n        \"\"\"Get windows console features.\n\n        Returns:\n            WindowsConsoleFeatures: An instance of WindowsConsoleFeatures.\n        \"\"\"\n        handle = GetStdHandle()\n        try:\n            console_mode = GetConsoleMode(handle)\n            success = True\n        except LegacyWindowsError:\n            console_mode = 0\n            success = False\n        vt = bool(success and console_mode & ENABLE_VIRTUAL_TERMINAL_PROCESSING)\n        truecolor = False\n        if vt:\n            win_version = sys.getwindowsversion()\n            truecolor = win_version.major > 10 or (\n                win_version.major == 10 and win_version.build >= 15063\n            )\n        features = WindowsConsoleFeatures(vt=vt, truecolor=truecolor)\n        return features\n\n\nif __name__ == \"__main__\":\n    import platform\n\n    features = get_windows_console_features()\n    from rich import print\n\n    print(f'platform=\"{platform.system()}\"')\n    print(repr(features))\n```",
+      "metadata": {
+        "language": "python",
+        "chunk_index": 0,
+        "strategy": "basic",
+        "total_chunks": 1,
+        "file_path": "rich/_windows.py"
+      },
+      "similarity_score": 1.1032593250274658
+    },
+    {
+      "content": "# File: rich/repr.py (python)\n\n## Code Content:\n```python\nfrom functools import partial\nimport inspect\nimport sys\n\nfrom typing import (\n    Any,\n    Callable,\n    Iterable,\n    List,\n    Optional,\n    overload,\n    Union,\n    Tuple,\n    Type,\n    TypeVar,\n)\n\n\nT = TypeVar(\"T\")\n\n\nResult = Iterable[Union[Any, Tuple[Any], Tuple[str, Any], Tuple[str, Any, Any]]]\nRichReprResult = Result\n\n\nclass ReprError(Exception):\n    \"\"\"An error occurred when attempting to build a repr.\"\"\"\n\n\n@overload\ndef auto(cls: Optional[Type[T]]) -> Type[T]:\n    ...\n\n\n@overload\ndef auto(*, angular: bool = False) -> Callable[[Type[T]], Type[T]]:\n    ...\n\n\ndef auto(\n    cls: Optional[Type[T]] = None, *, angular: Optional[bool] = None\n) -> Union[Type[T], Callable[[Type[T]], Type[T]]]:\n    \"\"\"Class decorator to create __repr__ from __rich_repr__\"\"\"\n\n    def do_replace(cls: Type[T], angular: Optional[bool] = None) -> Type[T]:\n        def auto_repr(self: T) -> str:\n            \"\"\"Create repr string from __rich_repr__\"\"\"\n            repr_str: List[str] = []\n            append = repr_str.append\n\n            angular: bool = getattr(self.__rich_repr__, \"angular\", False)  # type: ignore[attr-defined]\n            for arg in self.__rich_repr__():  # type: ignore[attr-defined]\n                if isinstance(arg, tuple):\n                    if len(arg) == 1:\n                        append(repr(arg[0]))\n                    else:\n                        key, value, *default = arg\n                        if key is None:\n                            append(repr(value))\n                        else:\n                            if len(default) and default[0] == value:\n                                continue\n                            append(f\"{key}={value!r}\")\n                else:\n                    append(repr(arg))\n            if angular:\n                return f\"<{self.__class__.__name__} {' '.join(repr_str)}>\"\n            else:\n                return f\"{self.__class__.__name__}({', '.join(repr_str)})\"",
+      "metadata": {
+        "language": "python",
+        "file_path": "rich/repr.py",
+        "total_chunks": 3,
+        "chunk_index": 0,
+        "strategy": "basic"
+      },
+      "similarity_score": 1.1073437929153442
+    },
+    {
+      "content": "# File: .coveragerc (text)\n\n## Code Content:\n```text\n[run]\nomit = rich/jupyter.py\n    rich/_windows.py\n    rich/_timer.py\n    rich/diagnose.py\n\n[report]\nexclude_lines =\n    pragma: no cover\n    if TYPE_CHECKING:\n    if __name__ == \"__main__\":\n    @overload\n```",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "basic",
+        "total_chunks": 1,
+        "language": "text",
+        "file_path": ".coveragerc"
+      },
+      "similarity_score": 1.110506296157837
+    },
+    {
+      "content": "In most cases this file will not exist. If it doesn't exist, you can create it by::\n\n    $ touch .venv/lib/python3.9/site-packages/sitecustomize.py\n\nAdd the following code to the file::\n\n    from rich.traceback import install\n    install(show_locals=True)\n\nAt this point, the traceback will be installed for any code that is run within the virtual environment.\n\n.. note::\n    If you plan on sharing your code, it is probably best to include the traceback install in your main entry point module.\n\n\nSuppressing Frames\n------------------\n\nIf you are working with a framework (click, django etc), you may only be interested in seeing the code from your own application within the traceback. You can exclude framework code by setting the `suppress` argument on `Traceback`, `install`, `Console.print_exception`, and `RichHandler`, which should be a list of modules or str paths.\n\nHere's how you would exclude `click <https://click.palletsprojects.com/en/8.0.x/>`_ from Rich exceptions:: \n\n    import click\n    from rich.traceback import install\n    install(suppress=[click])\n\nSuppressed frames will show the line and file only, without any code.\n\nMax Frames\n----------\n\nA recursion error can generate very large tracebacks that take a while to render and contain a lot of repetitive frames. Rich guards against this with a `max_frames` argument, which defaults to 100. If a traceback contains more than 100 frames then only the first 50, and last 50 will be shown. You can disable this feature by setting `max_frames` to 0.\n\nHere's an example of printing a recursive error::\n\n    from rich.console import Console\n\n\n    def foo(n):\n        return bar(n)\n\n\n    def bar(n):\n        return foo(n)\n\n\n    console = Console()\n\n    try:\n        foo(1)\n    except Exception:\n        console.print_exception(max_frames=20)\n```",
+      "metadata": {
+        "language": "text",
+        "total_chunks": 2,
+        "chunk_index": 1,
+        "file_path": "docs/source/traceback.rst",
+        "strategy": "basic"
+      },
+      "similarity_score": 1.1270701885223389
+    },
+    {
+      "content": "# File: rich/console.py (python)\n\n## Code Content:\n```python\nimport inspect\nimport io\nimport os\nimport platform\nimport sys\nimport threading\nimport zlib\nfrom abc import ABC, abstractmethod\nfrom dataclasses import dataclass, field\nfrom datetime import datetime\nfrom functools import wraps\nfrom getpass import getpass\nfrom html import escape\nfrom inspect import isclass\nfrom itertools import islice\nfrom time import monotonic\nfrom types import FrameType, ModuleType, TracebackType\nfrom typing import (\n    IO,\n    TYPE_CHECKING,\n    Any,\n    Callable,\n    Dict,\n    Iterable,\n    List,\n    Mapping,\n    NamedTuple,\n    Optional,\n    TextIO,\n    Tuple,\n    Type,\n    Union,\n    cast,\n)\n\nif sys.version_info >= (3, 8):\n    from typing import Literal, Protocol, runtime_checkable\nelse:\n    from typing_extensions import (\n        Literal,\n        Protocol,\n        runtime_checkable,\n    )  # pragma: no cover\n\nfrom . import errors, themes\nfrom ._emoji_replace import _emoji_replace\nfrom ._export_format import (\n    _SVG_CLASSES_PREFIX,\n    _SVG_FONT_FAMILY,\n    CONSOLE_HTML_FORMAT,\n    CONSOLE_SVG_FORMAT,\n)\nfrom ._log_render import FormatTimeCallable, LogRender\nfrom .align import Align, AlignMethod\nfrom .color import ColorSystem\nfrom .control import Control\nfrom .emoji import EmojiVariant\nfrom .highlighter import NullHighlighter, ReprHighlighter\nfrom .markup import render as render_markup\nfrom .measure import Measurement, measure_renderables\nfrom .pager import Pager, SystemPager\nfrom .pretty import Pretty, is_expandable\nfrom .protocol import rich_cast\nfrom .region import Region\nfrom .scope import render_scope\nfrom .screen import Screen\nfrom .segment import Segment\nfrom .style import Style, StyleType\nfrom .styled import Styled\nfrom .terminal_theme import DEFAULT_TERMINAL_THEME, SVG_EXPORT_THEME, TerminalTheme\nfrom .text import Text, TextType\nfrom .theme import Theme, ThemeStack",
+      "metadata": {
+        "language": "python",
+        "file_path": "rich/console.py",
+        "strategy": "basic",
+        "total_chunks": 56,
+        "chunk_index": 0
+      },
+      "similarity_score": 1.1322880983352661
+    }
+  ],
+  "enhanced": [
+    {
+      "content": "# File: rich/_extension.py (python)\n\n## Code Content:\n```python\nfrom typing import Any\n\n\ndef load_ipython_extension(ip: Any) -> None:  # pragma: no cover\n    # prevent circular import\n    from rich.pretty import install\n    from rich.traceback import install as tr_install\n\n    install()\n    tr_install()\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: e43016dd\n- Author: Nathan Page (nathanrpage97@gmail.com)\n- Date: 2021-06-07 04:37:36\n- Message: remove code coverage checks of ipython extension\n- Changes:\n```diff\n@@ -1,7 +1,7 @@\n from typing import Any\n \n \n-def load_ipython_extension(ip: Any) -> None:\n+def load_ipython_extension(ip: Any) -> None:  # pragma: no cover\n     # prevent circular import\n     from rich.pretty import install\n     from rich.traceback import install as tr_install...\n```\n\n### Commit 2\n- ID: 0b667ec0\n- Author: Nathan Page (nathanrpage97@gmail.com)\n- Date: 2021-06-07 03:17:55\n- Message: fix circular import and explain it is needed\n- Changes:\n```diff\n@@ -1,10 +1,10 @@\n from typing import Any\n \n-from rich.pretty import install\n-from rich.traceback import install as tr_install\n-\n \n def load_ipython_extension(ip: Any) -> None:\n+    # prevent circular import\n+    from rich.pretty import install\n+    from rich.traceback import install as tr_install\n \n     install()\n     tr_install()...\n```\n\n### Commit 3\n- ID: 8f9ebcdd\n- Author: Nathan Page (nathanrpage97@gmail.com)\n- Date: 2021-06-07 03:10:58\n- Message: remove unnecessary lazy import\n- Changes:\n```diff\n@@ -1,9 +1,10 @@\n from typing import Any\n \n+from rich.pretty import install\n+from rich.traceback import install as tr_install\n+\n \n def load_ipython_extension(ip: Any) -> None:\n-    from rich.pretty import install\n-    from rich.traceback import install as tr_install\n \n     install()\n     tr_install()...\n```",
+      "metadata": {
+        "total_chunks": 2,
+        "strategy": "enhanced",
+        "file_path": "rich/_extension.py",
+        "chunk_index": 0,
+        "language": "python",
+        "commit_count": 4
+      },
+      "similarity_score": 0.7279152870178223
+    },
+    {
+      "content": "### Commit 3\n- ID: 510cec71\n- Author: Troy Williams (troy.williams@bluebill.net)\n- Date: 2021-10-09 21:37:08\n- Message: Added section `Automatic Traceback Handler` to traceback.rst. It describes a method to automatically install the rich.traceback without having to include the code in your modules.\n- Changes:\n```diff\n@@ -26,7 +26,7 @@ The ``show_locals=True`` parameter causes Rich to display the value of local var\n See `exception.py <https://github.com/willmcgugan/rich/blob/master/examples/exception.py>`_ for a larger example.\n \n \n-Traceback handler\n+Traceback Handler\n -----------------\n \n Rich can be installed as the default traceback handler so that all uncaught exceptions will be rendered with highlighting. Here's how::\n@@ -36,6 +36,27 @@ Rich can be installed as the default traceback handler so that all ...\n```\n\n### Commit 4\n- ID: cf606f0a\n- Author: Will McGugan (willmcgugan@gmail.com)\n- Date: 2021-10-06 21:07:20\n- Message: changelog, doc fix\n- Changes:\n```diff\n@@ -42,7 +42,7 @@ Suppressing Frames\n \n If you are working with a framework (click, django etc), you may only be interested in seeing the code from your own application within the traceback. You can exclude framework code by setting the `suppress` argument on `Traceback`, `install`, and `Console.print_exception`, which should be a list of modules or str paths.\n \n-Here's how you would exclude [click](https://click.palletsprojects.com/en/8.0.x/) from Rich exceptions:: \n+Here's how you would exclud...\n```",
+      "metadata": {
+        "chunk_index": 3,
+        "total_chunks": 5,
+        "commit_count": 5,
+        "language": "text",
+        "file_path": "docs/source/traceback.rst",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 0.8769598007202148
+    },
+    {
+      "content": "### Commit 4\n- ID: 81215323\n- Author: Nathan Page (nathanrpage97@gmail.com)\n- Date: 2021-06-07 03:00:52\n- Message: add ipython extension for rich\n- Changes:\n```diff\n@@ -0,0 +1,9 @@\n+from typing import Any\n+\n+\n+def load_ipython_extension(ip: Any) -> None:\n+    from rich.pretty import install\n+    from rich.traceback import install as tr_install\n+\n+    install()\n+    tr_install()...\n```",
+      "metadata": {
+        "file_path": "rich/_extension.py",
+        "language": "python",
+        "commit_count": 4,
+        "chunk_index": 1,
+        "strategy": "enhanced",
+        "total_chunks": 2
+      },
+      "similarity_score": 0.8832162022590637
+    },
+    {
+      "content": "### Commit 2\n- ID: bdad740d\n- Author: Darren Burns (darrenb900@gmail.com)\n- Date: 2022-02-04 22:10:12\n- Message: Update issue template\n- Changes:\n```diff\n@@ -20,12 +20,21 @@ Provide a minimal code example that demonstrates the issue if you can. If the is\n \n What platform (Win/Linux/Mac) are you running on? What terminal software are you using?\n \n-I may ask you to cut and paste the output of the following commands. It may save some time if you do it now.\n+I may ask you to copy and paste the output of the following commands. It may save some time if you do it now.\n+\n+If you're using Rich in a terminal:\n \n ```\n-python -m rich.diagnose\n-python -m ric...\n```\n\n### Commit 3\n- ID: 5957b960\n- Author: Peder Bergebakken Sundt (pbsds@hotmail.com)\n- Date: 2022-01-16 22:04:30\n- Message: Collapse platform details in bug reports\n\nTo reduce noise.\n\nExample: https://github.com/Textualize/rich/issues/1838\n- Changes:\n```diff\n@@ -15,6 +15,8 @@ Edit this with a clear and concise description of what the bug.\n Provide a minimal code example that demonstrates the issue if you can. If the issue is visual in nature, consider posting a screenshot.\n \n **Platform**\n+<details>\n+<summary>Click to expand</summary>\n \n What platform (Win/Linux/Mac) are you running on? What terminal software are you using?\n \n@@ -25,3 +27,5 @@ python -m rich.diagnose\n python -m rich._windows\n pip freeze | grep rich\n ```\n+  \n+</details>...\n```",
+      "metadata": {
+        "strategy": "enhanced",
+        "total_chunks": 3,
+        "file_path": ".github/ISSUE_TEMPLATE/bug_report.md",
+        "commit_count": 5,
+        "language": "markdown",
+        "chunk_index": 1
+      },
+      "similarity_score": 0.9258067607879639
+    },
+    {
+      "content": "python -m rich.syntax syntax.py\n\nFor the full list of arguments, run the following::\n\n    python -m rich.syntax -h\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: c3469772\n- Author: Aaron Stephens (aaronjst93@gmail.com)\n- Date: 2022-01-03 17:04:35\n- Message: docs: fix typos and whitespace\n- Changes:\n```diff\n@@ -10,7 +10,7 @@ To syntax highlight code, construct a :class:`~rich.syntax.Syntax` object and pr\n \n     console = Console()\n     with open(\"syntax.py\", \"rt\") as code_file:\n-        syntax = Syntax(code_file.read(), \"python\")     \n+        syntax = Syntax(code_file.read(), \"python\")\n     console.print(syntax)\n \n You may also use the :meth:`~rich.syntax.Syntax.from_path` alternative constructor which will load the code from disk and auto-detect the file type. The example above could be re-writte...\n```\n\n### Commit 2\n- ID: ab6f9f97\n- Author: Hamel Husain (hamelsmu@github.com)\n- Date: 2020-12-17 04:36:13\n- Message: File needs to be in read mode\n- Changes:\n```diff\n@@ -9,7 +9,7 @@ To syntax highlight code, construct a :class:`~rich.syntax.Syntax` object and pr\n     from rich.syntax import Syntax\n \n     console = Console()\n-    with open(\"syntax.py\", \"wt\") as code_file:\n+    with open(\"syntax.py\", \"rt\") as code_file:\n         syntax = Syntax(code_file.read(), \"python\")     \n     console.print(syntax)...\n```\n\n### Commit 3\n- ID: 7e9bd936\n- Author: Will McGugan (willmcgugan@gmail.com)\n- Date: 2020-09-18 23:02:02\n- Message: docs\n- Changes:\n```diff\n@@ -5,15 +5,47 @@ Rich can syntax highlight various programming languages with line numbers.\n \n To syntax highlight code, construct a :class:`~rich.syntax.Syntax` object and print it to the console. Here's an example::\n \n+    from rich.console import Console\n+    from rich.syntax import Syntax\n+\n+    console = Console()\n+    with open(\"syntax.py\", \"wt\") as code_file:\n+        syntax = Syntax(code_file.read(), \"python\")     \n+    console.print(syntax)\n+\n+You may also use the :meth:`~rich.syntax.S...\n```",
+      "metadata": {
+        "file_path": "docs/source/syntax.rst",
+        "total_chunks": 3,
+        "language": "text",
+        "strategy": "enhanced",
+        "chunk_index": 1,
+        "commit_count": 5
+      },
+      "similarity_score": 0.9329597353935242
+    },
+    {
+      "content": "## Git Commit History\n\n### Commit 1\n- ID: 303e9b55\n- Author: Olivier Philippon (olivier@textualize.io)\n- Date: 2022-04-04 23:15:53\n- Message: Bump minimum Python version to `3.6.3` (from `3.6.1`)\n\nThe `OrderedDict[CacheKey, CacheValue]` code we use in the LRUCache class doesn't work with Python versions `3.6.1` and `3.6.2`, unfortunately\n- Changes:\n```diff\n@@ -12,7 +12,7 @@ Rich works with OSX, Linux and Windows.\n \n On Windows both the (ancient) cmd.exe terminal is supported and the new `Windows Terminal <https://github.com/microsoft/terminal/releases>`_. The latter has much improved support for color and style.\n \n-Rich requires Python 3.6.1 and above. Note that Python 3.6.0 is *not* supported due to lack of support for methods on NamedTuples.\n+Rich requires Python 3.6.3 and above. Note that Python 3.6.0 is *not* supported due to lack of support f...\n```\n\n### Commit 2\n- ID: 21432b4c\n- Author: Will McGugan (willmcgugan@gmail.com)\n- Date: 2022-02-22 18:37:16\n- Message: docs\n- Changes:\n```diff\n@@ -1,7 +1,7 @@\n Introduction\n ============\n \n-Rich is a Python library for writing *rich* text (with color and style) to the terminal, and for displaying advanced content such as tables, markdown, and syntax highlighted code. \n+Rich is a Python library for writing *rich* text (with color and style) to the terminal, and for displaying advanced content such as tables, markdown, and syntax highlighted code.\n \n Use Rich to make your command line applications visually appealing and present data in a...\n```",
+      "metadata": {
+        "language": "text",
+        "chunk_index": 4,
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "total_chunks": 6,
+        "file_path": "docs/source/introduction.rst"
+      },
+      "similarity_score": 0.9501473903656006
+    },
+    {
+      "content": "features = get_windows_console_features()\n    from rich import print\n\n    print(f'platform=\"{platform.system()}\"')\n    print(repr(features))\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 5a93a6e0\n- Author: Hadi Alqattan (alqattanhadizaki@gmail.com)\n- Date: 2022-03-12 21:23:42\n- Message: Pycln cought unused import using the new version.\n- Changes:\n```diff\n@@ -14,7 +14,7 @@ class WindowsConsoleFeatures:\n \n try:\n     import ctypes\n-    from ctypes import LibraryLoader, wintypes\n+    from ctypes import LibraryLoader\n \n     if sys.platform == \"win32\":\n         windll = LibraryLoader(ctypes.WinDLL)...\n```\n\n### Commit 2\n- ID: ca3e966d\n- Author: Darren Burns (darrenb900@gmail.com)\n- Date: 2022-03-04 00:14:01\n- Message: Handle legacy windows error\n- Changes:\n```diff\n@@ -26,6 +26,7 @@ try:\n         ENABLE_VIRTUAL_TERMINAL_PROCESSING,\n         GetConsoleMode,\n         GetStdHandle,\n+        LegacyWindowsError,\n     )\n \n except (AttributeError, ImportError, ValueError):\n@@ -44,8 +45,13 @@ else:\n             WindowsConsoleFeatures: An instance of WindowsConsoleFeatures.\n         \"\"\"\n         handle = GetStdHandle()\n-        console_mode = GetConsoleMode(handle)\n-        vt = bool(console_mode & ENABLE_VIRTUAL_TERMINAL_PROCESSING)\n+        try:\n+            cons...\n```\n\n### Commit 3\n- ID: 5a051f9f\n- Author: Darren Burns (darrenb900@gmail.com)\n- Date: 2022-03-03 22:31:35\n- Message: Make GetConsoleMode Windows Console wrapper more Pythonic\n- Changes:\n```diff\n@@ -44,9 +44,8 @@ else:\n             WindowsConsoleFeatures: An instance of WindowsConsoleFeatures.\n         \"\"\"\n         handle = GetStdHandle()\n-        console_mode = wintypes.DWORD()\n-        result = GetConsoleMode(handle, console_mode)\n-        vt = bool(result and console_mode.value & ENABLE_VIRTUAL_TERMINAL_PROCESSING)\n+        console_mode = GetConsoleMode(handle)\n+        vt = bool(console_mode & ENABLE_VIRTUAL_TERMINAL_PROCESSING)\n         truecolor = False\n         if vt:\n           ...\n```",
+      "metadata": {
+        "total_chunks": 3,
+        "file_path": "rich/_windows.py",
+        "language": "python",
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "chunk_index": 1
+      },
+      "similarity_score": 0.9540122151374817
+    },
+    {
+      "content": "# File: rich/errors.py (python)\n\n## Code Content:\n```python\nclass ConsoleError(Exception):\n    \"\"\"An error in console operation.\"\"\"\n\n\nclass StyleError(Exception):\n    \"\"\"An error in styles.\"\"\"\n\n\nclass StyleSyntaxError(ConsoleError):\n    \"\"\"Style was badly formatted.\"\"\"\n\n\nclass MissingStyle(StyleError):\n    \"\"\"No such style.\"\"\"\n\n\nclass StyleStackError(ConsoleError):\n    \"\"\"Style stack is invalid.\"\"\"\n\n\nclass NotRenderableError(ConsoleError):\n    \"\"\"Object is not renderable.\"\"\"\n\n\nclass MarkupError(ConsoleError):\n    \"\"\"Markup was badly formatted.\"\"\"\n\n\nclass LiveError(ConsoleError):\n    \"\"\"Error related to Live display.\"\"\"\n\n\nclass NoAltScreen(ConsoleError):\n    \"\"\"Alt screen mode was required.\"\"\"\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: d97751b1\n- Author: Will McGugan (willmcgugan@gmail.com)\n- Date: 2021-03-20 05:46:45\n- Message: black\n- Changes:\n```diff\n@@ -31,4 +31,4 @@ class LiveError(ConsoleError):\n \n \n class NoAltScreen(ConsoleError):\n-    \"\"\"Alt screen mode was required.\"\"\"\n\\ No newline at end of file\n+    \"\"\"Alt screen mode was required.\"\"\"...\n```\n\n### Commit 2\n- ID: ffc7aea1\n- Author: Will McGugan (willmcgugan@gmail.com)\n- Date: 2021-03-20 05:37:47\n- Message: updatable layout regions\n- Changes:\n```diff\n@@ -28,3 +28,7 @@ class MarkupError(ConsoleError):\n \n class LiveError(ConsoleError):\n     \"\"\"Error related to Live display.\"\"\"\n+\n+\n+class NoAltScreen(ConsoleError):\n+    \"\"\"Alt screen mode was required.\"\"\"\n\\ No newline at end of file...\n```\n\n### Commit 3\n- ID: 122b8131\n- Author: Will McGugan (willmcgugan@gmail.com)\n- Date: 2021-02-06 19:49:54\n- Message: live refactor\n- Changes:\n```diff\n@@ -24,3 +24,7 @@ class NotRenderableError(ConsoleError):\n \n class MarkupError(ConsoleError):\n     \"\"\"Markup was badly formatted.\"\"\"\n+\n+\n+class LiveError(ConsoleError):\n+    \"\"\"Error related to Live display.\"\"\"...\n```",
+      "metadata": {
+        "total_chunks": 2,
+        "strategy": "enhanced",
+        "chunk_index": 0,
+        "commit_count": 5,
+        "language": "python",
+        "file_path": "rich/errors.py"
+      },
+      "similarity_score": 0.9864663481712341
+    },
+    {
+      "content": "# File: rich/__init__.py (python)\n\n## Code Content:\n```python\n\"\"\"Rich text and beautiful formatting in the terminal.\"\"\"\n\nimport os\nfrom typing import IO, TYPE_CHECKING, Any, Callable, Optional, Union\n\nfrom ._extension import load_ipython_extension  # noqa: F401\n\n__all__ = [\"get_console\", \"reconfigure\", \"print\", \"inspect\"]\n\nif TYPE_CHECKING:\n    from .console import Console\n\n# Global console used by alternative print\n_console: Optional[\"Console\"] = None\n\n_IMPORT_CWD = os.path.abspath(os.getcwd())\n\n\ndef get_console() -> \"Console\":\n    \"\"\"Get a global :class:`~rich.console.Console` instance. This function is used when Rich requires a Console,\n    and hasn't been explicitly given one.\n\n    Returns:\n        Console: A console instance.\n    \"\"\"\n    global _console\n    if _console is None:\n        from .console import Console\n\n        _console = Console()\n\n    return _console\n\n\ndef reconfigure(*args: Any, **kwargs: Any) -> None:\n    \"\"\"Reconfigures the global console by replacing it with another.\n\n    Args:\n        console (Console): Replacement console instance.\n    \"\"\"\n    from rich.console import Console\n\n    new_console = Console(*args, **kwargs)\n    _console = get_console()\n    _console.__dict__ = new_console.__dict__\n\n\ndef print(\n    *objects: Any,\n    sep: str = \" \",\n    end: str = \"\\n\",\n    file: Optional[IO[str]] = None,\n    flush: bool = False,\n) -> None:\n    r\"\"\"Print object(s) supplied via positional arguments.\n    This function has an identical signature to the built-in print.\n    For more advanced features, see the :class:`~rich.console.Console` class.\n\n    Args:\n        sep (str, optional): Separator between printed objects. Defaults to \" \".\n        end (str, optional): Character to write at end of output. Defaults to \"\\\\n\".\n        file (IO[str], optional): File to write to, or None for stdout. Defaults to None.\n        flush (bool, optional): Has no effect as Rich always flushes output. Defaults to False.\n\n    \"\"\"\n    from .console import Console",
+      "metadata": {
+        "strategy": "enhanced",
+        "chunk_index": 0,
+        "total_chunks": 5,
+        "file_path": "rich/__init__.py",
+        "commit_count": 5,
+        "language": "python"
+      },
+      "similarity_score": 1.002042531967163
+    },
+    {
+      "content": "```python\nfrom rich import print\n\nprint(\"Hello, [bold magenta]World[/bold magenta]!\", \":vampire:\", locals())\n```\n\n![Hello World](https://github.com/willmcgugan/rich/raw/master/imgs/print.png)\n\n## Rich REPL\n\nRichはPythonのREPLでインストールすることができ、データ構造がきれいに表示され、ハイライトされます。\n\n```python\n>>> from rich import pretty\n>>> pretty.install()\n```\n\n![REPL](https://github.com/willmcgugan/rich/raw/master/imgs/repl.png)\n\n## Rich Inspect\n\nRichにはPythonオブジェクトやクラス、インスタンス、組み込み関数などに関するレポートを作成することができる、[inspect関数](https://rich.readthedocs.io/en/latest/reference/init.html?highlight=inspect#rich.inspect)があります。\n\nの使い方\n\nリッチなターミナルコンテンツをより制御していくには、[Console](https://rich.readthedocs.io/en/latest/reference/console.html#rich.console.Console) オブジェクトをインポートして構築していきます。\n\nConsole オブジェクトには `print` メソッドがあり、これは組み込み関数の `print` と意図的に似たインターフェイスを持っています。\n以下に使用例を示します:\n\nあなたが予想した通り、これは `\"Hello World!\"` をターミナルに表示します。組み込み関数の `print` とは異なり、Rich はターミナルの幅に合わせてテキストをワードラップすることに注意してください。\n\n出力結果に色やスタイルを追加する方法はいくつかあります。キーワード引数に `style` を追加することで、出力結果全体のスタイルを設定することができます。以下に例を示します:\n\"\"\"\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 303e9b55\n- Author: Olivier Philippon (olivier@textualize.io)\n- Date: 2022-04-04 23:15:53\n- Message: Bump minimum Python version to `3.6.3` (from `3.6.1`)\n\nThe `OrderedDict[CacheKey, CacheValue]` code we use in the LRUCache class doesn't work with Python versions `3.6.1` and `3.6.2`, unfortunately\n- Changes:\n```diff\n@@ -115,7 +115,7 @@ Richの紹介動画はこちらをご覧ください。 [calmcode.io](https://ca\n \n ## 互換性\n \n-RichはLinux、OSX、Windowsに対応しています。True colorと絵文字は新しい Windows ターミナルで動作しますが、古いターミナルでは8色に制限されています。Richを使用するにはPythonのバージョンは3.6.1以降が必要です。\n+RichはLinux、OSX、Windowsに対応しています。True colorと絵文字は新しい Windows ターミナルで動作しますが、古いターミナルでは8色に制限されています。Richを使用するにはPythonのバージョンは3.6.3以降が必要です。\n \n Richは追加の設定を行わずとも、[Jupyter notebooks](https://jupyter.org/)で動作します。...\n```",
+      "metadata": {
+        "strategy": "enhanced",
+        "total_chunks": 7,
+        "file_path": "benchmarks/snippets.py",
+        "chunk_index": 5,
+        "language": "python",
+        "commit_count": 2
+      },
+      "similarity_score": 1.023544430732727
+    },
+    {
+      "content": "# File: asv.conf.json (json)\n\n## Code Content:\n```json\n{\n  \"version\": 1,\n  \"project\": \"rich\",\n  \"project_url\": \"https://github.com/Textualize/rich\",\n  \"repo\": \".\",\n  \"repo_subdir\": \"\",\n  \"install_command\": [\n    \"in-dir={env_dir} python -mpip install {wheel_file}\"\n  ],\n  \"uninstall_command\": [\n    \"return-code=any python -mpip uninstall -y {project}\"\n  ],\n  \"build_command\": [\n    \"pip install poetry\",\n    \"python setup.py build\",\n    \"PIP_NO_BUILD_ISOLATION=false python -mpip wheel --no-deps --no-index -w {build_cache_dir} {build_dir}\"\n  ],\n  \"branches\": [\n    \"master\"\n  ],\n  \"html_dir\": \"./benchmarks/html\",\n  \"results_dir\": \"./benchmarks/results\",\n  \"env_dir\": \"./benchmarks/env\",\n  \"dvcs\": \"git\",\n  \"environment_type\": \"virtualenv\",\n  \"install_timeout\": 180,\n  \"show_commit_url\": \"http://github.com/Textualize/rich/commit/\",\n  \"pythons\": [\n    \"3.10\"\n  ],\n  \"matrix\": {\n    \"req\": {}\n  }\n}\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: c80ad26d\n- Author: Darren Burns (darrenb900@gmail.com)\n- Date: 2022-03-11 01:08:26\n- Message: Add initial benchmark suite\n- Changes:\n```diff\n@@ -0,0 +1,34 @@\n+{\n+  \"version\": 1,\n+  \"project\": \"rich\",\n+  \"project_url\": \"https://github.com/Textualize/rich\",\n+  \"repo\": \".\",\n+  \"repo_subdir\": \"\",\n+  \"install_command\": [\n+    \"in-dir={env_dir} python -mpip install {wheel_file}\"\n+  ],\n+  \"uninstall_command\": [\n+    \"return-code=any python -mpip uninstall -y {project}\"\n+  ],\n+  \"build_command\": [\n+    \"pip install poetry\",\n+    \"python setup.py build\",\n+    \"PIP_NO_BUILD_ISOLATION=false python -mpip wheel --no-deps --no-index -w {build_cach...\n```",
+      "metadata": {
+        "file_path": "asv.conf.json",
+        "strategy": "enhanced",
+        "language": "json",
+        "chunk_index": 0,
+        "total_chunks": 1,
+        "commit_count": 1
+      },
+      "similarity_score": 1.0320581197738647
+    },
+    {
+      "content": "# File: rich/default_styles.py (python)\n\n## Code Content:\n```python\nfrom typing import Dict\n\nfrom .style import Style",
+      "metadata": {
+        "total_chunks": 8,
+        "file_path": "rich/default_styles.py",
+        "language": "python",
+        "commit_count": 5,
+        "chunk_index": 0,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.0335164070129395
+    },
+    {
+      "content": "# File: rich/_win32_console.py (python)\n\n## Code Content:\n```python\n\"\"\"Light wrapper around the Win32 Console API - this module should only be imported on Windows\n\nThe API that this module wraps is documented at https://docs.microsoft.com/en-us/windows/console/console-functions\n\"\"\"\nimport ctypes\nimport sys\nfrom typing import Any\n\nwindll: Any = None\nif sys.platform == \"win32\":\n    windll = ctypes.LibraryLoader(ctypes.WinDLL)\nelse:\n    raise ImportError(f\"{__name__} can only be imported on Windows\")\n\nimport time\nfrom ctypes import Structure, byref, wintypes\nfrom typing import IO, NamedTuple, Type, cast\n\nfrom rich.color import ColorSystem\nfrom rich.style import Style\n\nSTDOUT = -11\nENABLE_VIRTUAL_TERMINAL_PROCESSING = 4\n\nCOORD = wintypes._COORD\n\n\nclass LegacyWindowsError(Exception):\n    pass\n\n\nclass WindowsCoordinates(NamedTuple):\n    \"\"\"Coordinates in the Windows Console API are (y, x), not (x, y).\n    This class is intended to prevent that confusion.\n    Rows and columns are indexed from 0.\n    This class can be used in place of wintypes._COORD in arguments and argtypes.\n    \"\"\"\n\n    row: int\n    col: int\n\n    @classmethod\n    def from_param(cls, value: \"WindowsCoordinates\") -> COORD:\n        \"\"\"Converts a WindowsCoordinates into a wintypes _COORD structure.\n        This classmethod is internally called by ctypes to perform the conversion.\n\n        Args:\n            value (WindowsCoordinates): The input coordinates to convert.\n\n        Returns:\n            wintypes._COORD: The converted coordinates struct.\n        \"\"\"\n        return COORD(value.col, value.row)\n\n\nclass CONSOLE_SCREEN_BUFFER_INFO(Structure):\n    _fields_ = [\n        (\"dwSize\", COORD),\n        (\"dwCursorPosition\", COORD),\n        (\"wAttributes\", wintypes.WORD),\n        (\"srWindow\", wintypes.SMALL_RECT),\n        (\"dwMaximumWindowSize\", COORD),\n    ]\n\n\nclass CONSOLE_CURSOR_INFO(ctypes.Structure):\n    _fields_ = [(\"dwSize\", wintypes.DWORD), (\"bVisible\", wintypes.BOOL)]",
+      "metadata": {
+        "file_path": "rich/_win32_console.py",
+        "commit_count": 5,
+        "language": "python",
+        "total_chunks": 14,
+        "strategy": "enhanced",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.0627691745758057
+    },
+    {
+      "content": "# File: docs/source/traceback.rst (text)\n\n## Code Content:\n```text\nTraceback\n=========\n\nRich can render Python tracebacks with syntax highlighting and formatting. Rich tracebacks are easier to read and show more code than standard Python tracebacks.\n\nTo see an example of a Rich traceback, running the following command::\n\n    python -m rich.traceback\n\n\nPrinting tracebacks\n-------------------\n\nThe :meth:`~rich.console.Console.print_exception` method will print a traceback for the current exception being handled. Here's an example::\n\n    from rich.console import Console\n    console = Console()\n\n    try:\n        do_something()\n    except Exception:\n        console.print_exception(show_locals=True)\n\nThe ``show_locals=True`` parameter causes Rich to display the value of local variables for each frame of the traceback.\n \nSee `exception.py <https://github.com/willmcgugan/rich/blob/master/examples/exception.py>`_ for a larger example.\n\n\nTraceback Handler\n-----------------\n\nRich can be installed as the default traceback handler so that all uncaught exceptions will be rendered with highlighting. Here's how::\n\n    from rich.traceback import install\n    install(show_locals=True)\n\nThere are a few options to configure the traceback handler, see :func:`~rich.traceback.install` for details.\n\nAutomatic Traceback Handler\n^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nIn some cases you may want to have the traceback handler installed automatically without having to worry about importing the code in your module. You can do that by modifying the `sitecustomize.py` in your virtual environment. Typically it would be located in your virtual environment path, underneath the `site-packages` folder, something like this::\n\n    ./.venv/lib/python3.9/site-packages/sitecustomize.py\n\nIn most cases this file will not exist. If it doesn't exist, you can create it by::\n\n    $ touch .venv/lib/python3.9/site-packages/sitecustomize.py\n\nAdd the following code to the file::",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "docs/source/traceback.rst",
+        "language": "text",
+        "total_chunks": 5,
+        "commit_count": 5,
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.088017225265503
+    },
+    {
+      "content": "# File: .gitignore (text)\n\n## Code Content:\n```text\n*.ipynb\n.pytype\n.DS_Store\n.vscode\n.idea/\nmypy_report\ndocs/build\ndocs/source/_build\ntools/*.txt\nplayground/\n\n# Byte-compiled / optimized / DLL files\n__pycache__/\n*.py[cod]\n*$py.class\n\n# C extensions\n*.so\n\n# Distribution / packaging\n.Python\nbuild/\ndevelop-eggs/\ndist/\ndownloads/\neggs/\n.eggs/\nlib/\nlib64/\nparts/\nsdist/\nvar/\nwheels/\n*.egg-info/\n.installed.cfg\n*.egg\nMANIFEST\n\n# PyInstaller\n#  Usually these files are written by a python script from a template\n#  before PyInstaller builds the exe, so as to inject date/other infos into it.\n*.manifest\n*.spec\n\n# Installer logs\npip-log.txt\npip-delete-this-directory.txt\n\n# Unit test / coverage reports\nhtmlcov/\n.tox/\n.coverage\n.coverage.*\n.cache\nnosetests.xml\ncoverage.xml\n*.cover\n.hypothesis/\n.pytest_cache/\n\n# Translations\n*.mo\n*.pot\n\n# Django stuff:\n*.log\nlocal_settings.py\ndb.sqlite3\n\n# Flask stuff:\ninstance/\n.webassets-cache\n\n# Scrapy stuff:\n.scrapy\n\n# Sphinx documentation\ndocs/_build/\n\n# PyBuilder\ntarget/\n\n# Jupyter Notebook\n.ipynb_checkpoints\n\n# pyenv\n.python-version\n\n# celery beat schedule file\ncelerybeat-schedule\n\n# SageMath parsed files\n*.sage.py\n\n# Environments\n.env\n.venv\nenv/\nvenv/\nENV/\nenv.bak/\nvenv.bak/\n\n# Spyder project settings\n.spyderproject\n.spyproject\n\n# Rope project settings\n.ropeproject\n\n# mkdocs documentation\n/site\n\n# mypy\n.mypy_cache/\n\n# airspeed velocity\nbenchmarks/env/\nbenchmarks/html/\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: c2f5ddbe\n- Author: Darren Burns (darrenb900@gmail.com)\n- Date: 2022-03-11 01:10:27\n- Message: Merge branch 'master' of github.com:Textualize/rich into benchmark\n- Changes:\n```diff\n@@ -2,6 +2,7 @@\n .pytype\n .DS_Store\n .vscode\n+.idea/\n mypy_report\n docs/build\n docs/source/_build...\n```",
+      "metadata": {
+        "language": "text",
+        "chunk_index": 0,
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "total_chunks": 2,
+        "file_path": ".gitignore"
+      },
+      "similarity_score": 1.0969129800796509
+    },
+    {
+      "content": "# File: docs/source/syntax.rst (text)\n\n## Code Content:\n```text\nSyntax\n======\n\nRich can syntax highlight various programming languages with line numbers.\n\nTo syntax highlight code, construct a :class:`~rich.syntax.Syntax` object and print it to the console. Here's an example::\n\n    from rich.console import Console\n    from rich.syntax import Syntax\n\n    console = Console()\n    with open(\"syntax.py\", \"rt\") as code_file:\n        syntax = Syntax(code_file.read(), \"python\")\n    console.print(syntax)\n\nYou may also use the :meth:`~rich.syntax.Syntax.from_path` alternative constructor which will load the code from disk and auto-detect the file type. The example above could be re-written as follows::\n\n\n    from rich.console import Console\n    from rich.syntax import Syntax\n\n    console = Console()\n    syntax = Syntax.from_path(\"syntax.py\")\n    console.print(syntax)\n\n\nLine numbers\n------------\n\nIf you set ``line_numbers=True``, Rich will render a column for line numbers::\n\n    syntax = Syntax.from_path(\"syntax.py\", line_numbers=True)\n\n\nTheme\n-----\n\nThe Syntax constructor (and :meth:`~rich.syntax.Syntax.from_path`) accept a ``theme`` attribute which should be the name of a `Pygments theme <https://pygments.org/demo/>`_. It may also be one of the special case theme names \"ansi_dark\" or \"ansi_light\" which will use the color theme configured by the terminal.\n\n\nBackground color\n----------------\n\nYou can override the background color from the theme by supplying a ``background_color`` argument to the constructor. This should be a string in the same format a style definition accepts, .e.g \"red\", \"#ff0000\", \"rgb(255,0,0)\" etc. You may also set the special value \"default\" which will use the default background color set in the terminal.\n\n\nSyntax CLI\n----------\n\nYou can use this class from the command line. Here's how you would syntax highlight a file called \"syntax.py\"::\n\n    python -m rich.syntax syntax.py\n\nFor the full list of arguments, run the following::",
+      "metadata": {
+        "commit_count": 5,
+        "strategy": "enhanced",
+        "chunk_index": 0,
+        "language": "text",
+        "file_path": "docs/source/syntax.rst",
+        "total_chunks": 3
+      },
+      "similarity_score": 1.0978385210037231
+    },
+    {
+      "content": "[[tool.mypy.overrides]]\nmodule = [\"pygments.*\", \"IPython.*\", \"commonmark.*\", \"ipywidgets.*\"]\nignore_missing_imports = true\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 7e180e03\n- Author: Will McGugan (willmcgugan@gmail.com)\n- Date: 2022-04-21 22:02:17\n- Message: Merge pull request #2131 from henryiii/henryiii/chore/mypy7\n\nfix(types): typing fixes exposed by extra checking\n- Changes:\n```diff\n@@ -54,10 +54,9 @@ build-backend = \"poetry.core.masonry.api\"\n \n [tool.mypy]\n files = [\"rich\"]\n-warn_unused_configs = true\n show_error_codes = true\n strict = true\n-enable_error_code = [\"ignore-without-code\"]\n+enable_error_code = [\"ignore-without-code\", \"redundant-expr\", \"truthy-bool\"]\n \n [[tool.mypy.overrides]]\n module = [\"pygments.*\", \"IPython.*\", \"commonmark.*\", \"ipywidgets.*\"]...\n```\n\n### Commit 2\n- ID: 7e7d542d\n- Author: Will McGugan (willmcgugan@gmail.com)\n- Date: 2022-04-05 18:57:08\n- Message: version bump\n- Changes:\n```diff\n@@ -2,7 +2,7 @@\n name = \"rich\"\n homepage = \"https://github.com/willmcgugan/rich\"\n documentation = \"https://rich.readthedocs.io/en/latest/\"\n-version = \"12.1.0\"\n+version = \"12.2.0\"\n description = \"Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal\"\n authors = [\"Will McGugan <willmcgugan@gmail.com>\"]\n license = \"MIT\"...\n```\n\n### Commit 3\n- ID: 303e9b55\n- Author: Olivier Philippon (olivier@textualize.io)\n- Date: 2022-04-04 23:15:53\n- Message: Bump minimum Python version to `3.6.3` (from `3.6.1`)\n\nThe `OrderedDict[CacheKey, CacheValue]` code we use in the LRUCache class doesn't work with Python versions `3.6.1` and `3.6.2`, unfortunately\n- Changes:\n```diff\n@@ -26,7 +26,7 @@ include = [\"rich/py.typed\"]\n \n \n [tool.poetry.dependencies]\n-python = \"^3.6.2\"\n+python = \"^3.6.3\"\n typing-extensions = { version = \">=4.0.0, <5.0\", python = \"<3.9\" }\n dataclasses = { version = \">=0.7,<0.9\", python = \"<3.7\" }\n pygments = \"^2.6.0\"...\n```",
+      "metadata": {
+        "chunk_index": 1,
+        "commit_count": 5,
+        "language": "toml",
+        "total_chunks": 3,
+        "file_path": "pyproject.toml",
+        "strategy": "enhanced"
+      },
+      "similarity_score": 1.100067138671875
+    },
+    {
+      "content": "### Commit 3\n- ID: 09cab8be\n- Author: Henry Schreiner (henryschreineriii@gmail.com)\n- Date: 2022-03-25 23:36:22\n- Message: fix: keep pycln from removing load_ipython_extension\n- Changes:\n```diff\n@@ -3,7 +3,7 @@\n import os\n from typing import Callable, IO, TYPE_CHECKING, Any, Optional, Union\n \n-from ._extension import load_ipython_extension\n+from ._extension import load_ipython_extension  # noqa: F401\n \n __all__ = [\"get_console\", \"reconfigure\", \"print\", \"inspect\"]...\n```\n\n### Commit 4\n- ID: 28beb14f\n- Author: Luka Mamukashvili (ultraluka0@gmail.com)\n- Date: 2022-03-25 22:43:32\n- Message: Return IPython extension\n- Changes:\n```diff\n@@ -3,6 +3,7 @@\n import os\n from typing import Callable, IO, TYPE_CHECKING, Any, Optional, Union\n \n+from ._extension import load_ipython_extension\n \n __all__ = [\"get_console\", \"reconfigure\", \"print\", \"inspect\"]...\n```\n\n### Commit 5\n- ID: 73a9a413\n- Author: Hadi Alqattan (alqattanhadizaki@gmail.com)\n- Date: 2022-02-26 21:23:38\n- Message: Run pycln over the entire project and double check the accuracy.\n- Changes:\n```diff\n@@ -3,7 +3,6 @@\n import os\n from typing import Callable, IO, TYPE_CHECKING, Any, Optional, Union\n \n-from ._extension import load_ipython_extension\n \n __all__ = [\"get_console\", \"reconfigure\", \"print\", \"inspect\"]...\n```",
+      "metadata": {
+        "file_path": "rich/__init__.py",
+        "strategy": "enhanced",
+        "commit_count": 5,
+        "language": "python",
+        "total_chunks": 5,
+        "chunk_index": 4
+      },
+      "similarity_score": 1.1001839637756348
+    },
+    {
+      "content": "# File: rich/_windows.py (python)\n\n## Code Content:\n```python\nimport sys\nfrom dataclasses import dataclass\n\n\n@dataclass\nclass WindowsConsoleFeatures:\n    \"\"\"Windows features available.\"\"\"\n\n    vt: bool = False\n    \"\"\"The console supports VT codes.\"\"\"\n    truecolor: bool = False\n    \"\"\"The console supports truecolor.\"\"\"\n\n\ntry:\n    import ctypes\n    from ctypes import LibraryLoader\n\n    if sys.platform == \"win32\":\n        windll = LibraryLoader(ctypes.WinDLL)\n    else:\n        windll = None\n        raise ImportError(\"Not windows\")\n\n    from rich._win32_console import (\n        ENABLE_VIRTUAL_TERMINAL_PROCESSING,\n        GetConsoleMode,\n        GetStdHandle,\n        LegacyWindowsError,\n    )\n\nexcept (AttributeError, ImportError, ValueError):\n\n    # Fallback if we can't load the Windows DLL\n    def get_windows_console_features() -> WindowsConsoleFeatures:\n        features = WindowsConsoleFeatures()\n        return features\n\nelse:\n\n    def get_windows_console_features() -> WindowsConsoleFeatures:\n        \"\"\"Get windows console features.\n\n        Returns:\n            WindowsConsoleFeatures: An instance of WindowsConsoleFeatures.\n        \"\"\"\n        handle = GetStdHandle()\n        try:\n            console_mode = GetConsoleMode(handle)\n            success = True\n        except LegacyWindowsError:\n            console_mode = 0\n            success = False\n        vt = bool(success and console_mode & ENABLE_VIRTUAL_TERMINAL_PROCESSING)\n        truecolor = False\n        if vt:\n            win_version = sys.getwindowsversion()\n            truecolor = win_version.major > 10 or (\n                win_version.major == 10 and win_version.build >= 15063\n            )\n        features = WindowsConsoleFeatures(vt=vt, truecolor=truecolor)\n        return features\n\n\nif __name__ == \"__main__\":\n    import platform\n\n    features = get_windows_console_features()\n    from rich import print\n\n    print(f'platform=\"{platform.system()}\"')\n    print(repr(features))\n```\n\n## Git Commit History",
+      "metadata": {
+        "strategy": "enhanced",
+        "chunk_index": 0,
+        "file_path": "rich/_windows.py",
+        "total_chunks": 3,
+        "language": "python",
+        "commit_count": 5
+      },
+      "similarity_score": 1.1032593250274658
+    },
+    {
+      "content": "# File: .coveragerc (text)\n\n## Code Content:\n```text\n[run]\nomit = rich/jupyter.py\n    rich/_windows.py\n    rich/_timer.py\n    rich/diagnose.py\n\n[report]\nexclude_lines =\n    pragma: no cover\n    if TYPE_CHECKING:\n    if __name__ == \"__main__\":\n    @overload\n```\n\n## Git Commit History\n\n### Commit 1\n- ID: 731f9848\n- Author: Darren Burns (darrenb900@gmail.com)\n- Date: 2022-02-04 21:51:58\n- Message: Expose diagnose.report as a function add a little more info to hint at environment\n- Changes:\n```diff\n@@ -2,7 +2,8 @@\n omit = rich/jupyter.py\n     rich/_windows.py\n     rich/_timer.py\n-    \n+    rich/diagnose.py\n+\n [report]\n exclude_lines =\n     pragma: no cover...\n```\n\n### Commit 2\n- ID: 99e4f286\n- Author: Will McGugan (willmcgugan@gmail.com)\n- Date: 2021-01-27 06:13:11\n- Message: optimize text\n- Changes:\n```diff\n@@ -1,7 +1,7 @@\n [run]\n omit = rich/jupyter.py\n     rich/_windows.py\n-    rich/_timer\n+    rich/_timer.py\n     \n [report]\n exclude_lines =...\n```\n\n### Commit 3\n- ID: 3d149e47\n- Author: Will McGugan (willmcgugan@gmail.com)\n- Date: 2021-01-26 05:21:38\n- Message: text optimizations\n- Changes:\n```diff\n@@ -1,7 +1,8 @@\n [run]\n omit = rich/jupyter.py\n     rich/_windows.py\n-\n+    rich/_timer\n+    \n [report]\n exclude_lines =\n     pragma: no cover...\n```\n\n### Commit 4\n- ID: 73de62b9\n- Author: Will McGugan (willmcgugan@gmail.com)\n- Date: 2020-07-21 01:52:01\n- Message: prompt update\n- Changes:\n```diff\n@@ -7,3 +7,4 @@ exclude_lines =\n     pragma: no cover\n     if TYPE_CHECKING:\n     if __name__ == \"__main__\":\n+    @overload...\n```\n\n### Commit 5\n- ID: 7bf9dd8f\n- Author: Will McGugan (willmcgugan@gmail.com)\n- Date: 2020-07-07 22:56:27\n- Message: typing, jupyter fix\n- Changes:\n```diff\n@@ -1,5 +1,6 @@\n [run]\n omit = rich/jupyter.py\n+    rich/_windows.py\n \n [report]\n exclude_lines =...\n```",
+      "metadata": {
+        "commit_count": 5,
+        "language": "text",
+        "file_path": ".coveragerc",
+        "strategy": "enhanced",
+        "total_chunks": 1,
+        "chunk_index": 0
+      },
+      "similarity_score": 1.10356605052948
+    }
+  ],
+  "compressed": [
+    {
+      "content": "# File: rich/_extension.py (python)\n\n## Key Code Elements:\nfrom typing import Any\ndef load_ipython_extension(ip: Any) -> None:  # pragma: no cover\n    from rich.pretty import install\n    from rich.traceback import install as tr_install\n\n## Recent Changes:\n- e43016dd by Nathan Page (nathanrpage97@gmail.com): remove code coverage checks of ipython extension...\n- 0b667ec0 by Nathan Page (nathanrpage97@gmail.com): fix circular import and explain it is needed...\n- 8f9ebcdd by Nathan Page (nathanrpage97@gmail.com): remove unnecessary lazy import...",
+      "metadata": {
+        "chunk_index": 0,
+        "strategy": "compressed",
+        "file_path": "rich/_extension.py",
+        "commit_count": 4,
+        "language": "python",
+        "total_chunks": 1
+      },
+      "similarity_score": 0.8690592050552368
+    },
+    {
+      "content": "# File: rich/__init__.py (python)\n\n## Key Code Elements:\nimport os\nfrom typing import IO, TYPE_CHECKING, Any, Callable, Optional, Union\nfrom ._extension import load_ipython_extension  # noqa: F401\nif TYPE_CHECKING:\n    from .console import Console\ndef get_console() -> \"Console\":\n    Returns:\n    if _console is None:\n        from .console import Console\ndef reconfigure(*args: Any, **kwargs: Any) -> None:\n    Args:\n    from rich.console import Console\ndef print(\n) -> None:\n    Args:\n\n## Recent Changes:\n- e89ec106 by Olivier Philippon (olivier@textualize.io): [console] PR feedback on SVG elements namespacing, episode II...\n- ec3e8497 by Olivier Philippon (olivier@textualize.io): [console] namespace SVG elements to avoid conflicts with surrounding HTML page...\n- 09cab8be by Henry Schreiner (henryschreineriii@gmail.com): fix: keep pycln from removing load_ipython_extension...",
+      "metadata": {
+        "commit_count": 5,
+        "strategy": "compressed",
+        "language": "python",
+        "total_chunks": 1,
+        "file_path": "rich/__init__.py",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.0499298572540283
+    },
+    {
+      "content": "# File: docs/source/traceback.rst (text)\n\n## Key Code Elements:\nTo see an example of a Rich traceback, running the following command::\nThe :meth:`~rich.console.Console.print_exception` method will print a traceback for the current exception being handled. Here's an example::\n    from rich.console import Console\n    try:\n    except Exception:\nRich can be installed as the default traceback handler so that all uncaught exceptions will be rendered with highlighting. Here's how::\n    from rich.traceback import install\nIn some cases you may want to have the traceback handler installed automatically without having to worry about importing the code in your module. You can do that by modifying the `sitecustomize.py` in your virtual environment. Typically it would be located in your virtual environment path, underneath the `site-packages` folder, something like this::\nIn most cases this file will not exist. If it doesn't exist, you can create it by::\nAdd the following code to the file::\n    from rich.traceback import install\n.. note::\nHere's how you would exclude `click <https://click.palletsprojects.com/en/8.0.x/>`_ from Rich exceptions:: \n    import click\n    from rich.traceback import install\n\n## Recent Changes:\n- c87b1a07 by Leron Gray (daddycocoaman@gmail.com): update docs for RichHandler suppress...\n- c3469772 by Aaron Stephens (aaronjst93@gmail.com): docs: fix typos and whitespace...\n- 510cec71 by Troy Williams (troy.williams@bluebill.net): Added section `Automatic Traceback Handler` to traceback.rst. It describes a method to automatically...",
+      "metadata": {
+        "file_path": "docs/source/traceback.rst",
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "language": "text",
+        "total_chunks": 1,
+        "commit_count": 5
+      },
+      "similarity_score": 1.0616017580032349
+    },
+    {
+      "content": "# File: rich/jupyter.py (python)\n\n## Key Code Elements:\nfrom typing import Any, Dict, Iterable, List, TYPE_CHECKING, Sequence\nif TYPE_CHECKING:\n    from rich.console import ConsoleRenderable\nfrom . import get_console\nfrom .segment import Segment\nfrom .terminal_theme import DEFAULT_TERMINAL_THEME\nif TYPE_CHECKING:\n    from rich.console import ConsoleRenderable\nclass JupyterRenderable:\n    def __init__(self, html: str, text: str) -> None:\n    def _repr_mimebundle_(\n    ) -> Dict[str, str]:\n        if include:\n        if exclude:\nclass JupyterMixin:\n\n## Recent Changes:\n- d42a6da0 by Henry Schreiner (henryschreineriii@gmail.com): fix(types): typing fixes exposed by extra checking\n\nSigned-off-by: Henry Schreiner <henryschreinerii...\n- 5251db4a by Henry Schreiner (henryschreineriii@gmail.com): fix(types): remove a few more type ignores...\n- 6216ee0f by Wasi Master (63045920+wasi-master@users.noreply.github.com): In Jupyter mode have the link target set to \"_blank\"...",
+      "metadata": {
+        "commit_count": 5,
+        "strategy": "compressed",
+        "language": "python",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "file_path": "rich/jupyter.py"
+      },
+      "similarity_score": 1.0930192470550537
+    },
+    {
+      "content": "# File: rich/_windows.py (python)\n\n## Key Code Elements:\nimport sys\nfrom dataclasses import dataclass\n@dataclass\nclass WindowsConsoleFeatures:\ntry:\n    import ctypes\n    from ctypes import LibraryLoader\n    if sys.platform == \"win32\":\n    else:\n    from rich._win32_console import (\nexcept (AttributeError, ImportError, ValueError):\n    def get_windows_console_features() -> WindowsConsoleFeatures:\nelse:\n    def get_windows_console_features() -> WindowsConsoleFeatures:\n        Returns:\n\n## Recent Changes:\n- 5a93a6e0 by Hadi Alqattan (alqattanhadizaki@gmail.com): Pycln cought unused import using the new version....\n- ca3e966d by Darren Burns (darrenb900@gmail.com): Handle legacy windows error...\n- 5a051f9f by Darren Burns (darrenb900@gmail.com): Make GetConsoleMode Windows Console wrapper more Pythonic...",
+      "metadata": {
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "file_path": "rich/_windows.py",
+        "total_chunks": 1,
+        "language": "python",
+        "commit_count": 5
+      },
+      "similarity_score": 1.1056647300720215
+    },
+    {
+      "content": "# File: rich/errors.py (python)\n\n## Key Code Elements:\nclass ConsoleError(Exception):\nclass StyleError(Exception):\nclass StyleSyntaxError(ConsoleError):\nclass MissingStyle(StyleError):\nclass StyleStackError(ConsoleError):\nclass NotRenderableError(ConsoleError):\nclass MarkupError(ConsoleError):\nclass LiveError(ConsoleError):\nclass NoAltScreen(ConsoleError):\n\n## Recent Changes:\n- d97751b1 by Will McGugan (willmcgugan@gmail.com): black...\n- ffc7aea1 by Will McGugan (willmcgugan@gmail.com): updatable layout regions...\n- 122b8131 by Will McGugan (willmcgugan@gmail.com): live refactor...",
+      "metadata": {
+        "commit_count": 5,
+        "strategy": "compressed",
+        "file_path": "rich/errors.py",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "language": "python"
+      },
+      "similarity_score": 1.1133395433425903
+    },
+    {
+      "content": "# File: rich/protocol.py (python)\n\n## Key Code Elements:\nfrom typing import Any, cast, Set, TYPE_CHECKING\nfrom inspect import isclass\nif TYPE_CHECKING:\n    from rich.console import RenderableType\ndef is_renderable(check_object: Any) -> bool:\ndef rich_cast(renderable: object) -> \"RenderableType\":\n    Args:\n    Returns:\n    from rich.console import RenderableType\n    while hasattr(renderable, \"__rich__\") and not isclass(renderable):\n        if hasattr(renderable, _GIBBERISH):\n        if renderable_type in rich_visited_set:\n\n## Recent Changes:\n- 73a9a413 by Hadi Alqattan (alqattanhadizaki@gmail.com): Run pycln over the entire project and double check the accuracy....\n- 0349c2c5 by Will McGugan (willmcgugan@gmail.com): formatting...\n- 20b27d53 by Will McGugan (willmcgugan@gmail.com): added rich cast to protocol...",
+      "metadata": {
+        "file_path": "rich/protocol.py",
+        "commit_count": 5,
+        "strategy": "compressed",
+        "language": "python",
+        "chunk_index": 0,
+        "total_chunks": 1
+      },
+      "similarity_score": 1.1526864767074585
+    },
+    {
+      "content": "# File: rich/diagnose.py (python)\n\n## Key Code Elements:\nimport os\nimport platform\nfrom rich import inspect\nfrom rich.console import Console, get_windows_console_features\nfrom rich.panel import Panel\nfrom rich.pretty import Pretty\ndef report() -> None:  # pragma: no cover\n\n## Recent Changes:\n- c8c2cf11 by Darren Burns (darrenb900@gmail.com): Add more diagnose.report env variables, invoke from __main__...\n- 29bc5dd4 by Darren Burns (darrenb900@gmail.com): Add missing return type annotation to diagnose.report...\n- 731f9848 by Darren Burns (darrenb900@gmail.com): Expose diagnose.report as a function add a little more info to hint at environment...",
+      "metadata": {
+        "total_chunks": 1,
+        "commit_count": 4,
+        "chunk_index": 0,
+        "file_path": "rich/diagnose.py",
+        "strategy": "compressed",
+        "language": "python"
+      },
+      "similarity_score": 1.1695553064346313
+    },
+    {
+      "content": "# File: rich/pretty.py (python)\n\n## Key Code Elements:\nimport builtins\nimport collections\nimport dataclasses\nimport inspect\nimport os\nimport sys\nfrom array import array\nfrom collections import Counter, UserDict, UserList, defaultdict, deque\nfrom dataclasses import dataclass, fields, is_dataclass\nfrom inspect import isclass\nfrom itertools import islice\nfrom types import MappingProxyType\nfrom typing import (\nfrom rich.repr import RichReprResult\ntry:\n\n## Recent Changes:\n- d42a6da0 by Henry Schreiner (henryschreineriii@gmail.com): fix(types): typing fixes exposed by extra checking\n\nSigned-off-by: Henry Schreiner <henryschreinerii...\n- 71057811 by Henry Schreiner (henryschreineriii@gmail.com): chore(types): include error code on type ignores\n\nSigned-off-by: Henry Schreiner <henryschreineriii@...\n- 5d644312 by Darren Burns (darrenb900@gmail.com): Reworking pretty namedtuples support, more defensive...",
+      "metadata": {
+        "language": "python",
+        "commit_count": 5,
+        "file_path": "rich/pretty.py",
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.1721599102020264
+    },
+    {
+      "content": "# File: rich/prompt.py (python)\n\n## Key Code Elements:\nfrom typing import Any, Generic, List, Optional, TextIO, TypeVar, Union, overload\nfrom . import get_console\nfrom .console import Console\nfrom .text import Text, TextType\nclass PromptError(Exception):\nclass InvalidResponse(PromptError):\n    Args:\n    def __init__(self, message: TextType) -> None:\n    def __rich__(self) -> TextType:\nclass PromptBase(Generic[PromptType]):\n    Args:\n    def __init__(\n    ) -> None:\n        if choices is not None:\n    @classmethod\n\n## Recent Changes:\n- 5251db4a by Henry Schreiner (henryschreineriii@gmail.com): fix(types): remove a few more type ignores...\n- 8d07aae7 by GBeauregard (greg@greg.red): Support pyright-style literal treatment\n\nNot all typecheckers will assume a variable assigned to a l...\n- 89066d9d by Nathan Page (nathanrpage97@gmail.com): support mypy strict compliant...",
+      "metadata": {
+        "commit_count": 5,
+        "file_path": "rich/prompt.py",
+        "strategy": "compressed",
+        "total_chunks": 1,
+        "language": "python",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.1779788732528687
+    },
+    {
+      "content": "# File: docs/source/logging.rst (text)\n\n## Key Code Elements:\nHere's an example of how to set up a rich logger::\n    import logging\n    from rich.logging import RichHandler\nRich logs won't render :ref:`console_markup` in logging by default as most libraries won't be aware of the need to escape literal square brackets, but you can enable it by setting ``markup=True`` on the handler. Alternatively you can enable it per log message by supplying the ``extra`` argument as follows::\nSimilarly, the highlighter may be overridden per log message::\nThe :class:`~rich.logging.RichHandler` class may be configured to use Rich's :class:`~rich.traceback.Traceback` class to format exceptions, which provides more context than a built-in exception. To get beautiful exceptions in your logs set ``rich_tracebacks=True`` on the handler constructor::\n    import logging\n    from rich.logging import RichHandler\n    try:\n    except Exception:\nHere's how you would exclude `click <https://click.palletsprojects.com/en/8.0.x/>`_ from Rich exceptions:: \n    import click\n    import logging\n    from rich.logging import RichHandler\n\n## Recent Changes:\n- c87b1a07 by Leron Gray (daddycocoaman@gmail.com): update docs for RichHandler suppress...\n- 8f6b52f2 by Leron Gray (daddycocoaman@gmail.com): add suppress to RichHandler...\n- c3469772 by Aaron Stephens (aaronjst93@gmail.com): docs: fix typos and whitespace...",
+      "metadata": {
+        "commit_count": 5,
+        "total_chunks": 1,
+        "language": "text",
+        "chunk_index": 0,
+        "file_path": "docs/source/logging.rst",
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.1800730228424072
+    },
+    {
+      "content": "# File: docs/source/introduction.rst (text)\n\n## Key Code Elements:\n.. note::\nYou can install Rich from PyPI with `pip` or your favorite package manager::\nIf you intend to use Rich with Jupyter then there are some additional dependencies which you can install with the following command::\nThe quickest way to get up and running with Rich is to import the alternative ``print`` function which takes the same arguments as the built-in ``print`` and may be used as a drop-in replacement. Here's how you would do that::\n    from rich import print\nThe following demonstrates both console markup and pretty formatting of Python objects::\nThis writes the following output to the terminal (including all the colors and styles):\nIf you would rather not shadow Python's built-in print, you can import ``rich.print`` as ``rprint`` (for example)::\n    from rich import print as rprint\nRich may be installed in the REPL so that Python data structures are automatically pretty printed with syntax highlighting. Here's how::\nYou can also use this feature to try out Rich *renderables*. Here's an example::\nRich also includes an IPython extension that will do this same pretty install + pretty tracebacks. Here's how to load it::\nRich has an :meth:`~rich.inspect` function which can generate a report on any Python object. It is a fantastic debug aid, and a good example of the output that Rich can generate. Here is a simple example::\n\n## Recent Changes:\n- 303e9b55 by Olivier Philippon (olivier@textualize.io): Bump minimum Python version to `3.6.3` (from `3.6.1`)\n\nThe `OrderedDict[CacheKey, CacheValue]` code ...\n- 21432b4c by Will McGugan (willmcgugan@gmail.com): docs...\n- c3469772 by Aaron Stephens (aaronjst93@gmail.com): docs: fix typos and whitespace...",
+      "metadata": {
+        "file_path": "docs/source/introduction.rst",
+        "strategy": "compressed",
+        "commit_count": 5,
+        "total_chunks": 1,
+        "language": "text",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.182615041732788
+    },
+    {
+      "content": "# File: rich/file_proxy.py (python)\n\n## Key Code Elements:\nimport io\nfrom typing import IO, TYPE_CHECKING, Any, List\nfrom .ansi import AnsiDecoder\nfrom .text import Text\nif TYPE_CHECKING:\n    from .console import Console\nclass FileProxy(io.TextIOBase):\n    def __init__(self, console: \"Console\", file: IO[str]) -> None:\n    @property\n    def rich_proxied_file(self) -> IO[str]:\n    def __getattr__(self, name: str) -> Any:\n    def write(self, text: str) -> int:\n        if not isinstance(text, str):\n        while text:\n            if new_line:\n\n## Recent Changes:\n- 939aac8c by Will McGugan (willmcgugan@gmail.com): always delete buffer...\n- 33889ab8 by Will McGugan (willmcgugan@gmail.com): sorted...\n- 07d51ffc by Will McGugan (willmcgugan@gmail.com): race condition and tests...",
+      "metadata": {
+        "file_path": "rich/file_proxy.py",
+        "language": "python",
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "commit_count": 5,
+        "total_chunks": 1
+      },
+      "similarity_score": 1.2053496837615967
+    },
+    {
+      "content": "# File: rich/console.py (python)\n\n## Key Code Elements:\nimport inspect\nimport io\nimport os\nimport platform\nimport sys\nimport threading\nimport zlib\nfrom abc import ABC, abstractmethod\nfrom dataclasses import dataclass, field\nfrom datetime import datetime\nfrom functools import wraps\nfrom getpass import getpass\nfrom html import escape\nfrom inspect import isclass\nfrom itertools import islice\n\n## Recent Changes:\n- 7e180e03 by Will McGugan (willmcgugan@gmail.com): Merge pull request #2131 from henryiii/henryiii/chore/mypy7\n\nfix(types): typing fixes exposed by ext...\n- cb56ec7e by Darren Burns (darrenburns@users.noreply.github.com): Setting terminal window title (#2200)\n\n* Adding tests for setting console title\n\n* Add Windows note\n...\n- e3fdf330 by Will McGugan (willmcgugan@gmail.com): Merge pull request #2170 from Textualize/console-svg-isolate-css-selectors-and-font-name\n\n[console] ...",
+      "metadata": {
+        "commit_count": 5,
+        "file_path": "rich/console.py",
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "chunk_index": 0,
+        "language": "python"
+      },
+      "similarity_score": 1.2232539653778076
+    },
+    {
+      "content": "# File: rich/abc.py (python)\n\n## Key Code Elements:\nfrom abc import ABC\nclass RichRenderable(ABC):\n    object supports the Rich renderable protocol. For example::\n        if isinstance(my_object, RichRenderable):\n    @classmethod\n    def __subclasshook__(cls, other: type) -> bool:\n    from rich.text import Text\n    class Foo:\n\n## Recent Changes:\n- c3b2c40c by Will McGugan (willmcgugan@gmail.com): removed is_rich_object, so as not to have 2 ways of doing it....\n- ecc42312 by Will McGugan (willmcgugan@gmail.com): rich abc...",
+      "metadata": {
+        "language": "python",
+        "chunk_index": 0,
+        "commit_count": 2,
+        "file_path": "rich/abc.py",
+        "strategy": "compressed",
+        "total_chunks": 1
+      },
+      "similarity_score": 1.228502631187439
+    },
+    {
+      "content": "# File: .pre-commit-config.yaml (yaml)\n\n## Key Code Elements:\nrepos:\n    hooks:\n    hooks:\n    hooks:\n    hooks:\n    hooks:\n\n## Recent Changes:\n- 65cb9bfb by Will McGugan (willmcgugan@gmail.com): Merge pull request #2056 from Textualize/benchmark\n\nBenchmark...\n- 395db54e by Hadi Alqattan (alqattanhadizaki@gmail.com): Update Pycln to v1.2.5...\n- 98fffaf6 by Hadi Alqattan (alqattanhadizaki@gmail.com): Update pycln to v1.2.4...",
+      "metadata": {
+        "file_path": ".pre-commit-config.yaml",
+        "commit_count": 5,
+        "language": "yaml",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "strategy": "compressed"
+      },
+      "similarity_score": 1.2296693325042725
+    },
+    {
+      "content": "# File: pyproject.toml (toml)\n\n## Recent Changes:\n- 7e180e03 by Will McGugan (willmcgugan@gmail.com): Merge pull request #2131 from henryiii/henryiii/chore/mypy7\n\nfix(types): typing fixes exposed by ext...\n- 7e7d542d by Will McGugan (willmcgugan@gmail.com): version bump...\n- 303e9b55 by Olivier Philippon (olivier@textualize.io): Bump minimum Python version to `3.6.3` (from `3.6.1`)\n\nThe `OrderedDict[CacheKey, CacheValue]` code ...",
+      "metadata": {
+        "total_chunks": 1,
+        "file_path": "pyproject.toml",
+        "strategy": "compressed",
+        "language": "toml",
+        "commit_count": 5,
+        "chunk_index": 0
+      },
+      "similarity_score": 1.2344028949737549
+    },
+    {
+      "content": "# File: docs/source/tree.rst (text)\n\n## Key Code Elements:\nRun the following command to see a demonstration of a Rich tree::\nThe following code creates and prints a tree with a simple text label::\n    from rich.tree import Tree\n    from rich import print\nWith only a single ``Tree`` instance this will output nothing more than the text \"Rich Tree\". Things get more interesting when we call :meth:`~rich.tree.Tree.add` to add more branches to the Tree. The following code adds two more branches::\nWhen you call :meth:`~rich.tree.Tree.add` a new Tree instance is returned. You can use this instance to add more branches to, and build up a more complex tree. Let's add a few more levels to the tree::\n\n## Recent Changes:\n- 400671da by Will McGugan (willmcgugan@gmail.com): doc...\n- 0f88bef9 by Will McGugan (willmcgugan@gmail.com): doc fix...\n- a6d81a32 by Will McGugan (willmcgugan@gmail.com): tree docs...",
+      "metadata": {
+        "strategy": "compressed",
+        "commit_count": 3,
+        "language": "text",
+        "total_chunks": 1,
+        "chunk_index": 0,
+        "file_path": "docs/source/tree.rst"
+      },
+      "similarity_score": 1.2350215911865234
+    },
+    {
+      "content": "# File: docs/source/syntax.rst (text)\n\n## Key Code Elements:\nTo syntax highlight code, construct a :class:`~rich.syntax.Syntax` object and print it to the console. Here's an example::\n    from rich.console import Console\n    from rich.syntax import Syntax\n    with open(\"syntax.py\", \"rt\") as code_file:\nYou may also use the :meth:`~rich.syntax.Syntax.from_path` alternative constructor which will load the code from disk and auto-detect the file type. The example above could be re-written as follows::\n    from rich.console import Console\n    from rich.syntax import Syntax\nIf you set ``line_numbers=True``, Rich will render a column for line numbers::\nYou can use this class from the command line. Here's how you would syntax highlight a file called \"syntax.py\"::\nFor the full list of arguments, run the following::\n\n## Recent Changes:\n- c3469772 by Aaron Stephens (aaronjst93@gmail.com): docs: fix typos and whitespace...\n- ab6f9f97 by Hamel Husain (hamelsmu@github.com): File needs to be in read mode...\n- 7e9bd936 by Will McGugan (willmcgugan@gmail.com): docs...",
+      "metadata": {
+        "total_chunks": 1,
+        "file_path": "docs/source/syntax.rst",
+        "commit_count": 5,
+        "language": "text",
+        "strategy": "compressed",
+        "chunk_index": 0
+      },
+      "similarity_score": 1.2488012313842773
+    },
+    {
+      "content": "# File: rich/style.py (python)\n\n## Key Code Elements:\nimport sys\nfrom functools import lru_cache\nfrom marshal import loads, dumps\nfrom random import randint\nfrom typing import Any, cast, Dict, Iterable, List, Optional, Type, Union\nfrom . import errors\nfrom .color import Color, ColorParseError, ColorSystem, blend_rgb\nfrom .repr import rich_repr, Result\nfrom .terminal_theme import DEFAULT_TERMINAL_THEME, TerminalTheme\nclass _Bit:\n    def __init__(self, bit_no: int) -> None:\n    def __get__(self, obj: \"Style\", objtype: Type[\"Style\"]) -> Optional[bool]:\n        if obj._set_attributes & self.bit:\n@rich_repr\nclass Style:\n\n## Recent Changes:\n- d42a6da0 by Henry Schreiner (henryschreineriii@gmail.com): fix(types): typing fixes exposed by extra checking\n\nSigned-off-by: Henry Schreiner <henryschreinerii...\n- 902f7085 by Will McGugan (willmcgugan@gmail.com): Revert \"Stop using functools.lru_cache decorator on instance methods\"...\n- 5aa02427 by Darren Burns (darrenb900@gmail.com): Stop using functools.lru_cache decorator on instance methods...",
+      "metadata": {
+        "chunk_index": 0,
+        "file_path": "rich/style.py",
+        "total_chunks": 1,
+        "strategy": "compressed",
+        "language": "python",
+        "commit_count": 5
+      },
+      "similarity_score": 1.254746913909912
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "reason": "The image is flipped upside down in the Particle Editor preview window due to incorrect image rendering orientation in the preview panel.",
+  "location": [
+    "extensions/gdx-tools/src/com/badlogic/gdx/tools/particleeditor/ImagePanel.java"
+  ],
+  "fix": "In the ImagePanel class, ensure the image is rendered with the correct orientation by adjusting the drawing code to account for the coordinate system differences between AWT and libGDX. This might involve flipping the image vertically before displaying it in the preview panel."
+}
