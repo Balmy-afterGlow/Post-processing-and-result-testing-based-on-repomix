@@ -18,7 +18,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # 第三方库导入
 try:
     import matplotlib.pyplot as plt
-    import matplotlib.patheffects as path_effects
     import seaborn as sns
 
     PLOTTING_AVAILABLE = True
@@ -235,8 +234,8 @@ class RAGChartGenerator:
         fig, ax = plt.subplots(figsize=(14, 9), dpi=100)
 
         # 设置更优雅的背景
-        fig.patch.set_facecolor("#FCFCFC")  # 更柔和的背景
-        ax.set_facecolor("#FEFEFE")  # 纯白图表区域
+        fig.patch.set_facecolor("#E8E8E8")  # 灰色背景
+        ax.set_facecolor("#E8E8E8")  # 灰色图表区域
 
         # 准备数据
         metrics = list(self.key_metrics.keys())
@@ -245,7 +244,7 @@ class RAGChartGenerator:
 
         # 计算条形图的位置 - 增加条形高度使其更突出
         y_positions = np.arange(len(metrics))
-        bar_height = 0.22  # 稍微减小以避免重叠
+        bar_height = 0.18  # 稍微减小以避免重叠
 
         # 为每个策略绘制条形图 - 确保compressed在上，enhanced在中，basic在下
         for i, strategy in enumerate(strategies):
@@ -294,8 +293,9 @@ class RAGChartGenerator:
 
         # 设置更柔和的网格
         ax.grid(
-            True, axis="x", alpha=0.3, linestyle="-", linewidth=0.6, color="#E8E8E8"
+            True, axis="x", alpha=0.6, linestyle="-", linewidth=0.8, color="#999999"
         )
+        ax.set_axisbelow(True)
         ax.grid(
             True, axis="y", alpha=0.15, linestyle=":", linewidth=0.4, color="#F0F0F0"
         )
@@ -336,10 +336,10 @@ class RAGChartGenerator:
         # 柔和的边框
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
-        ax.spines["left"].set_linewidth(0.8)
-        ax.spines["left"].set_color("#E0E0E0")
-        ax.spines["bottom"].set_linewidth(0.8)
-        ax.spines["bottom"].set_color("#E0E0E0")
+        ax.spines["left"].set_linewidth(1.2)
+        ax.spines["left"].set_color("#666666")  # 更深的颜色
+        ax.spines["bottom"].set_linewidth(1.2)
+        ax.spines["bottom"].set_color("#666666")  # 更深的颜色
 
         # 添加更优雅的子标题说明
         subtitle = "Performance comparison across key evaluation metrics • Higher scores indicate better performance"
@@ -365,7 +365,7 @@ class RAGChartGenerator:
             output_path,
             dpi=300,
             bbox_inches="tight",
-            facecolor="#FCFCFC",  # 匹配背景色
+            facecolor="#E8E8E8",  # 匹配背景色
             edgecolor="none",
             pad_inches=0.2,  # 增加边距
             format="png",
