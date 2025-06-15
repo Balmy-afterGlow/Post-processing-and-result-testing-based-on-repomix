@@ -274,7 +274,7 @@ class RAGEvaluationRunner:
         self.stats["processed_issues"] += 1
         return results
 
-    def run_evaluation(self, start_index: int = 0, max_issues: Optional[int] = None):
+    def run_all(self, start_index: int = 0, max_issues: Optional[int] = None):
         """运行评估"""
         logger.info("开始RAG评估...")
         logger.info(f"总问题数: {len(self.issues)}")
@@ -376,7 +376,7 @@ class RAGEvaluationRunner:
                 logger.info(f"  {strategy}: {len(json_files)} 个文件")
 
         logger.info(f"\n📊 统计文件: {self.output_dir}/evaluation_statistics.json")
-        logger.info(f"📝 日志文件: rag_evaluation.log")
+        logger.info(f"📝 日志文件: rag_run.log")
 
     def run_single_question(self, question_id: str) -> Dict:
         """
@@ -468,7 +468,7 @@ def main():
                 print(f"成功策略: {result['strategies_processed']}")
         else:
             # 批量处理
-            runner.run_evaluation(start_index=args.start, max_issues=args.max)
+            runner.run_all(start_index=args.start, max_issues=args.max)
 
     except Exception as e:
         logger.error(f"运行失败: {e}")
